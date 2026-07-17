@@ -28,10 +28,12 @@ void main() {
       );
       await first.initialize();
       await first.createFoundation(
-        const FoundationProfileInput(
+        FoundationProfileInput(
           displayName: 'Athlete Example',
           unit: WeightUnit.kilograms,
           roundingIncrement: 2.5,
+          startDate: DateTime(2026, 7, 20),
+          trainingDaysPerWeek: 3,
           oneRepMaxes: {
             MainLift.squat: 200,
             MainLift.benchPress: 120,
@@ -43,6 +45,7 @@ void main() {
       final generated = await first.loadSnapshot();
 
       expect(generated.nextSession, isNotNull);
+      expect(generated.nextSession!.scheduledFor, DateTime(2026, 7, 20));
       expect(generated.nextSession!.sets, hasLength(8));
       expect(generated.nextSession!.sets.first.load, 125);
       expect(generated.nextSession!.notes, isEmpty);
@@ -92,6 +95,7 @@ void main() {
         isTrue,
       );
       expect(restored.nextSession?.lift, MainLift.benchPress);
+      expect(restored.nextSession?.scheduledFor, DateTime(2026, 7, 22));
     },
   );
 }

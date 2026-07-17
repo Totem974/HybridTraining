@@ -17,12 +17,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Votre profil'), findsOneWidget);
+    expect(find.text('Introduction'), findsOneWidget);
+    for (var step = 0; step < 3; step++) {
+      await tester.tap(find.byKey(const Key('continue')));
+      await tester.pumpAndSettle();
+    }
+    expect(find.text('Charge maximum'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('profile-name')), 'Camille');
     for (final lift in MainLift.values) {
       await tester.enterText(find.byKey(Key('max-${lift.name}')), '100');
     }
-    for (var step = 0; step < 3; step++) {
+    for (var step = 0; step < 2; step++) {
       await tester.tap(find.byKey(const Key('continue')));
       await tester.pumpAndSettle();
     }

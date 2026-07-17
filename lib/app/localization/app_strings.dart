@@ -27,8 +27,30 @@ class AppStrings {
   String get genericError =>
       _fr ? 'Une erreur locale est survenue.' : 'A local error occurred.';
   List<String> get onboardingTitles => _fr
-      ? ['Votre profil', 'Programme', 'Calendrier', 'Tout est prêt']
-      : ['Your profile', 'Program', 'Schedule', 'Ready'];
+      ? [
+          'Introduction',
+          'Programme',
+          'Planning',
+          'Charge maximum',
+          'Validation',
+          'Votre plan',
+        ]
+      : [
+          'Introduction',
+          'Program',
+          'Schedule',
+          'Maximum load',
+          'Validation',
+          'Your plan',
+        ];
+  String get introMessage => _fr
+      ? 'Configurez votre premier cycle 5/3/1. Vous pourrez le personnaliser plus tard.'
+      : 'Set up your first 5/3/1 cycle. You can customize it later.';
+  String get standardProgram => 'Standard';
+  String get fullBodyProgram => 'Full Body';
+  String get validationMessage => _fr
+      ? 'Vérifiez vos charges avant de générer le cycle.'
+      : 'Review your loads before generating the cycle.';
   String get requiredField => _fr ? 'Champ obligatoire' : 'Required field';
   String get positiveValueRequired =>
       _fr ? 'Valeur positive obligatoire' : 'Positive value required';

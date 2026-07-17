@@ -10,6 +10,10 @@ réglages, l'historique et la bibliothèque informative suivent cette direction.
 La modification complète du cycle reste progressive tant que ses écritures
 métier ne sont pas disponibles.
 
+Le parcours d'introduction suit six panneaux : introduction, programme,
+planning, charges, validation et plan final. La date et la fréquence choisies
+alimentent réellement les dates des séances générées.
+
 Les captures locales regroupent un générateur web, des maquettes et une application
 Android observée. Elles guident le comportement seulement : aucun code, logo,
 illustration ou police n'est repris. `UNKNOWN` évite d'inventer un état absent.

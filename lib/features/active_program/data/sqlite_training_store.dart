@@ -69,6 +69,17 @@ class SqliteTrainingStore implements TrainingStore {
     }
     final database = await localDatabase.open();
     final now = _clock().toUtc();
+    if (input.trainingDaysPerWeek != 3 && input.trainingDaysPerWeek != 4) {
+      throw ArgumentError.value(
+        input.trainingDaysPerWeek,
+        'trainingDaysPerWeek',
+      );
+    }
+    final startsOn = DateTime(
+      input.startDate.year,
+      input.startDate.month,
+      input.startDate.day,
+    );
     final cycleId = 'cycle-${now.microsecondsSinceEpoch}';
     final unit = input.unit == WeightUnit.kilograms ? 'kg' : 'lb';
     final rounder = LoadRounder(increment: input.roundingIncrement);
@@ -106,18 +117,22 @@ class SqliteTrainingStore implements TrainingStore {
         'athlete_id': _athleteId,
         'program_definition_id': _programId,
         'program_definition_version': 1,
-        'starts_on': _dateOnly(now),
+        'starts_on': _dateOnly(startsOn),
         'status': 'active',
         'settings_json': jsonEncode({
           'unit': unit,
           'roundingIncrement': input.roundingIncrement,
           'trainingMaxRatio': 0.9,
           'supplementalSets': 5,
+          'trainingDaysPerWeek': input.trainingDaysPerWeek,
         }),
         'created_at': now.toIso8601String(),
       });
 
-      var sessionOffset = 0;
+      var sessionIndex = 0;
+      final weeklyOffsets = input.trainingDaysPerWeek == 4
+          ? const [0, 1, 3, 5]
+          : const [0, 2, 4];
       for (var week = 1; week <= 3; week++) {
         for (final lift in MainLift.values) {
           final sessionId = '$cycleId-w$week-${lift.name}';
@@ -135,7 +150,15 @@ class SqliteTrainingStore implements TrainingStore {
           await transaction.insert('training_sessions', {
             'id': sessionId,
             'cycle_id': cycleId,
-            'scheduled_for': _dateOnly(now.add(Duration(days: sessionOffset))),
+            'scheduled_for': _dateOnly(
+              startsOn.add(
+                Duration(
+                  days:
+                      (sessionIndex ~/ weeklyOffsets.length) * 7 +
+                      weeklyOffsets[sessionIndex % weeklyOffsets.length],
+                ),
+              ),
+            ),
             'status': 'planned',
           });
           for (var sequence = 0; sequence < generated.sets.length; sequence++) {
@@ -155,7 +178,7 @@ class SqliteTrainingStore implements TrainingStore {
               'performance_set': set.isPerformanceSet ? 1 : 0,
             });
           }
-          sessionOffset++;
+          sessionIndex++;
         }
       }
     });

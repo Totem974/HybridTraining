@@ -6,12 +6,16 @@ class FoundationProfileInput {
     required this.unit,
     required this.oneRepMaxes,
     required this.roundingIncrement,
+    required this.startDate,
+    required this.trainingDaysPerWeek,
   });
 
   final String displayName;
   final WeightUnit unit;
   final Map<MainLift, double> oneRepMaxes;
   final double roundingIncrement;
+  final DateTime startDate;
+  final int trainingDaysPerWeek;
 }
 
 class StoredSet {

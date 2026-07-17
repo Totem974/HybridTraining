@@ -51,20 +51,22 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                   ),
-                  Text('${_step + 1}/4'),
+                  Text('${_step + 1}/6'),
                 ],
               ),
             ),
-            LinearProgressIndicator(value: (_step + 1) / 4),
+            LinearProgressIndicator(value: (_step + 1) / 6),
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 180),
                 child: KeyedSubtree(
                   key: ValueKey(_step),
                   child: switch (_step) {
-                    0 => _maxStep(strings),
+                    0 => _introStep(strings),
                     1 => _programStep(strings),
                     2 => _scheduleStep(strings),
+                    3 => _maxStep(strings),
+                    4 => _validationStep(strings),
                     _ => _readyStep(strings),
                   },
                 ),
@@ -86,12 +88,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   if (_step > 0) const SizedBox(width: 12),
                   Expanded(
                     child: FilledButton(
-                      key: Key(_step == 3 ? 'create-cycle' : 'continue'),
+                      key: Key(_step == 5 ? 'create-cycle' : 'continue'),
                       onPressed: _saving ? null : _continue,
                       child: Text(
                         _saving
                             ? strings.creating
-                            : _step == 3
+                            : _step == 5
                             ? strings.createCycle
                             : strings.continueLabel,
                       ),
@@ -105,6 +107,34 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       ),
     );
   }
+
+  Widget _introStep(AppStrings strings) => Padding(
+    padding: const EdgeInsets.all(24),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'HYBRID',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            color: const Color(0xFFF5821F),
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        Text(
+          '5/3/1',
+          style: Theme.of(
+            context,
+          ).textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 28),
+        Text(
+          strings.introMessage,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+      ],
+    ),
+  );
 
   Widget _maxStep(AppStrings strings) => Form(
     key: _formKey,
@@ -167,7 +197,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       ),
       const SizedBox(height: 16),
       Card(
-        color: Theme.of(context).colorScheme.primaryContainer,
         child: ListTile(
           contentPadding: const EdgeInsets.all(18),
           leading: const Icon(Icons.fitness_center),
@@ -175,6 +204,19 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           subtitle: Text(strings.foundationProgramDescription),
           trailing: const Icon(Icons.check_circle),
         ),
+      ),
+      const SizedBox(height: 16),
+      SegmentedButton<int>(
+        segments: [
+          ButtonSegment(value: 0, label: Text(strings.standardProgram)),
+          ButtonSegment(
+            value: 1,
+            enabled: false,
+            label: Text(strings.fullBodyProgram),
+          ),
+        ],
+        selected: const {0},
+        onSelectionChanged: (_) {},
       ),
       const SizedBox(height: 12),
       Text(strings.pocProgramNotice),
@@ -240,9 +282,35 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     ],
   );
 
+  Widget _validationStep(AppStrings strings) => ListView(
+    padding: const EdgeInsets.all(20),
+    children: [
+      Text(
+        strings.validationMessage,
+        style: Theme.of(context).textTheme.titleLarge,
+      ),
+      const SizedBox(height: 18),
+      for (final lift in MainLift.values)
+        Card(
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: const Color(0xFFF5821F),
+              foregroundColor: const Color(0xFF1A0E00),
+              child: Text(strings.lift(lift.name).substring(0, 1)),
+            ),
+            title: Text(strings.lift(lift.name)),
+            trailing: Text(
+              '${_maxes[lift]!.text} ${_unit == WeightUnit.kilograms ? 'kg' : 'lb'}',
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ),
+        ),
+    ],
+  );
+
   Future<void> _continue() async {
-    if (_step == 0 && !_formKey.currentState!.validate()) return;
-    if (_step < 3) {
+    if (_step == 3 && !_formKey.currentState!.validate()) return;
+    if (_step < 5) {
       setState(() => _step++);
       return;
     }
@@ -252,6 +320,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         displayName: _name.text.trim(),
         unit: _unit,
         roundingIncrement: _unit == WeightUnit.kilograms ? 2.5 : 5,
+        startDate: _startDate,
+        trainingDaysPerWeek: _daysPerWeek,
         oneRepMaxes: {
           for (final entry in _maxes.entries)
             entry.key: double.parse(entry.value.text.replaceAll(',', '.')),
