@@ -2,24 +2,120 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/app/bootstrap/app_environment.dart';
 import 'package:hybrid_training/app/hybrid_training_app.dart';
+import 'package:hybrid_training/features/active_program/domain/training_store.dart';
+import 'package:hybrid_training/features/programs/domain/training_models.dart';
 
 void main() {
-  testWidgets('shows the Base0 foundation in the dev environment', (
+  testWidgets('creates a local profile and displays the first session', (
     tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final store = _FakeTrainingStore();
     await tester.pumpWidget(
-      const HybridTrainingApp(environment: AppEnvironment.dev),
+      HybridTrainingApp(environment: AppEnvironment.dev, store: store),
     );
+    await tester.pumpAndSettle();
 
-    expect(find.text('Hybrid 5/3/1 Dev'), findsOneWidget);
-    expect(find.text('Base0 foundation'), findsOneWidget);
+    expect(find.text('Créer votre profil local'), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('profile-name')), 'Camille');
+    for (final lift in MainLift.values) {
+      await tester.enterText(find.byKey(Key('max-${lift.name}')), '100');
+    }
+    await tester.ensureVisible(find.byKey(const Key('create-cycle')));
+    await tester.tap(find.byKey(const Key('create-cycle')));
+    await tester.pumpAndSettle();
+
+    expect(store.created?.displayName, 'Camille');
+    expect(store.created?.oneRepMaxes, hasLength(4));
+    expect(find.byKey(const Key('workout-session')), findsOneWidget);
+    expect(find.text('Squat'), findsOneWidget);
   });
 
-  testWidgets('hides the debug banner in production', (tester) async {
+  testWidgets('records a set, finishes a session and shows history', (
+    tester,
+  ) async {
+    final store = _FakeTrainingStore(hasExistingProfile: true);
     await tester.pumpWidget(
-      const HybridTrainingApp(environment: AppEnvironment.prod),
+      HybridTrainingApp(environment: AppEnvironment.prod, store: store),
     );
+    await tester.pumpAndSettle();
 
+    await tester.tap(find.text('Fait'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('finish-session')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Historique'));
+    await tester.pumpAndSettle();
+
+    expect(store.completedSetIds, ['set-1']);
+    expect(store.finishedSessionIds, ['session-1']);
+    expect(find.byKey(const Key('history-list')), findsOneWidget);
     expect(tester.widgetList(find.byType(Banner)), isEmpty);
   });
+}
+
+class _FakeTrainingStore implements TrainingStore {
+  _FakeTrainingStore({bool hasExistingProfile = false})
+    : _hasProfile = hasExistingProfile;
+
+  bool _hasProfile;
+  bool _setComplete = false;
+  bool _sessionComplete = false;
+  FoundationProfileInput? created;
+  final completedSetIds = <String>[];
+  final finishedSessionIds = <String>[];
+
+  StoredSession get _session => StoredSession(
+    id: 'session-1',
+    lift: MainLift.squat,
+    scheduledFor: DateTime(2026, 7, 17),
+    unit: WeightUnit.kilograms,
+    sets: [
+      StoredSet(
+        id: 'set-1',
+        sequence: 0,
+        kind: SetKind.main,
+        load: 90,
+        repetitions: 3,
+        isPerformanceSet: true,
+        isComplete: _setComplete,
+      ),
+    ],
+    isComplete: _sessionComplete,
+  );
+
+  @override
+  Future<void> initialize() async {}
+
+  @override
+  Future<bool> hasProfile() async => _hasProfile;
+
+  @override
+  Future<void> createFoundation(FoundationProfileInput input) async {
+    created = input;
+    _hasProfile = true;
+  }
+
+  @override
+  Future<TrainingSnapshot> loadSnapshot() async => TrainingSnapshot(
+    displayName: created?.displayName ?? 'Camille',
+    nextSession: _sessionComplete ? null : _session,
+    history: _sessionComplete ? [_session] : [],
+  );
+
+  @override
+  Future<void> completeSet(String setId, {required int repetitions}) async {
+    completedSetIds.add(setId);
+    _setComplete = true;
+  }
+
+  @override
+  Future<void> finishSession(String sessionId) async {
+    finishedSessionIds.add(sessionId);
+    _sessionComplete = true;
+  }
+
+  @override
+  Future<void> close() async {}
 }
