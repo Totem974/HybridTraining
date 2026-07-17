@@ -51,6 +51,17 @@ class FoundationController extends ChangeNotifier {
     });
   }
 
+  Future<void> updateSessionNotes(String id, String notes) async {
+    try {
+      await store.updateSessionNotes(id, notes);
+      error = null;
+    } catch (caught) {
+      error = caught;
+      state = FoundationState.error;
+      notifyListeners();
+    }
+  }
+
   Future<void> _run(Future<void> Function() action) async {
     try {
       await action();

@@ -10,13 +10,15 @@
 - estimation de 1RM, progression de TM et calcul exact de disques testés ;
 - schéma SQLite v1, format de sauvegarde v1 et pipeline d'import ;
 - catalogues initiaux et matrice des captures.
+- parcours POC en quatre étapes, tableau de bord et séance guidée ;
+- progression de série persistée, repos local et notes de séance sauvegardées.
 
 ## Prochaines tranches prioritaires
 
 | Priorité | Tranche | Éléments principaux |
 |---:|---|---|
 | 1 | Sauvegarde et migration | écran export/import, partage de fichier, rapport, échantillon historique anonymisé |
-| 2 | Séance complète | AMRAP réel, échec/saut, notes, repos, reprise après interruption |
+| 2 | Séance complète | AMRAP réel, échec/saut, reprise du chronomètre après interruption, échauffement et assistance à valider |
 | 3 | Profil et TM | édition, estimation dans l'UI, historique, progression de fin de cycle |
 | 4 | Salles et disques | CRUD salles/barres/disques, calcul depuis inventaire |
 | 5 | Catalogue | programme par programme, leader/anchor, 7th Week Protocol |
@@ -28,4 +30,3 @@
 
 Cloud, comptes, paywall, Health Connect, Garmin et sports d'endurance ne font pas
 partie de Base0. Aucun SDK correspondant n'a été ajouté.
-

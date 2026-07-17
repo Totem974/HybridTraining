@@ -74,6 +74,7 @@ class _HybridTrainingAppState extends State<HybridTrainingApp> {
             snapshot: controller.snapshot!,
             onCompleteSet: controller.completeSet,
             onFinishSession: controller.finishSession,
+            onUpdateNotes: controller.updateSessionNotes,
           ),
           FoundationState.error => Scaffold(
             body: Center(

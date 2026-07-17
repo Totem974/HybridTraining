@@ -48,6 +48,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('start-workout')));
     await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Rien à signaler');
+    await tester.pump(const Duration(milliseconds: 650));
     await tester.tap(find.byKey(const Key('complete-current-set')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('finish-session')));
@@ -55,6 +57,7 @@ void main() {
 
     expect(store.completedSetIds, ['set-1']);
     expect(store.finishedSessionIds, ['session-1']);
+    expect(store.savedNotes, ['Rien à signaler', 'Rien à signaler']);
     expect(find.text('Aucune séance planifiée.'), findsOneWidget);
     expect(find.text('Squat'), findsOneWidget);
     expect(tester.widgetList(find.byType(Banner)), isEmpty);
@@ -71,6 +74,7 @@ class _FakeTrainingStore implements TrainingStore {
   FoundationProfileInput? created;
   final completedSetIds = <String>[];
   final finishedSessionIds = <String>[];
+  final savedNotes = <String>[];
 
   StoredSession get _session => StoredSession(
     id: 'session-1',
@@ -89,6 +93,7 @@ class _FakeTrainingStore implements TrainingStore {
       ),
     ],
     isComplete: _sessionComplete,
+    notes: '',
   );
 
   @override
@@ -120,6 +125,11 @@ class _FakeTrainingStore implements TrainingStore {
   Future<void> finishSession(String sessionId) async {
     finishedSessionIds.add(sessionId);
     _sessionComplete = true;
+  }
+
+  @override
+  Future<void> updateSessionNotes(String sessionId, String notes) async {
+    savedNotes.add(notes);
   }
 
   @override

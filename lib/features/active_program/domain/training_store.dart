@@ -42,6 +42,7 @@ class StoredSession {
     required this.unit,
     required this.sets,
     required this.isComplete,
+    required this.notes,
   });
 
   final String id;
@@ -50,6 +51,7 @@ class StoredSession {
   final WeightUnit unit;
   final List<StoredSet> sets;
   final bool isComplete;
+  final String notes;
 }
 
 class TrainingSnapshot {
@@ -76,6 +78,8 @@ abstract interface class TrainingStore {
   Future<void> completeSet(String setId, {required int repetitions});
 
   Future<void> finishSession(String sessionId);
+
+  Future<void> updateSessionNotes(String sessionId, String notes);
 
   Future<void> close();
 }

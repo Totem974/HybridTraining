@@ -212,6 +212,7 @@ class SqliteTrainingStore implements TrainingStore {
       scheduledFor: DateTime.parse(row['scheduled_for']! as String),
       unit: unit,
       isComplete: row['status'] == 'complete',
+      notes: row['notes']! as String,
       sets: [
         for (final set in setRows)
           StoredSet(
@@ -251,6 +252,18 @@ class SqliteTrainingStore implements TrainingStore {
       where: 'id = ?',
       whereArgs: [sessionId],
     );
+  }
+
+  @override
+  Future<void> updateSessionNotes(String sessionId, String notes) async {
+    final database = await localDatabase.open();
+    final updated = await database.update(
+      'training_sessions',
+      {'notes': notes},
+      where: 'id = ?',
+      whereArgs: [sessionId],
+    );
+    if (updated != 1) throw StateError('Session not found: $sessionId');
   }
 
   @override

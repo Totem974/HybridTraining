@@ -45,6 +45,11 @@ void main() {
       expect(generated.nextSession, isNotNull);
       expect(generated.nextSession!.sets, hasLength(8));
       expect(generated.nextSession!.sets.first.load, 125);
+      expect(generated.nextSession!.notes, isEmpty);
+      await first.updateSessionNotes(
+        generated.nextSession!.id,
+        'Séance fluide',
+      );
       for (final set in generated.nextSession!.sets) {
         await first.completeSet(set.id, repetitions: set.repetitions);
       }
@@ -64,6 +69,7 @@ void main() {
 
       expect(restored.displayName, 'Athlete Example');
       expect(restored.history, hasLength(1));
+      expect(restored.history.single.notes, 'Séance fluide');
       expect(
         restored.history.single.sets.every((set) => set.isComplete),
         isTrue,

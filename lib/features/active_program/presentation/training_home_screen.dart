@@ -10,12 +10,14 @@ class TrainingHomeScreen extends StatelessWidget {
     required this.snapshot,
     required this.onCompleteSet,
     required this.onFinishSession,
+    required this.onUpdateNotes,
     super.key,
   });
 
   final TrainingSnapshot snapshot;
   final Future<void> Function(String id, int repetitions) onCompleteSet;
   final Future<void> Function(String id) onFinishSession;
+  final Future<void> Function(String id, String notes) onUpdateNotes;
 
   @override
   Widget build(BuildContext context) {
@@ -108,6 +110,7 @@ class TrainingHomeScreen extends StatelessWidget {
           session: session,
           onCompleteSet: onCompleteSet,
           onFinishSession: onFinishSession,
+          onUpdateNotes: onUpdateNotes,
         ),
       ),
     );
@@ -168,12 +171,14 @@ class WorkoutDetailScreen extends StatelessWidget {
     required this.session,
     required this.onCompleteSet,
     required this.onFinishSession,
+    required this.onUpdateNotes,
     super.key,
   });
 
   final StoredSession session;
   final Future<void> Function(String id, int repetitions) onCompleteSet;
   final Future<void> Function(String id) onFinishSession;
+  final Future<void> Function(String id, String notes) onUpdateNotes;
 
   @override
   Widget build(BuildContext context) {
@@ -210,6 +215,7 @@ class WorkoutDetailScreen extends StatelessWidget {
                   session: session,
                   onCompleteSet: onCompleteSet,
                   onFinishSession: onFinishSession,
+                  onUpdateNotes: onUpdateNotes,
                 ),
               ),
             ),
@@ -265,12 +271,14 @@ class ActiveWorkoutScreen extends StatefulWidget {
     required this.session,
     required this.onCompleteSet,
     required this.onFinishSession,
+    required this.onUpdateNotes,
     super.key,
   });
 
   final StoredSession session;
   final Future<void> Function(String id, int repetitions) onCompleteSet;
   final Future<void> Function(String id) onFinishSession;
+  final Future<void> Function(String id, String notes) onUpdateNotes;
 
   @override
   State<ActiveWorkoutScreen> createState() => _ActiveWorkoutScreenState();
@@ -280,8 +288,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   late final List<bool> _completed = [
     for (final set in widget.session.sets) set.isComplete,
   ];
-  final _notes = TextEditingController();
+  late final TextEditingController _notes = TextEditingController(
+    text: widget.session.notes,
+  );
   Timer? _timer;
+  Timer? _notesDebounce;
   int _restSeconds = 0;
   bool _busy = false;
 
@@ -290,6 +301,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _notesDebounce?.cancel();
     _notes.dispose();
     super.dispose();
   }
@@ -362,6 +374,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: _notes,
+              onChanged: _scheduleNotesSave,
               maxLines: 3,
               decoration: InputDecoration(
                 labelText: strings.sessionNotes,
@@ -419,9 +432,18 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 
   Future<void> _finish() async {
     setState(() => _busy = true);
+    _notesDebounce?.cancel();
+    await widget.onUpdateNotes(widget.session.id, _notes.text);
     await widget.onFinishSession(widget.session.id);
     if (!mounted) return;
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  void _scheduleNotesSave(String notes) {
+    _notesDebounce?.cancel();
+    _notesDebounce = Timer(const Duration(milliseconds: 600), () {
+      widget.onUpdateNotes(widget.session.id, notes);
+    });
   }
 }
 
