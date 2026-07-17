@@ -38,6 +38,12 @@ void main() {
     expect(store.created?.oneRepMaxes, hasLength(4));
     expect(find.byKey(const Key('home-dashboard')), findsOneWidget);
     expect(find.text('Squat'), findsOneWidget);
+    await tester.tap(find.text('Modifier'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('increase-squat')));
+    await tester.tap(find.byKey(const Key('save-cycle-maxes')));
+    await tester.pumpAndSettle();
+    expect(store.updatedMaxes?[MainLift.squat], 92.5);
     await tester.tap(find.byKey(const Key('nav-1')));
     await tester.pumpAndSettle();
     expect(find.text('Statistiques'), findsOneWidget);
@@ -103,6 +109,7 @@ class _FakeTrainingStore implements TrainingStore {
   final completedSetIds = <String>[];
   final finishedSessionIds = <String>[];
   final savedNotes = <String>[];
+  Map<MainLift, double>? updatedMaxes;
 
   StoredSession get _session => StoredSession(
     id: 'session-1',
@@ -141,6 +148,12 @@ class _FakeTrainingStore implements TrainingStore {
     displayName: created?.displayName ?? 'Camille',
     nextSession: _sessionComplete ? null : _session,
     history: _sessionComplete ? [_session] : [],
+    trainingMaxes: const {
+      MainLift.squat: 90,
+      MainLift.benchPress: 80,
+      MainLift.deadlift: 100,
+      MainLift.overheadPress: 50,
+    },
   );
 
   @override
@@ -164,6 +177,11 @@ class _FakeTrainingStore implements TrainingStore {
 
   @override
   Future<void> setRestUntil(String sessionId, DateTime? restUntil) async {}
+
+  @override
+  Future<void> updateTrainingMaxes(Map<MainLift, double> trainingMaxes) async {
+    updatedMaxes = {...trainingMaxes};
+  }
 
   @override
   Future<void> finishSession(String sessionId) async {

@@ -15,6 +15,7 @@ class TrainingHomeScreen extends StatelessWidget {
     required this.onStartSession,
     required this.onRecordSet,
     required this.onSetRestUntil,
+    required this.onUpdateTrainingMaxes,
     super.key,
   });
 
@@ -26,6 +27,8 @@ class TrainingHomeScreen extends StatelessWidget {
   final Future<void> Function(String id, int repetitions, SetResult result)
   onRecordSet;
   final Future<void> Function(String id, DateTime? restUntil) onSetRestUntil;
+  final Future<void> Function(Map<MainLift, double> trainingMaxes)
+  onUpdateTrainingMaxes;
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +74,16 @@ class TrainingHomeScreen extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
-              TextButton(onPressed: null, child: Text(strings.edit)),
+              TextButton(
+                onPressed: () => _openPanel(
+                  context,
+                  _EditCyclePanel(
+                    initialMaxes: snapshot.trainingMaxes,
+                    onSave: onUpdateTrainingMaxes,
+                  ),
+                ),
+                child: Text(strings.edit),
+              ),
             ],
           ),
           Card(
@@ -432,6 +444,93 @@ class _SimplePanel extends StatelessWidget {
     appBar: AppBar(title: Text(title)),
     body: const SizedBox.shrink(),
   );
+}
+
+class _EditCyclePanel extends StatefulWidget {
+  const _EditCyclePanel({required this.initialMaxes, required this.onSave});
+
+  final Map<MainLift, double> initialMaxes;
+  final Future<void> Function(Map<MainLift, double> trainingMaxes) onSave;
+
+  @override
+  State<_EditCyclePanel> createState() => _EditCyclePanelState();
+}
+
+class _EditCyclePanelState extends State<_EditCyclePanel> {
+  late final Map<MainLift, double> _maxes = {...widget.initialMaxes};
+  bool _saving = false;
+
+  @override
+  Widget build(BuildContext context) {
+    const strings = AppStrings();
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(strings.editCycle),
+        actions: [
+          TextButton(
+            key: const Key('save-cycle-maxes'),
+            onPressed: _saving ? null : _save,
+            child: Text(strings.save),
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Text(strings.trainingMaxExplanation),
+          const SizedBox(height: 18),
+          for (final lift in MainLift.values)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: const Color(0x26F5821F),
+                      foregroundColor: const Color(0xFFF5821F),
+                      child: Text(_liftCode(lift)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(strings.lift(lift.name))),
+                    IconButton(
+                      key: Key('decrease-${lift.name}'),
+                      onPressed: () => _change(lift, -2.5),
+                      icon: const Icon(Icons.remove),
+                    ),
+                    Text(
+                      _load(_maxes[lift] ?? 0),
+                      key: Key('training-max-${lift.name}'),
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    IconButton(
+                      key: Key('increase-${lift.name}'),
+                      onPressed: () => _change(lift, 2.5),
+                      icon: const Icon(Icons.add),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _change(MainLift lift, double delta) {
+    setState(
+      () => _maxes[lift] = ((_maxes[lift] ?? 0) + delta).clamp(2.5, 999),
+    );
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    await widget.onSave(_maxes);
+    if (!mounted) return;
+    Navigator.of(context).pop();
+  }
 }
 
 class _HistoryPanel extends StatelessWidget {

@@ -49,6 +49,7 @@ void main() {
       expect(generated.nextSession!.sets, hasLength(8));
       expect(generated.nextSession!.sets.first.load, 125);
       expect(generated.nextSession!.notes, isEmpty);
+      expect(generated.trainingMaxes[MainLift.squat], 180);
       await first.startSession(generated.nextSession!.id);
       final restUntil = now.add(const Duration(minutes: 3));
       await first.setRestUntil(generated.nextSession!.id, restUntil);
@@ -74,6 +75,12 @@ void main() {
       expect(records, hasLength(1));
       expect(records.single['repetitions'], 3);
       await first.finishSession(generated.nextSession!.id);
+      await first.updateTrainingMaxes(const {
+        MainLift.squat: 180,
+        MainLift.benchPress: 100,
+        MainLift.deadlift: 200,
+        MainLift.overheadPress: 70,
+      });
       await first.close();
 
       final reopened = SqliteTrainingStore(
@@ -96,6 +103,8 @@ void main() {
       );
       expect(restored.nextSession?.lift, MainLift.benchPress);
       expect(restored.nextSession?.scheduledFor, DateTime(2026, 7, 22));
+      expect(restored.trainingMaxes[MainLift.benchPress], 100);
+      expect(restored.nextSession!.sets.first.load, 70);
     },
   );
 }

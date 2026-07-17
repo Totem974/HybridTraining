@@ -139,6 +139,10 @@ class AppStrings {
       : 'Indexed program, but its rules still need review before activation.';
   String get currentProgram => _fr ? 'Programme actuel' : 'Current program';
   String get comingSoon => _fr ? 'Bientôt disponible' : 'Coming soon';
+  String get save => _fr ? 'Enregistrer' : 'Save';
+  String get trainingMaxExplanation => _fr
+      ? 'Ajustez vos Training Max. Seules les séries futures non réalisées seront recalculées.'
+      : 'Adjust your Training Maxes. Only future unrecorded sets will be recalculated.';
 
   String lift(String id) => switch ((languageCode, id)) {
     (_, 'squat') => 'Squat',

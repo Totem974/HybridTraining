@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:hybrid_training/features/active_program/domain/training_store.dart';
+import 'package:hybrid_training/features/programs/domain/training_models.dart';
 
 enum FoundationState { loading, onboarding, ready, error }
 
@@ -60,6 +61,13 @@ class FoundationController extends ChangeNotifier {
 
   Future<void> setRestUntil(String id, DateTime? restUntil) async {
     await store.setRestUntil(id, restUntil);
+  }
+
+  Future<void> updateTrainingMaxes(Map<MainLift, double> trainingMaxes) async {
+    await _run(() async {
+      await store.updateTrainingMaxes(trainingMaxes);
+      snapshot = await store.loadSnapshot();
+    });
   }
 
   Future<void> finishSession(String id) async {

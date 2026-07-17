@@ -75,11 +75,13 @@ class TrainingSnapshot {
     required this.displayName,
     required this.nextSession,
     required this.history,
+    required this.trainingMaxes,
   });
 
   final String displayName;
   final StoredSession? nextSession;
   final List<StoredSession> history;
+  final Map<MainLift, double> trainingMaxes;
 }
 
 abstract interface class TrainingStore {
@@ -102,6 +104,8 @@ abstract interface class TrainingStore {
   });
 
   Future<void> setRestUntil(String sessionId, DateTime? restUntil);
+
+  Future<void> updateTrainingMaxes(Map<MainLift, double> trainingMaxes);
 
   Future<void> finishSession(String sessionId);
 

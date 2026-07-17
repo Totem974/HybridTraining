@@ -113,6 +113,7 @@ class _HybridTrainingAppState extends State<HybridTrainingApp> {
             onStartSession: controller.startSession,
             onRecordSet: controller.recordSet,
             onSetRestUntil: controller.setRestUntil,
+            onUpdateTrainingMaxes: controller.updateTrainingMaxes,
           ),
           FoundationState.error => Scaffold(
             body: Center(

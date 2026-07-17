@@ -207,6 +207,16 @@ class SqliteTrainingStore implements TrainingStore {
       where: "status = 'complete'",
       orderBy: 'completed_at DESC',
     );
+    final maxRows = await database.rawQuery(
+      '''SELECT tm.exercise_id, tm.training_max
+         FROM training_max_history tm
+         JOIN (
+           SELECT exercise_id, MAX(effective_at) AS effective_at
+           FROM training_max_history
+           GROUP BY exercise_id
+         ) latest ON latest.exercise_id = tm.exercise_id
+                 AND latest.effective_at = tm.effective_at''',
+    );
     return TrainingSnapshot(
       displayName: profiles.single['display_name']! as String,
       nextSession: planned.isEmpty
@@ -215,7 +225,63 @@ class SqliteTrainingStore implements TrainingStore {
       history: [
         for (final row in historyRows) await _session(database, row, unit),
       ],
+      trainingMaxes: {
+        for (final row in maxRows)
+          MainLift.values.byName(row['exercise_id']! as String):
+              (row['training_max']! as num).toDouble(),
+      },
     );
+  }
+
+  @override
+  Future<void> updateTrainingMaxes(Map<MainLift, double> trainingMaxes) async {
+    if (trainingMaxes.length != MainLift.values.length ||
+        trainingMaxes.values.any((value) => value <= 0)) {
+      throw ArgumentError('Four positive training maxes are required.');
+    }
+    final database = await localDatabase.open();
+    final profiles = await database.query('athlete_profiles', limit: 1);
+    if (profiles.isEmpty) throw StateError('No local profile exists.');
+    final profile = profiles.single;
+    final unit = profile['preferred_unit']! as String;
+    final increment = (profile['rounding_increment']! as num).toDouble();
+    final rounder = LoadRounder(increment: increment);
+    final now = _clock().toUtc();
+    await database.transaction((transaction) async {
+      for (final entry in trainingMaxes.entries) {
+        await transaction.insert('training_max_history', {
+          'id': 'tm-edit-${entry.key.name}-${now.microsecondsSinceEpoch}',
+          'athlete_id': _athleteId,
+          'exercise_id': entry.key.name,
+          'one_rep_max': entry.value / 0.9,
+          'training_max': entry.value,
+          'unit': unit,
+          'effective_at': now.toIso8601String(),
+        });
+        final futureSets = await transaction.rawQuery(
+          '''SELECT ts.id, ts.percentage
+             FROM training_sets ts
+             JOIN training_sessions s ON s.id = ts.session_id
+             WHERE ts.lift_id = ? AND ts.result IS NULL
+               AND s.status != 'complete' ''',
+          [entry.key.name],
+        );
+        for (final set in futureSets) {
+          final percentage = (set['percentage']! as num).toDouble();
+          final unrounded = entry.value * percentage;
+          await transaction.update(
+            'training_sets',
+            {
+              'training_max': entry.value,
+              'unrounded_load': unrounded,
+              'prescribed_load': rounder.nearest(unrounded),
+            },
+            where: 'id = ?',
+            whereArgs: [set['id']],
+          );
+        }
+      }
+    });
   }
 
   Future<StoredSession> _session(
