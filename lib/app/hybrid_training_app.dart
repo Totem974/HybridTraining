@@ -41,7 +41,24 @@ class _HybridTrainingAppState extends State<HybridTrainingApp> {
       debugShowCheckedModeBanner: widget.environment.detailedLogging,
       title: widget.environment.displayName,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF42566F)),
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF6FA8DC),
+          brightness: Brightness.dark,
+        ),
+        scaffoldBackgroundColor: const Color(0xFF111512),
+        cardTheme: const CardThemeData(
+          color: Color(0xFF303431),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(22)),
+          ),
+        ),
+        inputDecorationTheme: const InputDecorationTheme(
+          filled: true,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+          ),
+        ),
         useMaterial3: true,
       ),
       home: ListenableBuilder(

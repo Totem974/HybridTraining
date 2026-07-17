@@ -17,12 +17,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Créer votre profil local'), findsOneWidget);
+    expect(find.text('Votre profil'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('profile-name')), 'Camille');
     for (final lift in MainLift.values) {
       await tester.enterText(find.byKey(Key('max-${lift.name}')), '100');
     }
-    await tester.ensureVisible(find.byKey(const Key('create-cycle')));
+    for (var step = 0; step < 3; step++) {
+      await tester.tap(find.byKey(const Key('continue')));
+      await tester.pumpAndSettle();
+    }
     await tester.tap(find.byKey(const Key('create-cycle')));
     await tester.pumpAndSettle();
 
