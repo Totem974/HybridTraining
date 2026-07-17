@@ -157,3 +157,23 @@ Résultats : dépôt de départ nettoyé, `kevin` à jour et branche
 `rebuild/base0-foundation` créée. Flutter, Dart, l'analyse et les tests ne sont pas
 encore vérifiables dans le bac à sable, car `flutter` et `dart` n'y sont pas dans le
 `PATH`.
+
+## Mise à jour après l'audit initial
+
+Le 17 juillet 2026, Flutter stable `3.44.6` et Dart `3.12.2` ont été installés dans
+`D:\SDK\flutter`. Les plugins Flutter et Dart sont installés dans Android Studio.
+Le squelette Android natif a été remplacé par un projet Flutter Android/iOS généré
+avec le CLI officiel.
+
+Vérifications supplémentaires réussies :
+
+```powershell
+flutter pub get
+flutter analyze
+flutter test
+flutter build apk --debug --flavor dev -t lib/main_dev.dart
+flutter build apk --debug --flavor prod -t lib/main_prod.dart
+```
+
+Les APK vérifiés utilisent respectivement `fr.totem974.hybridtraining.dev` et
+`fr.totem974.hybridtraining`.
