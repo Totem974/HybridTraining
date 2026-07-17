@@ -3,9 +3,10 @@
 Hybrid 5/3/1 est une application Flutter locale de programmation et de suivi
 d'entraînement 5/3/1. Android est la plateforme prioritaire.
 
-La Base0 fournit une première tranche locale : création du profil, choix kg/lb,
-saisie des quatre 1RM, génération d'un cycle Original 5/3/1 + First Set Last,
-validation des séries et historique persistant.
+La Base0 fournit une tranche locale complète : onboarding, choix kg/lb,
+planification 3 ou 4 jours, cycle Original 5/3/1 + First Set Last, séance guidée,
+AMRAP, repos, notes, records, historique, calcul de plaques et modification des
+Training Max. L'interface suit la maquette locale validée par le propriétaire.
 
 ## Prérequis Windows
 
@@ -88,9 +89,9 @@ La base SQLite est stockée dans l'espace privé de chaque flavor Android. Dev e
 prod ont donc des données séparées. Désinstaller l'application ou effacer son
 stockage Android supprime cette base.
 
-Le format de sauvegarde JSON versionné et le pipeline d'import sont préparés, mais
-l'écran d'export n'est pas encore présent. Tant qu'il ne l'est pas, il n'existe pas
-encore de procédure de sauvegarde grand public.
+Le format de sauvegarde JSON versionné et le pipeline d'import sont préparés,
+mais l'écran d'export n'est pas encore présent. Il n'existe donc pas encore de
+procédure de sauvegarde grand public.
 
 Les références locales sous `.SOURCE/` ne sont pas des données de l'application et
 ne doivent jamais être ajoutées à Git.
@@ -135,7 +136,15 @@ Utiliser `D:\SDK\flutter`, sans ajouter `\bin` dans ce champ.
 ## Limites Base0
 
 - seul Original 5/3/1 + First Set Last est automatisé ;
-- l'assistance est conservée comme concept mais pas encore saisissable ;
-- pas encore d'écran d'export/import, de chronomètre, notifications ou graphiques ;
+- échauffement et assistance attendent la validation de leurs règles exactes ;
+- pas encore d'écran d'export/import ni de notifications locales ;
+- les statistiques avancées et graphiques restent informatifs ;
+- la bibliothèque expose les programmes indexés, mais seul Original + FSL est activable ;
 - le sélecteur anglais n'est pas encore exposé ;
 - l'import de l'ancienne application attend un export anonymisé.
+
+## Java utilisé par Android
+
+Gradle exige Java 17 ou plus récent. Dans Android Studio, sélectionner le JDK
+embarqué (`jbr`) dans **Settings > Build Tools > Gradle > Gradle JDK**. Une
+session PowerShell configurée sur Java 8 ne peut pas exécuter le test Android.

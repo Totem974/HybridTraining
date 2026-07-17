@@ -26,24 +26,36 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    for (var step = 0; step < 3; step++) {
+      await tester.tap(find.byKey(const Key('continue')));
+      await tester.pumpAndSettle();
+    }
     await tester.enterText(find.byKey(const Key('profile-name')), 'Test local');
     for (final lift in MainLift.values) {
       await tester.enterText(find.byKey(Key('max-${lift.name}')), '100');
     }
-    await tester.ensureVisible(find.byKey(const Key('create-cycle')));
+    for (var step = 0; step < 2; step++) {
+      await tester.tap(find.byKey(const Key('continue')));
+      await tester.pumpAndSettle();
+    }
     await tester.tap(find.byKey(const Key('create-cycle')));
     await tester.pumpAndSettle();
 
-    while (find.text('Fait').evaluate().isNotEmpty) {
-      await tester.tap(find.text('Fait').first);
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open-workout')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('start-workout')));
+    await tester.pumpAndSettle();
+
+    for (var set = 0; set < 8; set++) {
+      await tester.ensureVisible(find.byKey(const Key('complete-current-set')));
+      await tester.tap(find.byKey(const Key('complete-current-set')));
+      await tester.pump(const Duration(milliseconds: 100));
+      if (find.text('Passer le repos').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Passer le repos'));
+        await tester.pump(const Duration(milliseconds: 100));
+      }
     }
     await tester.ensureVisible(find.byKey(const Key('finish-session')));
-    await tester.drag(
-      find.byKey(const Key('workout-session')),
-      const Offset(0, -120),
-    );
-    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('finish-session')));
     await tester.pumpAndSettle();
 
