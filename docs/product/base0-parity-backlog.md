@@ -9,6 +9,8 @@
 - validation des séries, fin de séance et historique SQLite ;
 - estimation de 1RM, progression de TM et calcul exact de disques testés ;
 - schéma SQLite v1, format de sauvegarde v1 et pipeline d'import ;
+- panneau Configuration avec export JSON, simulation/import atomique et
+  effacement confirmé des données ;
 - catalogues initiaux et matrice des captures.
 - parcours POC en quatre étapes, tableau de bord et séance guidée ;
 - progression de série persistée, repos local et notes de séance sauvegardées.
@@ -19,7 +21,7 @@
 
 | Priorité | Tranche | Éléments principaux |
 |---:|---|---|
-| 1 | Sauvegarde et migration | écran export/import, partage de fichier, rapport, échantillon historique anonymisé |
+| 1 | Sauvegarde et migration | partage natif du fichier et échantillon historique anonymisé |
 | 2 | Séance complète | échauffement et assistance à valider, réglage des temps de repos et inventaire de plaques dans l'interface |
 | 3 | Profil et TM | édition, estimation dans l'UI, historique, progression de fin de cycle |
 | 4 | Salles et disques | CRUD salles/barres/disques, calcul depuis inventaire |

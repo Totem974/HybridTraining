@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:hybrid_training/features/active_program/domain/training_store.dart';
+import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
 
 enum FoundationState { loading, onboarding, ready, error }
@@ -68,6 +69,25 @@ class FoundationController extends ChangeNotifier {
       await store.updateTrainingMaxes(trainingMaxes);
       snapshot = await store.loadSnapshot();
     });
+  }
+
+  Future<String> exportBackup() => store.exportBackup();
+
+  Future<ImportReport> importBackup(
+    String source, {
+    required bool dryRun,
+  }) async {
+    final report = await store.importBackup(source, dryRun: dryRun);
+    if (report.applied) await initialize();
+    return report;
+  }
+
+  Future<void> deleteAllData() async {
+    await store.deleteAllData();
+    await store.initialize();
+    snapshot = null;
+    state = FoundationState.onboarding;
+    notifyListeners();
   }
 
   Future<void> finishSession(String id) async {

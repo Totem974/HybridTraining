@@ -81,7 +81,7 @@ Le format d'export enveloppe les données :
 
 ```json
 {
-  "format": "hybrid-training-export",
+  "format": "hybrid-training-backup",
   "schemaVersion": 1,
   "exportedAt": "2026-07-17T00:00:00Z",
   "appVersion": "0.1.0",
@@ -89,8 +89,10 @@ Le format d'export enveloppe les données :
 }
 ```
 
-La détection d'un import précède son décodage. Un adaptateur historique ne sera
-implémenté qu'après réception d'un export réel anonymisé.
+La détection et la validation d'un import précèdent toute écriture. L'interface
+impose une simulation avec rapport avant confirmation, puis remplace les tables
+dans une transaction atomique. Un adaptateur historique ne sera implémenté
+qu'après réception d'un export réel anonymisé.
 
 ## Localisation et unités
 

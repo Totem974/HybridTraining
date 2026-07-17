@@ -1,4 +1,5 @@
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
+import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 
 class FoundationProfileInput {
   const FoundationProfileInput({
@@ -106,6 +107,12 @@ abstract interface class TrainingStore {
   Future<void> setRestUntil(String sessionId, DateTime? restUntil);
 
   Future<void> updateTrainingMaxes(Map<MainLift, double> trainingMaxes);
+
+  Future<String> exportBackup();
+
+  Future<ImportReport> importBackup(String source, {required bool dryRun});
+
+  Future<void> deleteAllData();
 
   Future<void> finishSession(String sessionId);
 

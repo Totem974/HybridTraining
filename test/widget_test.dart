@@ -4,6 +4,7 @@ import 'package:hybrid_training/app/bootstrap/app_environment.dart';
 import 'package:hybrid_training/app/hybrid_training_app.dart';
 import 'package:hybrid_training/features/active_program/domain/training_store.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
+import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 
 void main() {
   testWidgets('creates a local profile and displays the first session', (
@@ -57,6 +58,13 @@ void main() {
     await tester.tap(find.byKey(const Key('nav-4')));
     await tester.pumpAndSettle();
     expect(find.text('Réglages'), findsWidgets);
+    await tester.tap(find.byKey(const Key('export-data')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('export-json')), findsOneWidget);
+    Navigator.of(tester.element(find.byType(AlertDialog))).pop();
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
+    await tester.ensureVisible(find.text('Gérer mon programme'));
     await tester.tap(find.text('Gérer mon programme'));
     await tester.pumpAndSettle();
     expect(find.text('Bibliothèque'), findsOneWidget);
@@ -95,6 +103,44 @@ void main() {
     expect(find.text('Aucune séance planifiée.'), findsOneWidget);
     expect(find.text('Squat'), findsOneWidget);
     expect(tester.widgetList(find.byType(Banner)), isEmpty);
+  });
+
+  testWidgets('simulates import and confirms complete data deletion', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final store = _FakeTrainingStore(hasExistingProfile: true);
+    await tester.pumpWidget(
+      HybridTrainingApp(environment: AppEnvironment.dev, store: store),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('import-data')));
+    await tester.tap(find.byKey(const Key('import-data')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('import-json')),
+      '{"format":"hybrid-training-backup"}',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('simulate-import')));
+    await tester.pumpAndSettle();
+    expect(find.text('Sauvegarde valide'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('apply-import')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('home-dashboard')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('delete-data')));
+    await tester.tap(find.byKey(const Key('delete-data')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-delete-data')));
+    await tester.pumpAndSettle();
+    expect(find.text('Introduction'), findsOneWidget);
   });
 }
 
@@ -181,6 +227,26 @@ class _FakeTrainingStore implements TrainingStore {
   @override
   Future<void> updateTrainingMaxes(Map<MainLift, double> trainingMaxes) async {
     updatedMaxes = {...trainingMaxes};
+  }
+
+  @override
+  Future<String> exportBackup() async =>
+      '{"format":"hybrid-training-backup","schemaVersion":1}';
+
+  @override
+  Future<ImportReport> importBackup(
+    String source, {
+    required bool dryRun,
+  }) async => ImportReport(
+    dryRun: dryRun,
+    applied: !dryRun,
+    sourceFormat: 'hybrid-training-backup',
+    issues: const [],
+  );
+
+  @override
+  Future<void> deleteAllData() async {
+    _hasProfile = false;
   }
 
   @override

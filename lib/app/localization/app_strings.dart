@@ -143,6 +143,24 @@ class AppStrings {
   String get trainingMaxExplanation => _fr
       ? 'Ajustez vos Training Max. Seules les séries futures non réalisées seront recalculées.'
       : 'Adjust your Training Maxes. Only future unrecorded sets will be recalculated.';
+  String get data => _fr ? 'DONNÉES' : 'DATA';
+  String get exportData => _fr ? 'Exporter les données' : 'Export data';
+  String get importData => _fr ? 'Importer les données' : 'Import data';
+  String get deleteData => _fr ? 'Effacer les données' : 'Delete data';
+  String get exportReady => _fr ? 'Sauvegarde prête' : 'Backup ready';
+  String get copyJson => _fr ? 'Copier le JSON' : 'Copy JSON';
+  String get importInstructions => _fr
+      ? 'Collez une sauvegarde Hybrid 5/3/1. La simulation est obligatoire avant import.'
+      : 'Paste a Hybrid 5/3/1 backup. A dry run is required before import.';
+  String get simulateImport => _fr ? 'Simuler l’import' : 'Dry run';
+  String get applyImport => _fr ? 'Importer maintenant' : 'Import now';
+  String get importInvalid => _fr ? 'Import impossible' : 'Import invalid';
+  String get importValid => _fr ? 'Sauvegarde valide' : 'Backup valid';
+  String get deleteDataWarning => _fr
+      ? 'Cette action efface définitivement le profil, les cycles, les séances et les records locaux.'
+      : 'This permanently deletes the local profile, cycles, workouts, and records.';
+  String get cancel => _fr ? 'Annuler' : 'Cancel';
+  String get delete => _fr ? 'Effacer' : 'Delete';
 
   String lift(String id) => switch ((languageCode, id)) {
     (_, 'squat') => 'Squat',

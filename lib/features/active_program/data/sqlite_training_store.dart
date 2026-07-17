@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:hybrid_training/core/database/local_database.dart';
 import 'package:hybrid_training/features/active_program/domain/training_store.dart';
+import 'package:hybrid_training/features/import_export/data/sqlite_backup_manager.dart';
+import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 import 'package:hybrid_training/features/programs/domain/load_rounding.dart';
 import 'package:hybrid_training/features/programs/domain/original_fsl_program.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
@@ -17,6 +19,9 @@ class SqliteTrainingStore implements TrainingStore {
 
   final LocalDatabase localDatabase;
   final DateTime Function() _clock;
+
+  SqliteBackupManager get _backupManager =>
+      SqliteBackupManager(localDatabase: localDatabase, clock: _clock);
 
   @override
   Future<void> initialize() async {
@@ -461,6 +466,17 @@ class SqliteTrainingStore implements TrainingStore {
 
   @override
   Future<void> close() => localDatabase.close();
+
+  @override
+  Future<String> exportBackup() =>
+      _backupManager.exportBackup(appVersion: '0.1.0');
+
+  @override
+  Future<ImportReport> importBackup(String source, {required bool dryRun}) =>
+      _backupManager.importBackup(source, dryRun: dryRun);
+
+  @override
+  Future<void> deleteAllData() => _backupManager.deleteAllData();
 
   String _dateOnly(DateTime date) => date.toIso8601String().substring(0, 10);
 }

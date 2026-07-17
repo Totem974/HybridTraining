@@ -89,9 +89,10 @@ La base SQLite est stockée dans l'espace privé de chaque flavor Android. Dev e
 prod ont donc des données séparées. Désinstaller l'application ou effacer son
 stockage Android supprime cette base.
 
-Le format de sauvegarde JSON versionné et le pipeline d'import sont préparés,
-mais l'écran d'export n'est pas encore présent. Il n'existe donc pas encore de
-procédure de sauvegarde grand public.
+Le panneau Réglages permet d'exporter toutes les données au format JSON
+versionné, de copier cette sauvegarde, de simuler puis confirmer sa
+réimportation, et d'effacer toutes les données après confirmation. L'import est
+validé avant écriture et le remplacement de la base est atomique.
 
 Les références locales sous `.SOURCE/` ne sont pas des données de l'application et
 ne doivent jamais être ajoutées à Git.
@@ -137,7 +138,8 @@ Utiliser `D:\SDK\flutter`, sans ajouter `\bin` dans ce champ.
 
 - seul Original 5/3/1 + First Set Last est automatisé ;
 - échauffement et assistance attendent la validation de leurs règles exactes ;
-- pas encore d'écran d'export/import ni de notifications locales ;
+- l'export/import utilise pour l'instant un copier-coller JSON, sans partage de
+  fichier natif ; les notifications locales ne sont pas encore actives ;
 - les statistiques avancées et graphiques restent informatifs ;
 - la bibliothèque expose les programmes indexés, mais seul Original + FSL est activable ;
 - le sélecteur anglais n'est pas encore exposé ;

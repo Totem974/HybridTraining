@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hybrid_training/app/localization/app_strings.dart';
 import 'package:hybrid_training/features/active_program/domain/training_store.dart';
 import 'package:hybrid_training/features/gyms/domain/plate_calculator.dart';
+import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
 
 class TrainingHomeScreen extends StatelessWidget {
@@ -16,6 +18,9 @@ class TrainingHomeScreen extends StatelessWidget {
     required this.onRecordSet,
     required this.onSetRestUntil,
     required this.onUpdateTrainingMaxes,
+    required this.onExportBackup,
+    required this.onImportBackup,
+    required this.onDeleteAllData,
     super.key,
   });
 
@@ -29,6 +34,10 @@ class TrainingHomeScreen extends StatelessWidget {
   final Future<void> Function(String id, DateTime? restUntil) onSetRestUntil;
   final Future<void> Function(Map<MainLift, double> trainingMaxes)
   onUpdateTrainingMaxes;
+  final Future<String> Function() onExportBackup;
+  final Future<ImportReport> Function(String source, {required bool dryRun})
+  onImportBackup;
+  final Future<void> Function() onDeleteAllData;
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +135,16 @@ class TrainingHomeScreen extends StatelessWidget {
           } else if (index == 3) {
             _openPanel(context, _ProfilePanel(snapshot: snapshot));
           } else if (index == 4) {
-            _openPanel(context, const _SettingsPanel());
+            _openPanel(
+              context,
+              _SettingsPanel(
+                snapshot: snapshot,
+                onUpdateTrainingMaxes: onUpdateTrainingMaxes,
+                onExportBackup: onExportBackup,
+                onImportBackup: onImportBackup,
+                onDeleteAllData: onDeleteAllData,
+              ),
+            );
           }
         },
       ),
@@ -386,11 +404,28 @@ class _ProfilePanel extends StatelessWidget {
 }
 
 class _SettingsPanel extends StatelessWidget {
-  const _SettingsPanel();
+  const _SettingsPanel({
+    required this.snapshot,
+    required this.onUpdateTrainingMaxes,
+    required this.onExportBackup,
+    required this.onImportBackup,
+    required this.onDeleteAllData,
+  });
+
+  final TrainingSnapshot snapshot;
+  final Future<void> Function(Map<MainLift, double> trainingMaxes)
+  onUpdateTrainingMaxes;
+  final Future<String> Function() onExportBackup;
+  final Future<ImportReport> Function(String source, {required bool dryRun})
+  onImportBackup;
+  final Future<void> Function() onDeleteAllData;
 
   @override
   Widget build(BuildContext context) {
     const strings = AppStrings();
+    final unit =
+        snapshot.nextSession?.unit ??
+        (snapshot.history.isEmpty ? null : snapshot.history.first.unit);
     return Scaffold(
       appBar: AppBar(title: Text(strings.settings)),
       body: ListView(
@@ -403,12 +438,13 @@ class _SettingsPanel extends StatelessWidget {
               children: [
                 ListTile(
                   title: Text(strings.units),
-                  trailing: const Text('kg'),
+                  trailing: Text(unit == WeightUnit.pounds ? 'lb' : 'kg'),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   title: Text(strings.notifications),
-                  trailing: const Icon(Icons.chevron_right),
+                  subtitle: Text(strings.comingSoon),
+                  trailing: const Icon(Icons.notifications_off_outlined),
                 ),
               ],
             ),
@@ -423,7 +459,54 @@ class _SettingsPanel extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const _ProgramLibraryPanel()),
             ),
           ),
-          _PanelTile(icon: Icons.tune, label: strings.editCycle),
+          _PanelTile(
+            icon: Icons.tune,
+            label: strings.editCycle,
+            onTap: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (_) => _EditCyclePanel(
+                  initialMaxes: snapshot.trainingMaxes,
+                  onSave: onUpdateTrainingMaxes,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(strings.data, style: _sectionStyle),
+          const SizedBox(height: 8),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  key: const Key('export-data'),
+                  leading: const Icon(Icons.ios_share),
+                  title: Text(strings.exportData),
+                  onTap: () => _showExport(context),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  key: const Key('import-data'),
+                  leading: const Icon(Icons.file_download_outlined),
+                  title: Text(strings.importData),
+                  onTap: () => Navigator.of(context).push<void>(
+                    MaterialPageRoute(
+                      builder: (_) => _ImportPanel(onImport: onImportBackup),
+                    ),
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  key: const Key('delete-data'),
+                  leading: const Icon(Icons.delete_outline, color: Colors.red),
+                  title: Text(
+                    strings.deleteData,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  onTap: () => _confirmDelete(context),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: _AppBottomBar(
@@ -431,6 +514,157 @@ class _SettingsPanel extends StatelessWidget {
         onSelected: (index) => _panelNavigation(context, index),
       ),
     );
+  }
+
+  Future<void> _showExport(BuildContext context) async {
+    const strings = AppStrings();
+    final source = await onExportBackup();
+    if (!context.mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(strings.exportReady),
+        content: SizedBox(
+          width: 520,
+          child: TextField(
+            key: const Key('export-json'),
+            controller: TextEditingController(text: source),
+            readOnly: true,
+            maxLines: 10,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: source));
+              if (context.mounted) Navigator.of(context).pop();
+            },
+            child: Text(strings.copyJson),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    const strings = AppStrings();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(strings.deleteData),
+        content: Text(strings.deleteDataWarning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(strings.cancel),
+          ),
+          FilledButton(
+            key: const Key('confirm-delete-data'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(strings.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await onDeleteAllData();
+    if (context.mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
+  }
+}
+
+class _ImportPanel extends StatefulWidget {
+  const _ImportPanel({required this.onImport});
+
+  final Future<ImportReport> Function(String source, {required bool dryRun})
+  onImport;
+
+  @override
+  State<_ImportPanel> createState() => _ImportPanelState();
+}
+
+class _ImportPanelState extends State<_ImportPanel> {
+  final _source = TextEditingController();
+  ImportReport? _report;
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _source.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const strings = AppStrings();
+    final report = _report;
+    final hasError =
+        report?.issues.any((issue) => issue.severity == ImportSeverity.error) ??
+        true;
+    return Scaffold(
+      appBar: AppBar(title: Text(strings.importData)),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Text(strings.importInstructions),
+          const SizedBox(height: 12),
+          TextField(
+            key: const Key('import-json'),
+            controller: _source,
+            minLines: 8,
+            maxLines: 14,
+            onChanged: (_) => setState(() => _report = null),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            key: const Key('simulate-import'),
+            onPressed: _busy || _source.text.trim().isEmpty
+                ? null
+                : () => _run(dryRun: true),
+            child: Text(strings.simulateImport),
+          ),
+          if (report != null) ...[
+            const SizedBox(height: 12),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hasError ? strings.importInvalid : strings.importValid,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    for (final issue in report.issues)
+                      Text('${issue.path} — ${issue.message}'),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              key: const Key('apply-import'),
+              onPressed: _busy || hasError ? null : () => _run(dryRun: false),
+              child: Text(strings.applyImport),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _run({required bool dryRun}) async {
+    setState(() => _busy = true);
+    final report = await widget.onImport(_source.text, dryRun: dryRun);
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _report = report;
+    });
+    if (report.applied && mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
   }
 }
 

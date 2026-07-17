@@ -114,6 +114,9 @@ class _HybridTrainingAppState extends State<HybridTrainingApp> {
             onRecordSet: controller.recordSet,
             onSetRestUntil: controller.setRestUntil,
             onUpdateTrainingMaxes: controller.updateTrainingMaxes,
+            onExportBackup: controller.exportBackup,
+            onImportBackup: controller.importBackup,
+            onDeleteAllData: controller.deleteAllData,
           ),
           FoundationState.error => Scaffold(
             body: Center(

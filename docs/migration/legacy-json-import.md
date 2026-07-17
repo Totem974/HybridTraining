@@ -21,6 +21,11 @@ Une fixture manifestement fictive, `test/fixtures/fictitious_import_v1.json`,
 teste ce parcours. Elle n'est pas présentée comme compatible avec l'ancienne
 application.
 
+Le format natif `hybrid-training-backup` version 1 est, lui, entièrement pris en
+charge dans Réglages : export, validation, simulation avec rapport, import
+atomique et effacement confirmé. Seule la compatibilité avec l'ancienne
+application reste bloquée par l'absence d'échantillon.
+
 ## Échantillon nécessaire
 
 Fournir une copie anonymisée d'un export original contenant, si possible :
@@ -49,4 +54,3 @@ ajouter l'échantillon réel au dépôt Git.
 
 Le format d'export propre à Hybrid Training est `hybrid-training-backup`, version
 1, avec `format`, `schemaVersion`, `exportedAt`, `appVersion` et `payload`.
-

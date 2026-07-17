@@ -17,7 +17,9 @@ Le POC permet de créer un profil local, choisir kg/lb, saisir les quatre
 mouvements, choisir une date et une fréquence, générer un cycle, exécuter une
 séance, saisir l'AMRAP, réussir/échouer/sauter une série, reprendre un repos,
 enregistrer des notes et records, terminer la séance et retrouver l'historique
-après réouverture. Les Training Max et séries futures sont modifiables.
+après réouverture. Les Training Max et séries futures sont modifiables. Le
+panneau Configuration permet aussi l'export JSON, la simulation et l'import
+atomique d'une sauvegarde, ainsi que l'effacement confirmé des données locales.
 
 ## Dépendances principales
 
@@ -33,7 +35,7 @@ Les justifications détaillées figurent dans `docs/architecture/dependencies.md
 - `flutter pub get` : réussi ;
 - `dart format` : réussi ;
 - `flutter analyze` : aucune erreur ;
-- `flutter test` : 23 tests réussis ;
+- `flutter test` : 23 tests unitaires et 3 tests d'interface réussis ;
 - ascendance depuis `kevin` : confirmée ;
 - références protégées suivies par Git : aucune détectée.
 
@@ -60,7 +62,7 @@ anonymisé. Les règles d'échauffement et d'assistance non confirmées restent
 
 ## Prochaines phases après le POC
 
-1. écran d'import/export JSON et échantillon historique anonymisé ;
+1. partage natif du fichier de sauvegarde et échantillon historique anonymisé ;
 2. salles, barres et inventaires de plaques configurables ;
 3. notifications locales ;
 4. localisation ARB avec sélecteur français/anglais ;
