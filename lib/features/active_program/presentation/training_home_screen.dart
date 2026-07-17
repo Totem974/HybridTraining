@@ -35,11 +35,10 @@ class TrainingHomeScreen extends StatelessWidget {
         title: const Text('HYBRID 5/3/1'),
         actions: [
           IconButton(
-            tooltip: strings.settings,
-            onPressed: () => ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(strings.settingsComingSoon))),
-            icon: const Icon(Icons.settings),
+            tooltip: strings.notifications,
+            onPressed: () =>
+                _openPanel(context, _SimplePanel(title: strings.notifications)),
+            icon: const Icon(Icons.notifications_none),
           ),
         ],
       ),
@@ -47,11 +46,8 @@ class TrainingHomeScreen extends StatelessWidget {
         key: const Key('home-dashboard'),
         padding: const EdgeInsets.all(20),
         children: [
-          Text(
-            '${strings.hello} ${snapshot.displayName}',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 28),
+          Text(_date(context, DateTime.now()), textAlign: TextAlign.center),
+          const SizedBox(height: 18),
           Text(strings.thisWeek, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           if (snapshot.nextSession case final session?)
@@ -108,8 +104,26 @@ class TrainingHomeScreen extends StatelessWidget {
               ),
         ],
       ),
+      bottomNavigationBar: _AppBottomBar(
+        selectedIndex: 0,
+        onSelected: (index) {
+          if (index == 2 && snapshot.nextSession != null) {
+            _openWorkout(context, snapshot.nextSession!);
+          } else if (index == 1) {
+            _openPanel(context, _StatsPanel(snapshot: snapshot));
+          } else if (index == 3) {
+            _openPanel(context, _ProfilePanel(snapshot: snapshot));
+          } else if (index == 4) {
+            _openPanel(context, const _SettingsPanel());
+          }
+        },
+      ),
     );
   }
+
+  Future<void> _openPanel(BuildContext context, Widget panel) => Navigator.of(
+    context,
+  ).push<void>(MaterialPageRoute(builder: (_) => panel));
 
   Future<void> _openWorkout(BuildContext context, StoredSession session) async {
     await Navigator.of(context).push<void>(
@@ -139,7 +153,7 @@ class _NextWorkoutCard extends StatelessWidget {
     const strings = AppStrings();
     final main = session.sets.where((set) => set.kind == SetKind.main).last;
     return Card(
-      color: Theme.of(context).colorScheme.primaryContainer,
+      color: Theme.of(context).colorScheme.primary,
       child: InkWell(
         key: const Key('open-workout'),
         borderRadius: BorderRadius.circular(22),
@@ -150,6 +164,8 @@ class _NextWorkoutCard extends StatelessWidget {
             children: [
               const CircleAvatar(
                 radius: 34,
+                backgroundColor: Color(0x26000000),
+                foregroundColor: Color(0xFF1A0E00),
                 child: Icon(Icons.fitness_center, size: 32),
               ),
               const SizedBox(width: 18),
@@ -175,6 +191,252 @@ class _NextWorkoutCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _AppBottomBar extends StatelessWidget {
+  const _AppBottomBar({required this.selectedIndex, required this.onSelected});
+
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    top: false,
+    child: Container(
+      height: 68,
+      decoration: const BoxDecoration(
+        color: Color(0xFF0F0F0F),
+        border: Border(top: BorderSide(color: Color(0x18FFFFFF))),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _item(context, 0, Icons.home_rounded),
+          _item(context, 1, Icons.bar_chart_rounded),
+          IconButton.filled(
+            key: const Key('quick-workout'),
+            onPressed: () => onSelected(2),
+            style: IconButton.styleFrom(
+              backgroundColor: const Color(0xFFF5821F),
+              foregroundColor: const Color(0xFF1A0E00),
+              minimumSize: const Size(46, 46),
+            ),
+            icon: const Icon(Icons.add),
+          ),
+          _item(context, 3, Icons.person_rounded),
+          _item(context, 4, Icons.settings_rounded),
+        ],
+      ),
+    ),
+  );
+
+  Widget _item(BuildContext context, int index, IconData icon) => IconButton(
+    key: Key('nav-$index'),
+    onPressed: () => onSelected(index),
+    color: selectedIndex == index
+        ? const Color(0xFFF2F1EE)
+        : const Color(0x73F2F1EE),
+    icon: Icon(icon),
+  );
+}
+
+class _StatsPanel extends StatelessWidget {
+  const _StatsPanel({required this.snapshot});
+
+  final TrainingSnapshot snapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    const strings = AppStrings();
+    return Scaffold(
+      appBar: AppBar(title: Text(strings.statistics)),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _MetricCard(
+                  value: '${snapshot.history.length}',
+                  label: strings.sessions,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _MetricCard(
+                  value: snapshot.nextSession == null ? '✓' : '1',
+                  label: strings.cycleWeek,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Text(strings.recordsComingFromWorkouts),
+        ],
+      ),
+      bottomNavigationBar: _AppBottomBar(
+        selectedIndex: 1,
+        onSelected: (index) => _panelNavigation(context, index),
+      ),
+    );
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  const _MetricCard({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Text(value, style: Theme.of(context).textTheme.headlineMedium),
+          Text(label),
+        ],
+      ),
+    ),
+  );
+}
+
+class _ProfilePanel extends StatelessWidget {
+  const _ProfilePanel({required this.snapshot});
+
+  final TrainingSnapshot snapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    const strings = AppStrings();
+    final initials = snapshot.displayName
+        .split(' ')
+        .where((part) => part.isNotEmpty)
+        .take(2)
+        .map((part) => part[0].toUpperCase())
+        .join();
+    return Scaffold(
+      appBar: AppBar(title: Text(strings.profile)),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: const Color(0xFFF5821F),
+                foregroundColor: const Color(0xFF1A0E00),
+                child: Text(initials),
+              ),
+              const SizedBox(width: 14),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    snapshot.displayName,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  Text(strings.foundationProgram),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _PanelTile(icon: Icons.history, label: strings.history),
+          _PanelTile(icon: Icons.bar_chart, label: strings.statistics),
+          _PanelTile(icon: Icons.tune, label: strings.editLoads),
+          _PanelTile(icon: Icons.settings, label: strings.settings),
+        ],
+      ),
+      bottomNavigationBar: _AppBottomBar(
+        selectedIndex: 3,
+        onSelected: (index) => _panelNavigation(context, index),
+      ),
+    );
+  }
+}
+
+class _SettingsPanel extends StatelessWidget {
+  const _SettingsPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    const strings = AppStrings();
+    return Scaffold(
+      appBar: AppBar(title: Text(strings.settings)),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Text(strings.preferences, style: _sectionStyle),
+          const SizedBox(height: 8),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  title: Text(strings.units),
+                  trailing: const Text('kg'),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  title: Text(strings.notifications),
+                  trailing: const Icon(Icons.chevron_right),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(strings.program, style: _sectionStyle),
+          const SizedBox(height: 8),
+          _PanelTile(icon: Icons.menu_book, label: strings.manageProgram),
+          _PanelTile(icon: Icons.tune, label: strings.editCycle),
+        ],
+      ),
+      bottomNavigationBar: _AppBottomBar(
+        selectedIndex: 4,
+        onSelected: (index) => _panelNavigation(context, index),
+      ),
+    );
+  }
+}
+
+class _SimplePanel extends StatelessWidget {
+  const _SimplePanel({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(title)),
+    body: const SizedBox.shrink(),
+  );
+}
+
+class _PanelTile extends StatelessWidget {
+  const _PanelTile({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: ListTile(
+      leading: Icon(icon, color: const Color(0xFFF5821F)),
+      title: Text(label),
+      trailing: const Icon(Icons.chevron_right),
+    ),
+  );
+}
+
+const _sectionStyle = TextStyle(
+  color: Color(0xFFF5821F),
+  fontSize: 11,
+  fontWeight: FontWeight.w700,
+  letterSpacing: 1.2,
+);
+
+void _panelNavigation(BuildContext context, int index) {
+  if (index == 0) Navigator.of(context).popUntil((route) => route.isFirst);
 }
 
 class WorkoutDetailScreen extends StatelessWidget {
@@ -367,7 +629,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             const SizedBox(height: 16),
             if (current != null)
               Card(
-                color: Theme.of(context).colorScheme.primaryContainer,
+                color: Theme.of(context).colorScheme.surface,
                 child: Padding(
                   padding: const EdgeInsets.all(28),
                   child: Column(

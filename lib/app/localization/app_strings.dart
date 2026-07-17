@@ -90,6 +90,20 @@ class AppStrings {
   String get noExactPlateLoad => _fr
       ? 'Charge exacte indisponible avec les plaques par défaut.'
       : 'Exact load unavailable with the default plates.';
+  String get notifications => _fr ? 'Notifications' : 'Notifications';
+  String get statistics => _fr ? 'Statistiques' : 'Statistics';
+  String get sessions => _fr ? 'séances' : 'workouts';
+  String get cycleWeek => _fr ? 'semaine cycle' : 'cycle week';
+  String get recordsComingFromWorkouts => _fr
+      ? 'Les statistiques détaillées apparaîtront au fil des séances enregistrées.'
+      : 'Detailed statistics will appear as workouts are recorded.';
+  String get profile => _fr ? 'Profil' : 'Profile';
+  String get editLoads => _fr ? 'Modifier mes charges' : 'Edit my loads';
+  String get preferences => _fr ? 'PRÉFÉRENCES' : 'PREFERENCES';
+  String get units => _fr ? 'Unités' : 'Units';
+  String get program => _fr ? 'PROGRAMME' : 'PROGRAM';
+  String get manageProgram => _fr ? 'Gérer mon programme' : 'Manage my program';
+  String get editCycle => _fr ? 'Modifier le cycle' : 'Edit cycle';
 
   String lift(String id) => switch ((languageCode, id)) {
     (_, 'squat') => 'Squat',

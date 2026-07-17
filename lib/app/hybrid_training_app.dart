@@ -42,21 +42,56 @@ class _HybridTrainingAppState extends State<HybridTrainingApp> {
       title: widget.environment.displayName,
       theme: ThemeData(
         brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6FA8DC),
-          brightness: Brightness.dark,
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFFF5821F),
+          onPrimary: Color(0xFF1A0E00),
+          secondary: Color(0xFF3ECB6A),
+          onSecondary: Color(0xFF06210F),
+          surface: Color(0xFF171716),
+          onSurface: Color(0xFFF2F1EE),
+          error: Color(0xFFE2503B),
         ),
-        scaffoldBackgroundColor: const Color(0xFF111512),
+        scaffoldBackgroundColor: const Color(0xFF0B0B0C),
         cardTheme: const CardThemeData(
-          color: Color(0xFF303431),
+          color: Color(0xFF171716),
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(22)),
+            borderRadius: BorderRadius.all(Radius.circular(16)),
+          ),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF0B0B0C),
+          foregroundColor: Color(0xFFF2F1EE),
+          elevation: 0,
+          centerTitle: false,
+          titleTextStyle: TextStyle(
+            color: Color(0xFFF5821F),
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        navigationBarTheme: const NavigationBarThemeData(
+          backgroundColor: Color(0xFF0F0F0F),
+          indicatorColor: Color(0x33F5821F),
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF3ECB6A),
+            foregroundColor: const Color(0xFF06210F),
+            minimumSize: const Size(0, 52),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            textStyle: const TextStyle(fontWeight: FontWeight.w800),
           ),
         ),
         inputDecorationTheme: const InputDecorationTheme(
           filled: true,
+          fillColor: Color(0xFF171716),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(14)),
+            borderSide: BorderSide(color: Color(0x18FFFFFF)),
           ),
         ),
         useMaterial3: true,

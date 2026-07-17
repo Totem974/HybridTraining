@@ -33,6 +33,19 @@ void main() {
     expect(store.created?.oneRepMaxes, hasLength(4));
     expect(find.byKey(const Key('home-dashboard')), findsOneWidget);
     expect(find.text('Squat'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('nav-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('Statistiques'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-3')));
+    await tester.pumpAndSettle();
+    expect(find.text('Profil'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    expect(find.text('Réglages'), findsWidgets);
   });
 
   testWidgets('records a set, finishes a session and shows history', (
