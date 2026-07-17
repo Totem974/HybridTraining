@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:hybrid_training/app/localization/app_strings.dart';
 import 'package:hybrid_training/features/active_program/domain/training_store.dart';
@@ -18,118 +20,414 @@ class TrainingHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const strings = AppStrings();
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Hybrid 5/3/1 — ${snapshot.displayName}'),
-          bottom: TabBar(
-            tabs: [
-              Tab(text: strings.workout),
-              Tab(text: strings.history),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('HYBRID 5/3/1'),
+        actions: [
+          IconButton(
+            tooltip: strings.settings,
+            onPressed: () => ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(strings.settingsComingSoon))),
+            icon: const Icon(Icons.settings),
+          ),
+        ],
+      ),
+      body: ListView(
+        key: const Key('home-dashboard'),
+        padding: const EdgeInsets.all(20),
+        children: [
+          Text(
+            '${strings.hello} ${snapshot.displayName}',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 28),
+          Text(strings.thisWeek, style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 12),
+          if (snapshot.nextSession case final session?)
+            _NextWorkoutCard(
+              session: session,
+              onOpen: () => _openWorkout(context, session),
+            )
+          else
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(strings.noSession),
+              ),
+            ),
+          const SizedBox(height: 28),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  strings.currentCycle,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              TextButton(onPressed: null, child: Text(strings.edit)),
             ],
           ),
-        ),
-        body: TabBarView(
-          children: [
-            _WorkoutTab(
-              session: snapshot.nextSession,
-              onCompleteSet: onCompleteSet,
-              onFinishSession: onFinishSession,
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    strings.foundationProgram,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(strings.cycleDescription),
+                ],
+              ),
             ),
-            _HistoryTab(history: snapshot.history),
-          ],
+          ),
+          const SizedBox(height: 28),
+          Text(strings.history, style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          if (snapshot.history.isEmpty)
+            Text(strings.noHistory)
+          else
+            for (final session in snapshot.history)
+              ListTile(
+                leading: const Icon(Icons.check_circle),
+                title: Text(strings.lift(session.lift.name)),
+                subtitle: Text(_date(context, session.scheduledFor)),
+              ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openWorkout(BuildContext context, StoredSession session) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => WorkoutDetailScreen(
+          session: session,
+          onCompleteSet: onCompleteSet,
+          onFinishSession: onFinishSession,
         ),
       ),
     );
   }
 }
 
-class _WorkoutTab extends StatelessWidget {
-  const _WorkoutTab({
+class _NextWorkoutCard extends StatelessWidget {
+  const _NextWorkoutCard({required this.session, required this.onOpen});
+
+  final StoredSession session;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    const strings = AppStrings();
+    final main = session.sets.where((set) => set.kind == SetKind.main).last;
+    return Card(
+      color: Theme.of(context).colorScheme.primaryContainer,
+      child: InkWell(
+        key: const Key('open-workout'),
+        borderRadius: BorderRadius.circular(22),
+        onTap: onOpen,
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Row(
+            children: [
+              const CircleAvatar(
+                radius: 34,
+                child: Icon(Icons.fitness_center, size: 32),
+              ),
+              const SizedBox(width: 18),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_date(context, session.scheduledFor)),
+                    Text(
+                      strings.lift(session.lift.name),
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    Text(
+                      '${strings.topSet}: ${_load(main.load)} ${_unit(session.unit)} × ${main.repetitions}${main.isPerformanceSet ? '+' : ''}',
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class WorkoutDetailScreen extends StatelessWidget {
+  const WorkoutDetailScreen({
     required this.session,
     required this.onCompleteSet,
     required this.onFinishSession,
+    super.key,
   });
 
-  final StoredSession? session;
+  final StoredSession session;
   final Future<void> Function(String id, int repetitions) onCompleteSet;
   final Future<void> Function(String id) onFinishSession;
 
   @override
   Widget build(BuildContext context) {
     const strings = AppStrings();
-    final current = session;
-    if (current == null) return Center(child: Text(strings.noSession));
-    final unit = current.unit == WeightUnit.kilograms ? 'kg' : 'lb';
-    final allDone = current.sets.every((set) => set.isComplete);
-    return ListView(
-      key: const Key('workout-session'),
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text(
-          strings.lift(current.lift.name),
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        Text(current.scheduledFor.toIso8601String().substring(0, 10)),
-        const SizedBox(height: 16),
-        for (final set in current.sets)
-          Card(
-            child: ListTile(
-              leading: Icon(
-                set.isComplete
-                    ? Icons.check_circle
-                    : Icons.radio_button_unchecked,
-              ),
-              title: Text(
-                '${set.load.toStringAsFixed(set.load % 1 == 0 ? 0 : 1)} $unit × ${set.repetitions}${set.isPerformanceSet ? '+' : ''}',
-              ),
-              subtitle: Text(
-                set.kind == SetKind.main
-                    ? 'Travail principal'
-                    : 'First Set Last',
-              ),
-              trailing: set.isComplete
-                  ? null
-                  : TextButton(
-                      key: Key('complete-${set.id}'),
-                      onPressed: () => onCompleteSet(set.id, set.repetitions),
-                      child: Text(strings.done),
-                    ),
-            ),
+    final main = session.sets.where((set) => set.kind == SetKind.main);
+    final supplemental = session.sets.where(
+      (set) => set.kind == SetKind.supplemental,
+    );
+    return Scaffold(
+      appBar: AppBar(title: Text(strings.workout)),
+      body: ListView(
+        key: const Key('workout-session'),
+        padding: const EdgeInsets.all(20),
+        children: [
+          Text(
+            strings.lift(session.lift.name),
+            style: Theme.of(context).textTheme.headlineMedium,
           ),
-        const SizedBox(height: 12),
-        FilledButton(
-          key: const Key('finish-session'),
-          onPressed: allDone ? () => onFinishSession(current.id) : null,
-          child: Text(strings.finishSession),
-        ),
-      ],
+          Text(_date(context, session.scheduledFor)),
+          const SizedBox(height: 24),
+          _SetSection(title: strings.mainSets, sets: main, unit: session.unit),
+          const SizedBox(height: 20),
+          _SetSection(
+            title: strings.firstSetLast,
+            sets: supplemental,
+            unit: session.unit,
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            key: const Key('start-workout'),
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (_) => ActiveWorkoutScreen(
+                  session: session,
+                  onCompleteSet: onCompleteSet,
+                  onFinishSession: onFinishSession,
+                ),
+              ),
+            ),
+            icon: const Icon(Icons.play_arrow),
+            label: Text(strings.startWorkout),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _HistoryTab extends StatelessWidget {
-  const _HistoryTab({required this.history});
+class _SetSection extends StatelessWidget {
+  const _SetSection({
+    required this.title,
+    required this.sets,
+    required this.unit,
+  });
 
-  final List<StoredSession> history;
+  final String title;
+  final Iterable<StoredSet> sets;
+  final WeightUnit unit;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(title, style: Theme.of(context).textTheme.titleLarge),
+      const SizedBox(height: 8),
+      Card(
+        child: Column(
+          children: [
+            for (final set in sets)
+              ListTile(
+                leading: Icon(
+                  set.isComplete
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                ),
+                title: Text(
+                  '${_load(set.load)} ${_unit(unit)} × ${set.repetitions}${set.isPerformanceSet ? '+' : ''}',
+                ),
+              ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+class ActiveWorkoutScreen extends StatefulWidget {
+  const ActiveWorkoutScreen({
+    required this.session,
+    required this.onCompleteSet,
+    required this.onFinishSession,
+    super.key,
+  });
+
+  final StoredSession session;
+  final Future<void> Function(String id, int repetitions) onCompleteSet;
+  final Future<void> Function(String id) onFinishSession;
+
+  @override
+  State<ActiveWorkoutScreen> createState() => _ActiveWorkoutScreenState();
+}
+
+class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
+  late final List<bool> _completed = [
+    for (final set in widget.session.sets) set.isComplete,
+  ];
+  final _notes = TextEditingController();
+  Timer? _timer;
+  int _restSeconds = 0;
+  bool _busy = false;
+
+  int get _currentIndex => _completed.indexWhere((done) => !done);
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _notes.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     const strings = AppStrings();
-    if (history.isEmpty) return Center(child: Text(strings.noHistory));
-    return ListView(
-      key: const Key('history-list'),
-      children: [
-        for (final session in history)
-          ListTile(
-            leading: const Icon(Icons.check_circle),
-            title: Text(strings.lift(session.lift.name)),
-            subtitle: Text(
-              session.scheduledFor.toIso8601String().substring(0, 10),
+    final index = _currentIndex;
+    final finished = index == -1;
+    final current = finished ? null : widget.session.sets[index];
+    return Scaffold(
+      appBar: AppBar(title: Text(strings.activeWorkout)),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Text(
+              finished ? strings.workoutComplete : strings.next,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineMedium,
             ),
-          ),
-      ],
+            const SizedBox(height: 16),
+            if (current != null)
+              Card(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(28),
+                  child: Column(
+                    children: [
+                      Text(
+                        current.kind == SetKind.main
+                            ? strings.mainSets
+                            : strings.firstSetLast,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        strings.lift(widget.session.lift.name),
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        '${_load(current.load)} ${_unit(widget.session.unit)}  ×  ${current.repetitions}${current.isPerformanceSet ? '+' : ''}',
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (_restSeconds > 0) ...[
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Text(strings.rest),
+                      Text(
+                        _duration(_restSeconds),
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
+                      TextButton(
+                        onPressed: () => setState(() => _restSeconds = 0),
+                        child: Text(strings.skipRest),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            TextField(
+              controller: _notes,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: strings.sessionNotes,
+                prefixIcon: const Icon(Icons.notes),
+              ),
+            ),
+            const SizedBox(height: 20),
+            FilledButton(
+              key: Key(finished ? 'finish-session' : 'complete-current-set'),
+              onPressed: _busy
+                  ? null
+                  : finished
+                  ? _finish
+                  : _complete,
+              child: Text(
+                finished ? strings.finishSession : strings.setComplete,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '${_completed.where((done) => done).length}/${_completed.length} ${strings.setsCompleted}',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
+
+  Future<void> _complete() async {
+    final index = _currentIndex;
+    if (index < 0) return;
+    setState(() => _busy = true);
+    final set = widget.session.sets[index];
+    await widget.onCompleteSet(set.id, set.repetitions);
+    if (!mounted) return;
+    setState(() {
+      _completed[index] = true;
+      _busy = false;
+      if (_currentIndex != -1) _restSeconds = 180;
+    });
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted || _restSeconds <= 0) {
+        timer.cancel();
+      } else {
+        setState(() => _restSeconds--);
+      }
+    });
+  }
+
+  Future<void> _finish() async {
+    setState(() => _busy = true);
+    await widget.onFinishSession(widget.session.id);
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
 }
+
+String _load(double value) => value.toStringAsFixed(value % 1 == 0 ? 0 : 1);
+String _unit(WeightUnit unit) => unit == WeightUnit.kilograms ? 'kg' : 'lb';
+String _date(BuildContext context, DateTime date) =>
+    MaterialLocalizations.of(context).formatMediumDate(date);
+String _duration(int seconds) =>
+    '${(seconds ~/ 60).toString().padLeft(2, '0')}:${(seconds % 60).toString().padLeft(2, '0')}';

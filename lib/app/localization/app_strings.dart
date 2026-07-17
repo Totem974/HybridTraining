@@ -55,6 +55,29 @@ class AppStrings {
       ? 'Votre premier cycle est prêt à être créé.'
       : 'Your first cycle is ready to be created.';
   String get frequency => _fr ? 'Jours par semaine' : 'Days per week';
+  String get settings => _fr ? 'Réglages' : 'Settings';
+  String get settingsComingSoon => _fr
+      ? 'Les réglages arrivent dans le prochain lot.'
+      : 'Settings are coming in the next batch.';
+  String get hello => _fr ? 'Bonjour' : 'Hello';
+  String get thisWeek => _fr ? 'Cette semaine' : 'This week';
+  String get currentCycle => _fr ? 'Cycle en cours' : 'Current cycle';
+  String get edit => _fr ? 'Modifier' : 'Edit';
+  String get cycleDescription => _fr
+      ? 'Cycle local de trois semaines · progression sauvegardée automatiquement.'
+      : 'Local three-week cycle · progress saved automatically.';
+  String get topSet => _fr ? 'Série max' : 'Top set';
+  String get mainSets => _fr ? 'Séries principales' : 'Main sets';
+  String get firstSetLast => 'First Set Last';
+  String get startWorkout => _fr ? 'Commencer' : 'Start';
+  String get activeWorkout => _fr ? 'Séance en cours' : 'Active workout';
+  String get next => _fr ? 'Suivant' : 'Next';
+  String get workoutComplete => _fr ? 'Séance terminée' : 'Workout complete';
+  String get rest => _fr ? 'Repos' : 'Rest';
+  String get skipRest => _fr ? 'Passer le repos' : 'Skip rest';
+  String get sessionNotes => _fr ? 'Notes de séance' : 'Workout notes';
+  String get setComplete => _fr ? 'Série terminée' : 'Set complete';
+  String get setsCompleted => _fr ? 'séries terminées' : 'sets completed';
 
   String lift(String id) => switch ((languageCode, id)) {
     (_, 'squat') => 'Squat',

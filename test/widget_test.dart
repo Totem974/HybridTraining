@@ -31,7 +31,7 @@ void main() {
 
     expect(store.created?.displayName, 'Camille');
     expect(store.created?.oneRepMaxes, hasLength(4));
-    expect(find.byKey(const Key('workout-session')), findsOneWidget);
+    expect(find.byKey(const Key('home-dashboard')), findsOneWidget);
     expect(find.text('Squat'), findsOneWidget);
   });
 
@@ -44,16 +44,19 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Fait'));
+    await tester.tap(find.byKey(const Key('open-workout')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('start-workout')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('complete-current-set')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('finish-session')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Historique'));
     await tester.pumpAndSettle();
 
     expect(store.completedSetIds, ['set-1']);
     expect(store.finishedSessionIds, ['session-1']);
-    expect(find.byKey(const Key('history-list')), findsOneWidget);
+    expect(find.text('Aucune séance planifiée.'), findsOneWidget);
+    expect(find.text('Squat'), findsOneWidget);
     expect(tester.widgetList(find.byType(Banner)), isEmpty);
   });
 }
