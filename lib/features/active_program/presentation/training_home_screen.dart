@@ -343,8 +343,24 @@ class _ProfilePanel extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          _PanelTile(icon: Icons.history, label: strings.history),
-          _PanelTile(icon: Icons.bar_chart, label: strings.statistics),
+          _PanelTile(
+            icon: Icons.history,
+            label: strings.history,
+            onTap: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (_) => _HistoryPanel(history: snapshot.history),
+              ),
+            ),
+          ),
+          _PanelTile(
+            icon: Icons.bar_chart,
+            label: strings.statistics,
+            onTap: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(
+                builder: (_) => _StatsPanel(snapshot: snapshot),
+              ),
+            ),
+          ),
           _PanelTile(icon: Icons.tune, label: strings.editLoads),
           _PanelTile(icon: Icons.settings, label: strings.settings),
         ],
@@ -388,7 +404,13 @@ class _SettingsPanel extends StatelessWidget {
           const SizedBox(height: 20),
           Text(strings.program, style: _sectionStyle),
           const SizedBox(height: 8),
-          _PanelTile(icon: Icons.menu_book, label: strings.manageProgram),
+          _PanelTile(
+            icon: Icons.menu_book,
+            label: strings.manageProgram,
+            onTap: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(builder: (_) => const _ProgramLibraryPanel()),
+            ),
+          ),
           _PanelTile(icon: Icons.tune, label: strings.editCycle),
         ],
       ),
@@ -412,11 +434,194 @@ class _SimplePanel extends StatelessWidget {
   );
 }
 
+class _HistoryPanel extends StatelessWidget {
+  const _HistoryPanel({required this.history});
+
+  final List<StoredSession> history;
+
+  @override
+  Widget build(BuildContext context) {
+    const strings = AppStrings();
+    return Scaffold(
+      appBar: AppBar(title: Text(strings.history)),
+      body: history.isEmpty
+          ? Center(child: Text(strings.noHistory))
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: history.length,
+              itemBuilder: (context, index) {
+                final session = history[index];
+                return Card(
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: const Color(0x26F5821F),
+                      foregroundColor: const Color(0xFFF5821F),
+                      child: Text(_liftCode(session.lift)),
+                    ),
+                    title: Text(strings.lift(session.lift.name)),
+                    subtitle: Text(_date(context, session.scheduledFor)),
+                    trailing: const Icon(
+                      Icons.check_circle,
+                      color: Color(0xFF3ECB6A),
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
+
+class _ProgramLibraryPanel extends StatefulWidget {
+  const _ProgramLibraryPanel();
+
+  @override
+  State<_ProgramLibraryPanel> createState() => _ProgramLibraryPanelState();
+}
+
+class _ProgramLibraryPanelState extends State<_ProgramLibraryPanel> {
+  int _generation = 0;
+
+  static const _programs = [
+    _ProgramPreview(
+      name: 'Original 5/3/1 + First Set Last',
+      generation: 0,
+      page: 'Forever · PDF 180–181',
+      ready: true,
+    ),
+    _ProgramPreview(
+      name: 'Boring But Big',
+      generation: 0,
+      page: 'Forever · PDF 57',
+    ),
+    _ProgramPreview(
+      name: 'Full Body (1000% Awesome)',
+      generation: 0,
+      page: 'Forever · PDF 86',
+    ),
+    _ProgramPreview(
+      name: '5/3/1 Beyond',
+      generation: 1,
+      page: 'Catalogue indexé',
+    ),
+    _ProgramPreview(
+      name: '5/3/1 Classic',
+      generation: 2,
+      page: 'Catalogue indexé',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    const strings = AppStrings();
+    final visible = _programs.where((item) => item.generation == _generation);
+    return Scaffold(
+      appBar: AppBar(title: Text(strings.library)),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Text(strings.libraryDescription),
+          const SizedBox(height: 16),
+          SegmentedButton<int>(
+            segments: const [
+              ButtonSegment(value: 0, label: Text('Forever')),
+              ButtonSegment(value: 1, label: Text('Beyond')),
+              ButtonSegment(value: 2, label: Text('Classic')),
+            ],
+            selected: {_generation},
+            onSelectionChanged: (value) =>
+                setState(() => _generation = value.single),
+          ),
+          const SizedBox(height: 16),
+          for (final program in visible)
+            Card(
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(16),
+                title: Text(
+                  program.name,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                subtitle: Text(program.page),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push<void>(
+                  MaterialPageRoute(
+                    builder: (_) => _ProgramDetailPanel(program: program),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProgramDetailPanel extends StatelessWidget {
+  const _ProgramDetailPanel({required this.program});
+
+  final _ProgramPreview program;
+
+  @override
+  Widget build(BuildContext context) {
+    const strings = AppStrings();
+    return Scaffold(
+      appBar: AppBar(title: Text(strings.programDetails)),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              program.name,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 12),
+            Text(program.page),
+            const SizedBox(height: 20),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  program.ready
+                      ? strings.programRulesValidated
+                      : strings.programRulesNeedReview,
+                ),
+              ),
+            ),
+            const Spacer(),
+            FilledButton(
+              onPressed: null,
+              child: Text(
+                program.ready ? strings.currentProgram : strings.comingSoon,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProgramPreview {
+  const _ProgramPreview({
+    required this.name,
+    required this.generation,
+    required this.page,
+    this.ready = false,
+  });
+
+  final String name;
+  final int generation;
+  final String page;
+  final bool ready;
+}
+
 class _PanelTile extends StatelessWidget {
-  const _PanelTile({required this.icon, required this.label});
+  const _PanelTile({required this.icon, required this.label, this.onTap});
 
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) => Card(
@@ -424,6 +629,7 @@ class _PanelTile extends StatelessWidget {
       leading: Icon(icon, color: const Color(0xFFF5821F)),
       title: Text(label),
       trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
     ),
   );
 }
@@ -881,3 +1087,9 @@ String _date(BuildContext context, DateTime date) =>
     MaterialLocalizations.of(context).formatMediumDate(date);
 String _duration(int seconds) =>
     '${(seconds ~/ 60).toString().padLeft(2, '0')}:${(seconds % 60).toString().padLeft(2, '0')}';
+String _liftCode(MainLift lift) => switch (lift) {
+  MainLift.squat => 'SQ',
+  MainLift.benchPress => 'BP',
+  MainLift.deadlift => 'DL',
+  MainLift.overheadPress => 'OP',
+};

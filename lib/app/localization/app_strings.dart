@@ -104,6 +104,19 @@ class AppStrings {
   String get program => _fr ? 'PROGRAMME' : 'PROGRAM';
   String get manageProgram => _fr ? 'Gérer mon programme' : 'Manage my program';
   String get editCycle => _fr ? 'Modifier le cycle' : 'Edit cycle';
+  String get library => _fr ? 'Bibliothèque' : 'Library';
+  String get libraryDescription => _fr
+      ? 'Liste des programmes indexés. Seules les règles vérifiées sont activables.'
+      : 'Indexed programs. Only verified rules can be enabled.';
+  String get programDetails => _fr ? 'Fiche détaillée' : 'Program details';
+  String get programRulesValidated => _fr
+      ? 'Les règles de ce programme sont validées et utilisées par le POC.'
+      : 'This program rules are validated and used by the POC.';
+  String get programRulesNeedReview => _fr
+      ? 'Programme indexé, mais ses règles doivent encore être vérifiées avant activation.'
+      : 'Indexed program, but its rules still need review before activation.';
+  String get currentProgram => _fr ? 'Programme actuel' : 'Current program';
+  String get comingSoon => _fr ? 'Bientôt disponible' : 'Coming soon';
 
   String lift(String id) => switch ((languageCode, id)) {
     (_, 'squat') => 'Squat',

@@ -46,6 +46,12 @@ void main() {
     await tester.tap(find.byKey(const Key('nav-4')));
     await tester.pumpAndSettle();
     expect(find.text('Réglages'), findsWidgets);
+    await tester.tap(find.text('Gérer mon programme'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bibliothèque'), findsOneWidget);
+    await tester.tap(find.text('Original 5/3/1 + First Set Last'));
+    await tester.pumpAndSettle();
+    expect(find.text('Programme actuel'), findsOneWidget);
   });
 
   testWidgets('records a set, finishes a session and shows history', (

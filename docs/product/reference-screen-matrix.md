@@ -5,9 +5,10 @@
 Le prototype local `.SOURCE/GUI Amélioration app 531` définit désormais la
 direction visuelle du POC : fond `#0B0B0C`, surfaces `#171716`, identité orange
 `#F5821F`, actions validantes vertes `#3ECB6A` et navigation basse à cinq
-entrées. Le thème, l'accueil, la séance, les statistiques, le profil et les
-réglages suivent cette direction. Les panneaux nécessitant encore des données
-métier (bibliothèque et modification complète du cycle) restent progressifs.
+entrées. Le thème, l'accueil, la séance, les statistiques, le profil, les
+réglages, l'historique et la bibliothèque informative suivent cette direction.
+La modification complète du cycle reste progressive tant que ses écritures
+métier ne sont pas disponibles.
 
 Les captures locales regroupent un générateur web, des maquettes et une application
 Android observée. Elles guident le comportement seulement : aucun code, logo,
