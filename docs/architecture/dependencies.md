@@ -1,32 +1,35 @@
 # Dépendances
 
-Les versions exactes seront verrouillées dans `pubspec.lock` après génération avec
-le SDK Flutter installé. Aucune version n'est inventée tant que la résolution réelle
-n'a pas été exécutée.
+Versions résolues le 17 juillet 2026 avec Flutter 3.44.6 et Dart 3.12.2.
+`pubspec.lock` verrouille les versions transitives exactes.
 
-## Choix prévus
+| Dépendance directe | Version | Portée | Justification |
+|---|---:|---|---|
+| Flutter SDK | 3.44.6 | application | UI Android/iOS et outils officiels |
+| `cupertino_icons` | 1.0.8 | application | icônes Flutter générées avec le projet ; utilisation limitée |
+| `sqflite` | 2.4.3 | application | SQLite Android/iOS, transactions et migrations sans générateur supplémentaire |
+| `flutter_lints` | 6.0.0 | développement | règles statiques officielles Flutter |
+| `sqflite_common_ffi` | 2.4.2 | tests | base SQLite réelle sous Windows pour tester schéma et réouverture |
+| `integration_test` | SDK Flutter | tests | parcours réel sur Android fourni par Flutter |
 
-| Dépendance | Rôle | Justification |
-| --- | --- | --- |
-| Flutter SDK | Interface et services Android/iOS | Plateforme demandée pour le produit. |
-| `flutter_riverpod` | État et injection | Contrôleurs explicites, remplaçables dans les tests, sans conteneur DI supplémentaire. |
-| `go_router` | Navigation déclarative | Routes et redirections testables adaptées à l'onboarding et au programme actif. |
-| `drift` | SQLite typé et migrations | Requêtes typées, transactions et stratégie de migration vérifiable. |
-| `sqlite3_flutter_libs` | Moteur SQLite mobile | Fournit SQLite aux plateformes Flutter prises en charge par Drift. |
-| `path_provider` | Emplacement de la base et des exports | Évite les chemins locaux codés en dur. |
-| `json_annotation` et `json_serializable` | JSON fortement typé | Contrats versionnés et erreurs de décodage explicites. |
-| `build_runner` | Génération contrôlée | Génère les adaptateurs Drift et JSON de façon reproductible. |
-| `intl` et `flutter_localizations` | Français, anglais et formats locaux | Outils officiels de localisation Flutter. |
+## Choix d'architecture associés
 
-## Dépendances volontairement évitées au départ
+- L'état Base0 repose sur un `ChangeNotifier` injecté : aucun package de gestion
+  d'état n'est encore nécessaire.
+- La navigation Base0 n'a que deux états racine et deux onglets : aucun routeur
+  externe n'est justifié à ce stade.
+- Les contrats JSON sont petits et validés explicitement : pas de génération de
+  code avant que le format historique soit connu.
+- `sqflite` a été préféré à un ORM pour garder la première migration lisible et
+  limiter les dépendances. Les accès restent derrière `TrainingStore`.
 
-- framework d'architecture global ;
-- service locator en plus du conteneur d'état ;
-- client HTTP, authentification ou SDK cloud ;
-- Firebase, analytics, publicité ou suivi ;
-- bibliothèque de graphiques avant la tranche qui en a réellement besoin ;
-- bibliothèque d'achat ou paywall ;
-- package interne séparé pour chaque couche.
+## Dépendances volontairement absentes
 
-Chaque ajout futur doit documenter son besoin, sa maintenance, sa licence, son
-impact plateforme et l'alternative standard qui a été écartée.
+- réseau, compte, cloud, Firebase, analytics, publicité ;
+- achat ou paywall ;
+- service locator ou conteneur d'injection ;
+- graphique, notifications et tâches d'arrière-plan avant leur tranche dédiée ;
+- bibliothèque de navigation avant que le graphe d'écrans le nécessite.
+
+Chaque ajout futur doit documenter besoin, maintenance, licence, impact plateforme
+et alternative standard écartée.

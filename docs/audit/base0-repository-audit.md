@@ -177,3 +177,22 @@ flutter build apk --debug --flavor prod -t lib/main_prod.dart
 
 Les APK vérifiés utilisent respectivement `fr.totem974.hybridtraining.dev` et
 `fr.totem974.hybridtraining`.
+
+## Mise à jour de fin de Base0
+
+La branche contient désormais une base SQLite v1, un moteur Dart pur pour Original
+5/3/1 + FSL, un profil local, la génération de douze séances, l'enregistrement des
+séries et un historique persistant. Le parcours d'intégration a été exécuté sur un
+émulateur Android 16. Un téléphone Android 13 était également détecté sans fil.
+
+Vérifications finales ajoutées :
+
+```powershell
+dart format --set-exit-if-changed .
+flutter analyze
+flutter test
+flutter test integration_test/app_flow_test.dart -d emulator-5554 --flavor dev
+```
+
+L'import historique demeure bloqué uniquement par l'absence d'un export réel
+anonymisé. Les autres programmes indexés ne sont pas déclarés implémentés.

@@ -3,9 +3,9 @@
 Hybrid 5/3/1 est une application Flutter locale de programmation et de suivi
 d'entraînement 5/3/1. Android est la plateforme prioritaire.
 
-Base0 est en cours de construction. Les flavors Android, les identifiants et la
-fondation Flutter fonctionnent. Le profil, la base locale et les séances ne sont pas
-encore disponibles dans cette première étape.
+La Base0 fournit une première tranche locale : création du profil, choix kg/lb,
+saisie des quatre 1RM, génération d'un cycle Original 5/3/1 + First Set Last,
+validation des séries et historique persistant.
 
 ## Prérequis Windows
 
@@ -70,6 +70,7 @@ flutter pub get
 dart format --set-exit-if-changed .
 flutter analyze
 flutter test
+flutter test integration_test -d <identifiant-appareil> --flavor dev
 ```
 
 Compiler les deux APK de contrôle :
@@ -83,13 +84,13 @@ Les APK sont produits dans `build\app\outputs\flutter-apk\`.
 
 ## Données locales et sauvegarde
 
-La persistance Base0 n'est pas encore implémentée. L'écran actuel ne conserve donc
-aucune donnée d'entraînement. La future base SQLite sera stockée dans l'espace privé
-de chaque flavor Android : dev et prod auront des données séparées.
+La base SQLite est stockée dans l'espace privé de chaque flavor Android. Dev et
+prod ont donc des données séparées. Désinstaller l'application ou effacer son
+stockage Android supprime cette base.
 
-La sauvegarde JSON sera ajoutée avec validation et version de format. Tant que cette
-fonction n'existe pas, ne considérer aucune donnée de développement comme
-sauvegardée.
+Le format de sauvegarde JSON versionné et le pipeline d'import sont préparés, mais
+l'écran d'export n'est pas encore présent. Tant qu'il ne l'est pas, il n'existe pas
+encore de procédure de sauvegarde grand public.
 
 Les références locales sous `.SOURCE/` ne sont pas des données de l'application et
 ne doivent jamais être ajoutées à Git.
@@ -127,3 +128,14 @@ Utiliser `D:\SDK\flutter`, sans ajouter `\bin` dans ce champ.
 - [architecture](docs/architecture/overview.md) ;
 - [dépendances](docs/architecture/dependencies.md) ;
 - [matériaux de référence](docs/reference-materials.md).
+- [catalogue Forever](docs/program-specifications/forever-catalog.md) ;
+- [import historique](docs/migration/legacy-json-import.md) ;
+- [matrice des écrans](docs/product/reference-screen-matrix.md).
+
+## Limites Base0
+
+- seul Original 5/3/1 + First Set Last est automatisé ;
+- l'assistance est conservée comme concept mais pas encore saisissable ;
+- pas encore d'écran d'export/import, de chronomètre, notifications ou graphiques ;
+- le sélecteur anglais n'est pas encore exposé ;
+- l'import de l'ancienne application attend un export anonymisé.
