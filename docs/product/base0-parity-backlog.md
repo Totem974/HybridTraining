@@ -12,13 +12,15 @@
 - catalogues initiaux et matrice des captures.
 - parcours POC en quatre étapes, tableau de bord et séance guidée ;
 - progression de série persistée, repos local et notes de séance sauvegardées.
+- séance guidée robuste : AMRAP, réussite/échec/saut, reprise du repos,
+  chargement des plaques, récapitulatif et records personnels.
 
 ## Prochaines tranches prioritaires
 
 | Priorité | Tranche | Éléments principaux |
 |---:|---|---|
 | 1 | Sauvegarde et migration | écran export/import, partage de fichier, rapport, échantillon historique anonymisé |
-| 2 | Séance complète | AMRAP réel, échec/saut, reprise du chronomètre après interruption, échauffement et assistance à valider |
+| 2 | Séance complète | échauffement et assistance à valider, réglage des temps de repos et inventaire de plaques dans l'interface |
 | 3 | Profil et TM | édition, estimation dans l'UI, historique, progression de fin de cycle |
 | 4 | Salles et disques | CRUD salles/barres/disques, calcul depuis inventaire |
 | 5 | Catalogue | programme par programme, leader/anchor, 7th Week Protocol |

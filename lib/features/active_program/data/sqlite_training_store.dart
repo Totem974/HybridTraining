@@ -5,6 +5,7 @@ import 'package:hybrid_training/features/active_program/domain/training_store.da
 import 'package:hybrid_training/features/programs/domain/load_rounding.dart';
 import 'package:hybrid_training/features/programs/domain/original_fsl_program.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
+import 'package:hybrid_training/features/training_max/domain/max_calculator.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SqliteTrainingStore implements TrainingStore {
@@ -206,6 +207,13 @@ class SqliteTrainingStore implements TrainingStore {
       orderBy: 'sequence',
     );
     final lift = MainLift.values.byName(setRows.first['lift_id']! as String);
+    final restRows = await database.query(
+      'app_metadata',
+      columns: ['value'],
+      where: 'key = ?',
+      whereArgs: ['rest_until:${row['id']}'],
+      limit: 1,
+    );
     return StoredSession(
       id: row['id']! as String,
       lift: lift,
@@ -213,6 +221,12 @@ class SqliteTrainingStore implements TrainingStore {
       unit: unit,
       isComplete: row['status'] == 'complete',
       notes: row['notes']! as String,
+      startedAt: row['started_at'] == null
+          ? null
+          : DateTime.parse(row['started_at']! as String),
+      restUntil: restRows.isEmpty
+          ? null
+          : DateTime.tryParse(restRows.single['value']! as String),
       sets: [
         for (final set in setRows)
           StoredSet(
@@ -222,7 +236,11 @@ class SqliteTrainingStore implements TrainingStore {
             load: (set['prescribed_load']! as num).toDouble(),
             repetitions: set['prescribed_reps']! as int,
             isPerformanceSet: set['performance_set'] == 1,
-            isComplete: set['result'] == 'success',
+            isComplete: set['result'] != null,
+            completedRepetitions: set['completed_reps'] as int?,
+            result: set['result'] == null
+                ? null
+                : SetResult.values.byName(set['result']! as String),
           ),
       ],
     );
@@ -230,14 +248,99 @@ class SqliteTrainingStore implements TrainingStore {
 
   @override
   Future<void> completeSet(String setId, {required int repetitions}) async {
+    await recordSet(setId, repetitions: repetitions, result: SetResult.success);
+  }
+
+  @override
+  Future<void> recordSet(
+    String setId, {
+    required int repetitions,
+    required SetResult result,
+  }) async {
     if (repetitions < 0) throw ArgumentError.value(repetitions);
     final database = await localDatabase.open();
+    await database.transaction((transaction) async {
+      final rows = await transaction.rawQuery(
+        '''SELECT ts.lift_id, ts.prescribed_load, ts.performance_set,
+                  ap.preferred_unit
+           FROM training_sets ts
+           JOIN training_sessions s ON s.id = ts.session_id
+           JOIN training_cycles c ON c.id = s.cycle_id
+           JOIN athlete_profiles ap ON ap.id = c.athlete_id
+           WHERE ts.id = ?''',
+        [setId],
+      );
+      if (rows.isEmpty) throw StateError('Set not found: $setId');
+      final updated = await transaction.update(
+        'training_sets',
+        {'result': result.name, 'completed_reps': repetitions},
+        where: 'id = ?',
+        whereArgs: [setId],
+      );
+      if (updated != 1) throw StateError('Set not found: $setId');
+      final row = rows.single;
+      if (result != SetResult.success ||
+          repetitions == 0 ||
+          row['performance_set'] != 1) {
+        return;
+      }
+      final liftId = row['lift_id']! as String;
+      final unit = row['preferred_unit']! as String;
+      final load = (row['prescribed_load']! as num).toDouble();
+      const calculator = MaxCalculator();
+      final estimate = calculator.estimateOneRepMax(
+        load: load,
+        repetitions: repetitions,
+      );
+      final previous = await transaction.query(
+        'personal_records',
+        where: 'lift_id = ? AND unit = ?',
+        whereArgs: [liftId, unit],
+      );
+      final previousBest = previous.fold<double>(0, (best, record) {
+        final candidate = calculator.estimateOneRepMax(
+          load: (record['load']! as num).toDouble(),
+          repetitions: record['repetitions']! as int,
+        );
+        return candidate > best ? candidate : best;
+      });
+      if (estimate > previousBest) {
+        await transaction.insert('personal_records', {
+          'id': 'pr-${_clock().microsecondsSinceEpoch}-$setId',
+          'lift_id': liftId,
+          'load': load,
+          'repetitions': repetitions,
+          'unit': unit,
+          'achieved_at': _clock().toUtc().toIso8601String(),
+          'source_set_id': setId,
+        });
+      }
+    });
+  }
+
+  @override
+  Future<void> startSession(String sessionId) async {
+    final database = await localDatabase.open();
     await database.update(
-      'training_sets',
-      {'result': 'success', 'completed_reps': repetitions},
-      where: 'id = ?',
-      whereArgs: [setId],
+      'training_sessions',
+      {'status': 'started', 'started_at': _clock().toUtc().toIso8601String()},
+      where: "id = ? AND status = 'planned'",
+      whereArgs: [sessionId],
     );
+  }
+
+  @override
+  Future<void> setRestUntil(String sessionId, DateTime? restUntil) async {
+    final database = await localDatabase.open();
+    final key = 'rest_until:$sessionId';
+    if (restUntil == null) {
+      await database.delete('app_metadata', where: 'key = ?', whereArgs: [key]);
+      return;
+    }
+    await database.insert('app_metadata', {
+      'key': key,
+      'value': restUntil.toUtc().toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   @override
@@ -252,6 +355,7 @@ class SqliteTrainingStore implements TrainingStore {
       where: 'id = ?',
       whereArgs: [sessionId],
     );
+    await setRestUntil(sessionId, null);
   }
 
   @override

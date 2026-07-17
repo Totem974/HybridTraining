@@ -46,13 +46,30 @@ void main() {
       expect(generated.nextSession!.sets, hasLength(8));
       expect(generated.nextSession!.sets.first.load, 125);
       expect(generated.nextSession!.notes, isEmpty);
+      await first.startSession(generated.nextSession!.id);
+      final restUntil = now.add(const Duration(minutes: 3));
+      await first.setRestUntil(generated.nextSession!.id, restUntil);
       await first.updateSessionNotes(
         generated.nextSession!.id,
         'Séance fluide',
       );
-      for (final set in generated.nextSession!.sets) {
-        await first.completeSet(set.id, repetitions: set.repetitions);
+      for (var index = 0; index < generated.nextSession!.sets.length; index++) {
+        final set = generated.nextSession!.sets[index];
+        await first.recordSet(
+          set.id,
+          repetitions: index == 0 ? 7 : set.repetitions,
+          result: index == 1 ? SetResult.failure : SetResult.success,
+        );
       }
+      final inProgress = await first.loadSnapshot();
+      expect(inProgress.nextSession!.isStarted, isTrue);
+      expect(inProgress.nextSession!.restUntil, restUntil);
+      expect(inProgress.nextSession!.sets.first.completedRepetitions, 7);
+      expect(inProgress.nextSession!.sets[1].result, SetResult.failure);
+      final database = await first.localDatabase.open();
+      final records = await database.query('personal_records');
+      expect(records, hasLength(1));
+      expect(records.single['repetitions'], 3);
       await first.finishSession(generated.nextSession!.id);
       await first.close();
 

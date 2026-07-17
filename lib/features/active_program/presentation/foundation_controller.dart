@@ -44,6 +44,24 @@ class FoundationController extends ChangeNotifier {
     });
   }
 
+  Future<void> startSession(String id) async {
+    await _run(() async {
+      await store.startSession(id);
+      snapshot = await store.loadSnapshot();
+    });
+  }
+
+  Future<void> recordSet(String id, int repetitions, SetResult result) async {
+    await _run(() async {
+      await store.recordSet(id, repetitions: repetitions, result: result);
+      snapshot = await store.loadSnapshot();
+    });
+  }
+
+  Future<void> setRestUntil(String id, DateTime? restUntil) async {
+    await store.setRestUntil(id, restUntil);
+  }
+
   Future<void> finishSession(String id) async {
     await _run(() async {
       await store.finishSession(id);

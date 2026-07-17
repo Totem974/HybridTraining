@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hybrid_training/app/localization/app_strings.dart';
 import 'package:hybrid_training/features/active_program/domain/training_store.dart';
+import 'package:hybrid_training/features/gyms/domain/plate_calculator.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
 
 class TrainingHomeScreen extends StatelessWidget {
@@ -11,6 +12,9 @@ class TrainingHomeScreen extends StatelessWidget {
     required this.onCompleteSet,
     required this.onFinishSession,
     required this.onUpdateNotes,
+    required this.onStartSession,
+    required this.onRecordSet,
+    required this.onSetRestUntil,
     super.key,
   });
 
@@ -18,6 +22,10 @@ class TrainingHomeScreen extends StatelessWidget {
   final Future<void> Function(String id, int repetitions) onCompleteSet;
   final Future<void> Function(String id) onFinishSession;
   final Future<void> Function(String id, String notes) onUpdateNotes;
+  final Future<void> Function(String id) onStartSession;
+  final Future<void> Function(String id, int repetitions, SetResult result)
+  onRecordSet;
+  final Future<void> Function(String id, DateTime? restUntil) onSetRestUntil;
 
   @override
   Widget build(BuildContext context) {
@@ -111,6 +119,9 @@ class TrainingHomeScreen extends StatelessWidget {
           onCompleteSet: onCompleteSet,
           onFinishSession: onFinishSession,
           onUpdateNotes: onUpdateNotes,
+          onStartSession: onStartSession,
+          onRecordSet: onRecordSet,
+          onSetRestUntil: onSetRestUntil,
         ),
       ),
     );
@@ -172,6 +183,9 @@ class WorkoutDetailScreen extends StatelessWidget {
     required this.onCompleteSet,
     required this.onFinishSession,
     required this.onUpdateNotes,
+    required this.onStartSession,
+    required this.onRecordSet,
+    required this.onSetRestUntil,
     super.key,
   });
 
@@ -179,6 +193,10 @@ class WorkoutDetailScreen extends StatelessWidget {
   final Future<void> Function(String id, int repetitions) onCompleteSet;
   final Future<void> Function(String id) onFinishSession;
   final Future<void> Function(String id, String notes) onUpdateNotes;
+  final Future<void> Function(String id) onStartSession;
+  final Future<void> Function(String id, int repetitions, SetResult result)
+  onRecordSet;
+  final Future<void> Function(String id, DateTime? restUntil) onSetRestUntil;
 
   @override
   Widget build(BuildContext context) {
@@ -209,16 +227,21 @@ class WorkoutDetailScreen extends StatelessWidget {
           const SizedBox(height: 24),
           FilledButton.icon(
             key: const Key('start-workout'),
-            onPressed: () => Navigator.of(context).push<void>(
-              MaterialPageRoute(
-                builder: (_) => ActiveWorkoutScreen(
-                  session: session,
-                  onCompleteSet: onCompleteSet,
-                  onFinishSession: onFinishSession,
-                  onUpdateNotes: onUpdateNotes,
+            onPressed: () async {
+              await onStartSession(session.id);
+              if (!context.mounted) return;
+              await Navigator.of(context).push<void>(
+                MaterialPageRoute(
+                  builder: (_) => ActiveWorkoutScreen(
+                    session: session,
+                    onFinishSession: onFinishSession,
+                    onUpdateNotes: onUpdateNotes,
+                    onRecordSet: onRecordSet,
+                    onSetRestUntil: onSetRestUntil,
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
             icon: const Icon(Icons.play_arrow),
             label: Text(strings.startWorkout),
           ),
@@ -269,16 +292,19 @@ class _SetSection extends StatelessWidget {
 class ActiveWorkoutScreen extends StatefulWidget {
   const ActiveWorkoutScreen({
     required this.session,
-    required this.onCompleteSet,
     required this.onFinishSession,
     required this.onUpdateNotes,
+    required this.onRecordSet,
+    required this.onSetRestUntil,
     super.key,
   });
 
   final StoredSession session;
-  final Future<void> Function(String id, int repetitions) onCompleteSet;
   final Future<void> Function(String id) onFinishSession;
   final Future<void> Function(String id, String notes) onUpdateNotes;
+  final Future<void> Function(String id, int repetitions, SetResult result)
+  onRecordSet;
+  final Future<void> Function(String id, DateTime? restUntil) onSetRestUntil;
 
   @override
   State<ActiveWorkoutScreen> createState() => _ActiveWorkoutScreenState();
@@ -288,6 +314,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   late final List<bool> _completed = [
     for (final set in widget.session.sets) set.isComplete,
   ];
+  late final List<SetResult?> _results = [
+    for (final set in widget.session.sets) set.result,
+  ];
   late final TextEditingController _notes = TextEditingController(
     text: widget.session.notes,
   );
@@ -295,8 +324,19 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   Timer? _notesDebounce;
   int _restSeconds = 0;
   bool _busy = false;
+  int? _enteredRepetitions;
 
   int get _currentIndex => _completed.indexWhere((done) => !done);
+
+  @override
+  void initState() {
+    super.initState();
+    final restUntil = widget.session.restUntil;
+    if (restUntil != null) {
+      _restSeconds = restUntil.difference(DateTime.now().toUtc()).inSeconds;
+      if (_restSeconds > 0) _startTimer();
+    }
+  }
 
   @override
   void dispose() {
@@ -312,6 +352,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     final index = _currentIndex;
     final finished = index == -1;
     final current = finished ? null : widget.session.sets[index];
+    _enteredRepetitions ??= current?.repetitions;
     return Scaffold(
       appBar: AppBar(title: Text(strings.activeWorkout)),
       body: SafeArea(
@@ -336,6 +377,38 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                             ? strings.mainSets
                             : strings.firstSetLast,
                       ),
+                      if (current.isPerformanceSet) ...[
+                        const SizedBox(height: 20),
+                        Text(strings.amrapRepetitions),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              onPressed: (_enteredRepetitions ?? 0) > 0
+                                  ? () => setState(
+                                      () => _enteredRepetitions =
+                                          _enteredRepetitions! - 1,
+                                    )
+                                  : null,
+                              icon: const Icon(Icons.remove_circle_outline),
+                            ),
+                            Text(
+                              '$_enteredRepetitions',
+                              key: const Key('entered-repetitions'),
+                              style: Theme.of(context).textTheme.headlineMedium,
+                            ),
+                            IconButton(
+                              onPressed: () => setState(
+                                () => _enteredRepetitions =
+                                    _enteredRepetitions! + 1,
+                              ),
+                              icon: const Icon(Icons.add_circle_outline),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      _PlateHint(load: current.load, unit: widget.session.unit),
                       const SizedBox(height: 10),
                       Text(
                         strings.lift(widget.session.lift.name),
@@ -363,7 +436,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                         style: Theme.of(context).textTheme.displaySmall,
                       ),
                       TextButton(
-                        onPressed: () => setState(() => _restSeconds = 0),
+                        onPressed: _skipRest,
                         child: Text(strings.skipRest),
                       ),
                     ],
@@ -382,17 +455,55 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            FilledButton(
-              key: Key(finished ? 'finish-session' : 'complete-current-set'),
-              onPressed: _busy
-                  ? null
-                  : finished
-                  ? _finish
-                  : _complete,
-              child: Text(
-                finished ? strings.finishSession : strings.setComplete,
+            if (finished)
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(18),
+                  child: Text(
+                    '${_results.where((result) => result == SetResult.success).length} ${strings.successfulSets} · '
+                    '${_results.where((result) => result == SetResult.failure).length} ${strings.failedSets} · '
+                    '${_results.where((result) => result == SetResult.skipped).length} ${strings.skippedSets}',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ),
-            ),
+            if (finished)
+              FilledButton(
+                key: const Key('finish-session'),
+                onPressed: _busy ? null : _finish,
+                child: Text(strings.finishSession),
+              )
+            else ...[
+              FilledButton(
+                key: const Key('complete-current-set'),
+                onPressed: _busy ? null : () => _record(SetResult.success),
+                child: Text(strings.setComplete),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      key: const Key('fail-current-set'),
+                      onPressed: _busy
+                          ? null
+                          : () => _record(SetResult.failure),
+                      child: Text(strings.setFailed),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextButton(
+                      key: const Key('skip-current-set'),
+                      onPressed: _busy
+                          ? null
+                          : () => _record(SetResult.skipped),
+                      child: Text(strings.skipSet),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 10),
             Text(
               '${_completed.where((done) => done).length}/${_completed.length} ${strings.setsCompleted}',
@@ -404,19 +515,37 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     );
   }
 
-  Future<void> _complete() async {
+  Future<void> _record(SetResult result) async {
     final index = _currentIndex;
     if (index < 0) return;
     setState(() => _busy = true);
     final set = widget.session.sets[index];
-    await widget.onCompleteSet(set.id, set.repetitions);
+    final repetitions = result == SetResult.skipped
+        ? 0
+        : _enteredRepetitions ?? set.repetitions;
+    await widget.onRecordSet(set.id, repetitions, result);
     if (!mounted) return;
     setState(() {
       _completed[index] = true;
+      _results[index] = result;
       _busy = false;
+      _enteredRepetitions = _currentIndex == -1
+          ? null
+          : widget.session.sets[_currentIndex].repetitions;
       if (_currentIndex != -1) _restSeconds = 180;
     });
-    _startTimer();
+    if (_currentIndex != -1) {
+      final restUntil = DateTime.now().toUtc().add(
+        const Duration(seconds: 180),
+      );
+      await widget.onSetRestUntil(widget.session.id, restUntil);
+      _startTimer();
+    }
+  }
+
+  Future<void> _skipRest() async {
+    setState(() => _restSeconds = 0);
+    await widget.onSetRestUntil(widget.session.id, null);
   }
 
   void _startTimer() {
@@ -444,6 +573,43 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     _notesDebounce = Timer(const Duration(milliseconds: 600), () {
       widget.onUpdateNotes(widget.session.id, notes);
     });
+  }
+}
+
+class _PlateHint extends StatelessWidget {
+  const _PlateHint({required this.load, required this.unit});
+
+  final double load;
+  final WeightUnit unit;
+
+  @override
+  Widget build(BuildContext context) {
+    const strings = AppStrings();
+    final kilograms = unit == WeightUnit.kilograms;
+    final result = const PlateCalculator().exact(
+      target: load,
+      barWeight: kilograms ? 20 : 45,
+      inventory: kilograms
+          ? const [
+              PlateInventoryItem(weight: 20, quantity: 10),
+              PlateInventoryItem(weight: 10, quantity: 10),
+              PlateInventoryItem(weight: 5, quantity: 10),
+              PlateInventoryItem(weight: 2.5, quantity: 10),
+              PlateInventoryItem(weight: 1.25, quantity: 10),
+            ]
+          : const [
+              PlateInventoryItem(weight: 45, quantity: 10),
+              PlateInventoryItem(weight: 25, quantity: 10),
+              PlateInventoryItem(weight: 10, quantity: 10),
+              PlateInventoryItem(weight: 5, quantity: 10),
+              PlateInventoryItem(weight: 2.5, quantity: 10),
+            ],
+    );
+    if (result == null) return Text(strings.noExactPlateLoad);
+    final plates = result.perSide.isEmpty
+        ? strings.emptyBar
+        : result.perSide.map(_load).join(' + ');
+    return Text('${strings.perSide}: $plates ${_unit(unit)}');
   }
 }
 

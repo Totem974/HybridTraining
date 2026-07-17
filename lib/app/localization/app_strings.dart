@@ -78,6 +78,18 @@ class AppStrings {
   String get sessionNotes => _fr ? 'Notes de séance' : 'Workout notes';
   String get setComplete => _fr ? 'Série terminée' : 'Set complete';
   String get setsCompleted => _fr ? 'séries terminées' : 'sets completed';
+  String get amrapRepetitions =>
+      _fr ? 'Répétitions réalisées' : 'Completed repetitions';
+  String get setFailed => _fr ? 'Échec' : 'Failed';
+  String get skipSet => _fr ? 'Passer' : 'Skip';
+  String get successfulSets => _fr ? 'réussies' : 'successful';
+  String get failedSets => _fr ? 'échouées' : 'failed';
+  String get skippedSets => _fr ? 'passées' : 'skipped';
+  String get perSide => _fr ? 'Par côté' : 'Per side';
+  String get emptyBar => _fr ? 'barre seule' : 'empty bar';
+  String get noExactPlateLoad => _fr
+      ? 'Charge exacte indisponible avec les plaques par défaut.'
+      : 'Exact load unavailable with the default plates.';
 
   String lift(String id) => switch ((languageCode, id)) {
     (_, 'squat') => 'Squat',

@@ -23,6 +23,8 @@ class StoredSet {
     required this.repetitions,
     required this.isPerformanceSet,
     required this.isComplete,
+    this.completedRepetitions,
+    this.result,
   });
 
   final String id;
@@ -32,7 +34,11 @@ class StoredSet {
   final int repetitions;
   final bool isPerformanceSet;
   final bool isComplete;
+  final int? completedRepetitions;
+  final SetResult? result;
 }
+
+enum SetResult { success, failure, skipped }
 
 class StoredSession {
   const StoredSession({
@@ -43,6 +49,8 @@ class StoredSession {
     required this.sets,
     required this.isComplete,
     required this.notes,
+    this.startedAt,
+    this.restUntil,
   });
 
   final String id;
@@ -52,6 +60,10 @@ class StoredSession {
   final List<StoredSet> sets;
   final bool isComplete;
   final String notes;
+  final DateTime? startedAt;
+  final DateTime? restUntil;
+
+  bool get isStarted => startedAt != null;
 }
 
 class TrainingSnapshot {
@@ -76,6 +88,16 @@ abstract interface class TrainingStore {
   Future<TrainingSnapshot> loadSnapshot();
 
   Future<void> completeSet(String setId, {required int repetitions});
+
+  Future<void> startSession(String sessionId);
+
+  Future<void> recordSet(
+    String setId, {
+    required int repetitions,
+    required SetResult result,
+  });
+
+  Future<void> setRestUntil(String sessionId, DateTime? restUntil);
 
   Future<void> finishSession(String sessionId);
 

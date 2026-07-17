@@ -38,6 +38,8 @@ void main() {
   testWidgets('records a set, finishes a session and shows history', (
     tester,
   ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     final store = _FakeTrainingStore(hasExistingProfile: true);
     await tester.pumpWidget(
       HybridTrainingApp(environment: AppEnvironment.prod, store: store),
@@ -50,8 +52,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'Rien à signaler');
     await tester.pump(const Duration(milliseconds: 650));
+    await tester.ensureVisible(find.byKey(const Key('complete-current-set')));
     await tester.tap(find.byKey(const Key('complete-current-set')));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('finish-session')));
     await tester.tap(find.byKey(const Key('finish-session')));
     await tester.pumpAndSettle();
 
@@ -120,6 +124,22 @@ class _FakeTrainingStore implements TrainingStore {
     completedSetIds.add(setId);
     _setComplete = true;
   }
+
+  @override
+  Future<void> startSession(String sessionId) async {}
+
+  @override
+  Future<void> recordSet(
+    String setId, {
+    required int repetitions,
+    required SetResult result,
+  }) async {
+    completedSetIds.add(setId);
+    _setComplete = true;
+  }
+
+  @override
+  Future<void> setRestUntil(String sessionId, DateTime? restUntil) async {}
 
   @override
   Future<void> finishSession(String sessionId) async {
