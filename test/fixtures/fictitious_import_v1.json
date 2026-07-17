@@ -1,0 +1,12 @@
+{
+  "format": "hybrid-training-fixture",
+  "schemaVersion": 1,
+  "payload": {
+    "profile": {"displayName": "Athlete Example", "unit": "kg"},
+    "trainingMaxes": [
+      {"liftId": "squat", "value": 90.0, "unit": "kg"}
+    ],
+    "futureField": "reported, never silently discarded"
+  }
+}
+
