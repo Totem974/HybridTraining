@@ -20,6 +20,7 @@ du produit, de l'architecture ou des audits.
 |---|---|---|
 | 2026-07-18 | Reprise d’une séance active persistée | [Rapport final](2026-07-18-reprise-seance-active.md) |
 | 2026-07-18 | Modèle de générations et lignées | [Rapport final](2026-07-18-lignees-programmes.md) |
+| 2026-07-18 | Bibliothèque et onboarding par lignées | [Rapport final](2026-07-18-bibliotheque-onboarding-lignees.md) |
 | 2026-07-18 | Reprise d’une séance active persistée | [Rapport final](2026-07-18-reprise-seance-active.md) |
 | 2026-07-18 | Modèle de générations et lignées | [Rapport final](2026-07-18-lignees-programmes.md) |
 | 2026-07-18 | Stabilisation Base0 et identité Forever par défaut | [Rapport final](2026-07-18-stabilisation-base0-forever.md) |

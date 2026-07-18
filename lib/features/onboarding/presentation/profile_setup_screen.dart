@@ -23,6 +23,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   int _daysPerWeek = 4;
   DateTime _startDate = DateTime.now();
   bool _saving = false;
+  String? _saveError;
+  String _selectedPresetId = 'forever-original-fsl-v1';
 
   @override
   void dispose() {
@@ -74,8 +76,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             ),
             Padding(
               padding: const EdgeInsets.all(20),
-              child: Row(
+              child: Column(
                 children: [
+                  if (_saveError != null) ...[
+                    Text(_saveError!, style: const TextStyle(color: Colors.redAccent)),
+                    const SizedBox(height: 8),
+                  ],
+                  Row(children: [
                   if (_step > 0)
                     Expanded(
                       child: OutlinedButton(
@@ -99,6 +106,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       ),
                     ),
                   ),
+                  ]),
                 ],
               ),
             ),
@@ -314,21 +322,27 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       setState(() => _step++);
       return;
     }
-    setState(() => _saving = true);
-    await widget.onSubmit(
+    setState(() { _saving = true; _saveError = null; });
+    try {
+      await widget.onSubmit(
       FoundationProfileInput(
         displayName: _name.text.trim(),
         unit: _unit,
         roundingIncrement: _unit == WeightUnit.kilograms ? 2.5 : 5,
         startDate: _startDate,
         trainingDaysPerWeek: _daysPerWeek,
+        persistentPresetId: _selectedPresetId,
         oneRepMaxes: {
           for (final entry in _maxes.entries)
             entry.key: double.parse(entry.value.text.replaceAll(',', '.')),
         },
       ),
-    );
-    if (mounted) setState(() => _saving = false);
+      );
+    } catch (_) {
+      if (mounted) setState(() => _saveError = 'Création impossible. Vérifiez les valeurs puis réessayez.');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   Future<void> _pickDate() async {

@@ -100,7 +100,11 @@ class _HybridTrainingAppState extends State<HybridTrainingApp> {
         listenable: controller,
         builder: (context, _) => switch (controller.state) {
           FoundationState.loading => const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Text('HYBRID 5/3/1', style: TextStyle(color: Color(0xFFF5821F), fontSize: 28, fontWeight: FontWeight.w900)),
+              SizedBox(height: 20),
+              CircularProgressIndicator(),
+            ])),
           ),
           FoundationState.onboarding => ProfileSetupScreen(
             onSubmit: controller.createProfile,

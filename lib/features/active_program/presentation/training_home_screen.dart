@@ -8,6 +8,7 @@ import 'package:hybrid_training/features/gyms/domain/plate_calculator.dart';
 import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
 import 'package:hybrid_training/features/programs/domain/program_identity.dart';
+import 'package:hybrid_training/features/programs/presentation/program_library_screen.dart';
 
 class TrainingHomeScreen extends StatelessWidget {
   const TrainingHomeScreen({
@@ -461,7 +462,7 @@ class _SettingsPanel extends StatelessWidget {
             onTap: () => Navigator.of(context).push<void>(
               MaterialPageRoute(
                 builder: (_) =>
-                    _ProgramLibraryPanel(activeProgram: snapshot.activeProgram),
+                    const ProgramLibraryScreen(),
               ),
             ),
           ),
