@@ -1,5 +1,20 @@
 # Matrice des écrans de référence
 
+## Audit black-box de l’application d’origine
+
+La spécification issue de l’observation directe de l’application Android d’origine
+est séparée des captures de maquette et du prototype HTML :
+
+- [rapport d’audit](../audit/original-app-black-box-audit.md) ;
+- [matrice des écrans](original-app-screen-matrix.md) ;
+- [matrice des interactions](original-app-interaction-matrix.md) ;
+- [cycle de vie des données](original-app-data-lifecycle.md) ;
+- [carte de navigation](original-app-navigation-map.md) ;
+- [analyse des écarts avec la reconstruction](original-app-gap-analysis.md).
+
+Ces documents décrivent des comportements observés, sans leur conférer le statut de
+règles métier Forever ni remplacer la direction UI validée ci-dessous.
+
 ## Direction UI validée par le propriétaire
 
 Le prototype local `.SOURCE/GUI Amélioration app 531` définit désormais la
@@ -26,8 +41,8 @@ illustration ou police n'est repris. `UNKNOWN` évite d'inventer un état absent
 | `onboarding_maxes` | Charges maximum ; `111901`, `132917` | onboarding ; quatre charges, reps/1RM, kg/lb | valeurs positives ; vers validation | UNKNOWN | implémenté : 1RM positif et kg/lb ; estimation UI à venir |
 | `onboarding_review` | Validation des max ; `111901`, `132917` | après saisie ; revoir/continuer | quatre valeurs ; retour ou programme | UNKNOWN | non séparé ; validation dans le formulaire |
 | `program_recommendation` | Choix de génération ; `111901`, `113214`, `145705` | onboarding ; famille ou objectif | maquettes divergentes ; vers proposition | UNKNOWN | un seul modèle vérifié, affiché explicitement |
-| `program_proposal` | Proposition ; `132917`, `145705` | après sélection ; commencer/changer | carte récapitulative ; vers accueil/bibliothèque | UNKNOWN | intégré à la création du cycle |
-| `program_library` | Bibliothèque ; `145705`, `204913` | navigation ; onglets, cartes, détail | liste/fiche ; vide/erreur non observés | gratuit/payant non déterminable | documentation seulement ; pas de faux catalogue actif |
+| `program_proposal` | Proposition ; `132917`, `145705` | après sélection ; commencer/changer | carte récapitulative ; vers accueil/bibliothèque | UNKNOWN | Forever — Original + FSL explicite à la création du cycle |
+| `program_library` | Bibliothèque ; `145705`, `204913` | navigation ; onglets, cartes, détail | liste/fiche ; vide/erreur non observés | gratuit/payant non déterminable | s'ouvre sur Forever ; seul `forever-original-fsl-v1` est actuel, les autres fiches sont informatives et non activables |
 | `cycle_editor` | Modification cycle ; `204913` | programme actif ; max, reps, ratio, variante, deload | sauvegarde visible ; erreur non observée ; retour accueil | UNKNOWN | backlog ; modèle Base0 immuable après création |
 | `dashboard` | Tableau de bord ; `112546`, `145705` | profil configuré ; prochaine séance, TM, progrès | vide après cycle possible ; vers séance/historique/réglages | UNKNOWN | remplacé par deux onglets simples et originaux |
 | `workout_detail` | Détail du jour ; `204913` | tableau de bord ; séries et assistance | cases à faire ; vers exécution | UNKNOWN | implémenté sous forme de liste de séries |
