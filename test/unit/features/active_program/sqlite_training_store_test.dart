@@ -110,7 +110,7 @@ void main() {
         restored.activeProgram.templateId,
         ProgramDefinitionRef.originalFsl.templateId,
       );
-      expect(restored.activeProgram.family, ProgramFamily.forever);
+      expect(restored.activeProgram.rulesetGeneration, MethodGeneration.forever);
       expect(
         restored.activeProgram.validationStatus,
         ProgramValidationStatus.rulesReviewed,

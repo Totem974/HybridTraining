@@ -100,10 +100,10 @@ ne doivent jamais être ajoutées à Git.
 
 ## Programme par défaut
 
-La famille par défaut est **5/3/1 Forever**. Le seul template actuellement
-activable est **Original 5/3/1 + First Set Last**, conservé sous l'identifiant
-stable `forever-original-fsl-v1`. Beyond, Classic et les autres templates
-Forever restent visibles uniquement comme catalogue informatif.
+Original, Beyond et Forever sont trois générations du système 5/3/1. Les
+concepts peuvent recevoir des révisions dans plusieurs générations. Le seul
+preset actuellement activable est **Original 5/3/1 + First Set Last 5 × 5**,
+avec règles Forever, sous l'identifiant stable `forever-original-fsl-v1`.
 
 Les systèmes leader/anchor, le protocole de septième semaine, la progression
 automatique entre cycles et l'assistance détaillée restent hors périmètre. Aucun

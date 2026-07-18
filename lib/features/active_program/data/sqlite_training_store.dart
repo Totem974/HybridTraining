@@ -5,8 +5,9 @@ import 'package:hybrid_training/features/active_program/domain/training_store.da
 import 'package:hybrid_training/features/import_export/data/sqlite_backup_manager.dart';
 import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 import 'package:hybrid_training/features/programs/domain/load_rounding.dart';
-import 'package:hybrid_training/features/programs/domain/original_fsl_program.dart';
 import 'package:hybrid_training/features/programs/domain/program_identity.dart';
+import 'package:hybrid_training/features/programs/domain/program_catalog.dart';
+import 'package:hybrid_training/features/programs/domain/program_generator_factory.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
 import 'package:hybrid_training/features/training_max/domain/max_calculator.dart';
 import 'package:sqflite/sqflite.dart';
@@ -83,14 +84,20 @@ class SqliteTrainingStore implements TrainingStore {
         input.oneRepMaxes.values.any((value) => value <= 0)) {
       throw ArgumentError('A name and four positive maxes are required.');
     }
-    final database = await localDatabase.open();
-    final now = _clock().toUtc();
+    const catalog = ProgramCatalog();
+    final preset = catalog.preset(input.persistentPresetId);
     if (input.trainingDaysPerWeek != 3 && input.trainingDaysPerWeek != 4) {
       throw ArgumentError.value(
         input.trainingDaysPerWeek,
         'trainingDaysPerWeek',
       );
     }
+    if (!preset.supportedFrequencies.contains(input.trainingDaysPerWeek)) {
+      throw ArgumentError.value(input.trainingDaysPerWeek, 'trainingDaysPerWeek');
+    }
+    final program = const ProgramGeneratorFactory().resolve(input.persistentPresetId);
+    final database = await localDatabase.open();
+    final now = _clock().toUtc();
     final startsOn = DateTime(
       input.startDate.year,
       input.startDate.month,
@@ -99,7 +106,6 @@ class SqliteTrainingStore implements TrainingStore {
     final cycleId = 'cycle-${now.microsecondsSinceEpoch}';
     final unit = input.unit == WeightUnit.kilograms ? 'kg' : 'lb';
     final rounder = LoadRounder(increment: input.roundingIncrement);
-    const program = OriginalFslProgram();
 
     await database.transaction((transaction) async {
       await transaction.insert('athlete_profiles', {
@@ -131,8 +137,8 @@ class SqliteTrainingStore implements TrainingStore {
       await transaction.insert('training_cycles', {
         'id': cycleId,
         'athlete_id': _athleteId,
-        'program_definition_id': _programId,
-        'program_definition_version': 1,
+        'program_definition_id': input.persistentPresetId,
+        'program_definition_version': input.presetVersion,
         'starts_on': _dateOnly(startsOn),
         'status': 'active',
         'settings_json': jsonEncode({

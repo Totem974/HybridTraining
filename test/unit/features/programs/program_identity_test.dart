@@ -5,7 +5,7 @@ void main() {
   test('default program is the versioned Forever Original FSL template', () {
     const program = ProgramDefinitionRef.originalFsl;
 
-    expect(program.family, ProgramFamily.forever);
+    expect(program.rulesetGeneration, MethodGeneration.forever);
     expect(program.templateId, 'forever-original-fsl-v1');
     expect(program.version, 1);
     expect(program.labelKey, 'program.forever_original_fsl');
@@ -26,7 +26,7 @@ void main() {
       persistentVersion: 1,
     );
 
-    expect(program.family, ProgramFamily.forever);
+    expect(program.rulesetGeneration, MethodGeneration.forever);
     expect(program.labelKey, ProgramDefinitionRef.originalFsl.labelKey);
     expect(program.references.single.bookPages, '168-170');
   });

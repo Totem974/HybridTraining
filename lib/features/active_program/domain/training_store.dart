@@ -10,6 +10,8 @@ class FoundationProfileInput {
     required this.roundingIncrement,
     required this.startDate,
     required this.trainingDaysPerWeek,
+    this.persistentPresetId = 'forever-original-fsl-v1',
+    this.presetVersion = 1,
   });
 
   final String displayName;
@@ -18,6 +20,8 @@ class FoundationProfileInput {
   final double roundingIncrement;
   final DateTime startDate;
   final int trainingDaysPerWeek;
+  final String persistentPresetId;
+  final int presetVersion;
 }
 
 class StoredSet {

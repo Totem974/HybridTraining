@@ -1,14 +1,22 @@
-enum ProgramFamily { forever, beyond, classic }
+enum MethodGeneration { original, beyond, forever }
+
+enum ForeverStatus { current, currentWithRestrictions, legacy, superseded, unknown }
 
 enum ProgramValidationStatus { rulesReviewed, indexed, needsReview }
 
-class ProgramDocumentReference {
-  const ProgramDocumentReference({
-    required this.title,
-    required this.bookPages,
-    required this.pdfPages,
-  });
+enum ProductAvailability { available, comingSoon, documentationOnly }
 
+enum ProgramConceptType {
+  mainMethod,
+  supplementalWork,
+  assistance,
+  cycleProtocol,
+  completePreset,
+  standaloneProgram,
+}
+
+class ProgramDocumentReference {
+  const ProgramDocumentReference({required this.title, required this.bookPages, required this.pdfPages});
   final String title;
   final String bookPages;
   final String pdfPages;
@@ -16,8 +24,8 @@ class ProgramDocumentReference {
 
 class ProgramDefinitionRef {
   const ProgramDefinitionRef({
-    required this.family,
-    required this.templateId,
+    required this.rulesetGeneration,
+    required this.persistentPresetId,
     required this.version,
     required this.labelKey,
     required this.validationStatus,
@@ -25,54 +33,44 @@ class ProgramDefinitionRef {
   });
 
   static const originalFsl = ProgramDefinitionRef(
-    family: ProgramFamily.forever,
-    templateId: 'forever-original-fsl-v1',
+    rulesetGeneration: MethodGeneration.forever,
+    persistentPresetId: 'forever-original-fsl-v1',
     version: 1,
     labelKey: 'program.forever_original_fsl',
     validationStatus: ProgramValidationStatus.rulesReviewed,
-    references: [
-      ProgramDocumentReference(
-        title: '5/3/1 Forever',
-        bookPages: '168-170',
-        pdfPages: '180-182',
-      ),
-    ],
+    references: [ProgramDocumentReference(title: '5/3/1 Forever', bookPages: '168-170', pdfPages: '180-182')],
   );
 
-  final ProgramFamily family;
-  final String templateId;
+  final MethodGeneration rulesetGeneration;
+  final String persistentPresetId;
   final int version;
   final String labelKey;
   final ProgramValidationStatus validationStatus;
   final List<ProgramDocumentReference> references;
 
+  @Deprecated('Use persistentPresetId')
+  String get templateId => persistentPresetId;
+  @Deprecated('Use rulesetGeneration')
+  MethodGeneration get family => rulesetGeneration;
   double get documentedTrainingMaxMinimum => 0.85;
   double get documentedTrainingMaxMaximum => 0.90;
 
-  static ProgramDefinitionRef fromJson(
-    Map<String, Object?> definition, {
-    required String persistentId,
-    required int persistentVersion,
-  }) {
-    if (persistentId == originalFsl.templateId) {
-      return ProgramDefinitionRef(
-        family: _family(definition['family']) ?? originalFsl.family,
-        templateId: persistentId,
-        version: persistentVersion,
-        labelKey: definition['labelKey'] as String? ?? originalFsl.labelKey,
-        validationStatus:
-            _status(definition['validationStatus']) ??
-            originalFsl.validationStatus,
-        references: _references(definition['references']),
-      );
-    }
-    throw StateError('Unsupported program definition: $persistentId');
+  static ProgramDefinitionRef fromJson(Map<String, Object?> json, {required String persistentId, required int persistentVersion}) {
+    if (persistentId != originalFsl.persistentPresetId) throw StateError('Unsupported program definition: $persistentId');
+    return ProgramDefinitionRef(
+      rulesetGeneration: parseGeneration(json['rulesetGeneration'] ?? json['family']) ?? originalFsl.rulesetGeneration,
+      persistentPresetId: persistentId,
+      version: persistentVersion,
+      labelKey: json['labelKey'] as String? ?? originalFsl.labelKey,
+      validationStatus: _status(json['validationStatus']) ?? originalFsl.validationStatus,
+      references: _references(json['references']),
+    );
   }
 
-  static ProgramFamily? _family(Object? value) => switch (value) {
-    'forever' => ProgramFamily.forever,
-    'beyond' => ProgramFamily.beyond,
-    'classic' => ProgramFamily.classic,
+  static MethodGeneration? parseGeneration(Object? value) => switch (value) {
+    'original' || 'classic' => MethodGeneration.original,
+    'beyond' => MethodGeneration.beyond,
+    'forever' => MethodGeneration.forever,
     _ => null,
   };
 
@@ -85,22 +83,11 @@ class ProgramDefinitionRef {
 
   static List<ProgramDocumentReference> _references(Object? value) {
     if (value is! List<Object?>) return originalFsl.references;
-    final parsed = <ProgramDocumentReference>[];
+    final result = <ProgramDocumentReference>[];
     for (final item in value) {
-      if (item is! Map<String, Object?> ||
-          item['title'] is! String ||
-          item['bookPages'] is! String ||
-          item['pdfPages'] is! String) {
-        return originalFsl.references;
-      }
-      parsed.add(
-        ProgramDocumentReference(
-          title: item['title']! as String,
-          bookPages: item['bookPages']! as String,
-          pdfPages: item['pdfPages']! as String,
-        ),
-      );
+      if (item is! Map<String, Object?> || item['title'] is! String || item['bookPages'] is! String || item['pdfPages'] is! String) return originalFsl.references;
+      result.add(ProgramDocumentReference(title: item['title']! as String, bookPages: item['bookPages']! as String, pdfPages: item['pdfPages']! as String));
     }
-    return parsed.isEmpty ? originalFsl.references : List.unmodifiable(parsed);
+    return result.isEmpty ? originalFsl.references : List.unmodifiable(result);
   }
 }
