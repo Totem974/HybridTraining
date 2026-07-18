@@ -95,6 +95,7 @@ class AppStrings {
   String get mainSets => _fr ? 'Séries principales' : 'Main sets';
   String get firstSetLast => 'First Set Last';
   String get startWorkout => _fr ? 'Commencer' : 'Start';
+  String get resumeWorkout => _fr ? 'Reprendre' : 'Resume';
   String get activeWorkout => _fr ? 'Séance en cours' : 'Active workout';
   String get next => _fr ? 'Suivant' : 'Next';
   String get workoutComplete => _fr ? 'Séance terminée' : 'Workout complete';

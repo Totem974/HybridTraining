@@ -129,6 +129,30 @@ void main() {
     expect(tester.widgetList(find.byType(Banner)), isEmpty);
   });
 
+  testWidgets('resumes a persisted active session without starting it again', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final store = _FakeTrainingStore(
+      hasExistingProfile: true,
+      sessionStarted: true,
+    );
+    await tester.pumpWidget(
+      HybridTrainingApp(environment: AppEnvironment.dev, store: store),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('open-workout')));
+    await tester.pumpAndSettle();
+    expect(find.text('Reprendre'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('start-workout')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(TextField), findsOneWidget);
+    expect(store.startedSessionIds, isEmpty);
+  });
+
   testWidgets('simulates import and confirms complete data deletion', (
     tester,
   ) async {
@@ -205,12 +229,15 @@ class _FakeTrainingStore implements TrainingStore {
   _FakeTrainingStore({
     bool hasExistingProfile = false,
     this.failNextRecord = false,
+    this.sessionStarted = false,
   }) : _hasProfile = hasExistingProfile;
 
   bool _hasProfile;
   bool _setComplete = false;
   bool _sessionComplete = false;
   bool failNextRecord;
+  final bool sessionStarted;
+  final startedSessionIds = <String>[];
   FoundationProfileInput? created;
   final completedSetIds = <String>[];
   final finishedSessionIds = <String>[];
@@ -235,6 +262,7 @@ class _FakeTrainingStore implements TrainingStore {
     ],
     isComplete: _sessionComplete,
     notes: '',
+    startedAt: sessionStarted ? DateTime.utc(2026, 7, 17, 8) : null,
   );
 
   @override
@@ -270,7 +298,9 @@ class _FakeTrainingStore implements TrainingStore {
   }
 
   @override
-  Future<void> startSession(String sessionId) async {}
+  Future<void> startSession(String sessionId) async {
+    startedSessionIds.add(sessionId);
+  }
 
   @override
   Future<void> recordSet(

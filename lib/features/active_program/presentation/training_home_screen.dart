@@ -821,13 +821,13 @@ class _ProgramLibraryPanel extends StatefulWidget {
 }
 
 class _ProgramLibraryPanelState extends State<_ProgramLibraryPanel> {
-  ProgramFamily _family = ProgramFamily.forever;
+  MethodGeneration _family = MethodGeneration.forever;
 
   static const _programs = [
     _ProgramPreview(
       templateId: 'forever-original-fsl-v1',
       labelKey: 'program.forever_original_fsl',
-      family: ProgramFamily.forever,
+      family: MethodGeneration.forever,
       validationStatus: ProgramValidationStatus.rulesReviewed,
       reference: ProgramDocumentReference(
         title: '5/3/1 Forever',
@@ -838,7 +838,7 @@ class _ProgramLibraryPanelState extends State<_ProgramLibraryPanel> {
     _ProgramPreview(
       templateId: 'forever-boring-but-big-indexed',
       labelKey: 'program.forever_boring_but_big',
-      family: ProgramFamily.forever,
+      family: MethodGeneration.forever,
       validationStatus: ProgramValidationStatus.needsReview,
       reference: ProgramDocumentReference(
         title: '5/3/1 Forever',
@@ -849,7 +849,7 @@ class _ProgramLibraryPanelState extends State<_ProgramLibraryPanel> {
     _ProgramPreview(
       templateId: 'forever-full-body-1000-indexed',
       labelKey: 'program.forever_full_body_1000',
-      family: ProgramFamily.forever,
+      family: MethodGeneration.forever,
       validationStatus: ProgramValidationStatus.needsReview,
       reference: ProgramDocumentReference(
         title: '5/3/1 Forever',
@@ -860,13 +860,13 @@ class _ProgramLibraryPanelState extends State<_ProgramLibraryPanel> {
     _ProgramPreview(
       templateId: 'beyond-catalog-indexed',
       labelKey: 'program.beyond_catalog',
-      family: ProgramFamily.beyond,
+      family: MethodGeneration.beyond,
       validationStatus: ProgramValidationStatus.indexed,
     ),
     _ProgramPreview(
       templateId: 'classic-catalog-indexed',
       labelKey: 'program.classic_catalog',
-      family: ProgramFamily.classic,
+      family: MethodGeneration.original,
       validationStatus: ProgramValidationStatus.indexed,
     ),
   ];
@@ -882,16 +882,16 @@ class _ProgramLibraryPanelState extends State<_ProgramLibraryPanel> {
         children: [
           Text(strings.libraryDescription),
           const SizedBox(height: 16),
-          SegmentedButton<ProgramFamily>(
+          SegmentedButton<MethodGeneration>(
             segments: const [
               ButtonSegment(
-                value: ProgramFamily.forever,
+                value: MethodGeneration.forever,
                 label: Text('Forever'),
               ),
-              ButtonSegment(value: ProgramFamily.beyond, label: Text('Beyond')),
+              ButtonSegment(value: MethodGeneration.beyond, label: Text('Beyond')),
               ButtonSegment(
-                value: ProgramFamily.classic,
-                label: Text('Classic'),
+                value: MethodGeneration.original,
+                label: Text('Original'),
               ),
             ],
             selected: {_family},
@@ -1001,7 +1001,7 @@ class _ProgramPreview {
 
   final String templateId;
   final String labelKey;
-  final ProgramFamily family;
+  final MethodGeneration family;
   final ProgramValidationStatus validationStatus;
   final ProgramDocumentReference? reference;
 }
@@ -1086,7 +1086,7 @@ class WorkoutDetailScreen extends StatelessWidget {
           FilledButton.icon(
             key: const Key('start-workout'),
             onPressed: () async {
-              await onStartSession(session.id);
+              if (!session.isStarted) await onStartSession(session.id);
               if (!context.mounted) return;
               await Navigator.of(context).push<void>(
                 MaterialPageRoute(
@@ -1101,7 +1101,9 @@ class WorkoutDetailScreen extends StatelessWidget {
               );
             },
             icon: const Icon(Icons.play_arrow),
-            label: Text(strings.startWorkout),
+            label: Text(
+              session.isStarted ? strings.resumeWorkout : strings.startWorkout,
+            ),
           ),
         ],
       ),
