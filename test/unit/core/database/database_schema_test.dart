@@ -8,7 +8,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 void main() {
   sqfliteFfiInit();
 
-  test('empty database creates v1 and v2 tables with constraints', () async {
+  test('empty database creates v1 to v3 tables with constraints', () async {
     final database = await databaseFactoryFfi.openDatabase(
       inMemoryDatabasePath,
       options: OpenDatabaseOptions(
@@ -17,6 +17,7 @@ void main() {
         onCreate: (db, version) async {
           await DatabaseSchema.createV1(db);
           await DatabaseSchema.createV2(db);
+          await DatabaseSchema.createV3(db);
         },
       ),
     );
@@ -38,11 +39,14 @@ void main() {
         'set_performances',
         'plan_events',
         'program_definition_snapshots',
+        'workout_runtime_sessions',
+        'workout_runtime_blocks',
+        'workout_activities',
       }),
     );
   });
 
-  test('v1 to v2 migration preserves legacy rows', () async {
+  test('v1 to v3 migration preserves legacy rows', () async {
     final temporary = await Directory.systemTemp.createTemp('db-v1-v2-');
     addTearDown(() => temporary.delete(recursive: true));
     final path = '${temporary.path}/migration.db';
@@ -66,7 +70,8 @@ void main() {
       {'key': 'legacy', 'value': 'kept'},
     ]);
     expect(await database.query('training_plans'), isEmpty);
-    expect(await database.getVersion(), 2);
+    expect(await database.query('workout_runtime_sessions'), isEmpty);
+    expect(await database.getVersion(), 3);
   });
 
   test('interrupted migration rolls back and leaves v1 restorable', () async {

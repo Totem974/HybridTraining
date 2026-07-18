@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 abstract final class DatabaseSchema {
-  static const version = 2;
+  static const version = 3;
 
   static Future<void> createV1(DatabaseExecutor database) async {
     await database.execute('''
@@ -176,10 +176,9 @@ abstract final class DatabaseSchema {
     int newVersion,
   ) async {
     if (oldVersion == newVersion) return;
-    if (oldVersion == 1 && newVersion == 2) {
-      await createV2(database);
-      return;
-    }
+    if (oldVersion < 2 && newVersion >= 2) await createV2(database);
+    if (oldVersion < 3 && newVersion >= 3) await createV3(database);
+    if (oldVersion >= 1 && newVersion <= 3) return;
     throw StateError(
       'No database migration registered from $oldVersion to $newVersion.',
     );
@@ -324,6 +323,21 @@ abstract final class DatabaseSchema {
     );
     await database.execute(
       'CREATE INDEX prescriptions_block_idx ON set_prescriptions(session_block_id, sequence)',
+    );
+  }
+
+  static Future<void> createV3(DatabaseExecutor database) async {
+    await database.execute(
+      '''CREATE TABLE workout_runtime_sessions (session_id TEXT PRIMARY KEY, status TEXT NOT NULL CHECK(status IN ('planned','started','completed','abandoned','skipped')), active_block_sequence INTEGER NOT NULL DEFAULT 0 CHECK(active_block_sequence >= 0), notes TEXT NOT NULL DEFAULT '', started_at TEXT, ended_at TEXT, updated_at TEXT NOT NULL, FOREIGN KEY(session_id) REFERENCES plan_training_sessions(id) ON DELETE CASCADE)''',
+    );
+    await database.execute(
+      '''CREATE TABLE workout_runtime_blocks (session_block_id TEXT PRIMARY KEY, status TEXT NOT NULL CHECK(status IN ('pending','active','completed','skipped')), rest_until TEXT, updated_at TEXT NOT NULL, FOREIGN KEY(session_block_id) REFERENCES session_blocks(id) ON DELETE CASCADE)''',
+    );
+    await database.execute(
+      '''CREATE TABLE workout_activities (id TEXT PRIMARY KEY, session_block_id TEXT NOT NULL, sequence INTEGER NOT NULL CHECK(sequence >= 0), label TEXT NOT NULL, target_type TEXT NOT NULL CHECK(target_type IN ('setsRepsLoad','totalReps','duration','distance','rounds','completion')), target_json TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('pending','success','failure','skipped')), result_json TEXT, updated_at TEXT NOT NULL, FOREIGN KEY(session_block_id) REFERENCES session_blocks(id) ON DELETE CASCADE, UNIQUE(session_block_id, sequence))''',
+    );
+    await database.execute(
+      'CREATE INDEX workout_activities_block_idx ON workout_activities(session_block_id, sequence)',
     );
   }
 }

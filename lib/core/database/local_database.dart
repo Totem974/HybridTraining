@@ -26,6 +26,7 @@ class LocalDatabase {
         onCreate: (database, version) async {
           await DatabaseSchema.createV1(database);
           if (version >= 2) await DatabaseSchema.createV2(database);
+          if (version >= 3) await DatabaseSchema.createV3(database);
         },
         onUpgrade: DatabaseSchema.migrate,
       ),

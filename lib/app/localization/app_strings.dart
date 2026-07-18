@@ -26,6 +26,40 @@ class AppStrings {
       '${_fr ? 'Programme' : 'Program'} : ${programLabel('program.forever_original_fsl')}';
   String get createCycle => _fr ? 'Créer mon cycle' : 'Create my cycle';
   String get workout => _fr ? 'Séance' : 'Workout';
+  String get previousBlock => _fr ? 'Précédent' : 'Previous';
+  String get nextBlock => _fr ? 'Suivant' : 'Next';
+  String get successfulResult => _fr ? 'Réussi' : 'Success';
+  String get failedResult => _fr ? 'Échoué' : 'Failure';
+  String get skippedResult => _fr ? 'Sauté' : 'Skipped';
+  String workoutBlockRole(String role) => switch ((languageCode, role)) {
+    ('fr', 'mobility') => 'Mobilité',
+    ('fr', 'warmUp') => 'Échauffement',
+    ('fr', 'jumpsThrows') => 'Sauts et lancers',
+    ('fr', 'mainWork') => 'Travail principal',
+    ('fr', 'performanceSet') => 'Série de performance',
+    ('fr', 'supplemental') => 'Complément',
+    ('fr', 'assistancePush') => 'Assistance poussée',
+    ('fr', 'assistancePull') => 'Assistance tirage',
+    ('fr', 'assistanceSingleLegCore') => 'Unilatéral et tronc',
+    ('fr', 'conditioningEasy') => 'Conditionnement facile',
+    ('fr', 'conditioningHard') => 'Conditionnement difficile',
+    ('fr', 'trainingMaxTest') => 'Test Training Max',
+    ('fr', 'personalRecordTest') => 'Test record personnel',
+    (_, 'mobility') => 'Mobility',
+    (_, 'warmUp') => 'Warm-up',
+    (_, 'jumpsThrows') => 'Jumps and throws',
+    (_, 'mainWork') => 'Main work',
+    (_, 'performanceSet') => 'Performance set',
+    (_, 'supplemental') => 'Supplemental',
+    (_, 'assistancePush') => 'Push assistance',
+    (_, 'assistancePull') => 'Pull assistance',
+    (_, 'assistanceSingleLegCore') => 'Single-leg and core',
+    (_, 'conditioningEasy') => 'Easy conditioning',
+    (_, 'conditioningHard') => 'Hard conditioning',
+    (_, 'trainingMaxTest') => 'Training Max test',
+    (_, 'personalRecordTest') => 'Personal record test',
+    _ => role,
+  };
   String get history => _fr ? 'Historique' : 'History';
   String get noSession =>
       _fr ? 'Aucune séance planifiée.' : 'No planned workout.';
