@@ -18,6 +18,15 @@ class HybridBackupHandler implements ImportFormatHandler {
     'training_sets',
     'personal_records',
     'app_metadata',
+    'program_definition_snapshots',
+    'training_plans',
+    'training_blocks',
+    'plan_training_cycles',
+    'plan_training_sessions',
+    'session_blocks',
+    'set_prescriptions',
+    'set_performances',
+    'plan_events',
   ];
 
   static const columns = <String, Set<String>>{
@@ -119,6 +128,95 @@ class HybridBackupHandler implements ImportFormatHandler {
       'source_set_id',
     },
     'app_metadata': {'key', 'value'},
+    'program_definition_snapshots': {
+      'id',
+      'blueprint_id',
+      'blueprint_version',
+      'snapshot_json',
+      'rule_provenance_json',
+      'created_at',
+    },
+    'training_plans': {
+      'id',
+      'athlete_id',
+      'blueprint_id',
+      'blueprint_version',
+      'definition_snapshot_id',
+      'macrocycle',
+      'status',
+      'created_at',
+      'completed_at',
+    },
+    'training_blocks': {
+      'id',
+      'plan_id',
+      'sequence',
+      'role',
+      'template_id',
+      'status',
+      'started_at',
+      'completed_at',
+    },
+    'plan_training_cycles': {
+      'id',
+      'block_id',
+      'sequence',
+      'starts_on',
+      'status',
+    },
+    'plan_training_sessions': {
+      'id',
+      'cycle_id',
+      'sequence',
+      'scheduled_for',
+      'status',
+      'started_at',
+      'completed_at',
+      'notes',
+      'rest_until',
+    },
+    'session_blocks': {
+      'id',
+      'session_id',
+      'sequence',
+      'kind',
+      'movement_id',
+      'rule_provenance_json',
+    },
+    'set_prescriptions': {
+      'id',
+      'session_block_id',
+      'sequence',
+      'training_max',
+      'percentage',
+      'unrounded_load',
+      'rounding_increment',
+      'prescribed_load',
+      'prescribed_reps',
+      'prescription_json',
+      'rule_provenance_json',
+    },
+    'set_performances': {
+      'id',
+      'prescription_id',
+      'result',
+      'completed_reps',
+      'actual_load',
+      'notes',
+      'recorded_at',
+    },
+    'plan_events': {
+      'id',
+      'plan_id',
+      'sequence',
+      'event_type',
+      'from_block_id',
+      'to_block_id',
+      'proposed_training_maxes_json',
+      'confirmed_training_maxes_json',
+      'rule_provenance_json',
+      'occurred_at',
+    },
   };
 
   static const requiredColumns = <String, Set<String>>{
@@ -134,6 +232,20 @@ class HybridBackupHandler implements ImportFormatHandler {
     'training_sets': {'id', 'session_id', 'lift_id', 'sequence'},
     'personal_records': {'id', 'lift_id', 'load', 'repetitions'},
     'app_metadata': {'key', 'value'},
+    'program_definition_snapshots': {
+      'id',
+      'blueprint_id',
+      'blueprint_version',
+      'snapshot_json',
+    },
+    'training_plans': {'id', 'athlete_id', 'definition_snapshot_id'},
+    'training_blocks': {'id', 'plan_id', 'sequence', 'role'},
+    'plan_training_cycles': {'id', 'block_id', 'sequence'},
+    'plan_training_sessions': {'id', 'cycle_id', 'sequence'},
+    'session_blocks': {'id', 'session_id', 'sequence', 'kind'},
+    'set_prescriptions': {'id', 'session_block_id', 'sequence'},
+    'set_performances': {'id', 'prescription_id', 'result'},
+    'plan_events': {'id', 'plan_id', 'sequence', 'event_type'},
   };
 
   @override
@@ -143,7 +255,8 @@ class HybridBackupHandler implements ImportFormatHandler {
   @override
   ImportInspection inspect(Map<String, Object?> document) {
     final issues = <ImportIssue>[];
-    if (document['schemaVersion'] != BackupEnvelope.schemaVersion) {
+    final sourceVersion = document['schemaVersion'];
+    if (sourceVersion != 1 && sourceVersion != BackupEnvelope.schemaVersion) {
       issues.add(
         const ImportIssue(
           path: r'$.schemaVersion',
@@ -174,7 +287,9 @@ class HybridBackupHandler implements ImportFormatHandler {
         ),
       );
     }
-    for (final table in tables) {
+    final normalizedPayload = Map<String, Object?>.from(payload);
+    final expectedTables = sourceVersion == 1 ? tables.take(12) : tables;
+    for (final table in expectedTables) {
       final rows = payload[table];
       if (rows is! List<Object?>) {
         issues.add(
@@ -222,11 +337,16 @@ class HybridBackupHandler implements ImportFormatHandler {
         }
       }
     }
+    if (sourceVersion == 1) {
+      for (final table in tables.skip(12)) {
+        normalizedPayload[table] = <Object?>[];
+      }
+    }
     return ImportInspection(
       candidate: ImportCandidate(
         sourceFormat: BackupEnvelope.format,
-        schemaVersion: BackupEnvelope.schemaVersion,
-        payload: payload,
+        schemaVersion: sourceVersion is int ? sourceVersion : 0,
+        payload: normalizedPayload,
       ),
       issues: issues,
     );

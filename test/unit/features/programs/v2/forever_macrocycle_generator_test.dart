@@ -183,7 +183,7 @@ void main() {
       final expected = File(
         'test/fixtures/forever_macrocycle_plan.golden.json',
       ).readAsStringSync();
-      expect(actual.trim(), expected.trim());
+      expect(actual.trim(), expected.replaceAll('\r\n', '\n').trim());
     });
   });
 

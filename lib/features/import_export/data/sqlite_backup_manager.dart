@@ -14,6 +14,15 @@ class SqliteBackupManager implements AtomicImportTarget {
 
   static const _insertOrder = HybridBackupHandler.tables;
   static const _deleteOrder = [
+    'plan_events',
+    'set_performances',
+    'set_prescriptions',
+    'session_blocks',
+    'plan_training_sessions',
+    'plan_training_cycles',
+    'training_blocks',
+    'training_plans',
+    'program_definition_snapshots',
     'personal_records',
     'training_sets',
     'training_sessions',

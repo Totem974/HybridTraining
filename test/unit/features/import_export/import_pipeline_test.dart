@@ -17,7 +17,7 @@ void main() {
     final document = jsonDecode(encoded) as Map<String, Object?>;
 
     expect(document['format'], BackupEnvelope.format);
-    expect(document['schemaVersion'], 1);
+    expect(document['schemaVersion'], BackupEnvelope.schemaVersion);
     expect(document['exportedAt'], '2026-07-17T12:00:00.000Z');
   });
 

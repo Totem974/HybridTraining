@@ -23,7 +23,10 @@ class LocalDatabase {
       options: OpenDatabaseOptions(
         version: DatabaseSchema.version,
         onConfigure: (database) => database.execute('PRAGMA foreign_keys = ON'),
-        onCreate: (database, version) => DatabaseSchema.createV1(database),
+        onCreate: (database, version) async {
+          await DatabaseSchema.createV1(database);
+          if (version >= 2) await DatabaseSchema.createV2(database);
+        },
         onUpgrade: DatabaseSchema.migrate,
       ),
     );

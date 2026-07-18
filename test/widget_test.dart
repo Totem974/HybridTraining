@@ -114,7 +114,7 @@ void main() {
     await tester.tap(find.text('Gérer mon programme'));
     await tester.pumpAndSettle();
     expect(find.byType(ProgramLibraryScreen), findsOneWidget);
-    await tester.tap(find.text('Original 5/3/1'));
+    await tester.tap(find.text('Original + First Set Last'));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('program-detail-list')), findsOneWidget);
     expect(find.text('Programme actuel'), findsOneWidget);
@@ -258,19 +258,20 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Original 5/3/1'), findsOneWidget);
+    expect(find.text('Original + First Set Last'), findsOneWidget);
+    await tester.tap(find.text('Composants'));
+    await tester.pumpAndSettle();
     expect(find.text('First Set Last'), findsOneWidget);
-    await tester.tap(find.text('Tous'));
+    await tester.tap(find.text('Programmes'));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('program-library-list')), findsOneWidget);
-    for (final id in [
-      'boring-but-big',
-      'joker-sets',
-      'coffinworm',
-      'krypteia',
-    ]) {
-      final card = find.byKey(Key('concept-$id'));
-      await tester.scrollUntilVisible(card, 250);
+    for (final title in ['Coffinworm', 'Krypteia']) {
+      final card = find.text(title);
+      await tester.scrollUntilVisible(
+        card,
+        250,
+        scrollable: find.byType(Scrollable).last,
+      );
       expect(card, findsOneWidget);
     }
   });

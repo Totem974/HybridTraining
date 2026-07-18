@@ -100,4 +100,68 @@ void main() {
     final database = await store.localDatabase.open();
     expect(await database.query('program_definitions'), isNotEmpty);
   });
+
+  test('v1 backup imports into v2 without losing legacy history', () async {
+    final temporary = await Directory.systemTemp.createTemp('hybrid-v1-');
+    addTearDown(() => temporary.delete(recursive: true));
+    final store = SqliteTrainingStore(
+      localDatabase: LocalDatabase(
+        factory: databaseFactoryFfi,
+        databasePath: '${temporary.path}/v1.db',
+      ),
+      clock: () => DateTime.utc(2026, 7, 18, 12),
+    );
+    addTearDown(store.close);
+    await store.initialize();
+    await store.createFoundation(
+      FoundationProfileInput(
+        displayName: 'Fictitious V1 Athlete',
+        unit: WeightUnit.kilograms,
+        oneRepMaxes: const {
+          MainLift.squat: 150,
+          MainLift.benchPress: 100,
+          MainLift.deadlift: 180,
+          MainLift.overheadPress: 70,
+        },
+        roundingIncrement: 2.5,
+        startDate: DateTime(2026, 7, 20),
+        trainingDaysPerWeek: 4,
+      ),
+    );
+    final document =
+        jsonDecode(await store.exportBackup()) as Map<String, Object?>;
+    document['schemaVersion'] = 1;
+    final payload = document['payload']! as Map<String, Object?>;
+    for (final table in [
+      'program_definition_snapshots',
+      'training_plans',
+      'training_blocks',
+      'plan_training_cycles',
+      'plan_training_sessions',
+      'session_blocks',
+      'set_prescriptions',
+      'set_performances',
+      'plan_events',
+    ]) {
+      payload.remove(table);
+    }
+
+    final report = await store.importBackup(jsonEncode(document), dryRun: true);
+    expect(report.applied, isFalse);
+    expect(report.issues, isEmpty);
+    final applied = await store.importBackup(
+      jsonEncode(document),
+      dryRun: false,
+    );
+    expect(applied.applied, isTrue);
+    final snapshot = await store.loadSnapshot();
+    expect(
+      snapshot.activeProgram.persistentPresetId,
+      'forever-original-fsl-v1',
+    );
+    expect(snapshot.nextSession, isNotNull);
+    final db = await store.localDatabase.open();
+    expect(await db.query('training_plans'), isEmpty);
+    expect(await db.query('training_sessions'), hasLength(12));
+  });
 }

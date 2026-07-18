@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 abstract final class DatabaseSchema {
-  static const version = 1;
+  static const version = 2;
 
   static Future<void> createV1(DatabaseExecutor database) async {
     await database.execute('''
@@ -176,8 +176,154 @@ abstract final class DatabaseSchema {
     int newVersion,
   ) async {
     if (oldVersion == newVersion) return;
+    if (oldVersion == 1 && newVersion == 2) {
+      await createV2(database);
+      return;
+    }
     throw StateError(
       'No database migration registered from $oldVersion to $newVersion.',
+    );
+  }
+
+  /// Additive v2 schema. The v1 cycle/session/set tables deliberately remain
+  /// untouched: they are the immutable execution record for legacy plans.
+  static Future<void> createV2(DatabaseExecutor database) async {
+    await database.execute('''
+      CREATE TABLE program_definition_snapshots (
+        id TEXT PRIMARY KEY,
+        blueprint_id TEXT NOT NULL,
+        blueprint_version INTEGER NOT NULL CHECK(blueprint_version > 0),
+        snapshot_json TEXT NOT NULL,
+        rule_provenance_json TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE(blueprint_id, blueprint_version)
+      )
+    ''');
+    await database.execute('''
+      CREATE TABLE training_plans (
+        id TEXT PRIMARY KEY,
+        athlete_id TEXT NOT NULL,
+        blueprint_id TEXT NOT NULL,
+        blueprint_version INTEGER NOT NULL CHECK(blueprint_version > 0),
+        definition_snapshot_id TEXT NOT NULL,
+        macrocycle INTEGER NOT NULL CHECK(macrocycle > 0),
+        status TEXT NOT NULL CHECK(status IN ('planned','active','complete','cancelled')),
+        created_at TEXT NOT NULL,
+        completed_at TEXT,
+        FOREIGN KEY(athlete_id) REFERENCES athlete_profiles(id),
+        FOREIGN KEY(definition_snapshot_id)
+          REFERENCES program_definition_snapshots(id)
+      )
+    ''');
+    await database.execute('''
+      CREATE TABLE training_blocks (
+        id TEXT PRIMARY KEY,
+        plan_id TEXT NOT NULL,
+        sequence INTEGER NOT NULL CHECK(sequence >= 0),
+        role TEXT NOT NULL CHECK(role IN ('prep','leader','seventhWeek','anchor')),
+        template_id TEXT NOT NULL,
+        status TEXT NOT NULL CHECK(status IN ('planned','active','complete','cancelled')),
+        started_at TEXT,
+        completed_at TEXT,
+        FOREIGN KEY(plan_id) REFERENCES training_plans(id) ON DELETE CASCADE,
+        UNIQUE(plan_id, sequence)
+      )
+    ''');
+    await database.execute('''
+      CREATE TABLE plan_training_cycles (
+        id TEXT PRIMARY KEY,
+        block_id TEXT NOT NULL,
+        sequence INTEGER NOT NULL CHECK(sequence >= 0),
+        starts_on TEXT NOT NULL,
+        status TEXT NOT NULL CHECK(status IN ('planned','active','complete','cancelled')),
+        FOREIGN KEY(block_id) REFERENCES training_blocks(id) ON DELETE CASCADE,
+        UNIQUE(block_id, sequence)
+      )
+    ''');
+    await database.execute('''
+      CREATE TABLE plan_training_sessions (
+        id TEXT PRIMARY KEY,
+        cycle_id TEXT NOT NULL,
+        sequence INTEGER NOT NULL CHECK(sequence >= 0),
+        scheduled_for TEXT NOT NULL,
+        status TEXT NOT NULL CHECK(status IN ('planned','started','complete','cancelled')),
+        started_at TEXT,
+        completed_at TEXT,
+        notes TEXT NOT NULL DEFAULT '',
+        rest_until TEXT,
+        FOREIGN KEY(cycle_id) REFERENCES plan_training_cycles(id) ON DELETE CASCADE,
+        UNIQUE(cycle_id, sequence)
+      )
+    ''');
+    await database.execute('''
+      CREATE TABLE session_blocks (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        sequence INTEGER NOT NULL CHECK(sequence >= 0),
+        kind TEXT NOT NULL,
+        movement_id TEXT,
+        rule_provenance_json TEXT NOT NULL,
+        FOREIGN KEY(session_id) REFERENCES plan_training_sessions(id)
+          ON DELETE CASCADE,
+        UNIQUE(session_id, sequence)
+      )
+    ''');
+    await database.execute('''
+      CREATE TABLE set_prescriptions (
+        id TEXT PRIMARY KEY,
+        session_block_id TEXT NOT NULL,
+        sequence INTEGER NOT NULL CHECK(sequence >= 0),
+        training_max REAL NOT NULL CHECK(training_max > 0),
+        percentage REAL,
+        unrounded_load REAL NOT NULL CHECK(unrounded_load >= 0),
+        rounding_increment REAL NOT NULL CHECK(rounding_increment > 0),
+        prescribed_load REAL NOT NULL CHECK(prescribed_load >= 0),
+        prescribed_reps INTEGER NOT NULL CHECK(prescribed_reps >= 0),
+        prescription_json TEXT NOT NULL,
+        rule_provenance_json TEXT NOT NULL,
+        FOREIGN KEY(session_block_id) REFERENCES session_blocks(id)
+          ON DELETE CASCADE,
+        UNIQUE(session_block_id, sequence)
+      )
+    ''');
+    await database.execute('''
+      CREATE TABLE set_performances (
+        id TEXT PRIMARY KEY,
+        prescription_id TEXT NOT NULL UNIQUE,
+        result TEXT NOT NULL CHECK(result IN ('success','failure','skipped')),
+        completed_reps INTEGER NOT NULL CHECK(completed_reps >= 0),
+        actual_load REAL,
+        notes TEXT NOT NULL DEFAULT '',
+        recorded_at TEXT NOT NULL,
+        FOREIGN KEY(prescription_id) REFERENCES set_prescriptions(id)
+      )
+    ''');
+    await database.execute('''
+      CREATE TABLE plan_events (
+        id TEXT PRIMARY KEY,
+        plan_id TEXT NOT NULL,
+        sequence INTEGER NOT NULL CHECK(sequence >= 0),
+        event_type TEXT NOT NULL,
+        from_block_id TEXT,
+        to_block_id TEXT,
+        proposed_training_maxes_json TEXT,
+        confirmed_training_maxes_json TEXT,
+        rule_provenance_json TEXT NOT NULL,
+        occurred_at TEXT NOT NULL,
+        FOREIGN KEY(plan_id) REFERENCES training_plans(id) ON DELETE CASCADE,
+        FOREIGN KEY(from_block_id) REFERENCES training_blocks(id),
+        FOREIGN KEY(to_block_id) REFERENCES training_blocks(id),
+        UNIQUE(plan_id, sequence)
+      )
+    ''');
+    await database.execute(
+      'CREATE INDEX training_blocks_plan_idx ON training_blocks(plan_id, sequence)',
+    );
+    await database.execute(
+      'CREATE INDEX plan_sessions_cycle_idx ON plan_training_sessions(cycle_id, sequence)',
+    );
+    await database.execute(
+      'CREATE INDEX prescriptions_block_idx ON set_prescriptions(session_block_id, sequence)',
     );
   }
 }
