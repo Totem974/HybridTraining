@@ -29,10 +29,7 @@ void main() {
     await tester.tap(find.byKey(const Key('continue')));
     await tester.pumpAndSettle();
     expect(find.text('Programme'), findsOneWidget);
-    expect(
-      find.text('5/3/1 Forever — Original + First Set Last'),
-      findsOneWidget,
-    );
+    expect(find.text('5/3/1 Forever'), findsOneWidget);
     await tester.tap(find.byKey(const Key('continue')));
     await tester.pumpAndSettle();
     expect(find.text('Planning'), findsOneWidget);
@@ -95,7 +92,7 @@ void main() {
     await reopened.close();
 
     expect(restored.displayName, 'Test local');
-    expect(restored.activeProgram.family, ProgramFamily.forever);
+    expect(restored.activeProgram.rulesetGeneration, MethodGeneration.forever);
     expect(restored.activeProgram.templateId, 'forever-original-fsl-v1');
     expect(restored.history, hasLength(1));
   });

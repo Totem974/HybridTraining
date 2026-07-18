@@ -7,9 +7,15 @@ génération précise. Une origine ne désigne donc jamais automatiquement les r
 à exécuter.
 
 Un **preset** est une composition complète et versionnée. Lui seul peut générer
-un cycle. Le preset disponible `forever-original-fsl-v1` applique les règles
-Forever, le travail principal Original 5/3/1 et la révision Forever de First Set
-Last 5 × 5. Il accepte trois ou quatre jours, quatre étant recommandé.
+un cycle. Le preset disponible `forever-original-fsl-v1` applique les révisions
+`forever-original-531-v1` et `forever-first-set-last-5x5-v1`. L’origine du
+concept principal reste Original, mais les règles réellement exécutées sont
+portées par leurs révisions Forever. Il accepte trois ou quatre jours, quatre
+étant recommandé.
+
+Le catalogue valide ses identifiants, ses références, ses fréquences, son unique
+recommandation disponible et l’association entre preset et générateur avant
+toute utilisation par le stockage.
 
 Les statuts `current`, `currentWithRestrictions`, `legacy`, `superseded` et
 `unknown` décrivent la continuité dans Forever. Aucun statut actuel et aucune

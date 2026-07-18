@@ -1,33 +1,20 @@
-# Décision sur le programme par défaut
+# Décision sur le preset par défaut
 
-## Décision
+Original, Beyond et Forever sont des générations successives du même système
+5/3/1, et non des familles exclusives. Les concepts possèdent une origine
+historique et peuvent recevoir des révisions propres à plusieurs générations.
 
-La famille par défaut de Hybrid 5/3/1 est **5/3/1 Forever**. Le seul template
-activable dans ce lot est **Original 5/3/1 + First Set Last**. Son identifiant
-persistant reste `forever-original-fsl-v1` et la version de définition reste 1.
+Le seul preset disponible est `forever-original-fsl-v1`, version 1. Il utilise
+les règles Forever, la révision principale `forever-original-531-v1` et la
+révision supplémentaire `forever-first-set-last-5x5-v1`. Il conserve un
+Training Max applicatif à 90 %, cinq séries FSL, quatre jours recommandés et
+trois jours comme adaptation produit.
 
-Ce template ne représente pas tout le catalogue Forever. Beyond et Classic sont
-des familles distinctes ; Boring But Big, Full Body et les autres entrées
-Forever restent indexées ou `NEEDS_REVIEW` et ne peuvent générer aucun cycle.
-
-## Modèle d'identité
-
-L'identité métier sépare :
-
-- la famille : Forever, Beyond ou Classic ;
-- l'identifiant stable du template ;
-- la version de la définition ;
-- la clé de libellé français/anglais ;
-- le statut de validation documentaire ;
-- les références structurées aux pages du livre et du PDF.
-
-Le snapshot fournit cette identité aux écrans. Le moteur Original + FSL continue
-d'utiliser un Training Max à 90 %, dans la plage documentée de 85 à 90 %, sans
-modifier les pourcentages, l'arrondi ni les cinq séries FSL existantes.
+Seul un preset complet et disponible peut générer un cycle. Un concept, une
+origine ou une génération ne peut jamais être persisté comme programme actif.
 
 ## Compatibilité SQLite
 
-Le schéma reste en version 1. Les cycles existants continuent de référencer
-`forever-original-fsl-v1`. Une ancienne ligne `program_definitions` dont le JSON
-ne contient pas les nouvelles métadonnées est décodée avec un fallback
-déterministe basé sur cet identifiant ; elle n'est ni remplacée ni supprimée.
+Le schéma reste en version 1 et les cycles conservent l’identifiant
+`forever-original-fsl-v1`. Le champ historique `family` reste lisible et la
+valeur `classic` devient l’alias de sérialisation de `original`.

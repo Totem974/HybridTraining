@@ -6,6 +6,7 @@ import 'package:hybrid_training/features/active_program/domain/training_store.da
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
 import 'package:hybrid_training/features/programs/domain/program_identity.dart';
 import 'package:hybrid_training/features/import_export/domain/import_models.dart';
+import 'package:hybrid_training/features/programs/presentation/program_library_screen.dart';
 
 void main() {
   testWidgets('creates a local profile and displays the first session', (
@@ -22,10 +23,7 @@ void main() {
     expect(find.text('Introduction'), findsOneWidget);
     await tester.tap(find.byKey(const Key('continue')));
     await tester.pumpAndSettle();
-    expect(
-      find.text('5/3/1 Forever — Original + First Set Last'),
-      findsOneWidget,
-    );
+    expect(find.text('5/3/1 Forever'), findsOneWidget);
     for (var step = 0; step < 2; step++) {
       await tester.tap(find.byKey(const Key('continue')));
       await tester.pumpAndSettle();
@@ -78,23 +76,11 @@ void main() {
     await tester.ensureVisible(find.text('Gérer mon programme'));
     await tester.tap(find.text('Gérer mon programme'));
     await tester.pumpAndSettle();
-    expect(find.text('Bibliothèque'), findsOneWidget);
-    await tester.tap(
-      find.text('5/3/1 Forever — Original + First Set Last').last,
-    );
+    expect(find.byType(ProgramLibraryScreen), findsOneWidget);
+    await tester.tap(find.text('Original 5/3/1'));
     await tester.pumpAndSettle();
+    expect(find.byKey(const Key('program-detail-list')), findsOneWidget);
     expect(find.text('Programme actuel'), findsOneWidget);
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Beyond'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('5/3/1 Beyond'));
-    await tester.pumpAndSettle();
-    expect(find.text('Bientôt disponible'), findsOneWidget);
-    expect(
-      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
-      isNull,
-    );
   });
 
   testWidgets('records a set, finishes a session and shows history', (
@@ -222,6 +208,55 @@ void main() {
     await tester.tap(record);
     await tester.pumpAndSettle();
     expect(find.text('1/1 séries terminées'), findsOneWidget);
+  });
+  testWidgets('library exposes all concepts and filters', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: ProgramLibraryScreen(
+          mode: ProgramLibraryMode.select,
+          selectedPresetId: 'forever-original-fsl-v1',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Original 5/3/1'), findsOneWidget);
+    expect(find.text('First Set Last'), findsOneWidget);
+    await tester.tap(find.text('Tous'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('program-library-list')), findsOneWidget);
+    for (final id in [
+      'boring-but-big',
+      'joker-sets',
+      'coffinworm',
+      'krypteia',
+    ]) {
+      final card = find.byKey(Key('concept-$id'));
+      await tester.scrollUntilVisible(card, 250);
+      expect(card, findsOneWidget);
+    }
+  });
+
+  testWidgets('onboarding opens the selectable program library', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      HybridTrainingApp(
+        environment: AppEnvironment.dev,
+        store: _FakeTrainingStore(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('continue')));
+    await tester.pumpAndSettle();
+    expect(find.text('Standard'), findsNothing);
+    expect(find.text('Full Body'), findsNothing);
+    await tester.tap(find.byKey(const Key('view-current-programs')));
+    await tester.pumpAndSettle();
+    expect(find.byType(ProgramLibraryScreen), findsOneWidget);
   });
 }
 

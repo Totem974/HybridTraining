@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:hybrid_training/app/localization/app_strings.dart';
 import 'package:hybrid_training/features/active_program/domain/training_store.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
+import 'package:hybrid_training/features/programs/domain/program_catalog.dart';
+import 'package:hybrid_training/features/programs/domain/program_identity.dart';
+import 'package:hybrid_training/features/programs/presentation/program_library_screen.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({required this.onSubmit, super.key});
@@ -79,34 +82,39 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               child: Column(
                 children: [
                   if (_saveError != null) ...[
-                    Text(_saveError!, style: const TextStyle(color: Colors.redAccent)),
+                    Text(
+                      _saveError!,
+                      style: const TextStyle(color: Colors.redAccent),
+                    ),
                     const SizedBox(height: 8),
                   ],
-                  Row(children: [
-                  if (_step > 0)
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _saving
-                            ? null
-                            : () => setState(() => _step--),
-                        child: Text(strings.back),
+                  Row(
+                    children: [
+                      if (_step > 0)
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: _saving
+                                ? null
+                                : () => setState(() => _step--),
+                            child: Text(strings.back),
+                          ),
+                        ),
+                      if (_step > 0) const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          key: Key(_step == 5 ? 'create-cycle' : 'continue'),
+                          onPressed: _saving ? null : _continue,
+                          child: Text(
+                            _saving
+                                ? strings.creating
+                                : _step == 5
+                                ? strings.createCycle
+                                : strings.continueLabel,
+                          ),
+                        ),
                       ),
-                    ),
-                  if (_step > 0) const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
-                      key: Key(_step == 5 ? 'create-cycle' : 'continue'),
-                      onPressed: _saving ? null : _continue,
-                      child: Text(
-                        _saving
-                            ? strings.creating
-                            : _step == 5
-                            ? strings.createCycle
-                            : strings.continueLabel,
-                      ),
-                    ),
+                    ],
                   ),
-                  ]),
                 ],
               ),
             ),
@@ -206,28 +214,37 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       const SizedBox(height: 16),
       Card(
         child: ListTile(
+          key: const Key('recommended-program'),
           contentPadding: const EdgeInsets.all(18),
           leading: const Icon(Icons.fitness_center),
-          title: Text(strings.foundationProgram),
-          subtitle: Text(strings.foundationProgramDescription),
-          trailing: const Icon(Icons.check_circle),
+          title: const Text('5/3/1 Forever'),
+          subtitle: Text(
+            'Original 5/3/1 + First Set Last 5 × 5\n${strings.currentVerifiedAvailable}\n${strings.fourDaysRecommended}',
+          ),
+          trailing: _selectedPresetId == 'forever-original-fsl-v1'
+              ? const Icon(Icons.check_circle)
+              : null,
         ),
       ),
       const SizedBox(height: 16),
-      SegmentedButton<int>(
-        segments: [
-          ButtonSegment(value: 0, label: Text(strings.standardProgram)),
-          ButtonSegment(
-            value: 1,
-            enabled: false,
-            label: Text(strings.fullBodyProgram),
-          ),
-        ],
-        selected: const {0},
-        onSelectionChanged: (_) {},
+      OutlinedButton(
+        key: const Key('view-current-programs'),
+        onPressed: () => _openLibrary(),
+        child: Text(strings.viewCurrentPrograms),
       ),
-      const SizedBox(height: 12),
-      Text(strings.pocProgramNotice),
+      for (final generation in MethodGeneration.values)
+        TextButton(
+          key: Key('explore-${generation.name}'),
+          onPressed: () => _openLibrary(origin: generation),
+          child: Text(
+            strings.exploreOrigin(strings.generationLabel(generation.name)),
+          ),
+        ),
+      TextButton(
+        key: const Key('browse-program-library'),
+        onPressed: () => _openLibrary(showAll: true),
+        child: Text(strings.browseLibrary),
+      ),
     ],
   );
 
@@ -261,6 +278,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         onSelectionChanged: (value) =>
             setState(() => _daysPerWeek = value.single),
       ),
+      if (_daysPerWeek == 3) ...[
+        const SizedBox(height: 12),
+        Text(strings.threeDayCalendar),
+      ],
     ],
   );
 
@@ -279,10 +300,26 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             children: [
               Text(strings.foundationProgram),
               const SizedBox(height: 8),
+              Text('${strings.rulesGeneration}: Forever'),
+              Text('${strings.mainWork}: Original 5/3/1'),
+              Text('${strings.supplementalWork}: First Set Last 5 × 5'),
+              Text('${strings.trainingMax}: 90 %'),
               Text('${strings.frequency}: $_daysPerWeek'),
+              Text(
+                _daysPerWeek == 3
+                    ? strings.threeDayCalendar
+                    : (_daysPerWeek == 4 ? (_frCalendar(strings)) : ''),
+              ),
               Text(
                 '${strings.startDate}: ${MaterialLocalizations.of(context).formatMediumDate(_startDate)}',
               ),
+              Text(
+                '${strings.unit}: ${_unit == WeightUnit.kilograms ? 'kg' : 'lb'}',
+              ),
+              for (final lift in MainLift.values)
+                Text(
+                  '${strings.lift(lift.name)}: ${_maxes[lift]!.text} ${_unit == WeightUnit.kilograms ? 'kg' : 'lb'}',
+                ),
             ],
           ),
         ),
@@ -317,33 +354,80 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   );
 
   Future<void> _continue() async {
-    if (_step == 3 && !_formKey.currentState!.validate()) return;
+    if (_step == 3 && !_formKey.currentState!.validate()) {
+      return;
+    }
     if (_step < 5) {
+      if (_step == 1) {
+        const catalog = ProgramCatalog();
+        final preset = catalog.preset(_selectedPresetId);
+        if (preset.availability != ProductAvailability.available) {
+          return;
+        }
+      }
       setState(() => _step++);
       return;
     }
-    setState(() { _saving = true; _saveError = null; });
+    setState(() {
+      _saving = true;
+      _saveError = null;
+    });
     try {
       await widget.onSubmit(
-      FoundationProfileInput(
-        displayName: _name.text.trim(),
-        unit: _unit,
-        roundingIncrement: _unit == WeightUnit.kilograms ? 2.5 : 5,
-        startDate: _startDate,
-        trainingDaysPerWeek: _daysPerWeek,
-        persistentPresetId: _selectedPresetId,
-        oneRepMaxes: {
-          for (final entry in _maxes.entries)
-            entry.key: double.parse(entry.value.text.replaceAll(',', '.')),
-        },
-      ),
+        FoundationProfileInput(
+          displayName: _name.text.trim(),
+          unit: _unit,
+          roundingIncrement: _unit == WeightUnit.kilograms ? 2.5 : 5,
+          startDate: _startDate,
+          trainingDaysPerWeek: _daysPerWeek,
+          persistentPresetId: _selectedPresetId,
+          presetVersion: const ProgramCatalog()
+              .preset(_selectedPresetId)
+              .version,
+          oneRepMaxes: {
+            for (final entry in _maxes.entries)
+              entry.key: double.parse(entry.value.text.replaceAll(',', '.')),
+          },
+        ),
       );
     } catch (_) {
-      if (mounted) setState(() => _saveError = 'Création impossible. Vérifiez les valeurs puis réessayez.');
+      if (mounted) {
+        setState(
+          () => _saveError =
+              'Création impossible. Vérifiez les valeurs puis réessayez.',
+        );
+      }
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
+
+  Future<void> _openLibrary({
+    MethodGeneration? origin,
+    bool showAll = false,
+  }) async {
+    final selected = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => ProgramLibraryScreen(
+          mode: ProgramLibraryMode.select,
+          selectedPresetId: _selectedPresetId,
+          initialOrigin: origin,
+          initialStatus: showAll
+              ? ProgramStatusFilter.all
+              : ProgramStatusFilter.current,
+        ),
+      ),
+    );
+    if (selected != null && mounted) {
+      setState(() => _selectedPresetId = selected);
+    }
+  }
+
+  String _frCalendar(AppStrings strings) => strings.languageCode == 'fr'
+      ? '12 séances réparties sur 3 semaines calendaires.'
+      : '12 workouts spread over 3 calendar weeks.';
 
   Future<void> _pickDate() async {
     final selected = await showDatePicker(
@@ -352,6 +436,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       firstDate: DateTime.now().subtract(const Duration(days: 1)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (selected != null) setState(() => _startDate = selected);
+    if (selected != null) {
+      setState(() => _startDate = selected);
+    }
   }
 }

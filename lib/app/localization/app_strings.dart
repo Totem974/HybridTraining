@@ -51,6 +51,60 @@ class AppStrings {
       : 'Set up your first 5/3/1 cycle. You can customize it later.';
   String get standardProgram => 'Standard';
   String get fullBodyProgram => 'Full Body';
+  String get recommended => _fr ? 'RECOMMANDÉ' : 'RECOMMENDED';
+  String get selectedProgramBadge => _fr ? 'SÉLECTIONNÉ' : 'SELECTED';
+  String get currentFilter => _fr ? 'Actuels' : 'Current';
+  String get legacyFilter => 'Legacy';
+  String get allFilter => _fr ? 'Tous' : 'All';
+  String get origin => _fr ? 'Origine' : 'Origin';
+  String get allOrigins => _fr ? 'Toutes' : 'All';
+  String get originalGeneration => 'Original';
+  String get beyondGeneration => 'Beyond';
+  String get foreverGeneration => 'Forever';
+  String get revision => _fr ? 'Révision' : 'Revision';
+  String get foreverState => _fr ? 'Statut dans Forever' : 'Forever status';
+  String get productAvailability => _fr ? 'Disponibilité' : 'Availability';
+  String get noProgramsForFilter => _fr
+      ? 'Aucun programme documenté dans ce filtre.'
+      : 'No documented program in this filter.';
+  String get toReview => _fr ? 'À vérifier' : 'Needs review';
+  String get chooseProgram =>
+      _fr ? 'Choisir ce programme' : 'Choose this program';
+  String get programSelected =>
+      _fr ? 'Programme sélectionné' : 'Program selected';
+  String get conceptType => _fr ? 'Type de concept' : 'Concept type';
+  String get revisionHistory =>
+      _fr ? 'Historique des révisions' : 'Revision history';
+  String get rulesNeedReview => _fr ? 'Règles à valider' : 'Rules need review';
+  String get presetDetails => _fr ? 'Preset disponible' : 'Available preset';
+  String get persistentPreset =>
+      _fr ? 'Identifiant persistant' : 'Persistent identifier';
+  String get rulesGeneration =>
+      _fr ? 'Génération des règles' : 'Rules generation';
+  String get mainWork => _fr ? 'Travail principal' : 'Main work';
+  String get supplementalWork =>
+      _fr ? 'Travail supplémentaire' : 'Supplemental work';
+  String get trainingMax => 'Training Max';
+  String get supportedFrequencies =>
+      _fr ? 'Fréquences supportées' : 'Supported frequencies';
+  String get recommendedFrequency =>
+      _fr ? 'Fréquence recommandée' : 'Recommended frequency';
+  String get version => 'Version';
+  String get viewCurrentPrograms =>
+      _fr ? 'Voir les programmes actuels' : 'View current programs';
+  String get browseLibrary =>
+      _fr ? 'Parcourir toute la bibliothèque' : 'Browse the full library';
+  String exploreOrigin(String generation) => _fr
+      ? 'Explorer les concepts issus de $generation'
+      : 'Explore concepts originating in $generation';
+  String get currentVerifiedAvailable => _fr
+      ? 'ACTUEL · RÈGLES VÉRIFIÉES · DISPONIBLE'
+      : 'CURRENT · RULES REVIEWED · AVAILABLE';
+  String get fourDaysRecommended =>
+      _fr ? '4 jours recommandés' : '4 days recommended';
+  String get threeDayCalendar => _fr
+      ? '12 séances réparties sur 4 semaines calendaires.'
+      : '12 workouts spread over 4 calendar weeks.';
   String get validationMessage => _fr
       ? 'Vérifiez vos charges avant de générer le cycle.'
       : 'Review your loads before generating the cycle.';
@@ -182,7 +236,61 @@ class AppStrings {
     'program.forever_full_body_1000' => 'Full Body (1000% Awesome)',
     'program.beyond_catalog' => '5/3/1 Beyond',
     'program.classic_catalog' => '5/3/1 Classic',
+    'program.original_531' => 'Original 5/3/1',
+    'program.first_set_last' => 'First Set Last',
+    'program.boring_but_big' => 'Boring But Big',
+    'program.joker_sets' => 'Joker Sets',
+    'program.boring_but_strong' => 'Boring But Strong',
+    'program.full_body_1000' => 'Full Body (1000% Awesome)',
+    'program.coffinworm' => 'Coffinworm',
+    'program.pervertor' => 'Pervertor',
+    'program.god_is_a_beast' => 'God Is a Beast',
+    'program.krypteia' => 'Krypteia',
     _ => key,
+  };
+
+  String generationLabel(String? value) => switch (value) {
+    'original' => 'Original',
+    'beyond' => 'Beyond',
+    'forever' => 'Forever',
+    _ => toReview,
+  };
+
+  String foreverStatusLabel(String? value) => switch (value) {
+    'current' => _fr ? 'Actuel' : 'Current',
+    'currentWithRestrictions' =>
+      _fr ? 'Actuel avec restrictions' : 'Current with restrictions',
+    'legacy' => 'Legacy',
+    'superseded' => _fr ? 'Remplacé' : 'Superseded',
+    _ => toReview,
+  };
+
+  String documentationStatusLabel(String value) => switch (value) {
+    'rulesReviewed' => rulesReviewed,
+    'indexed' => _fr ? 'Indexé' : 'Indexed',
+    _ => rulesNeedReview,
+  };
+
+  String availabilityLabel(String value) => switch (value) {
+    'available' => _fr ? 'Disponible' : 'Available',
+    'comingSoon' => comingSoon,
+    _ => _fr ? 'Documentation uniquement' : 'Documentation only',
+  };
+
+  String availabilityAction(String availability, String documentation) {
+    if (documentation == 'needsReview') return rulesNeedReview;
+    return availability == 'comingSoon'
+        ? comingSoon
+        : (_fr ? 'Documentation uniquement' : 'Documentation only');
+  }
+
+  String conceptTypeLabel(String value) => switch (value) {
+    'mainMethod' => _fr ? 'Méthode principale' : 'Main method',
+    'supplementalWork' => _fr ? 'Travail supplémentaire' : 'Supplemental work',
+    'assistance' => 'Assistance',
+    'cycleProtocol' => _fr ? 'Protocole de cycle' : 'Cycle protocol',
+    'completePreset' => 'Preset',
+    _ => _fr ? 'Programme autonome' : 'Standalone program',
   };
 
   String familyLabel(String family) => switch (family) {

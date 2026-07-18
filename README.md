@@ -104,6 +104,10 @@ Original, Beyond et Forever sont trois générations du système 5/3/1. Les
 concepts peuvent recevoir des révisions dans plusieurs générations. Le seul
 preset actuellement activable est **Original 5/3/1 + First Set Last 5 × 5**,
 avec règles Forever, sous l'identifiant stable `forever-original-fsl-v1`.
+La bibliothèque distingue l’origine des concepts de la génération de leurs
+révisions. Elle peut être consultée depuis les réglages ou utilisée pour choisir
+un preset concret pendant l’onboarding ; une génération seule n’est jamais un
+programme sélectionnable.
 
 Les systèmes leader/anchor, le protocole de septième semaine, la progression
 automatique entre cycles et l'assistance détaillée restent hors périmètre. Aucun
@@ -143,6 +147,8 @@ Utiliser `D:\SDK\flutter`, sans ajouter `\bin` dans ce champ.
 - [dépendances](docs/architecture/dependencies.md) ;
 - [matériaux de référence](docs/reference-materials.md).
 - [catalogue Forever](docs/program-specifications/forever-catalog.md) ;
+- [modèle de lignées](docs/product/program-lineage-model.md) ;
+- [spécification de la bibliothèque](docs/product/program-library-specification.md) ;
 - [import historique](docs/migration/legacy-json-import.md) ;
 - [matrice des écrans](docs/product/reference-screen-matrix.md).
 

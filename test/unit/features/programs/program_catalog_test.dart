@@ -6,38 +6,86 @@ import 'package:hybrid_training/features/programs/domain/program_identity.dart';
 void main() {
   const catalog = ProgramCatalog();
 
-  test('generations and classic compatibility are distinct and stable', () {
-    expect(MethodGeneration.values, [MethodGeneration.original, MethodGeneration.beyond, MethodGeneration.forever]);
-    expect(ProgramDefinitionRef.parseGeneration('classic'), MethodGeneration.original);
+  test('generations and classic compatibility are stable', () {
+    expect(MethodGeneration.values, [
+      MethodGeneration.original,
+      MethodGeneration.beyond,
+      MethodGeneration.forever,
+    ]);
+    expect(
+      ProgramDefinitionRef.parseGeneration('classic'),
+      MethodGeneration.original,
+    );
   });
 
-  test('concept origin differs from revision generation', () {
-    final concept = catalog.concept('original-531');
-    final revision = catalog.revision('original-531-v1');
-    expect(concept.originGeneration, MethodGeneration.original);
-    expect(revision.generation, MethodGeneration.original);
-    expect(catalog.concept('first-set-last').originGeneration, isNull);
-    expect(catalog.revision('forever-first-set-last-5x5-v1').generation, MethodGeneration.forever);
+  test('Original concept has distinct Original and Forever revisions', () {
+    final revisions = catalog.revisionsFor('original-531');
+    expect(
+      catalog.concept('original-531').originGeneration,
+      MethodGeneration.original,
+    );
+    expect(
+      revisions.map((item) => item.id),
+      containsAll(['original-original-531-v1', 'forever-original-531-v1']),
+    );
+    expect(
+      catalog.revision('forever-original-531-v1').generation,
+      MethodGeneration.forever,
+    );
   });
 
-  test('catalog identifiers and executable recommendation are unique', () {
-    expect(conceptsIds(), hasLength(ProgramCatalog.concepts.length));
-    expect(revisionIds(), hasLength(ProgramCatalog.revisions.length));
-    expect(presetIds(), hasLength(ProgramCatalog.presets.length));
-    expect(catalog.selectablePresets, hasLength(1));
-    expect(catalog.recommendedPreset.persistentPresetId, 'forever-original-fsl-v1');
-  });
-
-  test('preset composes Original main work and Forever FSL revision', () {
+  test('preset uses both reviewed Forever revisions', () {
     final preset = catalog.recommendedPreset;
-    expect(preset.rulesetGeneration, MethodGeneration.forever);
-    expect(preset.mainRevisionId, 'original-531-v1');
+    expect(preset.mainRevisionId, 'forever-original-531-v1');
     expect(preset.supplementalRevisionId, 'forever-first-set-last-5x5-v1');
     expect(preset.supportedFrequencies, {3, 4});
-    expect(const ProgramGeneratorFactory().resolve(preset.persistentPresetId), isNotNull);
+    expect(
+      const ProgramGeneratorFactory().resolve(preset.persistentPresetId),
+      isNotNull,
+    );
+  });
+
+  test('default catalog satisfies every invariant', () {
+    expect(catalog.validate().errors, isEmpty);
+    expect(catalog.concepts, hasLength(10));
+    expect(catalog.selectablePresets, hasLength(1));
+  });
+
+  test('validator detects duplicate and broken references', () {
+    final invalid = ProgramCatalog(
+      concepts: [catalog.concepts.first, catalog.concepts.first],
+      revisions: const [
+        ProgramRevision(
+          id: 'broken',
+          conceptId: 'missing',
+          generation: MethodGeneration.original,
+          version: 1,
+          foreverStatus: ForeverStatus.unknown,
+          documentationStatus: ProgramValidationStatus.needsReview,
+          references: [],
+        ),
+      ],
+      presets: const [
+        ProgramPresetDefinition(
+          persistentPresetId: 'broken',
+          version: 0,
+          rulesetGeneration: MethodGeneration.forever,
+          mainRevisionId: 'missing',
+          supplementalRevisionId: null,
+          supportedFrequencies: {3},
+          recommendedFrequency: 4,
+          availability: ProductAvailability.available,
+          recommended: true,
+          generatorId: null,
+        ),
+      ],
+    );
+    final errors = invalid.validate(generators: const {}).errors.join('\n');
+    expect(errors, contains('Duplicate concept'));
+    expect(errors, contains('Missing concept'));
+    expect(errors, contains('Missing revision'));
+    expect(errors, contains('Unsupported recommended frequency'));
+    expect(errors, contains('Invalid preset version'));
+    expect(errors, contains('Missing generator'));
   });
 }
-
-Set<String> conceptsIds() => {for (final item in ProgramCatalog.concepts) item.id};
-Set<String> revisionIds() => {for (final item in ProgramCatalog.revisions) item.id};
-Set<String> presetIds() => {for (final item in ProgramCatalog.presets) item.persistentPresetId};

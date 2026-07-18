@@ -14,3 +14,10 @@ Le splash HYBRID 5/3/1 couvre l’initialisation réelle, sans délai artificiel
 
 Les presets documentaires restent non sélectionnables. Aucun moteur Beyond ou
 Original supplémentaire n’est fourni.
+
+## Addendum — validation
+
+La première version de ce rapport avait été commitée sans validation Flutter :
+le formatage, l’analyse, les tests et les builds n’avaient pas abouti dans le
+bac à sable. Le lot 1B corrige les écarts fonctionnels et consigne séparément les
+résultats réellement obtenus.

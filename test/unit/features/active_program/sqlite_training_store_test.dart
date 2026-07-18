@@ -110,7 +110,10 @@ void main() {
         restored.activeProgram.templateId,
         ProgramDefinitionRef.originalFsl.templateId,
       );
-      expect(restored.activeProgram.rulesetGeneration, MethodGeneration.forever);
+      expect(
+        restored.activeProgram.rulesetGeneration,
+        MethodGeneration.forever,
+      );
       expect(
         restored.activeProgram.validationStatus,
         ProgramValidationStatus.rulesReviewed,
@@ -185,4 +188,50 @@ void main() {
       await expectLater(store.finishSession(session.id), throwsStateError);
     },
   );
+
+  test('invalid preset selections write no foundation data', () async {
+    final temporary = await Directory.systemTemp.createTemp('hybrid-preset-');
+    addTearDown(() => temporary.delete(recursive: true));
+    final store = SqliteTrainingStore(
+      localDatabase: LocalDatabase(
+        factory: databaseFactoryFfi,
+        databasePath: '${temporary.path}/preset.db',
+      ),
+    );
+    addTearDown(store.close);
+    await store.initialize();
+
+    Future<void> expectNoWrites(FoundationProfileInput input) async {
+      await expectLater(store.createFoundation(input), throwsA(anything));
+      final database = await store.localDatabase.open();
+      for (final table in [
+        'athlete_profiles',
+        'training_cycles',
+        'training_max_history',
+        'training_sessions',
+      ]) {
+        expect((await database.query(table)), isEmpty, reason: table);
+      }
+    }
+
+    FoundationProfileInput input({required String id, required int version}) =>
+        FoundationProfileInput(
+          displayName: 'Preset Example',
+          unit: WeightUnit.kilograms,
+          oneRepMaxes: const {
+            MainLift.squat: 100,
+            MainLift.benchPress: 100,
+            MainLift.deadlift: 100,
+            MainLift.overheadPress: 100,
+          },
+          roundingIncrement: 2.5,
+          startDate: DateTime(2026, 7, 20),
+          trainingDaysPerWeek: 4,
+          persistentPresetId: id,
+          presetVersion: version,
+        );
+
+    await expectNoWrites(input(id: 'forever-original-fsl-v1', version: 2));
+    await expectNoWrites(input(id: 'unknown-preset', version: 1));
+  });
 }

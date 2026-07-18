@@ -7,7 +7,6 @@ import 'package:hybrid_training/features/active_program/domain/training_store.da
 import 'package:hybrid_training/features/gyms/domain/plate_calculator.dart';
 import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
-import 'package:hybrid_training/features/programs/domain/program_identity.dart';
 import 'package:hybrid_training/features/programs/presentation/program_library_screen.dart';
 
 class TrainingHomeScreen extends StatelessWidget {
@@ -461,8 +460,10 @@ class _SettingsPanel extends StatelessWidget {
             label: strings.manageProgram,
             onTap: () => Navigator.of(context).push<void>(
               MaterialPageRoute(
-                builder: (_) =>
-                    const ProgramLibraryScreen(),
+                builder: (_) => ProgramLibraryScreen(
+                  mode: ProgramLibraryMode.browse,
+                  activePresetId: snapshot.activeProgram.persistentPresetId,
+                ),
               ),
             ),
           ),
@@ -810,201 +811,6 @@ class _HistoryPanel extends StatelessWidget {
             ),
     );
   }
-}
-
-class _ProgramLibraryPanel extends StatefulWidget {
-  const _ProgramLibraryPanel({required this.activeProgram});
-
-  final ProgramDefinitionRef activeProgram;
-
-  @override
-  State<_ProgramLibraryPanel> createState() => _ProgramLibraryPanelState();
-}
-
-class _ProgramLibraryPanelState extends State<_ProgramLibraryPanel> {
-  MethodGeneration _family = MethodGeneration.forever;
-
-  static const _programs = [
-    _ProgramPreview(
-      templateId: 'forever-original-fsl-v1',
-      labelKey: 'program.forever_original_fsl',
-      family: MethodGeneration.forever,
-      validationStatus: ProgramValidationStatus.rulesReviewed,
-      reference: ProgramDocumentReference(
-        title: '5/3/1 Forever',
-        bookPages: '168-170',
-        pdfPages: '180-182',
-      ),
-    ),
-    _ProgramPreview(
-      templateId: 'forever-boring-but-big-indexed',
-      labelKey: 'program.forever_boring_but_big',
-      family: MethodGeneration.forever,
-      validationStatus: ProgramValidationStatus.needsReview,
-      reference: ProgramDocumentReference(
-        title: '5/3/1 Forever',
-        bookPages: 'NEEDS_REVIEW',
-        pdfPages: '57',
-      ),
-    ),
-    _ProgramPreview(
-      templateId: 'forever-full-body-1000-indexed',
-      labelKey: 'program.forever_full_body_1000',
-      family: MethodGeneration.forever,
-      validationStatus: ProgramValidationStatus.needsReview,
-      reference: ProgramDocumentReference(
-        title: '5/3/1 Forever',
-        bookPages: 'NEEDS_REVIEW',
-        pdfPages: '86',
-      ),
-    ),
-    _ProgramPreview(
-      templateId: 'beyond-catalog-indexed',
-      labelKey: 'program.beyond_catalog',
-      family: MethodGeneration.beyond,
-      validationStatus: ProgramValidationStatus.indexed,
-    ),
-    _ProgramPreview(
-      templateId: 'classic-catalog-indexed',
-      labelKey: 'program.classic_catalog',
-      family: MethodGeneration.original,
-      validationStatus: ProgramValidationStatus.indexed,
-    ),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    const strings = AppStrings();
-    final visible = _programs.where((item) => item.family == _family);
-    return Scaffold(
-      appBar: AppBar(title: Text(strings.library)),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Text(strings.libraryDescription),
-          const SizedBox(height: 16),
-          SegmentedButton<MethodGeneration>(
-            segments: const [
-              ButtonSegment(
-                value: MethodGeneration.forever,
-                label: Text('Forever'),
-              ),
-              ButtonSegment(value: MethodGeneration.beyond, label: Text('Beyond')),
-              ButtonSegment(
-                value: MethodGeneration.original,
-                label: Text('Original'),
-              ),
-            ],
-            selected: {_family},
-            onSelectionChanged: (value) =>
-                setState(() => _family = value.single),
-          ),
-          const SizedBox(height: 16),
-          for (final program in visible)
-            Card(
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                title: Text(
-                  strings.programLabel(program.labelKey),
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-                subtitle: Text(
-                  program.templateId == widget.activeProgram.templateId
-                      ? strings.currentProgram
-                      : strings.comingSoon,
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(context).push<void>(
-                  MaterialPageRoute(
-                    builder: (_) => _ProgramDetailPanel(
-                      program: program,
-                      isCurrent:
-                          program.templateId == widget.activeProgram.templateId,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProgramDetailPanel extends StatelessWidget {
-  const _ProgramDetailPanel({required this.program, required this.isCurrent});
-
-  final _ProgramPreview program;
-  final bool isCurrent;
-
-  @override
-  Widget build(BuildContext context) {
-    const strings = AppStrings();
-    return Scaffold(
-      appBar: AppBar(title: Text(strings.programDetails)),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              strings.programLabel(program.labelKey),
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '${strings.programFamily}: ${strings.familyLabel(program.family.name)}',
-            ),
-            Text(
-              '${strings.programTemplate}: ${strings.templateLabel(program.labelKey)}',
-            ),
-            Text(
-              '${strings.validationStatus}: ${program.validationStatus == ProgramValidationStatus.rulesReviewed ? strings.rulesReviewed : strings.indexedOnly}',
-            ),
-            if (program.reference case final reference?)
-              Text(
-                '${strings.documentarySource}: ${reference.title}, ${strings.bookPages} ${reference.bookPages} / ${strings.pdfPages} ${reference.pdfPages}',
-              ),
-            const SizedBox(height: 20),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  program.validationStatus ==
-                          ProgramValidationStatus.rulesReviewed
-                      ? strings.programRulesValidated
-                      : strings.programRulesNeedReview,
-                ),
-              ),
-            ),
-            const Spacer(),
-            FilledButton(
-              onPressed: null,
-              child: Text(
-                isCurrent ? strings.currentProgram : strings.comingSoon,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ProgramPreview {
-  const _ProgramPreview({
-    required this.templateId,
-    required this.labelKey,
-    required this.family,
-    required this.validationStatus,
-    this.reference,
-  });
-
-  final String templateId;
-  final String labelKey;
-  final MethodGeneration family;
-  final ProgramValidationStatus validationStatus;
-  final ProgramDocumentReference? reference;
 }
 
 class _PanelTile extends StatelessWidget {

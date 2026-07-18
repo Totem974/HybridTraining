@@ -8,7 +8,8 @@ class ProgramGeneratorFactory {
 
   OriginalFslProgram resolve(String persistentPresetId) {
     final preset = catalog.preset(persistentPresetId);
-    if (preset.availability != ProductAvailability.available || preset.generatorId == null) {
+    if (preset.availability != ProductAvailability.available ||
+        preset.generatorId == null) {
       throw StateError('Preset is not available: $persistentPresetId');
     }
     return switch (preset.generatorId) {

@@ -86,6 +86,9 @@ class SqliteTrainingStore implements TrainingStore {
     }
     const catalog = ProgramCatalog();
     final preset = catalog.preset(input.persistentPresetId);
+    if (input.presetVersion != preset.version) {
+      throw ArgumentError.value(input.presetVersion, 'presetVersion');
+    }
     if (input.trainingDaysPerWeek != 3 && input.trainingDaysPerWeek != 4) {
       throw ArgumentError.value(
         input.trainingDaysPerWeek,
@@ -93,9 +96,14 @@ class SqliteTrainingStore implements TrainingStore {
       );
     }
     if (!preset.supportedFrequencies.contains(input.trainingDaysPerWeek)) {
-      throw ArgumentError.value(input.trainingDaysPerWeek, 'trainingDaysPerWeek');
+      throw ArgumentError.value(
+        input.trainingDaysPerWeek,
+        'trainingDaysPerWeek',
+      );
     }
-    final program = const ProgramGeneratorFactory().resolve(input.persistentPresetId);
+    final program = const ProgramGeneratorFactory().resolve(
+      input.persistentPresetId,
+    );
     final database = await localDatabase.open();
     final now = _clock().toUtc();
     final startsOn = DateTime(
