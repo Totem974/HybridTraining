@@ -49,6 +49,8 @@ class ProgramPresetDefinition {
     required this.recommendedFrequency,
     required this.availability,
     required this.recommended,
+    required this.legacyCompatible,
+    required this.implementationStatus,
     required this.generatorId,
   });
 
@@ -61,6 +63,8 @@ class ProgramPresetDefinition {
   final int recommendedFrequency;
   final ProductAvailability availability;
   final bool recommended;
+  final bool legacyCompatible;
+  final ProgramImplementationStatus implementationStatus;
   final String? generatorId;
 }
 
@@ -207,7 +211,9 @@ class ProgramCatalog {
       supportedFrequencies: {3, 4},
       recommendedFrequency: 4,
       availability: ProductAvailability.available,
-      recommended: true,
+      recommended: false,
+      legacyCompatible: true,
+      implementationStatus: ProgramImplementationStatus.experimental,
       generatorId: 'original-fsl',
     ),
   ];
@@ -227,10 +233,13 @@ class ProgramCatalog {
   List<ProgramPresetDefinition> get selectablePresets => presets
       .where((item) => item.availability == ProductAvailability.available)
       .toList(growable: false);
-  ProgramPresetDefinition get recommendedPreset => presets.singleWhere(
-    (item) =>
-        item.recommended && item.availability == ProductAvailability.available,
-  );
+  ProgramPresetDefinition? get recommendedPreset => presets
+      .where(
+        (item) =>
+            item.recommended &&
+            item.availability == ProductAvailability.available,
+      )
+      .firstOrNull;
   List<ProgramPresetDefinition> presetsForConcept(String conceptId) => presets
       .where(
         (preset) =>
@@ -301,9 +310,9 @@ class ProgramCatalog {
                   item.recommended &&
                   item.availability == ProductAvailability.available,
             )
-            .length !=
+            .length >
         1) {
-      errors.add('Exactly one available preset must be recommended');
+      errors.add('At most one available preset may be recommended');
     }
     return ProgramCatalogValidation(List.unmodifiable(errors));
   }

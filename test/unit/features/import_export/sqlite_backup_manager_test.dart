@@ -49,6 +49,13 @@ void main() {
         (document['payload']! as Map<String, Object?>)['training_sessions'],
         hasLength(12),
       );
+      final exportedDefinitions =
+          (document['payload']! as Map<String, Object?>)['program_definitions']!
+              as List<Object?>;
+      expect(
+        (exportedDefinitions.single! as Map<String, Object?>)['id'],
+        'forever-original-fsl-v1',
+      );
 
       await store.deleteAllData();
       expect(await store.hasProfile(), isFalse);
@@ -63,6 +70,10 @@ void main() {
       expect(
         (await store.loadSnapshot()).displayName,
         'Athlete Backup Example',
+      );
+      expect(
+        (await store.loadSnapshot()).activeProgram.persistentPresetId,
+        'forever-original-fsl-v1',
       );
     },
   );

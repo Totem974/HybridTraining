@@ -3,7 +3,7 @@
 Hybrid 5/3/1 est une application Flutter locale de programmation et de suivi
 d'entraînement 5/3/1. Android est la plateforme prioritaire.
 
-La Base0 fournit une tranche locale complète : onboarding, choix kg/lb,
+La Base0 fournit une tranche locale complète : onboarding de compatibilité, choix kg/lb,
 planification 3 ou 4 jours, cycle 5/3/1 Forever — Original + First Set Last,
 séance guidée,
 AMRAP, repos, notes, records, historique, calcul de plaques et modification des
@@ -105,9 +105,11 @@ ne doivent jamais être ajoutées à Git.
 ## Programme par défaut
 
 Original, Beyond et Forever sont trois générations du système 5/3/1. Les
-concepts peuvent recevoir des révisions dans plusieurs générations. Le seul
-preset actuellement activable est **Original 5/3/1 + First Set Last 5 × 5**,
+concepts peuvent recevoir des révisions dans plusieurs générations. Le preset
+historique encore activable est **Original 5/3/1 + First Set Last 5 × 5**,
 avec règles Forever, sous l'identifiant stable `forever-original-fsl-v1`.
+Il n'est pas une recommandation officielle : c'est un preset de compatibilité
+disponible pendant la construction du moteur Forever.
 La bibliothèque distingue l’origine des concepts de la génération de leurs
 révisions. Elle peut être consultée depuis les réglages ou utilisée pour choisir
 un preset concret pendant l’onboarding ; une génération seule n’est jamais un
@@ -154,6 +156,7 @@ Utiliser `D:\SDK\flutter`, sans ajouter `\bin` dans ce champ.
 - [modèle de lignées](docs/product/program-lineage-model.md) ;
 - [spécification de la bibliothèque](docs/product/program-library-specification.md) ;
 - [spécification du planning initial](docs/product/initial-cycle-planning-specification.md) ;
+- [décision de gel de l'onboarding](docs/product/onboarding-standby-decision.md) ;
 - [import historique](docs/migration/legacy-json-import.md) ;
 - [matrice des écrans](docs/product/reference-screen-matrix.md).
 

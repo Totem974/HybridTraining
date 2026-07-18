@@ -27,4 +27,20 @@ void main() {
     expect(french.rulesReviewed, 'Règles vérifiées');
     expect(english.rulesReviewed, 'Rules reviewed');
   });
+
+  test('describes the historical preset only as compatibility', () {
+    const french = AppStrings();
+    expect(
+      french.compatibilityPresetNotice,
+      'Preset de compatibilité disponible pendant la construction du moteur Forever.',
+    );
+    expect(
+      french.compatibilityPresetNotice.toLowerCase(),
+      isNot(contains('officiel')),
+    );
+    expect(
+      french.compatibilityPresetNotice.toLowerCase(),
+      isNot(contains('recommand')),
+    );
+  });
 }

@@ -7,11 +7,19 @@ import 'package:hybrid_training/features/active_program/domain/training_store.da
 import 'package:hybrid_training/features/active_program/presentation/foundation_controller.dart';
 import 'package:hybrid_training/features/active_program/presentation/training_home_screen.dart';
 import 'package:hybrid_training/features/onboarding/presentation/profile_setup_screen.dart';
+import 'package:hybrid_training/features/onboarding/domain/setup_entry_policy.dart';
+import 'package:hybrid_training/features/onboarding/presentation/development_bootstrap_screen.dart';
 
 class HybridTrainingApp extends StatefulWidget {
-  const HybridTrainingApp({required this.environment, this.store, super.key});
+  const HybridTrainingApp({
+    required this.environment,
+    this.setupEntryMode = SetupEntryMode.legacyCompatibility,
+    this.store,
+    super.key,
+  });
 
   final AppEnvironment environment;
+  final SetupEntryMode setupEntryMode;
   final TrainingStore? store;
 
   @override
@@ -118,9 +126,7 @@ class _HybridTrainingAppState extends State<HybridTrainingApp> {
               ),
             ),
           ),
-          FoundationState.onboarding => ProfileSetupScreen(
-            onSubmit: controller.createProfile,
-          ),
+          FoundationState.onboarding => _setupEntry(controller),
           FoundationState.ready => TrainingHomeScreen(
             snapshot: controller.snapshot!,
             onCompleteSet: controller.completeSet,
@@ -151,5 +157,21 @@ class _HybridTrainingAppState extends State<HybridTrainingApp> {
         },
       ),
     );
+  }
+
+  Widget _setupEntry(FoundationController controller) {
+    final mode = SetupEntryPolicy.resolve(
+      environment: widget.environment,
+      requestedMode: widget.setupEntryMode,
+    );
+    return switch (mode) {
+      SetupEntryMode.developmentBootstrap => DevelopmentBootstrapScreen(
+        onSubmit: controller.createProfile,
+      ),
+      SetupEntryMode.legacyCompatibility ||
+      SetupEntryMode.recommendationV2Disabled => ProfileSetupScreen(
+        onSubmit: controller.createProfile,
+      ),
+    };
   }
 }

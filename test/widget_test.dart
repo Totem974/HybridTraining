@@ -6,9 +6,46 @@ import 'package:hybrid_training/features/active_program/domain/training_store.da
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
 import 'package:hybrid_training/features/programs/domain/program_identity.dart';
 import 'package:hybrid_training/features/import_export/domain/import_models.dart';
+import 'package:hybrid_training/features/onboarding/domain/setup_entry_policy.dart';
 import 'package:hybrid_training/features/programs/presentation/program_library_screen.dart';
 
 void main() {
+  testWidgets('prod keeps compatibility and never exposes recommendation V2', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      HybridTrainingApp(
+        environment: AppEnvironment.prod,
+        setupEntryMode: SetupEntryMode.recommendationV2Disabled,
+        store: _FakeTrainingStore(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Introduction'), findsOneWidget);
+    expect(find.byKey(const Key('create-development-demo')), findsNothing);
+    expect(find.textContaining('Recommendation V2'), findsNothing);
+  });
+
+  testWidgets('dev creates the deterministic demonstration bootstrap', (
+    tester,
+  ) async {
+    final store = _FakeTrainingStore();
+    await tester.pumpWidget(
+      HybridTrainingApp(
+        environment: AppEnvironment.dev,
+        setupEntryMode: SetupEntryMode.developmentBootstrap,
+        store: store,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('create-development-demo')));
+    await tester.pumpAndSettle();
+    expect(store.created?.displayName, 'Athlète Démo');
+    expect(store.created?.startDate, DateTime(2026, 1, 5));
+    expect(store.created?.persistentPresetId, 'forever-original-fsl-v1');
+    expect(find.byKey(const Key('home-dashboard')), findsOneWidget);
+  });
+
   testWidgets('creates a local profile and displays the first session', (
     tester,
   ) async {

@@ -1,10 +1,14 @@
-# Décision sur le preset par défaut
+# Décision historique sur le preset de compatibilité
+
+> Cette décision est conservée pour expliquer les bases et cycles existants.
+> `forever-original-fsl-v1` n'est plus recommandé par le futur système produit.
+> Il reste compatible et son implémentation est marquée expérimentale.
 
 Original, Beyond et Forever sont des générations successives du même système
 5/3/1, et non des familles exclusives. Les concepts possèdent une origine
 historique et peuvent recevoir des révisions propres à plusieurs générations.
 
-Le seul preset disponible est `forever-original-fsl-v1`, version 1. Il utilise
+Le preset de compatibilité disponible est `forever-original-fsl-v1`, version 1. Il utilise
 les règles Forever, la révision principale `forever-original-531-v1` et la
 révision supplémentaire `forever-first-set-last-5x5-v1`. Il conserve un
 Training Max applicatif à 90 %, cinq séries FSL, quatre jours recommandés et

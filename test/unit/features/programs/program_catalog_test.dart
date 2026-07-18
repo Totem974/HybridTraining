@@ -35,10 +35,17 @@ void main() {
   });
 
   test('preset uses both reviewed Forever revisions', () {
-    final preset = catalog.recommendedPreset;
+    final preset = catalog.preset('forever-original-fsl-v1');
     expect(preset.mainRevisionId, 'forever-original-531-v1');
     expect(preset.supplementalRevisionId, 'forever-first-set-last-5x5-v1');
     expect(preset.supportedFrequencies, {3, 4});
+    expect(preset.recommended, isFalse);
+    expect(preset.legacyCompatible, isTrue);
+    expect(
+      preset.implementationStatus,
+      ProgramImplementationStatus.experimental,
+    );
+    expect(catalog.recommendedPreset, isNull);
     expect(
       const ProgramGeneratorFactory().resolve(preset.persistentPresetId),
       isNotNull,
@@ -80,6 +87,8 @@ void main() {
           recommendedFrequency: 4,
           availability: ProductAvailability.available,
           recommended: true,
+          legacyCompatible: false,
+          implementationStatus: ProgramImplementationStatus.experimental,
           generatorId: null,
         ),
       ],

@@ -12,6 +12,8 @@ enum ProgramValidationStatus { rulesReviewed, indexed, needsReview }
 
 enum ProductAvailability { available, comingSoon, documentationOnly }
 
+enum ProgramImplementationStatus { experimental, productionReady }
+
 enum ProgramConceptType {
   mainMethod,
   supplementalWork,

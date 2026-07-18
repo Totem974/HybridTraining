@@ -7,6 +7,16 @@ class AppStrings {
 
   String get setupTitle =>
       _fr ? 'Créer votre profil local' : 'Create your local profile';
+  String get compatibilityPresetNotice => _fr
+      ? 'Preset de compatibilité disponible pendant la construction du moteur Forever.'
+      : 'Compatibility preset available while the Forever engine is being built.';
+  String get developmentBootstrapTitle =>
+      _fr ? 'Données de démonstration' : 'Demo data';
+  String get developmentBootstrapDescription => _fr
+      ? 'Crée un profil fictif et un plan déterministe réservé au flavor dev.'
+      : 'Creates a fictional profile and deterministic plan for the dev flavor only.';
+  String get createDevelopmentDemo =>
+      _fr ? 'Créer le profil de démonstration' : 'Create demo profile';
   String get displayName => _fr ? 'Prénom ou pseudonyme' : 'Name or nickname';
   String get unit => _fr ? 'Unité' : 'Unit';
   String get maxInstructions => _fr

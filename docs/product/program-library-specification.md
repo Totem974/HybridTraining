@@ -17,5 +17,6 @@ inconnue est affichée « À vérifier », jamais remplacée par une description
 inventée.
 
 Seul un preset `available` peut être sélectionné. Pour ce lot, il s’agit de
-`forever-original-fsl-v1`, recommandé et présélectionné. Les concepts
-documentaires restent consultables et leur bouton est désactivé.
+`forever-original-fsl-v1`, conservé pour compatibilité et présélectionné. Il
+n'est pas une recommandation du futur moteur. Les concepts documentaires
+restent consultables et leur bouton est désactivé.

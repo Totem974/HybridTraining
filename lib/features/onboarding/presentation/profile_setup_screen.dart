@@ -232,12 +232,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       const SizedBox(height: 16),
       Card(
         child: ListTile(
-          key: const Key('recommended-program'),
+          key: const Key('compatibility-program'),
           contentPadding: const EdgeInsets.all(18),
           leading: const Icon(Icons.fitness_center),
           title: const Text('5/3/1 Forever'),
           subtitle: Text(
-            'Original 5/3/1 + First Set Last 5 × 5\n${strings.currentVerifiedAvailable}\n${strings.fourDaysRecommended}',
+            'Original 5/3/1 + First Set Last 5 × 5\n${strings.compatibilityPresetNotice}',
           ),
           trailing: _selectedPresetId == 'forever-original-fsl-v1'
               ? const Icon(Icons.check_circle)
