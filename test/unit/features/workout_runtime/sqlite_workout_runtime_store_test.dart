@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/core/database/local_database.dart';
+import 'package:hybrid_training/features/import_export/data/sqlite_backup_manager.dart';
 import 'package:hybrid_training/features/workout_runtime/data/sqlite_workout_runtime_store.dart';
 import 'package:hybrid_training/features/workout_runtime/domain/composable_workout.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -90,6 +91,38 @@ void main() {
       ).isBefore(DateTime.utc(2026, 7, 18, 10)),
       isTrue,
     );
+  });
+
+  test('backup v3 restores the complete mutable runtime state', () async {
+    await store.initialize(_workout());
+    await store.startOrResume('session');
+    await store.record(
+      'warm-item',
+      PrescriptionStatus.success,
+      result: {'seconds': 240},
+    );
+    await store.navigate('session', blockSequence: 1);
+    await store.setRest('main', DateTime.utc(2026, 7, 18, 10, 3));
+    await store.updateNotes('session', 'Fictitious backup note');
+
+    final backup = SqliteBackupManager(localDatabase: local);
+    final source = await backup.exportBackup(appVersion: 'test');
+    await backup.deleteAllData();
+    expect(await store.load('session'), isNull);
+
+    final report = await backup.importBackup(source, dryRun: false);
+    expect(report.applied, isTrue);
+    expect(report.issues, isEmpty);
+    final restored = await store.load('session');
+    expect(restored?['status'], 'started');
+    expect(restored?['active_block_sequence'], 1);
+    expect(restored?['notes'], 'Fictitious backup note');
+    final blocks = restored?['blocks']! as List<Map<String, Object?>>;
+    expect(blocks[1]['rest_until'], '2026-07-18T10:03:00.000Z');
+    final activities =
+        blocks.first['activities']! as List<Map<String, Object?>>;
+    expect(activities.single['status'], 'success');
+    expect(activities.single['result_json'], '{"seconds":240}');
   });
 
   test('SQLite failure rolls initialization back atomically', () async {
@@ -194,6 +227,43 @@ Future<void> _seed(LocalDatabase local) async {
     'rounding_increment': 2.5,
     'created_at': '2026-07-18T00:00:00Z',
     'updated_at': '2026-07-18T00:00:00Z',
+  });
+  await db.insert('program_definitions', {
+    'id': 'legacy-compatible',
+    'schema_version': 1,
+    'name_key': 'program.forever_original_fsl',
+    'definition_json': '{}',
+    'created_at': '2026-07-18T00:00:00Z',
+  });
+  await db.insert('training_cycles', {
+    'id': 'legacy-cycle',
+    'athlete_id': 'athlete',
+    'program_definition_id': 'legacy-compatible',
+    'program_definition_version': 1,
+    'starts_on': '2026-07-18',
+    'status': 'active',
+    'settings_json': '{}',
+    'created_at': '2026-07-18T00:00:00Z',
+  });
+  await db.insert('training_sessions', {
+    'id': 'legacy-session',
+    'cycle_id': 'legacy-cycle',
+    'scheduled_for': '2026-07-18',
+    'status': 'planned',
+  });
+  await db.insert('training_sets', {
+    'id': 'legacy-set',
+    'session_id': 'legacy-session',
+    'lift_id': 'squat',
+    'sequence': 0,
+    'kind': 'main',
+    'training_max': 100,
+    'percentage': .9,
+    'unrounded_load': 90,
+    'rounding_increment': 2.5,
+    'prescribed_load': 90,
+    'prescribed_reps': 5,
+    'performance_set': 0,
   });
   await db.insert('program_definition_snapshots', {
     'id': 'snapshot',

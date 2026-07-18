@@ -232,7 +232,7 @@ class ProgramCatalog {
       supplementalRevisionId: null,
       supportedFrequencies: {3},
       recommendedFrequency: 3,
-      availability: ProductAvailability.available,
+      availability: ProductAvailability.comingSoon,
       recommended: false,
       legacyCompatible: false,
       implementationStatus: ProgramImplementationStatus.productionReady,

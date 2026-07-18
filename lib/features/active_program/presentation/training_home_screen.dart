@@ -128,26 +128,7 @@ class TrainingHomeScreen extends StatelessWidget {
       ),
       bottomNavigationBar: _AppBottomBar(
         selectedIndex: 0,
-        onSelected: (index) {
-          if (index == 2 && snapshot.nextSession != null) {
-            _openWorkout(context, snapshot.nextSession!);
-          } else if (index == 1) {
-            _openPanel(context, _StatsPanel(snapshot: snapshot));
-          } else if (index == 3) {
-            _openPanel(context, _ProfilePanel(snapshot: snapshot));
-          } else if (index == 4) {
-            _openPanel(
-              context,
-              _SettingsPanel(
-                snapshot: snapshot,
-                onUpdateTrainingMaxes: onUpdateTrainingMaxes,
-                onExportBackup: onExportBackup,
-                onImportBackup: onImportBackup,
-                onDeleteAllData: onDeleteAllData,
-              ),
-            );
-          }
-        },
+        onSelected: (index) => _navigate(context, index),
       ),
     );
   }
@@ -170,6 +151,39 @@ class TrainingHomeScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _navigate(BuildContext context, int index) async {
+    final navigator = Navigator.of(context);
+    navigator.popUntil((route) => route.isFirst);
+    if (index == 0) return;
+    if (index == 2) {
+      final session = snapshot.nextSession;
+      if (session == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(const AppStrings().noSession)));
+        return;
+      }
+      await _openWorkout(context, session);
+      return;
+    }
+    final panel = switch (index) {
+      1 => _StatsPanel(snapshot: snapshot, onNavigate: _navigate),
+      3 => _ProfilePanel(snapshot: snapshot, onNavigate: _navigate),
+      4 => _SettingsPanel(
+        snapshot: snapshot,
+        onUpdateTrainingMaxes: onUpdateTrainingMaxes,
+        onExportBackup: onExportBackup,
+        onImportBackup: onImportBackup,
+        onDeleteAllData: onDeleteAllData,
+        onNavigate: _navigate,
+      ),
+      _ => null,
+    };
+    if (panel != null) {
+      await navigator.push<void>(MaterialPageRoute(builder: (_) => panel));
+    }
   }
 }
 
@@ -246,6 +260,7 @@ class _AppBottomBar extends StatelessWidget {
           _item(context, 1, Icons.bar_chart_rounded),
           IconButton.filled(
             key: const Key('quick-workout'),
+            tooltip: const AppStrings().startWorkout,
             onPressed: () => onSelected(2),
             style: IconButton.styleFrom(
               backgroundColor: const Color(0xFFF5821F),
@@ -261,20 +276,32 @@ class _AppBottomBar extends StatelessWidget {
     ),
   );
 
-  Widget _item(BuildContext context, int index, IconData icon) => IconButton(
-    key: Key('nav-$index'),
-    onPressed: () => onSelected(index),
-    color: selectedIndex == index
-        ? const Color(0xFFF2F1EE)
-        : const Color(0x73F2F1EE),
-    icon: Icon(icon),
-  );
+  Widget _item(BuildContext context, int index, IconData icon) {
+    const strings = AppStrings();
+    final tooltip = switch (index) {
+      0 => strings.home,
+      1 => strings.statistics,
+      3 => strings.profile,
+      4 => strings.settings,
+      _ => '',
+    };
+    return IconButton(
+      key: Key('nav-$index'),
+      tooltip: tooltip,
+      onPressed: () => onSelected(index),
+      color: selectedIndex == index
+          ? const Color(0xFFF2F1EE)
+          : const Color(0x73F2F1EE),
+      icon: Icon(icon),
+    );
+  }
 }
 
 class _StatsPanel extends StatelessWidget {
-  const _StatsPanel({required this.snapshot});
+  const _StatsPanel({required this.snapshot, required this.onNavigate});
 
   final TrainingSnapshot snapshot;
+  final Future<void> Function(BuildContext context, int index) onNavigate;
 
   @override
   Widget build(BuildContext context) {
@@ -307,7 +334,7 @@ class _StatsPanel extends StatelessWidget {
       ),
       bottomNavigationBar: _AppBottomBar(
         selectedIndex: 1,
-        onSelected: (index) => _panelNavigation(context, index),
+        onSelected: (index) => onNavigate(context, index),
       ),
     );
   }
@@ -334,9 +361,10 @@ class _MetricCard extends StatelessWidget {
 }
 
 class _ProfilePanel extends StatelessWidget {
-  const _ProfilePanel({required this.snapshot});
+  const _ProfilePanel({required this.snapshot, required this.onNavigate});
 
   final TrainingSnapshot snapshot;
+  final Future<void> Function(BuildContext context, int index) onNavigate;
 
   @override
   Widget build(BuildContext context) {
@@ -361,15 +389,17 @@ class _ProfilePanel extends StatelessWidget {
                 child: Text(initials),
               ),
               const SizedBox(width: 14),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    snapshot.displayName,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  Text(strings.programLabel(snapshot.activeProgram.labelKey)),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      snapshot.displayName,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    Text(strings.programLabel(snapshot.activeProgram.labelKey)),
+                  ],
+                ),
               ),
             ],
           ),
@@ -388,7 +418,8 @@ class _ProfilePanel extends StatelessWidget {
             label: strings.statistics,
             onTap: () => Navigator.of(context).push<void>(
               MaterialPageRoute(
-                builder: (_) => _StatsPanel(snapshot: snapshot),
+                builder: (_) =>
+                    _StatsPanel(snapshot: snapshot, onNavigate: onNavigate),
               ),
             ),
           ),
@@ -398,7 +429,7 @@ class _ProfilePanel extends StatelessWidget {
       ),
       bottomNavigationBar: _AppBottomBar(
         selectedIndex: 3,
-        onSelected: (index) => _panelNavigation(context, index),
+        onSelected: (index) => onNavigate(context, index),
       ),
     );
   }
@@ -411,6 +442,7 @@ class _SettingsPanel extends StatelessWidget {
     required this.onExportBackup,
     required this.onImportBackup,
     required this.onDeleteAllData,
+    required this.onNavigate,
   });
 
   final TrainingSnapshot snapshot;
@@ -420,6 +452,7 @@ class _SettingsPanel extends StatelessWidget {
   final Future<ImportReport> Function(String source, {required bool dryRun})
   onImportBackup;
   final Future<void> Function() onDeleteAllData;
+  final Future<void> Function(BuildContext context, int index) onNavigate;
 
   @override
   Widget build(BuildContext context) {
@@ -519,14 +552,20 @@ class _SettingsPanel extends StatelessWidget {
       ),
       bottomNavigationBar: _AppBottomBar(
         selectedIndex: 4,
-        onSelected: (index) => _panelNavigation(context, index),
+        onSelected: (index) => onNavigate(context, index),
       ),
     );
   }
 
   Future<void> _showExport(BuildContext context) async {
     const strings = AppStrings();
-    final source = await onExportBackup();
+    late final String source;
+    try {
+      source = await onExportBackup();
+    } catch (_) {
+      if (context.mounted) _showWriteFailed(context);
+      return;
+    }
     if (!context.mounted) return;
     await showDialog<void>(
       context: context,
@@ -575,7 +614,12 @@ class _SettingsPanel extends StatelessWidget {
       ),
     );
     if (confirmed != true) return;
-    await onDeleteAllData();
+    try {
+      await onDeleteAllData();
+    } catch (_) {
+      if (context.mounted) _showWriteFailed(context);
+      return;
+    }
     if (context.mounted) {
       Navigator.of(context).popUntil((route) => route.isFirst);
     }
@@ -664,12 +708,18 @@ class _ImportPanelState extends State<_ImportPanel> {
 
   Future<void> _run({required bool dryRun}) async {
     setState(() => _busy = true);
-    final report = await widget.onImport(_source.text, dryRun: dryRun);
+    late final ImportReport report;
+    try {
+      report = await widget.onImport(_source.text, dryRun: dryRun);
+    } catch (_) {
+      if (!mounted) return;
+      _showWriteFailed(context);
+      return;
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
     if (!mounted) return;
-    setState(() {
-      _busy = false;
-      _report = report;
-    });
+    setState(() => _report = report);
     if (report.applied && mounted) {
       Navigator.of(context).popUntil((route) => route.isFirst);
     }
@@ -769,7 +819,14 @@ class _EditCyclePanelState extends State<_EditCyclePanel> {
 
   Future<void> _save() async {
     setState(() => _saving = true);
-    await widget.onSave(_maxes);
+    try {
+      await widget.onSave(_maxes);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      _showWriteFailed(context);
+      return;
+    }
     if (!mounted) return;
     Navigator.of(context).pop();
   }
@@ -825,7 +882,7 @@ class _PanelTile extends StatelessWidget {
     child: ListTile(
       leading: Icon(icon, color: const Color(0xFFF5821F)),
       title: Text(label),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: onTap == null ? null : const Icon(Icons.chevron_right),
       onTap: onTap,
     ),
   );
@@ -837,10 +894,6 @@ const _sectionStyle = TextStyle(
   fontWeight: FontWeight.w700,
   letterSpacing: 1.2,
 );
-
-void _panelNavigation(BuildContext context, int index) {
-  if (index == 0) Navigator.of(context).popUntil((route) => route.isFirst);
-}
 
 class WorkoutDetailScreen extends StatelessWidget {
   const WorkoutDetailScreen({
@@ -989,8 +1042,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   );
   Timer? _timer;
   Timer? _notesDebounce;
+  Future<void> _notesWrite = Future.value();
   int _restSeconds = 0;
   bool _busy = false;
+  bool _allowPop = false;
+  int _notesRevision = 0;
+  int _persistedNotesRevision = 0;
   int? _enteredRepetitions;
 
   int get _currentIndex => _completed.indexWhere((done) => !done);
@@ -1009,6 +1066,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   void dispose() {
     _timer?.cancel();
     _notesDebounce?.cancel();
+    if (_persistedNotesRevision < _notesRevision) {
+      unawaited(
+        _queueNotesSave(_notesRevision, _notes.text, reportError: false),
+      );
+    }
     _notes.dispose();
     super.dispose();
   }
@@ -1020,164 +1082,173 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     final finished = index == -1;
     final current = finished ? null : widget.session.sets[index];
     _enteredRepetitions ??= current?.repetitions;
-    return Scaffold(
-      appBar: AppBar(title: Text(strings.activeWorkout)),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            Text(
-              finished ? strings.workoutComplete : strings.next,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 16),
-            if (current != null)
-              Card(
-                color: Theme.of(context).colorScheme.surface,
-                child: Padding(
-                  padding: const EdgeInsets.all(28),
-                  child: Column(
-                    children: [
-                      Text(
-                        current.kind == SetKind.main
-                            ? strings.mainSets
-                            : strings.firstSetLast,
-                      ),
-                      if (current.isPerformanceSet) ...[
-                        const SizedBox(height: 20),
-                        Text(strings.amrapRepetitions),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            IconButton(
-                              onPressed: (_enteredRepetitions ?? 0) > 0
-                                  ? () => setState(
-                                      () => _enteredRepetitions =
-                                          _enteredRepetitions! - 1,
-                                    )
-                                  : null,
-                              icon: const Icon(Icons.remove_circle_outline),
-                            ),
-                            Text(
-                              '$_enteredRepetitions',
-                              key: const Key('entered-repetitions'),
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            IconButton(
-                              onPressed: () => setState(
-                                () => _enteredRepetitions =
-                                    _enteredRepetitions! + 1,
+    return PopScope<void>(
+      canPop: _allowPop,
+      onPopInvokedWithResult: (didPop, _) => _handlePop(didPop),
+      child: Scaffold(
+        appBar: AppBar(title: Text(strings.activeWorkout)),
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+              Text(
+                finished ? strings.workoutComplete : strings.next,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: 16),
+              if (current != null)
+                Card(
+                  color: Theme.of(context).colorScheme.surface,
+                  child: Padding(
+                    padding: const EdgeInsets.all(28),
+                    child: Column(
+                      children: [
+                        Text(
+                          current.kind == SetKind.main
+                              ? strings.mainSets
+                              : strings.firstSetLast,
+                        ),
+                        if (current.isPerformanceSet) ...[
+                          const SizedBox(height: 20),
+                          Text(strings.amrapRepetitions),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IconButton(
+                                onPressed: (_enteredRepetitions ?? 0) > 0
+                                    ? () => setState(
+                                        () => _enteredRepetitions =
+                                            _enteredRepetitions! - 1,
+                                      )
+                                    : null,
+                                icon: const Icon(Icons.remove_circle_outline),
                               ),
-                              icon: const Icon(Icons.add_circle_outline),
-                            ),
-                          ],
+                              Text(
+                                '$_enteredRepetitions',
+                                key: const Key('entered-repetitions'),
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineMedium,
+                              ),
+                              IconButton(
+                                onPressed: () => setState(
+                                  () => _enteredRepetitions =
+                                      _enteredRepetitions! + 1,
+                                ),
+                                icon: const Icon(Icons.add_circle_outline),
+                              ),
+                            ],
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        _PlateHint(
+                          load: current.load,
+                          unit: widget.session.unit,
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          strings.lift(widget.session.lift.name),
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          '${_load(current.load)} ${_unit(widget.session.unit)}  ×  ${current.repetitions}${current.isPerformanceSet ? '+' : ''}',
+                          style: Theme.of(context).textTheme.displaySmall,
                         ),
                       ],
-                      const SizedBox(height: 16),
-                      _PlateHint(load: current.load, unit: widget.session.unit),
-                      const SizedBox(height: 10),
-                      Text(
-                        strings.lift(widget.session.lift.name),
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        '${_load(current.load)} ${_unit(widget.session.unit)}  ×  ${current.repetitions}${current.isPerformanceSet ? '+' : ''}',
-                        style: Theme.of(context).textTheme.displaySmall,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            if (_restSeconds > 0) ...[
+              if (_restSeconds > 0) ...[
+                const SizedBox(height: 16),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Text(strings.rest),
+                        Text(
+                          _duration(_restSeconds),
+                          style: Theme.of(context).textTheme.displaySmall,
+                        ),
+                        TextButton(
+                          key: const Key('skip-rest'),
+                          onPressed: _skipRest,
+                          child: Text(strings.skipRest),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      Text(strings.rest),
-                      Text(
-                        _duration(_restSeconds),
-                        style: Theme.of(context).textTheme.displaySmall,
-                      ),
-                      TextButton(
-                        key: const Key('skip-rest'),
-                        onPressed: _skipRest,
-                        child: Text(strings.skipRest),
-                      ),
-                    ],
-                  ),
+              TextField(
+                controller: _notes,
+                onChanged: _scheduleNotesSave,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: strings.sessionNotes,
+                  prefixIcon: const Icon(Icons.notes),
                 ),
               ),
-            ],
-            const SizedBox(height: 16),
-            TextField(
-              controller: _notes,
-              onChanged: _scheduleNotesSave,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: strings.sessionNotes,
-                prefixIcon: const Icon(Icons.notes),
-              ),
-            ),
-            const SizedBox(height: 20),
-            if (finished)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Text(
-                    '${_results.where((result) => result == SetResult.success).length} ${strings.successfulSets} · '
-                    '${_results.where((result) => result == SetResult.failure).length} ${strings.failedSets} · '
-                    '${_results.where((result) => result == SetResult.skipped).length} ${strings.skippedSets}',
-                    textAlign: TextAlign.center,
+              const SizedBox(height: 20),
+              if (finished)
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Text(
+                      '${_results.where((result) => result == SetResult.success).length} ${strings.successfulSets} · '
+                      '${_results.where((result) => result == SetResult.failure).length} ${strings.failedSets} · '
+                      '${_results.where((result) => result == SetResult.skipped).length} ${strings.skippedSets}',
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
-              ),
-            if (finished)
-              FilledButton(
-                key: const Key('finish-session'),
-                onPressed: _busy ? null : _finish,
-                child: Text(strings.finishSession),
-              )
-            else ...[
-              FilledButton(
-                key: Key('record-set-${current!.sequence}-success'),
-                onPressed: _busy ? null : () => _record(SetResult.success),
-                child: Text(strings.setComplete),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      key: Key('record-set-${current.sequence}-failure'),
-                      onPressed: _busy
-                          ? null
-                          : () => _record(SetResult.failure),
-                      child: Text(strings.setFailed),
+              if (finished)
+                FilledButton(
+                  key: const Key('finish-session'),
+                  onPressed: _busy ? null : _finish,
+                  child: Text(strings.finishSession),
+                )
+              else ...[
+                FilledButton(
+                  key: Key('record-set-${current!.sequence}-success'),
+                  onPressed: _busy ? null : () => _record(SetResult.success),
+                  child: Text(strings.setComplete),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        key: Key('record-set-${current.sequence}-failure'),
+                        onPressed: _busy
+                            ? null
+                            : () => _record(SetResult.failure),
+                        child: Text(strings.setFailed),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextButton(
-                      key: Key('record-set-${current.sequence}-skipped'),
-                      onPressed: _busy
-                          ? null
-                          : () => _record(SetResult.skipped),
-                      child: Text(strings.skipSet),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextButton(
+                        key: Key('record-set-${current.sequence}-skipped'),
+                        onPressed: _busy
+                            ? null
+                            : () => _record(SetResult.skipped),
+                        child: Text(strings.skipSet),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              ],
+              const SizedBox(height: 10),
+              Text(
+                '${_completed.where((done) => done).length}/${_completed.length} ${strings.setsCompleted}',
+                textAlign: TextAlign.center,
               ),
             ],
-            const SizedBox(height: 10),
-            Text(
-              '${_completed.where((done) => done).length}/${_completed.length} ${strings.setsCompleted}',
-              textAlign: TextAlign.center,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -1215,14 +1286,25 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
       final restUntil = DateTime.now().toUtc().add(
         const Duration(seconds: 180),
       );
-      await widget.onSetRestUntil(widget.session.id, restUntil);
-      _startTimer();
+      try {
+        await widget.onSetRestUntil(widget.session.id, restUntil);
+        _startTimer();
+      } catch (_) {
+        if (!mounted) return;
+        setState(() => _restSeconds = 0);
+        _showWriteFailed(context);
+      }
     }
   }
 
   Future<void> _skipRest() async {
-    setState(() => _restSeconds = 0);
-    await widget.onSetRestUntil(widget.session.id, null);
+    try {
+      await widget.onSetRestUntil(widget.session.id, null);
+    } catch (_) {
+      if (mounted) _showWriteFailed(context);
+      return;
+    }
+    if (mounted) setState(() => _restSeconds = 0);
   }
 
   void _startTimer() {
@@ -1238,9 +1320,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 
   Future<void> _finish() async {
     setState(() => _busy = true);
-    _notesDebounce?.cancel();
     try {
-      await widget.onUpdateNotes(widget.session.id, _notes.text);
+      if (!await _flushNotes()) {
+        if (mounted) setState(() => _busy = false);
+        return;
+      }
       await widget.onFinishSession(widget.session.id);
     } catch (_) {
       if (!mounted) return;
@@ -1251,15 +1335,62 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
       return;
     }
     if (!mounted) return;
+    setState(() => _allowPop = true);
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) return;
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  Future<void> _handlePop(bool didPop) async {
+    if (didPop) return;
+    if (!await _flushNotes() || !mounted) return;
+    setState(() => _allowPop = true);
+    Navigator.of(context).pop();
   }
 
   void _scheduleNotesSave(String notes) {
     _notesDebounce?.cancel();
-    _notesDebounce = Timer(const Duration(milliseconds: 600), () {
-      widget.onUpdateNotes(widget.session.id, notes);
-    });
+    final revision = ++_notesRevision;
+    _notesDebounce = Timer(
+      const Duration(milliseconds: 600),
+      () => _queueNotesSave(revision, notes),
+    );
   }
+
+  Future<bool> _flushNotes() {
+    _notesDebounce?.cancel();
+    if (_persistedNotesRevision >= _notesRevision) {
+      return Future.value(true);
+    }
+    return _queueNotesSave(_notesRevision, _notes.text);
+  }
+
+  Future<bool> _queueNotesSave(
+    int revision,
+    String notes, {
+    bool reportError = true,
+  }) async {
+    var succeeded = true;
+    _notesWrite = _notesWrite.then((_) async {
+      try {
+        await widget.onUpdateNotes(widget.session.id, notes);
+        if (revision > _persistedNotesRevision) {
+          _persistedNotesRevision = revision;
+        }
+      } catch (_) {
+        succeeded = false;
+      }
+    });
+    await _notesWrite;
+    if (!succeeded && reportError && mounted) _showWriteFailed(context);
+    return succeeded;
+  }
+}
+
+void _showWriteFailed(BuildContext context) {
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(const AppStrings().writeFailed)));
 }
 
 class _PlateHint extends StatelessWidget {

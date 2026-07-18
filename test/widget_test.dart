@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/app/bootstrap/app_environment.dart';
@@ -146,7 +148,7 @@ void main() {
 
     expect(store.completedSetIds, ['set-1']);
     expect(store.finishedSessionIds, ['session-1']);
-    expect(store.savedNotes, ['Rien à signaler', 'Rien à signaler']);
+    expect(store.savedNotes, ['Rien à signaler']);
     expect(find.text('Aucune séance planifiée.'), findsOneWidget);
     expect(find.text('Squat'), findsOneWidget);
     expect(tester.widgetList(find.byType(Banner)), isEmpty);
@@ -174,6 +176,82 @@ void main() {
 
     expect(find.byType(TextField), findsOneWidget);
     expect(store.startedSessionIds, isEmpty);
+  });
+
+  testWidgets('bottom navigation remains usable from every panel', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final store = _FakeTrainingStore(hasExistingProfile: true);
+    await tester.pumpWidget(
+      HybridTrainingApp(environment: AppEnvironment.dev, store: store),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('nav-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('Statistiques'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('nav-3')));
+    await tester.pumpAndSettle();
+    expect(find.text('Profil'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    expect(find.text('Réglages'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('nav-0')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('home-dashboard')), findsOneWidget);
+  });
+
+  testWidgets('leaving a workout immediately still persists edited notes', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final store = _FakeTrainingStore(hasExistingProfile: true);
+    await tester.pumpWidget(
+      HybridTrainingApp(environment: AppEnvironment.dev, store: store),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open-workout')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('start-workout')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'Note fictive immédiate');
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(store.savedNotes, ['Note fictive immédiate']);
+  });
+
+  testWidgets('a delayed older note cannot overwrite the latest note on exit', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final firstWrite = Completer<void>();
+    final store = _FakeTrainingStore(
+      hasExistingProfile: true,
+      firstNoteWriteGate: firstWrite,
+    );
+    await tester.pumpWidget(
+      HybridTrainingApp(environment: AppEnvironment.dev, store: store),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open-workout')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('start-workout')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'Ancienne note');
+    await tester.pump(const Duration(milliseconds: 650));
+    await tester.enterText(find.byType(TextField), 'Dernière note');
+    firstWrite.complete();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(store.savedNotes, ['Ancienne note', 'Dernière note']);
   });
 
   testWidgets('simulates import and confirms complete data deletion', (
@@ -212,6 +290,40 @@ void main() {
     await tester.tap(find.byKey(const Key('confirm-delete-data')));
     await tester.pumpAndSettle();
     expect(find.text('Introduction'), findsOneWidget);
+  });
+
+  testWidgets('failed import re-enables simulation and allows retry', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final store = _FakeTrainingStore(
+      hasExistingProfile: true,
+      failNextImport: true,
+    );
+    await tester.pumpWidget(
+      HybridTrainingApp(environment: AppEnvironment.dev, store: store),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-4')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('import-data')));
+    await tester.tap(find.byKey(const Key('import-data')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('import-json')), '{}');
+    await tester.pump();
+
+    final simulate = find.byKey(const Key('simulate-import'));
+    await tester.tap(simulate);
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Enregistrement impossible. Vous pouvez réessayer.'),
+      findsOneWidget,
+    );
+    expect(tester.widget<OutlinedButton>(simulate).onPressed, isNotNull);
+    await tester.tap(simulate);
+    await tester.pumpAndSettle();
+    expect(find.text('Sauvegarde valide'), findsOneWidget);
   });
 
   testWidgets('failed set write keeps the set pending and allows retry', (
@@ -342,6 +454,8 @@ class _FakeTrainingStore implements TrainingStore {
   _FakeTrainingStore({
     bool hasExistingProfile = false,
     this.failNextRecord = false,
+    this.failNextImport = false,
+    this.firstNoteWriteGate,
     this.sessionStarted = false,
   }) : _hasProfile = hasExistingProfile;
 
@@ -349,6 +463,9 @@ class _FakeTrainingStore implements TrainingStore {
   bool _setComplete = false;
   bool _sessionComplete = false;
   bool failNextRecord;
+  bool failNextImport;
+  final Completer<void>? firstNoteWriteGate;
+  bool _usedFirstNoteWriteGate = false;
   final bool sessionStarted;
   final startedSessionIds = <String>[];
   FoundationProfileInput? created;
@@ -445,12 +562,18 @@ class _FakeTrainingStore implements TrainingStore {
   Future<ImportReport> importBackup(
     String source, {
     required bool dryRun,
-  }) async => ImportReport(
-    dryRun: dryRun,
-    applied: !dryRun,
-    sourceFormat: 'hybrid-training-backup',
-    issues: const [],
-  );
+  }) async {
+    if (failNextImport) {
+      failNextImport = false;
+      throw StateError('simulated import failure');
+    }
+    return ImportReport(
+      dryRun: dryRun,
+      applied: !dryRun,
+      sourceFormat: 'hybrid-training-backup',
+      issues: const [],
+    );
+  }
 
   @override
   Future<void> deleteAllData() async {
@@ -466,6 +589,10 @@ class _FakeTrainingStore implements TrainingStore {
   @override
   Future<void> updateSessionNotes(String sessionId, String notes) async {
     savedNotes.add(notes);
+    if (!_usedFirstNoteWriteGate && firstNoteWriteGate != null) {
+      _usedFirstNoteWriteGate = true;
+      await firstNoteWriteGate!.future;
+    }
   }
 
   @override

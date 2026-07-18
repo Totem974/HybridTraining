@@ -150,14 +150,14 @@ void main() {
     expect(fixture.presetsForConcept('concept-a'), hasLength(2));
   });
 
-  test('only an implemented preset can be selected', () {
+  test('only a preset wired to the active UI can be selected', () {
     final executable = repository.findById('preset-forever-original-fsl')!;
     final component = repository.findById('component-fsl')!;
     final documentary = repository.findById('program-coffinworm')!;
     expect(executable.isExecutable, isTrue);
     expect(
       repository.findById('preset-forever-beginner-prep-school')!.isExecutable,
-      isTrue,
+      isFalse,
     );
     expect(component.isExecutable, isFalse);
     expect(documentary.isExecutable, isFalse);

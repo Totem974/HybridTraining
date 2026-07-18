@@ -55,17 +55,18 @@ void main() {
   test('default catalog satisfies every invariant', () {
     expect(catalog.validate().errors, isEmpty);
     expect(catalog.concepts, hasLength(11));
-    expect(catalog.selectablePresets, hasLength(2));
+    expect(catalog.selectablePresets, hasLength(1));
     expect(
       catalog.presetsForConcept('original-531').single.persistentPresetId,
       'forever-original-fsl-v1',
     );
   });
 
-  test('Beginner Prep School is available without becoming universal', () {
+  test('Beginner Prep School stays unavailable until UI v2 is wired', () {
     final preset = catalog.preset('forever-beginner-prep-school-v1');
     expect(preset.supportedFrequencies, {3});
     expect(preset.recommended, isFalse);
+    expect(preset.availability, ProductAvailability.comingSoon);
     expect(
       preset.implementationStatus,
       ProgramImplementationStatus.productionReady,

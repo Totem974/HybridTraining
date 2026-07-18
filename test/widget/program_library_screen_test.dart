@@ -54,7 +54,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Beginner Prep School can be selected outside onboarding', (
+  testWidgets('Beginner Prep School cannot be selected before v2 wiring', (
     tester,
   ) async {
     await pumpLibrary(tester);
@@ -70,9 +70,7 @@ void main() {
     final button = tester.widget<FilledButton>(
       find.byKey(const Key('select-program')),
     );
-    expect(button.onPressed, isNotNull);
-    button.onPressed!();
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
+    expect(button.onPressed, isNull);
+    expect(find.text('Consultation uniquement'), findsOneWidget);
   });
 }

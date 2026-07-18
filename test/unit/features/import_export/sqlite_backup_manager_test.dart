@@ -101,6 +101,57 @@ void main() {
     expect(await database.query('program_definitions'), isNotEmpty);
   });
 
+  test(
+    'structurally valid but unusable backup never replaces a profile',
+    () async {
+      final temporary = await Directory.systemTemp.createTemp(
+        'hybrid-unusable-',
+      );
+      addTearDown(() => temporary.delete(recursive: true));
+      final store = SqliteTrainingStore(
+        localDatabase: LocalDatabase(
+          factory: databaseFactoryFfi,
+          databasePath: '${temporary.path}/unusable.db',
+        ),
+      );
+      addTearDown(store.close);
+      await store.initialize();
+      await store.createFoundation(
+        FoundationProfileInput(
+          displayName: 'Fictitious Preserved Athlete',
+          unit: WeightUnit.kilograms,
+          oneRepMaxes: const {
+            MainLift.squat: 150,
+            MainLift.benchPress: 100,
+            MainLift.deadlift: 180,
+            MainLift.overheadPress: 70,
+          },
+          roundingIncrement: 2.5,
+          startDate: DateTime(2026, 7, 20),
+          trainingDaysPerWeek: 4,
+        ),
+      );
+      final document =
+          jsonDecode(await store.exportBackup()) as Map<String, Object?>;
+      final payload = document['payload']! as Map<String, Object?>;
+      payload['training_cycles'] = <Object?>[];
+      payload['training_sessions'] = <Object?>[];
+      payload['training_sets'] = <Object?>[];
+
+      final report = await store.importBackup(
+        jsonEncode(document),
+        dryRun: false,
+      );
+
+      expect(report.applied, isFalse);
+      expect(report.issues, isNotEmpty);
+      expect(
+        (await store.loadSnapshot()).displayName,
+        'Fictitious Preserved Athlete',
+      );
+    },
+  );
+
   test('v1 backup imports into v2 without losing legacy history', () async {
     final temporary = await Directory.systemTemp.createTemp('hybrid-v1-');
     addTearDown(() => temporary.delete(recursive: true));
@@ -163,5 +214,42 @@ void main() {
     final db = await store.localDatabase.open();
     expect(await db.query('training_plans'), isEmpty);
     expect(await db.query('training_sessions'), hasLength(12));
+  });
+
+  test('v2 backup remains importable with empty runtime v3 tables', () async {
+    final temporary = await Directory.systemTemp.createTemp('hybrid-v2-');
+    addTearDown(() => temporary.delete(recursive: true));
+    final store = SqliteTrainingStore(
+      localDatabase: LocalDatabase(
+        factory: databaseFactoryFfi,
+        databasePath: '${temporary.path}/v2.db',
+      ),
+    );
+    addTearDown(store.close);
+    await store.initialize();
+    final document =
+        jsonDecode(await store.exportBackup()) as Map<String, Object?>;
+    document['schemaVersion'] = 2;
+    final payload = document['payload']! as Map<String, Object?>;
+    for (final table in [
+      'workout_runtime_sessions',
+      'workout_runtime_blocks',
+      'workout_activities',
+    ]) {
+      payload.remove(table);
+    }
+
+    final report = await store.importBackup(jsonEncode(document), dryRun: true);
+    expect(report.applied, isFalse);
+    expect(report.issues, isEmpty);
+    final applied = await store.importBackup(
+      jsonEncode(document),
+      dryRun: false,
+    );
+    expect(applied.applied, isTrue);
+    final database = await store.localDatabase.open();
+    expect(await database.query('workout_runtime_sessions'), isEmpty);
+    expect(await database.query('workout_runtime_blocks'), isEmpty);
+    expect(await database.query('workout_activities'), isEmpty);
   });
 }

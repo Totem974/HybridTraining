@@ -386,7 +386,7 @@ const canonicalProgramEntries = <ProgramLibraryEntry>[
     mainMovementsPerSession: 2,
     equipment: {..._basicEquipment, ProgramEquipment.bodyweight},
     tmRange: ProgramTmRange(.85, .90),
-    implementationStatus: ProgramImplementationStatus.productionReady,
+    implementationStatus: ProgramImplementationStatus.experimental,
     complexity: 2,
     presetId: 'forever-beginner-prep-school-v1',
     revisionId: 'forever-beginner-prep-school-v1',

@@ -8,7 +8,7 @@ class BackupEnvelope {
   });
 
   static const format = 'hybrid-training-backup';
-  static const schemaVersion = 2;
+  static const schemaVersion = 3;
 
   final DateTime exportedAt;
   final String appVersion;

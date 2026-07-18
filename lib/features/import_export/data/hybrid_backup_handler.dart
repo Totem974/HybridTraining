@@ -5,6 +5,9 @@ import 'package:hybrid_training/features/import_export/domain/import_pipeline.da
 class HybridBackupHandler implements ImportFormatHandler {
   const HybridBackupHandler();
 
+  static const _legacyTableCount = 12;
+  static const _version2TableCount = 21;
+
   static const tables = [
     'athlete_profiles',
     'exercises',
@@ -27,6 +30,9 @@ class HybridBackupHandler implements ImportFormatHandler {
     'set_prescriptions',
     'set_performances',
     'plan_events',
+    'workout_runtime_sessions',
+    'workout_runtime_blocks',
+    'workout_activities',
   ];
 
   static const columns = <String, Set<String>>{
@@ -217,6 +223,32 @@ class HybridBackupHandler implements ImportFormatHandler {
       'rule_provenance_json',
       'occurred_at',
     },
+    'workout_runtime_sessions': {
+      'session_id',
+      'status',
+      'active_block_sequence',
+      'notes',
+      'started_at',
+      'ended_at',
+      'updated_at',
+    },
+    'workout_runtime_blocks': {
+      'session_block_id',
+      'status',
+      'rest_until',
+      'updated_at',
+    },
+    'workout_activities': {
+      'id',
+      'session_block_id',
+      'sequence',
+      'label',
+      'target_type',
+      'target_json',
+      'status',
+      'result_json',
+      'updated_at',
+    },
   };
 
   static const requiredColumns = <String, Set<String>>{
@@ -246,6 +278,18 @@ class HybridBackupHandler implements ImportFormatHandler {
     'set_prescriptions': {'id', 'session_block_id', 'sequence'},
     'set_performances': {'id', 'prescription_id', 'result'},
     'plan_events': {'id', 'plan_id', 'sequence', 'event_type'},
+    'workout_runtime_sessions': {'session_id', 'status', 'updated_at'},
+    'workout_runtime_blocks': {'session_block_id', 'status', 'updated_at'},
+    'workout_activities': {
+      'id',
+      'session_block_id',
+      'sequence',
+      'label',
+      'target_type',
+      'target_json',
+      'status',
+      'updated_at',
+    },
   };
 
   @override
@@ -256,7 +300,9 @@ class HybridBackupHandler implements ImportFormatHandler {
   ImportInspection inspect(Map<String, Object?> document) {
     final issues = <ImportIssue>[];
     final sourceVersion = document['schemaVersion'];
-    if (sourceVersion != 1 && sourceVersion != BackupEnvelope.schemaVersion) {
+    if (sourceVersion != 1 &&
+        sourceVersion != 2 &&
+        sourceVersion != BackupEnvelope.schemaVersion) {
       issues.add(
         const ImportIssue(
           path: r'$.schemaVersion',
@@ -288,7 +334,12 @@ class HybridBackupHandler implements ImportFormatHandler {
       );
     }
     final normalizedPayload = Map<String, Object?>.from(payload);
-    final expectedTables = sourceVersion == 1 ? tables.take(12) : tables;
+    final expectedTableCount = switch (sourceVersion) {
+      1 => _legacyTableCount,
+      2 => _version2TableCount,
+      _ => tables.length,
+    };
+    final expectedTables = tables.take(expectedTableCount);
     for (final table in expectedTables) {
       final rows = payload[table];
       if (rows is! List<Object?>) {
@@ -337,10 +388,13 @@ class HybridBackupHandler implements ImportFormatHandler {
         }
       }
     }
-    if (sourceVersion == 1) {
-      for (final table in tables.skip(12)) {
+    if (sourceVersion == 1 || sourceVersion == 2) {
+      for (final table in tables.skip(expectedTableCount)) {
         normalizedPayload[table] = <Object?>[];
       }
+    }
+    if (!issues.any((issue) => issue.severity == ImportSeverity.error)) {
+      _validateUsableLegacySnapshot(normalizedPayload, issues);
     }
     return ImportInspection(
       candidate: ImportCandidate(
@@ -351,4 +405,76 @@ class HybridBackupHandler implements ImportFormatHandler {
       issues: issues,
     );
   }
+
+  static void _validateUsableLegacySnapshot(
+    Map<String, Object?> payload,
+    List<ImportIssue> issues,
+  ) {
+    final profiles = _rows(payload, 'athlete_profiles');
+    if (profiles.isEmpty) return;
+    final definitions = _rows(payload, 'program_definitions');
+    final cycles = _rows(
+      payload,
+      'training_cycles',
+    ).where((row) => row['status'] == 'active').toList(growable: false);
+    if (cycles.isEmpty) {
+      issues.add(
+        const ImportIssue(
+          path: r'$.payload.training_cycles',
+          message: 'A profile requires an active compatible training cycle.',
+          severity: ImportSeverity.error,
+        ),
+      );
+      return;
+    }
+    final definitionIds = definitions.map((row) => row['id']).toSet();
+    if (cycles.any(
+      (cycle) => !definitionIds.contains(cycle['program_definition_id']),
+    )) {
+      issues.add(
+        const ImportIssue(
+          path: r'$.payload.program_definitions',
+          message: 'The active cycle requires its program definition.',
+          severity: ImportSeverity.error,
+        ),
+      );
+    }
+    final cycleIds = cycles.map((row) => row['id']).toSet();
+    final sessions = _rows(payload, 'training_sessions')
+        .where((row) => cycleIds.contains(row['cycle_id']))
+        .toList(growable: false);
+    if (sessions.isEmpty) {
+      issues.add(
+        const ImportIssue(
+          path: r'$.payload.training_sessions',
+          message: 'The active cycle requires at least one session.',
+          severity: ImportSeverity.error,
+        ),
+      );
+      return;
+    }
+    final sessionIds = sessions.map((row) => row['id']).toSet();
+    final setSessionIds = _rows(
+      payload,
+      'training_sets',
+    ).map((row) => row['session_id']).toSet();
+    if (sessionIds.any((id) => !setSessionIds.contains(id))) {
+      issues.add(
+        const ImportIssue(
+          path: r'$.payload.training_sets',
+          message: 'Every session in the active cycle requires a set.',
+          severity: ImportSeverity.error,
+        ),
+      );
+    }
+  }
+
+  static List<Map<String, Object?>> _rows(
+    Map<String, Object?> payload,
+    String table,
+  ) =>
+      (payload[table] as List<Object?>?)
+          ?.whereType<Map<String, Object?>>()
+          .toList(growable: false) ??
+      const [];
 }

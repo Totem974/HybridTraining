@@ -26,6 +26,7 @@ class AppStrings {
       '${_fr ? 'Programme' : 'Program'} : ${programLabel('program.forever_original_fsl')}';
   String get createCycle => _fr ? 'Créer mon cycle' : 'Create my cycle';
   String get workout => _fr ? 'Séance' : 'Workout';
+  String get home => _fr ? 'Accueil' : 'Home';
   String get previousBlock => _fr ? 'Précédent' : 'Previous';
   String get nextBlock => _fr ? 'Suivant' : 'Next';
   String get successfulResult => _fr ? 'Réussi' : 'Success';
