@@ -52,6 +52,13 @@ Les définitions de programmes portent un identifiant stable, une version de for
 un statut de validation et leurs références documentaires. Le générateur valide une
 définition avant de produire un cycle.
 
+L'identité sépare explicitement la famille (`forever`, `beyond`, `classic`), le
+template stable, la version de définition, la clé de libellé et le statut
+documentaire. Le snapshot expose cette identité ; les écrans ne reconstruisent
+pas le programme actif depuis un texte. Les anciennes définitions
+`forever-original-fsl-v1` sans ces métadonnées utilisent un fallback déterministe
+sans changement du schéma SQLite v1.
+
 ## État et injection
 
 L'état de chaque parcours est exposé par de petits contrôleurs testables. Les

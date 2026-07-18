@@ -13,4 +13,18 @@ void main() {
       expect(french.lift('customStableId'), 'customStableId');
     },
   );
+
+  test('localizes program identity without changing its stable key', () {
+    const french = AppStrings();
+    const english = AppStrings.english();
+    const key = 'program.forever_original_fsl';
+
+    expect(
+      french.programLabel(key),
+      '5/3/1 Forever — Original + First Set Last',
+    );
+    expect(english.programLabel(key), french.programLabel(key));
+    expect(french.rulesReviewed, 'Règles vérifiées');
+    expect(english.rulesReviewed, 'Rules reviewed');
+  });
 }

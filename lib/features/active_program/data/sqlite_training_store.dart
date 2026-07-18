@@ -6,6 +6,7 @@ import 'package:hybrid_training/features/import_export/data/sqlite_backup_manage
 import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 import 'package:hybrid_training/features/programs/domain/load_rounding.dart';
 import 'package:hybrid_training/features/programs/domain/original_fsl_program.dart';
+import 'package:hybrid_training/features/programs/domain/program_identity.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
 import 'package:hybrid_training/features/training_max/domain/max_calculator.dart';
 import 'package:sqflite/sqflite.dart';
@@ -39,12 +40,22 @@ class SqliteTrainingStore implements TrainingStore {
     await database.insert('program_definitions', {
       'id': _programId,
       'schema_version': 1,
-      'name_key': 'program.original_fsl',
+      'name_key': ProgramDefinitionRef.originalFsl.labelKey,
       'definition_json': jsonEncode({
         'format': 'hybrid-training-program',
         'schemaVersion': 1,
         'id': _programId,
-        'nameKey': 'program.original_fsl',
+        'nameKey': ProgramDefinitionRef.originalFsl.labelKey,
+        'family': 'forever',
+        'labelKey': ProgramDefinitionRef.originalFsl.labelKey,
+        'validationStatus': 'rulesReviewed',
+        'references': [
+          {
+            'title': '5/3/1 Forever',
+            'bookPages': '168-170',
+            'pdfPages': '180-182',
+          },
+        ],
         'source': {'book': '5/3/1 Forever', 'pages': '168-170'},
         'model': 'original-351-fsl',
         'trainingMax': {'minimumRatio': 0.85, 'maximumRatio': 0.90},
@@ -222,6 +233,20 @@ class SqliteTrainingStore implements TrainingStore {
          ) latest ON latest.exercise_id = tm.exercise_id
                  AND latest.effective_at = tm.effective_at''',
     );
+    final programRows = await database.rawQuery(
+      '''SELECT pd.id, pd.schema_version, pd.definition_json
+         FROM training_cycles c
+         JOIN program_definitions pd ON pd.id = c.program_definition_id
+         WHERE c.status = 'active'
+         ORDER BY c.created_at DESC
+         LIMIT 1''',
+    );
+    if (programRows.isEmpty) throw StateError('No active program exists.');
+    final programRow = programRows.single;
+    final definition = jsonDecode(programRow['definition_json']! as String);
+    if (definition is! Map<String, Object?>) {
+      throw const FormatException('Invalid program definition JSON.');
+    }
     return TrainingSnapshot(
       displayName: profiles.single['display_name']! as String,
       nextSession: planned.isEmpty
@@ -235,6 +260,11 @@ class SqliteTrainingStore implements TrainingStore {
           MainLift.values.byName(row['exercise_id']! as String):
               (row['training_max']! as num).toDouble(),
       },
+      activeProgram: ProgramDefinitionRef.fromJson(
+        definition,
+        persistentId: programRow['id']! as String,
+        persistentVersion: programRow['schema_version']! as int,
+      ),
     );
   }
 
@@ -274,7 +304,7 @@ class SqliteTrainingStore implements TrainingStore {
         for (final set in futureSets) {
           final percentage = (set['percentage']! as num).toDouble();
           final unrounded = entry.value * percentage;
-          await transaction.update(
+          final updated = await transaction.update(
             'training_sets',
             {
               'training_max': entry.value,
@@ -284,6 +314,9 @@ class SqliteTrainingStore implements TrainingStore {
             where: 'id = ?',
             whereArgs: [set['id']],
           );
+          if (updated != 1) {
+            throw StateError('Set not found while updating Training Max.');
+          }
         }
       }
     });
@@ -355,7 +388,7 @@ class SqliteTrainingStore implements TrainingStore {
     final database = await localDatabase.open();
     await database.transaction((transaction) async {
       final rows = await transaction.rawQuery(
-        '''SELECT ts.lift_id, ts.prescribed_load, ts.performance_set,
+        '''SELECT ts.lift_id, ts.prescribed_load, ts.performance_set, s.status,
                   ap.preferred_unit
            FROM training_sets ts
            JOIN training_sessions s ON s.id = ts.session_id
@@ -365,6 +398,9 @@ class SqliteTrainingStore implements TrainingStore {
         [setId],
       );
       if (rows.isEmpty) throw StateError('Set not found: $setId');
+      if (rows.single['status'] == 'complete') {
+        throw StateError('Session is already complete for set: $setId');
+      }
       final updated = await transaction.update(
         'training_sets',
         {'result': result.name, 'completed_reps': repetitions},
@@ -415,17 +451,28 @@ class SqliteTrainingStore implements TrainingStore {
   @override
   Future<void> startSession(String sessionId) async {
     final database = await localDatabase.open();
-    await database.update(
+    final updated = await database.update(
       'training_sessions',
       {'status': 'started', 'started_at': _clock().toUtc().toIso8601String()},
       where: "id = ? AND status = 'planned'",
       whereArgs: [sessionId],
     );
+    if (updated != 1) {
+      throw StateError('Planned session not found: $sessionId');
+    }
   }
 
   @override
   Future<void> setRestUntil(String sessionId, DateTime? restUntil) async {
     final database = await localDatabase.open();
+    final sessions = await database.query(
+      'training_sessions',
+      columns: ['id'],
+      where: 'id = ?',
+      whereArgs: [sessionId],
+      limit: 1,
+    );
+    if (sessions.isEmpty) throw StateError('Session not found: $sessionId');
     final key = 'rest_until:$sessionId';
     if (restUntil == null) {
       await database.delete('app_metadata', where: 'key = ?', whereArgs: [key]);
@@ -440,16 +487,43 @@ class SqliteTrainingStore implements TrainingStore {
   @override
   Future<void> finishSession(String sessionId) async {
     final database = await localDatabase.open();
-    await database.update(
-      'training_sessions',
-      {
-        'status': 'complete',
-        'completed_at': _clock().toUtc().toIso8601String(),
-      },
-      where: 'id = ?',
-      whereArgs: [sessionId],
-    );
-    await setRestUntil(sessionId, null);
+    await database.transaction((transaction) async {
+      final sessions = await transaction.query(
+        'training_sessions',
+        columns: ['status'],
+        where: 'id = ?',
+        whereArgs: [sessionId],
+        limit: 1,
+      );
+      if (sessions.isEmpty) throw StateError('Session not found: $sessionId');
+      if (sessions.single['status'] == 'complete') {
+        throw StateError('Session is already complete: $sessionId');
+      }
+      final incomplete = Sqflite.firstIntValue(
+        await transaction.rawQuery(
+          'SELECT COUNT(*) FROM training_sets WHERE session_id = ? AND result IS NULL',
+          [sessionId],
+        ),
+      );
+      if ((incomplete ?? 0) != 0) {
+        throw StateError('Session has incomplete sets: $sessionId');
+      }
+      final updated = await transaction.update(
+        'training_sessions',
+        {
+          'status': 'complete',
+          'completed_at': _clock().toUtc().toIso8601String(),
+        },
+        where: "id = ? AND status != 'complete'",
+        whereArgs: [sessionId],
+      );
+      if (updated != 1) throw StateError('Session not found: $sessionId');
+      await transaction.delete(
+        'app_metadata',
+        where: 'key = ?',
+        whereArgs: ['rest_until:$sessionId'],
+      );
+    });
   }
 
   @override

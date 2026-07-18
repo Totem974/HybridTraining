@@ -4,6 +4,7 @@ import 'package:hybrid_training/app/bootstrap/app_environment.dart';
 import 'package:hybrid_training/app/hybrid_training_app.dart';
 import 'package:hybrid_training/features/active_program/domain/training_store.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
+import 'package:hybrid_training/features/programs/domain/program_identity.dart';
 import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 
 void main() {
@@ -19,7 +20,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Introduction'), findsOneWidget);
-    for (var step = 0; step < 3; step++) {
+    await tester.tap(find.byKey(const Key('continue')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('5/3/1 Forever — Original + First Set Last'),
+      findsOneWidget,
+    );
+    for (var step = 0; step < 2; step++) {
       await tester.tap(find.byKey(const Key('continue')));
       await tester.pumpAndSettle();
     }
@@ -32,6 +39,10 @@ void main() {
       await tester.tap(find.byKey(const Key('continue')));
       await tester.pumpAndSettle();
     }
+    expect(
+      find.text('5/3/1 Forever — Original + First Set Last'),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const Key('create-cycle')));
     await tester.pumpAndSettle();
 
@@ -68,9 +79,22 @@ void main() {
     await tester.tap(find.text('Gérer mon programme'));
     await tester.pumpAndSettle();
     expect(find.text('Bibliothèque'), findsOneWidget);
-    await tester.tap(find.text('Original 5/3/1 + First Set Last'));
+    await tester.tap(
+      find.text('5/3/1 Forever — Original + First Set Last').last,
+    );
     await tester.pumpAndSettle();
     expect(find.text('Programme actuel'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Beyond'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('5/3/1 Beyond'));
+    await tester.pumpAndSettle();
+    expect(find.text('Bientôt disponible'), findsOneWidget);
+    expect(
+      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+      isNull,
+    );
   });
 
   testWidgets('records a set, finishes a session and shows history', (
@@ -90,8 +114,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'Rien à signaler');
     await tester.pump(const Duration(milliseconds: 650));
-    await tester.ensureVisible(find.byKey(const Key('complete-current-set')));
-    await tester.tap(find.byKey(const Key('complete-current-set')));
+    await tester.ensureVisible(find.byKey(const Key('record-set-0-success')));
+    await tester.tap(find.byKey(const Key('record-set-0-success')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('finish-session')));
     await tester.tap(find.byKey(const Key('finish-session')));
@@ -142,15 +166,51 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Introduction'), findsOneWidget);
   });
+
+  testWidgets('failed set write keeps the set pending and allows retry', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final store = _FakeTrainingStore(
+      hasExistingProfile: true,
+      failNextRecord: true,
+    );
+    await tester.pumpWidget(
+      HybridTrainingApp(environment: AppEnvironment.dev, store: store),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('open-workout')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('start-workout')));
+    await tester.pumpAndSettle();
+
+    final record = find.byKey(const Key('record-set-0-success'));
+    await tester.tap(record);
+    await tester.pumpAndSettle();
+
+    expect(find.text('0/1 séries terminées'), findsOneWidget);
+    expect(
+      find.text('Enregistrement impossible. Vous pouvez réessayer.'),
+      findsOneWidget,
+    );
+    expect(record, findsOneWidget);
+    await tester.tap(record);
+    await tester.pumpAndSettle();
+    expect(find.text('1/1 séries terminées'), findsOneWidget);
+  });
 }
 
 class _FakeTrainingStore implements TrainingStore {
-  _FakeTrainingStore({bool hasExistingProfile = false})
-    : _hasProfile = hasExistingProfile;
+  _FakeTrainingStore({
+    bool hasExistingProfile = false,
+    this.failNextRecord = false,
+  }) : _hasProfile = hasExistingProfile;
 
   bool _hasProfile;
   bool _setComplete = false;
   bool _sessionComplete = false;
+  bool failNextRecord;
   FoundationProfileInput? created;
   final completedSetIds = <String>[];
   final finishedSessionIds = <String>[];
@@ -200,6 +260,7 @@ class _FakeTrainingStore implements TrainingStore {
       MainLift.deadlift: 100,
       MainLift.overheadPress: 50,
     },
+    activeProgram: ProgramDefinitionRef.originalFsl,
   );
 
   @override
@@ -217,6 +278,10 @@ class _FakeTrainingStore implements TrainingStore {
     required int repetitions,
     required SetResult result,
   }) async {
+    if (failNextRecord) {
+      failNextRecord = false;
+      throw StateError('simulated write failure');
+    }
     completedSetIds.add(setId);
     _setComplete = true;
   }

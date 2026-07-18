@@ -1,5 +1,6 @@
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
 import 'package:hybrid_training/features/import_export/domain/import_models.dart';
+import 'package:hybrid_training/features/programs/domain/program_identity.dart';
 
 class FoundationProfileInput {
   const FoundationProfileInput({
@@ -77,12 +78,14 @@ class TrainingSnapshot {
     required this.nextSession,
     required this.history,
     required this.trainingMaxes,
+    required this.activeProgram,
   });
 
   final String displayName;
   final StoredSession? nextSession;
   final List<StoredSession> history;
   final Map<MainLift, double> trainingMaxes;
+  final ProgramDefinitionRef activeProgram;
 }
 
 abstract interface class TrainingStore {

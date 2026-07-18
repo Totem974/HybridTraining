@@ -5,6 +5,7 @@ import 'package:hybrid_training/core/database/local_database.dart';
 import 'package:hybrid_training/features/active_program/data/sqlite_training_store.dart';
 import 'package:hybrid_training/features/active_program/domain/training_store.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
+import 'package:hybrid_training/features/programs/domain/program_identity.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
@@ -75,6 +76,15 @@ void main() {
       expect(records, hasLength(1));
       expect(records.single['repetitions'], 3);
       await first.finishSession(generated.nextSession!.id);
+      await database.update(
+        'program_definitions',
+        {
+          'definition_json':
+              '{"format":"hybrid-training-program","schemaVersion":1,"id":"forever-original-fsl-v1","weeks":[1,2,3]}',
+        },
+        where: 'id = ?',
+        whereArgs: ['forever-original-fsl-v1'],
+      );
       await first.updateTrainingMaxes(const {
         MainLift.squat: 180,
         MainLift.benchPress: 100,
@@ -95,6 +105,16 @@ void main() {
       final restored = await reopened.loadSnapshot();
 
       expect(restored.displayName, 'Athlete Example');
+      expect(restored.activeProgram, isNotNull);
+      expect(
+        restored.activeProgram.templateId,
+        ProgramDefinitionRef.originalFsl.templateId,
+      );
+      expect(restored.activeProgram.family, ProgramFamily.forever);
+      expect(
+        restored.activeProgram.validationStatus,
+        ProgramValidationStatus.rulesReviewed,
+      );
       expect(restored.history, hasLength(1));
       expect(restored.history.single.notes, 'Séance fluide');
       expect(
@@ -105,6 +125,64 @@ void main() {
       expect(restored.nextSession?.scheduledFor, DateTime(2026, 7, 22));
       expect(restored.trainingMaxes[MainLift.benchPress], 100);
       expect(restored.nextSession!.sets.first.load, 70);
+    },
+  );
+
+  test(
+    'store rejects incomplete, missing and already completed sessions',
+    () async {
+      final temporary = await Directory.systemTemp.createTemp(
+        'hybrid-integrity-',
+      );
+      addTearDown(() => temporary.delete(recursive: true));
+      final store = SqliteTrainingStore(
+        localDatabase: LocalDatabase(
+          factory: databaseFactoryFfi,
+          databasePath: '${temporary.path}/integrity.db',
+        ),
+        clock: () => DateTime.utc(2026, 7, 18, 8),
+      );
+      addTearDown(store.close);
+      await store.initialize();
+      await store.createFoundation(
+        FoundationProfileInput(
+          displayName: 'Integrity Example',
+          unit: WeightUnit.kilograms,
+          roundingIncrement: 2.5,
+          startDate: DateTime(2026, 7, 20),
+          trainingDaysPerWeek: 4,
+          oneRepMaxes: const {
+            MainLift.squat: 200,
+            MainLift.benchPress: 120,
+            MainLift.deadlift: 220,
+            MainLift.overheadPress: 80,
+          },
+        ),
+      );
+      final session = (await store.loadSnapshot()).nextSession!;
+
+      await expectLater(store.finishSession(session.id), throwsStateError);
+      await expectLater(
+        store.finishSession('missing-session'),
+        throwsStateError,
+      );
+      for (final set in session.sets) {
+        await store.recordSet(
+          set.id,
+          repetitions: set.repetitions,
+          result: SetResult.success,
+        );
+      }
+      await store.finishSession(session.id);
+      await expectLater(
+        store.recordSet(
+          session.sets.first.id,
+          repetitions: 3,
+          result: SetResult.success,
+        ),
+        throwsStateError,
+      );
+      await expectLater(store.finishSession(session.id), throwsStateError);
     },
   );
 }

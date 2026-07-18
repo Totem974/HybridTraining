@@ -13,7 +13,7 @@ class AppStrings {
       ? 'Saisissez votre 1RM pour les quatre mouvements.'
       : 'Enter your one-rep max for all four lifts.';
   String get selectedProgram =>
-      '${_fr ? 'Programme' : 'Program'} : Original 5/3/1 + First Set Last';
+      '${_fr ? 'Programme' : 'Program'} : ${programLabel('program.forever_original_fsl')}';
   String get createCycle => _fr ? 'Créer mon cycle' : 'Create my cycle';
   String get workout => _fr ? 'Séance' : 'Workout';
   String get history => _fr ? 'Historique' : 'History';
@@ -26,6 +26,9 @@ class AppStrings {
   String get retry => _fr ? 'Réessayer' : 'Retry';
   String get genericError =>
       _fr ? 'Une erreur locale est survenue.' : 'A local error occurred.';
+  String get writeFailed => _fr
+      ? 'Enregistrement impossible. Vous pouvez réessayer.'
+      : 'Could not save. You can try again.';
   List<String> get onboardingTitles => _fr
       ? [
           'Introduction',
@@ -59,7 +62,7 @@ class AppStrings {
   String get creating => _fr ? 'Création…' : 'Creating…';
   String get programPrompt =>
       _fr ? 'Choisissez votre point de départ' : 'Choose your starting point';
-  String get foundationProgram => '5/3/1 + First Set Last';
+  String get foundationProgram => programLabel('program.forever_original_fsl');
   String get foundationProgramDescription => _fr
       ? 'Le programme validé pour ce premier POC.'
       : 'The program validated for this first POC.';
@@ -131,6 +134,15 @@ class AppStrings {
       ? 'Liste des programmes indexés. Seules les règles vérifiées sont activables.'
       : 'Indexed programs. Only verified rules can be enabled.';
   String get programDetails => _fr ? 'Fiche détaillée' : 'Program details';
+  String get programFamily => _fr ? 'Famille' : 'Family';
+  String get programTemplate => 'Template';
+  String get validationStatus =>
+      _fr ? 'Statut documentaire' : 'Documentation status';
+  String get rulesReviewed => _fr ? 'Règles vérifiées' : 'Rules reviewed';
+  String get indexedOnly => _fr ? 'Règles à vérifier' : 'Rules need review';
+  String get documentarySource => _fr ? 'Source' : 'Source';
+  String get bookPages => _fr ? 'pages livre' : 'book pages';
+  String get pdfPages => _fr ? 'pages PDF' : 'PDF pages';
   String get programRulesValidated => _fr
       ? 'Les règles de ce programme sont validées et utilisées par le POC.'
       : 'This program rules are validated and used by the POC.';
@@ -161,6 +173,28 @@ class AppStrings {
       : 'This permanently deletes the local profile, cycles, workouts, and records.';
   String get cancel => _fr ? 'Annuler' : 'Cancel';
   String get delete => _fr ? 'Effacer' : 'Delete';
+
+  String programLabel(String key) => switch (key) {
+    'program.forever_original_fsl' =>
+      '5/3/1 Forever — Original + First Set Last',
+    'program.forever_boring_but_big' => 'Boring But Big',
+    'program.forever_full_body_1000' => 'Full Body (1000% Awesome)',
+    'program.beyond_catalog' => '5/3/1 Beyond',
+    'program.classic_catalog' => '5/3/1 Classic',
+    _ => key,
+  };
+
+  String familyLabel(String family) => switch (family) {
+    'forever' => 'Forever',
+    'beyond' => 'Beyond',
+    'classic' => 'Classic',
+    _ => family,
+  };
+
+  String templateLabel(String key) => switch (key) {
+    'program.forever_original_fsl' => 'Original + First Set Last',
+    _ => programLabel(key),
+  };
 
   String lift(String id) => switch ((languageCode, id)) {
     (_, 'squat') => 'Squat',

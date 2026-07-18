@@ -4,8 +4,8 @@
 
 - Branche : `rebuild/base0-foundation`, descendante de `kevin` (vérifié par
   `git merge-base --is-ancestor`).
-- Modèle automatisé : Original 5/3/1 + First Set Last, trois semaines, règles
-  documentées et testées.
+- Modèle automatisé : 5/3/1 Forever — Original + First Set Last, trois semaines,
+  règles documentées et testées.
 - Architecture : Flutter feature-first, domaine Dart pur, persistance SQLite
   derrière `TrainingStore`, état injecté par `FoundationController`.
 - Flavors : `fr.totem974.hybridtraining.dev` et
@@ -30,21 +30,21 @@ atomique d'une sauvegarde, ainsi que l'effacement confirmé des données locales
 
 Les justifications détaillées figurent dans `docs/architecture/dependencies.md`.
 
-## Vérifications du 17 juillet 2026
+## Vérifications du 18 juillet 2026
 
 - `flutter pub get` : réussi ;
 - `dart format` : réussi ;
 - `flutter analyze` : aucune erreur ;
-- `flutter test` : 23 tests unitaires et 3 tests d'interface réussis ;
+- `flutter test` : 32 tests réussis ;
+- test d'intégration dev : réussi sur Redmi Note 7, Android 13 ;
+- builds APK debug dev et prod : réussis ;
 - ascendance depuis `kevin` : confirmée ;
 - références protégées suivies par Git : aucune détectée.
 
-Le test `integration_test/app_flow_test.dart` a été actualisé pour la nouvelle
-interface. Sa dernière exécution n'a pas démarré l'application : Gradle a refusé
-le Java 8 de la session et exige Java 17. Il avait été exécuté avec succès sur
-Android avant les évolutions d'interface. Une nouvelle validation sur appareil
-reste requise avec le JDK Android Studio ; elle produirait un APK de test et a
-donc été différée conformément à la demande du propriétaire.
+Le test `integration_test/app_flow_test.dart` couvre les six étapes de
+l'onboarding, la création du cycle Forever, l'enregistrement des huit séries par
+clés stables, la fin de séance, la réouverture SQLite, l'identité du programme et
+l'historique. Il a été exécuté avec le JDK Android Studio sur le Redmi Note 7.
 
 ## Matériaux et limites
 

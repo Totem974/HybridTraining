@@ -55,6 +55,42 @@ void main() {
     expect(session.sets[2].repetitions, 1);
   });
 
+  test('all three confirmed weeks preserve exact percentages and reps', () {
+    final sessions = [
+      for (var week = 1; week <= 3; week++)
+        program.buildSession(week: week, liftMax: liftMax, rounder: rounder),
+    ];
+
+    expect(
+      sessions[0].sets.take(3).map((set) => (set.percentage, set.repetitions)),
+      orderedEquals([(0.70, 3), (0.80, 3), (0.90, 3)]),
+    );
+    expect(
+      sessions[1].sets.take(3).map((set) => (set.percentage, set.repetitions)),
+      orderedEquals([(0.65, 5), (0.75, 5), (0.85, 5)]),
+    );
+    expect(
+      sessions[2].sets.take(3).map((set) => (set.percentage, set.repetitions)),
+      orderedEquals([(0.75, 5), (0.85, 3), (0.95, 1)]),
+    );
+    expect(
+      sessions.map(
+        (session) => session.sets.where((set) => set.isPerformanceSet).length,
+      ),
+      orderedEquals([1, 0, 1]),
+    );
+    expect(
+      sessions.map(
+        (session) => session.sets.skip(3).map((set) => set.percentage).toList(),
+      ),
+      orderedEquals([
+        everyElement(0.70),
+        everyElement(0.65),
+        everyElement(0.75),
+      ]),
+    );
+  });
+
   test('supports the confirmed three-set FSL option', () {
     const reducedProgram = OriginalFslProgram(supplementalSets: 3);
 

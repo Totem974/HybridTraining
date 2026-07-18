@@ -4,7 +4,8 @@ Hybrid 5/3/1 est une application Flutter locale de programmation et de suivi
 d'entraînement 5/3/1. Android est la plateforme prioritaire.
 
 La Base0 fournit une tranche locale complète : onboarding, choix kg/lb,
-planification 3 ou 4 jours, cycle Original 5/3/1 + First Set Last, séance guidée,
+planification 3 ou 4 jours, cycle 5/3/1 Forever — Original + First Set Last,
+séance guidée,
 AMRAP, repos, notes, records, historique, calcul de plaques et modification des
 Training Max. L'interface suit la maquette locale validée par le propriétaire.
 
@@ -97,6 +98,17 @@ validé avant écriture et le remplacement de la base est atomique.
 Les références locales sous `.SOURCE/` ne sont pas des données de l'application et
 ne doivent jamais être ajoutées à Git.
 
+## Programme par défaut
+
+La famille par défaut est **5/3/1 Forever**. Le seul template actuellement
+activable est **Original 5/3/1 + First Set Last**, conservé sous l'identifiant
+stable `forever-original-fsl-v1`. Beyond, Classic et les autres templates
+Forever restent visibles uniquement comme catalogue informatif.
+
+Les systèmes leader/anchor, le protocole de septième semaine, la progression
+automatique entre cycles et l'assistance détaillée restent hors périmètre. Aucun
+de ces comportements n'est déduit des données de démonstration du prototype.
+
 ## Problèmes courants
 
 ### `flutter` n'est pas reconnu
@@ -136,7 +148,7 @@ Utiliser `D:\SDK\flutter`, sans ajouter `\bin` dans ce champ.
 
 ## Limites Base0
 
-- seul Original 5/3/1 + First Set Last est automatisé ;
+- seul 5/3/1 Forever — Original + First Set Last est automatisé ;
 - échauffement et assistance attendent la validation de leurs règles exactes ;
 - l'export/import utilise pour l'instant un copier-coller JSON, sans partage de
   fichier natif ; les notifications locales ne sont pas encore actives ;

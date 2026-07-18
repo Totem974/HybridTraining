@@ -103,8 +103,8 @@ class FoundationController extends ChangeNotifier {
       error = null;
     } catch (caught) {
       error = caught;
-      state = FoundationState.error;
       notifyListeners();
+      rethrow;
     }
   }
 
@@ -114,7 +114,8 @@ class FoundationController extends ChangeNotifier {
       error = null;
     } catch (caught) {
       error = caught;
-      state = FoundationState.error;
+      notifyListeners();
+      rethrow;
     }
     notifyListeners();
   }
