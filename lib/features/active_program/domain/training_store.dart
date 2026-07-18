@@ -1,25 +1,33 @@
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
 import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 import 'package:hybrid_training/features/programs/domain/program_identity.dart';
+import 'package:hybrid_training/features/programs/domain/training_schedule.dart';
 
 class FoundationProfileInput {
-  const FoundationProfileInput({
+  FoundationProfileInput({
     required this.displayName,
     required this.unit,
     required this.oneRepMaxes,
     required this.roundingIncrement,
-    required this.startDate,
-    required this.trainingDaysPerWeek,
+    TrainingScheduleDefinition? schedule,
+    DateTime? startDate,
+    int? trainingDaysPerWeek,
     this.persistentPresetId = 'forever-original-fsl-v1',
     this.presetVersion = 1,
-  });
+  }) : schedule =
+           schedule ??
+           _legacyCompatibleSchedule(
+             startDate: startDate!,
+             frequency: trainingDaysPerWeek!,
+           );
 
   final String displayName;
   final WeightUnit unit;
   final Map<MainLift, double> oneRepMaxes;
   final double roundingIncrement;
-  final DateTime startDate;
-  final int trainingDaysPerWeek;
+  final TrainingScheduleDefinition schedule;
+  DateTime get startDate => schedule.startsOn;
+  int get trainingDaysPerWeek => schedule.frequency;
   final String persistentPresetId;
   final int presetVersion;
 }
@@ -83,6 +91,7 @@ class TrainingSnapshot {
     required this.history,
     required this.trainingMaxes,
     required this.activeProgram,
+    this.activeCycle,
   });
 
   final String displayName;
@@ -90,6 +99,63 @@ class TrainingSnapshot {
   final List<StoredSession> history;
   final Map<MainLift, double> trainingMaxes;
   final ProgramDefinitionRef activeProgram;
+  final ActiveCycleSummary? activeCycle;
+}
+
+TrainingScheduleDefinition _legacyCompatibleSchedule({
+  required DateTime startDate,
+  required int frequency,
+}) {
+  const order = [
+    MainLift.deadlift,
+    MainLift.squat,
+    MainLift.benchPress,
+    MainLift.overheadPress,
+  ];
+  final offsets = frequency == 4 ? const [0, 1, 3, 5] : const [0, 2, 4];
+  final days = [
+    for (final offset in offsets)
+      TrainingWeekday.fromDate(startDate.add(Duration(days: offset))),
+  ];
+  return TrainingScheduleDefinition(
+    startsOn: startDate,
+    frequency: frequency,
+    selectedWeekdays: days,
+    liftOrder: order,
+    mode: frequency == 4
+        ? TrainingScheduleMode.fixedWeekdayAssignment
+        : TrainingScheduleMode.rotatingAcrossSelectedDays,
+    weekdayAssignments: frequency == 4
+        ? [
+            for (var index = 0; index < days.length; index++)
+              TrainingDayAssignment(weekday: days[index], lift: order[index]),
+          ]
+        : const [],
+  );
+}
+
+class ActiveCycleSummary {
+  const ActiveCycleSummary({
+    required this.startsOn,
+    required this.firstSession,
+    required this.lastSession,
+    required this.frequency,
+    required this.selectedWeekdays,
+    required this.totalSessions,
+    required this.completedSessions,
+    required this.hasStructuredSchedule,
+  });
+
+  final DateTime startsOn;
+  final DateTime firstSession;
+  final DateTime lastSession;
+  final int frequency;
+  final List<TrainingWeekday> selectedWeekdays;
+  final int totalSessions;
+  final int completedSessions;
+  final bool hasStructuredSchedule;
+
+  int get calendarWeeks => lastSession.difference(firstSession).inDays ~/ 7 + 1;
 }
 
 abstract interface class TrainingStore {

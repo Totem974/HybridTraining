@@ -9,6 +9,7 @@ import 'package:hybrid_training/features/programs/domain/program_identity.dart';
 import 'package:hybrid_training/features/programs/domain/program_catalog.dart';
 import 'package:hybrid_training/features/programs/domain/program_generator_factory.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
+import 'package:hybrid_training/features/programs/domain/training_schedule.dart';
 import 'package:hybrid_training/features/training_max/domain/max_calculator.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -104,6 +105,8 @@ class SqliteTrainingStore implements TrainingStore {
     final program = const ProgramGeneratorFactory().resolve(
       input.persistentPresetId,
     );
+    input.schedule.ensureValid();
+    final slots = const SessionScheduleBuilder().build(input.schedule);
     final database = await localDatabase.open();
     final now = _clock().toUtc();
     final startsOn = DateTime(
@@ -155,60 +158,57 @@ class SqliteTrainingStore implements TrainingStore {
           'trainingMaxRatio': 0.9,
           'supplementalSets': 5,
           'trainingDaysPerWeek': input.trainingDaysPerWeek,
+          'scheduleVersion': input.schedule.version,
+          'scheduleMode': input.schedule.mode.name,
+          'selectedWeekdays': [
+            for (final day in input.schedule.selectedWeekdays) day.isoValue,
+          ],
+          'liftOrder': [for (final lift in input.schedule.liftOrder) lift.name],
+          'weekdayAssignments': {
+            for (final assignment in input.schedule.weekdayAssignments)
+              assignment.weekday.isoValue.toString(): assignment.lift.name,
+          },
         }),
         'created_at': now.toIso8601String(),
       });
 
-      var sessionIndex = 0;
-      final weeklyOffsets = input.trainingDaysPerWeek == 4
-          ? const [0, 1, 3, 5]
-          : const [0, 2, 4];
-      for (var week = 1; week <= 3; week++) {
-        for (final lift in MainLift.values) {
-          final sessionId = '$cycleId-w$week-${lift.name}';
-          final liftMax = LiftMax(
-            lift: lift,
-            oneRepMax: input.oneRepMaxes[lift]!,
-            trainingMaxRatio: 0.9,
-            unit: input.unit,
-          );
-          final generated = program.buildSession(
-            week: week,
-            liftMax: liftMax,
-            rounder: rounder,
-          );
-          await transaction.insert('training_sessions', {
-            'id': sessionId,
-            'cycle_id': cycleId,
-            'scheduled_for': _dateOnly(
-              startsOn.add(
-                Duration(
-                  days:
-                      (sessionIndex ~/ weeklyOffsets.length) * 7 +
-                      weeklyOffsets[sessionIndex % weeklyOffsets.length],
-                ),
-              ),
-            ),
-            'status': 'planned',
+      for (final slot in slots) {
+        final lift = slot.lift;
+        final sessionId =
+            '$cycleId-w${slot.programWeek}-${slot.index}-${lift.name}';
+        final liftMax = LiftMax(
+          lift: lift,
+          oneRepMax: input.oneRepMaxes[lift]!,
+          trainingMaxRatio: 0.9,
+          unit: input.unit,
+        );
+        final generated = program.buildSession(
+          week: slot.programWeek,
+          liftMax: liftMax,
+          rounder: rounder,
+        );
+        await transaction.insert('training_sessions', {
+          'id': sessionId,
+          'cycle_id': cycleId,
+          'scheduled_for': _dateOnly(slot.date),
+          'status': 'planned',
+        });
+        for (var sequence = 0; sequence < generated.sets.length; sequence++) {
+          final set = generated.sets[sequence];
+          await transaction.insert('training_sets', {
+            'id': '$sessionId-s$sequence',
+            'session_id': sessionId,
+            'lift_id': lift.name,
+            'sequence': sequence,
+            'kind': set.kind.name,
+            'training_max': set.trainingMax,
+            'percentage': set.percentage,
+            'unrounded_load': set.unroundedLoad,
+            'rounding_increment': set.roundingIncrement,
+            'prescribed_load': set.load,
+            'prescribed_reps': set.repetitions,
+            'performance_set': set.isPerformanceSet ? 1 : 0,
           });
-          for (var sequence = 0; sequence < generated.sets.length; sequence++) {
-            final set = generated.sets[sequence];
-            await transaction.insert('training_sets', {
-              'id': '$sessionId-s$sequence',
-              'session_id': sessionId,
-              'lift_id': lift.name,
-              'sequence': sequence,
-              'kind': set.kind.name,
-              'training_max': set.trainingMax,
-              'percentage': set.percentage,
-              'unrounded_load': set.unroundedLoad,
-              'rounding_increment': set.roundingIncrement,
-              'prescribed_load': set.load,
-              'prescribed_reps': set.repetitions,
-              'performance_set': set.isPerformanceSet ? 1 : 0,
-            });
-          }
-          sessionIndex++;
         }
       }
     });
@@ -256,6 +256,36 @@ class SqliteTrainingStore implements TrainingStore {
          LIMIT 1''',
     );
     if (programRows.isEmpty) throw StateError('No active program exists.');
+    final cycleRows = await database.query(
+      'training_cycles',
+      where: "status = 'active'",
+      orderBy: 'created_at DESC',
+      limit: 1,
+    );
+    final cycleRow = cycleRows.single;
+    final cycleSessions = await database.query(
+      'training_sessions',
+      where: 'cycle_id = ?',
+      whereArgs: [cycleRow['id']],
+      orderBy: 'scheduled_for, id',
+    );
+    final settingsValue = jsonDecode(cycleRow['settings_json']! as String);
+    final settings = settingsValue is Map<String, Object?>
+        ? settingsValue
+        : const <String, Object?>{};
+    final weekdayValues = settings['selectedWeekdays'];
+    final selectedWeekdays = weekdayValues is List<Object?>
+        ? weekdayValues
+              .whereType<num>()
+              .map((value) => TrainingWeekday.fromIso(value.toInt()))
+              .toList(growable: false)
+        : const <TrainingWeekday>[];
+    final firstDate = DateTime.parse(
+      cycleSessions.first['scheduled_for']! as String,
+    );
+    final lastDate = DateTime.parse(
+      cycleSessions.last['scheduled_for']! as String,
+    );
     final programRow = programRows.single;
     final definition = jsonDecode(programRow['definition_json']! as String);
     if (definition is! Map<String, Object?>) {
@@ -278,6 +308,20 @@ class SqliteTrainingStore implements TrainingStore {
         definition,
         persistentId: programRow['id']! as String,
         persistentVersion: programRow['schema_version']! as int,
+      ),
+      activeCycle: ActiveCycleSummary(
+        startsOn: DateTime.parse(cycleRow['starts_on']! as String),
+        firstSession: firstDate,
+        lastSession: lastDate,
+        frequency:
+            (settings['trainingDaysPerWeek'] as num?)?.toInt() ??
+            _derivedFrequency(cycleSessions),
+        selectedWeekdays: selectedWeekdays,
+        totalSessions: cycleSessions.length,
+        completedSessions: cycleSessions
+            .where((row) => row['status'] == 'complete')
+            .length,
+        hasStructuredSchedule: settings['scheduleVersion'] != null,
       ),
     );
   }
@@ -567,4 +611,17 @@ class SqliteTrainingStore implements TrainingStore {
   Future<void> deleteAllData() => _backupManager.deleteAllData();
 
   String _dateOnly(DateTime date) => date.toIso8601String().substring(0, 10);
+
+  int _derivedFrequency(List<Map<String, Object?>> sessions) {
+    final first = DateTime.parse(sessions.first['scheduled_for']! as String);
+    return sessions
+        .where(
+          (row) =>
+              DateTime.parse(
+                row['scheduled_for']! as String,
+              ).difference(first).inDays <
+              7,
+        )
+        .length;
+  }
 }

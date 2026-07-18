@@ -258,6 +258,46 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ProgramLibraryScreen), findsOneWidget);
   });
+
+  testWidgets('planning keeps real weekdays and lift order without overflow', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      HybridTrainingApp(
+        environment: AppEnvironment.dev,
+        store: _FakeTrainingStore(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('continue')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('continue')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('planning-step')), findsOneWidget);
+    expect(find.text('4/4 sélectionnés'), findsOneWidget);
+    expect(find.byKey(const Key('weekday-1')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.byKey(const Key('weekday-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('3/4 sélectionnés'), findsOneWidget);
+    expect(
+      tester.widget<FilledButton>(find.byKey(const Key('continue'))).onPressed,
+      isNull,
+    );
+    await tester.tap(find.byKey(const Key('weekday-3')));
+    await tester.pumpAndSettle();
+    expect(find.text('4/4 sélectionnés'), findsOneWidget);
+
+    final move = find.byKey(const Key('move-lift-down-0'));
+    await tester.scrollUntilVisible(move, 250);
+    await tester.tap(move);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
 }
 
 class _FakeTrainingStore implements TrainingStore {

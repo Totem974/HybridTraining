@@ -88,3 +88,9 @@ Joker, assistance et inventaire de matériel absents ou partiels dans le POC.
 - portée exacte de Supprimer, Arrêter le cycle et Refaire l’introduction ;
 - maintien de la navigation basse issue du prototype malgré son absence dans
   l’application d’origine.
+## Planning du premier cycle
+
+La reconstruction choisit une date, trois ou quatre jours ISO et l’ordre des
+mouvements. Quatre jours utilisent une affectation fixe ; trois jours utilisent
+une rotation sans séance doublée. Cette décision produit reste distincte des
+observations black-box historiques.

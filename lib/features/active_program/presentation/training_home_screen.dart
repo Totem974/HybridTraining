@@ -107,7 +107,7 @@ class TrainingHomeScreen extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
-                  Text(strings.cycleDescription),
+                  Text(_cycleDescription(strings, snapshot.activeCycle)),
                 ],
               ),
             ),
@@ -1305,6 +1305,14 @@ String _date(BuildContext context, DateTime date) =>
     MaterialLocalizations.of(context).formatMediumDate(date);
 String _duration(int seconds) =>
     '${(seconds ~/ 60).toString().padLeft(2, '0')}:${(seconds % 60).toString().padLeft(2, '0')}';
+String _cycleDescription(AppStrings strings, ActiveCycleSummary? cycle) {
+  if (cycle == null) return strings.cycleDescription;
+  final duration = cycle.frequency == 3
+      ? '${cycle.calendarWeeks} ${strings.calendarWeeks}'
+      : '3 ${strings.programWeeks}';
+  return '${cycle.totalSessions} ${strings.sessions} · ${cycle.frequency} ${strings.frequency.toLowerCase()} · $duration';
+}
+
 String _liftCode(MainLift lift) => switch (lift) {
   MainLift.squat => 'SQ',
   MainLift.benchPress => 'BP',

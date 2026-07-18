@@ -6,6 +6,7 @@ import 'package:hybrid_training/features/active_program/data/sqlite_training_sto
 import 'package:hybrid_training/features/active_program/domain/training_store.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
 import 'package:hybrid_training/features/programs/domain/program_identity.dart';
+import 'package:hybrid_training/features/programs/domain/training_schedule.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
@@ -48,7 +49,8 @@ void main() {
       expect(generated.nextSession, isNotNull);
       expect(generated.nextSession!.scheduledFor, DateTime(2026, 7, 20));
       expect(generated.nextSession!.sets, hasLength(8));
-      expect(generated.nextSession!.sets.first.load, 125);
+      expect(generated.nextSession!.lift, MainLift.deadlift);
+      expect(generated.nextSession!.sets.first.load, 137.5);
       expect(generated.nextSession!.notes, isEmpty);
       expect(generated.trainingMaxes[MainLift.squat], 180);
       await first.startSession(generated.nextSession!.id);
@@ -124,10 +126,13 @@ void main() {
         restored.history.single.sets.every((set) => set.isComplete),
         isTrue,
       );
-      expect(restored.nextSession?.lift, MainLift.benchPress);
+      expect(restored.nextSession?.lift, MainLift.squat);
       expect(restored.nextSession?.scheduledFor, DateTime(2026, 7, 22));
       expect(restored.trainingMaxes[MainLift.benchPress], 100);
-      expect(restored.nextSession!.sets.first.load, 70);
+      expect(restored.nextSession!.sets.first.load, 125);
+      expect(restored.activeCycle?.totalSessions, 12);
+      expect(restored.activeCycle?.frequency, 3);
+      expect(restored.activeCycle?.hasStructuredSchedule, isTrue);
     },
   );
 
@@ -233,5 +238,66 @@ void main() {
 
     await expectNoWrites(input(id: 'forever-original-fsl-v1', version: 2));
     await expectNoWrites(input(id: 'unknown-preset', version: 1));
+
+    await expectNoWrites(
+      FoundationProfileInput(
+        displayName: 'Invalid schedule',
+        unit: WeightUnit.kilograms,
+        oneRepMaxes: const {
+          MainLift.squat: 100,
+          MainLift.benchPress: 100,
+          MainLift.deadlift: 100,
+          MainLift.overheadPress: 100,
+        },
+        roundingIncrement: 2.5,
+        schedule: TrainingScheduleDefinition(
+          startsOn: DateTime(2026, 7, 20),
+          frequency: 4,
+          selectedWeekdays: const [
+            TrainingWeekday.monday,
+            TrainingWeekday.tuesday,
+          ],
+          liftOrder: MainLift.values,
+          mode: TrainingScheduleMode.fixedWeekdayAssignment,
+          weekdayAssignments: const [],
+        ),
+      ),
+    );
   });
+
+  test(
+    'old cycle settings remain readable through a derived summary',
+    () async {
+      final temporary = await Directory.systemTemp.createTemp(
+        'hybrid-old-schedule-',
+      );
+      addTearDown(() => temporary.delete(recursive: true));
+      final store = SqliteTrainingStore(
+        localDatabase: LocalDatabase(
+          factory: databaseFactoryFfi,
+          databasePath: '${temporary.path}/old.db',
+        ),
+      );
+      addTearDown(store.close);
+      await store.initialize();
+      await store.createFoundation(
+        FoundationProfileInput(
+          displayName: 'Legacy Example',
+          unit: WeightUnit.kilograms,
+          oneRepMaxes: {for (final lift in MainLift.values) lift: 100},
+          roundingIncrement: 2.5,
+          startDate: DateTime(2026, 7, 20),
+          trainingDaysPerWeek: 4,
+        ),
+      );
+      final database = await store.localDatabase.open();
+      await database.update('training_cycles', {
+        'settings_json': '{"trainingDaysPerWeek":4}',
+      }, where: "status = 'active'");
+      final snapshot = await store.loadSnapshot();
+      expect(snapshot.activeCycle?.hasStructuredSchedule, isFalse);
+      expect(snapshot.activeCycle?.totalSessions, 12);
+      expect(snapshot.activeCycle?.firstSession, DateTime(2026, 7, 20));
+    },
+  );
 }

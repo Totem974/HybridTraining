@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/app/bootstrap/app_environment.dart';
@@ -89,12 +91,40 @@ void main() {
     );
     await reopened.initialize();
     final restored = await reopened.loadSnapshot();
-    await reopened.close();
+    final database = await reopened.localDatabase.open();
+    final cycles = await database.query('training_cycles', limit: 1);
+    final settings =
+        jsonDecode(cycles.single['settings_json']! as String)
+            as Map<String, Object?>;
+    final sessions = await database.rawQuery(
+      '''SELECT s.scheduled_for, ts.lift_id
+         FROM training_sessions s
+         JOIN training_sets ts ON ts.session_id = s.id AND ts.sequence = 0
+         ORDER BY s.scheduled_for, s.id''',
+    );
 
     expect(restored.displayName, 'Test local');
     expect(restored.activeProgram.rulesetGeneration, MethodGeneration.forever);
     expect(restored.activeProgram.templateId, 'forever-original-fsl-v1');
     expect(restored.history, hasLength(1));
+    expect(restored.activeCycle?.totalSessions, 12);
+    expect(restored.activeCycle?.selectedWeekdays.map((day) => day.isoValue), [
+      1,
+      2,
+      4,
+      6,
+    ]);
+    expect(settings['scheduleVersion'], 1);
+    expect(settings['scheduleMode'], 'fixedWeekdayAssignment');
+    expect(settings['liftOrder'], [
+      'deadlift',
+      'squat',
+      'benchPress',
+      'overheadPress',
+    ]);
+    expect(sessions, hasLength(12));
+    expect(sessions.first['lift_id'], 'overheadPress');
+    await reopened.close();
   });
 }
 

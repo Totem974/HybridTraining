@@ -9,6 +9,10 @@ séance guidée,
 AMRAP, repos, notes, records, historique, calcul de plaques et modification des
 Training Max. L'interface suit la maquette locale validée par le propriétaire.
 
+Le premier cycle utilise les jours réellement choisis. À quatre jours, chaque
+mouvement conserve son jour ; à trois jours, les quatre mouvements tournent sur
+les trois jours sélectionnés pendant quatre semaines calendaires.
+
 ## Prérequis Windows
 
 - Windows 11 ;
@@ -149,6 +153,7 @@ Utiliser `D:\SDK\flutter`, sans ajouter `\bin` dans ce champ.
 - [catalogue Forever](docs/program-specifications/forever-catalog.md) ;
 - [modèle de lignées](docs/product/program-lineage-model.md) ;
 - [spécification de la bibliothèque](docs/product/program-library-specification.md) ;
+- [spécification du planning initial](docs/product/initial-cycle-planning-specification.md) ;
 - [import historique](docs/migration/legacy-json-import.md) ;
 - [matrice des écrans](docs/product/reference-screen-matrix.md).
 

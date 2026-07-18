@@ -37,7 +37,7 @@ illustration ou police n'est repris. `UNKNOWN` évite d'inventer un état absent
 |---|---|---|---|---|---|
 | `splash` | Splash ; `2026-07-15 132917`, `204913` | lancement ; aucune saisie | attente puis onboarding/accueil ; erreurs non observées | UNKNOWN | non implémenté ; démarrage Flutter neutre |
 | `onboarding_intro` | Introduction ; `112427`, `132917` | premier lancement ; commencer/passer | pagination visible ; vide/erreur non observés ; vers planning | UNKNOWN | simplifié vers profil ; aucun texte tiers repris |
-| `onboarding_schedule` | Planning ; `132917`, `204913` | onboarding ; date, 2/3/4 séances, jours/mouvements | sélection requise probable ; vers max | UNKNOWN | backlog ; Base0 génère 4 jours séquentiels |
+| `onboarding_schedule` | Planning ; `132917`, `204913` | onboarding ; date, 3/4 séances, jours/mouvements | planning validé ; vers max | UNKNOWN | implémenté : jours ISO, affectation fixe à 4 jours, rotation à 3 jours et aperçu de 12 séances |
 | `onboarding_maxes` | Charges maximum ; `111901`, `132917` | onboarding ; quatre charges, reps/1RM, kg/lb | valeurs positives ; vers validation | UNKNOWN | implémenté : 1RM positif et kg/lb ; estimation UI à venir |
 | `onboarding_review` | Validation des max ; `111901`, `132917` | après saisie ; revoir/continuer | quatre valeurs ; retour ou programme | UNKNOWN | non séparé ; validation dans le formulaire |
 | `program_recommendation` | Choix de génération ; `111901`, `113214`, `145705` | onboarding ; famille ou objectif | maquettes divergentes ; vers proposition | UNKNOWN | un seul modèle vérifié, affiché explicitement |

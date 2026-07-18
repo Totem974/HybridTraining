@@ -5,6 +5,7 @@ import 'package:hybrid_training/features/programs/domain/training_models.dart';
 import 'package:hybrid_training/features/programs/domain/program_catalog.dart';
 import 'package:hybrid_training/features/programs/domain/program_identity.dart';
 import 'package:hybrid_training/features/programs/presentation/program_library_screen.dart';
+import 'package:hybrid_training/features/programs/domain/training_schedule.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({required this.onSubmit, super.key});
@@ -25,6 +26,18 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   int _step = 0;
   int _daysPerWeek = 4;
   DateTime _startDate = DateTime.now();
+  List<TrainingWeekday> _selectedWeekdays = const [
+    TrainingWeekday.monday,
+    TrainingWeekday.tuesday,
+    TrainingWeekday.thursday,
+    TrainingWeekday.saturday,
+  ];
+  List<MainLift> _liftOrder = const [
+    MainLift.deadlift,
+    MainLift.squat,
+    MainLift.benchPress,
+    MainLift.overheadPress,
+  ];
   bool _saving = false;
   String? _saveError;
   String _selectedPresetId = 'forever-original-fsl-v1';
@@ -103,7 +116,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       Expanded(
                         child: FilledButton(
                           key: Key(_step == 5 ? 'create-cycle' : 'continue'),
-                          onPressed: _saving ? null : _continue,
+                          onPressed:
+                              _saving ||
+                                  (_step == 2 &&
+                                      _scheduleDefinition.validate().isNotEmpty)
+                              ? null
+                              : _continue,
                           child: Text(
                             _saving
                                 ? strings.creating
@@ -248,42 +266,158 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     ],
   );
 
-  Widget _scheduleStep(AppStrings strings) => ListView(
-    padding: const EdgeInsets.all(20),
-    children: [
-      Text(strings.startPrompt, style: Theme.of(context).textTheme.titleLarge),
-      const SizedBox(height: 12),
-      Card(
-        child: ListTile(
-          leading: const Icon(Icons.calendar_today),
-          title: Text(
-            MaterialLocalizations.of(context).formatMediumDate(_startDate),
-          ),
-          subtitle: Text(strings.startDate),
-          onTap: _pickDate,
+  Widget _scheduleStep(AppStrings strings) {
+    final preview = _schedulePreview;
+    return ListView(
+      key: const Key('planning-step'),
+      padding: const EdgeInsets.all(20),
+      children: [
+        Text(
+          strings.startPrompt,
+          style: Theme.of(context).textTheme.titleLarge,
         ),
-      ),
-      const SizedBox(height: 24),
-      Text(
-        strings.frequencyPrompt,
-        style: Theme.of(context).textTheme.titleLarge,
-      ),
-      const SizedBox(height: 12),
-      SegmentedButton<int>(
-        segments: [
-          ButtonSegment(value: 3, label: Text(strings.threeDays)),
-          ButtonSegment(value: 4, label: Text(strings.fourDays)),
-        ],
-        selected: {_daysPerWeek},
-        onSelectionChanged: (value) =>
-            setState(() => _daysPerWeek = value.single),
-      ),
-      if (_daysPerWeek == 3) ...[
         const SizedBox(height: 12),
-        Text(strings.threeDayCalendar),
+        Card(
+          child: ListTile(
+            key: const Key('pick-start-date'),
+            leading: const Icon(Icons.calendar_today),
+            title: Text(
+              MaterialLocalizations.of(context).formatMediumDate(_startDate),
+            ),
+            subtitle: Text(strings.startDate),
+            onTap: _pickDate,
+          ),
+        ),
+        Wrap(
+          spacing: 8,
+          children: [
+            TextButton(
+              key: const Key('date-today'),
+              onPressed: () => _setStartDate(DateTime.now()),
+              child: Text(strings.today),
+            ),
+            TextButton(
+              key: const Key('date-tomorrow'),
+              onPressed: () =>
+                  _setStartDate(DateTime.now().add(const Duration(days: 1))),
+              child: Text(strings.tomorrow),
+            ),
+            TextButton(
+              key: const Key('date-next-monday'),
+              onPressed: _nextMonday,
+              child: Text(strings.nextMonday),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text(
+          strings.frequencyPrompt,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        SegmentedButton<int>(
+          segments: [
+            ButtonSegment(value: 3, label: Text(strings.threeDays)),
+            ButtonSegment(value: 4, label: Text(strings.fourDays)),
+          ],
+          selected: {_daysPerWeek},
+          onSelectionChanged: (value) => _changeFrequency(value.single),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          strings.trainingDays,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        Text(
+          strings.daysSelected(_selectedWeekdays.length, _daysPerWeek),
+          key: const Key('selected-day-count'),
+        ),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (final day in TrainingWeekday.values)
+              Semantics(
+                selected: _selectedWeekdays.contains(day),
+                label: strings.weekdayLong(day.isoValue),
+                child: FilterChip(
+                  key: Key('weekday-${day.isoValue}'),
+                  label: Text(strings.weekdayShort(day.isoValue)),
+                  selected: _selectedWeekdays.contains(day),
+                  onSelected: (_) => _toggleWeekday(day),
+                ),
+              ),
+          ],
+        ),
+        if (_hasConsecutiveWarning)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Text(
+              strings.consecutiveDaysWarning,
+              key: const Key('consecutive-warning'),
+              style: const TextStyle(color: Colors.amber),
+            ),
+          ),
+        const SizedBox(height: 20),
+        Text(
+          _daysPerWeek == 4
+              ? strings.fixedAssignments
+              : strings.rotationAcrossDays,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        ReorderableListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          buildDefaultDragHandles: true,
+          itemCount: _liftOrder.length,
+          onReorderItem: _moveLift,
+          itemBuilder: (context, index) => Card(
+            key: ValueKey(_liftOrder[index]),
+            child: ListTile(
+              key: Key('lift-order-$index'),
+              title: Text(strings.lift(_liftOrder[index].name)),
+              subtitle: _daysPerWeek == 4 && index < _sortedWeekdays.length
+                  ? Text(strings.weekdayLong(_sortedWeekdays[index].isoValue))
+                  : null,
+              leading: IconButton(
+                key: Key('move-lift-up-$index'),
+                onPressed: index == 0
+                    ? null
+                    : () => _moveLift(index, index - 1),
+                icon: const Icon(Icons.arrow_upward),
+                tooltip: strings.moveUp,
+              ),
+              trailing: IconButton(
+                key: Key('move-lift-down-$index'),
+                onPressed: index == _liftOrder.length - 1
+                    ? null
+                    : () => _moveLift(index, index + 1),
+                icon: const Icon(Icons.arrow_downward),
+                tooltip: strings.moveDown,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          strings.schedulePreview,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        if (preview.isNotEmpty) ...[
+          Text('${strings.firstSession}: ${_dateLabel(preview.first.date)}'),
+          Text('${strings.lastSession}: ${_dateLabel(preview.last.date)}'),
+          Text(
+            '${preview.length} ${strings.sessions} · 3 ${strings.programWeeks} · ${_calendarWeeks(preview)} ${strings.calendarWeeks}',
+          ),
+          for (final slot in preview.take(4))
+            ListTile(
+              dense: true,
+              title: Text(_dateLabel(slot.date)),
+              trailing: Text(strings.lift(slot.lift.name)),
+            ),
+        ],
       ],
-    ],
-  );
+    );
+  }
 
   Widget _readyStep(AppStrings strings) => ListView(
     padding: const EdgeInsets.all(20),
@@ -306,10 +440,27 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               Text('${strings.trainingMax}: 90 %'),
               Text('${strings.frequency}: $_daysPerWeek'),
               Text(
-                _daysPerWeek == 3
-                    ? strings.threeDayCalendar
-                    : (_daysPerWeek == 4 ? (_frCalendar(strings)) : ''),
+                '${strings.trainingDays}: ${_sortedWeekdays.map((day) => strings.weekdayLong(day.isoValue)).join(', ')}',
               ),
+              Text(
+                _daysPerWeek == 4
+                    ? strings.fixedAssignments
+                    : strings.rotationAcrossDays,
+              ),
+              Text(
+                '${strings.liftOrder}: ${_liftOrder.map((lift) => strings.lift(lift.name)).join(' → ')}',
+              ),
+              if (_schedulePreview.isNotEmpty) ...[
+                Text(
+                  '${strings.firstSession}: ${_dateLabel(_schedulePreview.first.date)}',
+                ),
+                Text(
+                  '${strings.lastSession}: ${_dateLabel(_schedulePreview.last.date)}',
+                ),
+                Text(
+                  '${_schedulePreview.length} ${strings.sessions} · ${_calendarWeeks(_schedulePreview)} ${strings.calendarWeeks}',
+                ),
+              ],
               Text(
                 '${strings.startDate}: ${MaterialLocalizations.of(context).formatMediumDate(_startDate)}',
               ),
@@ -357,6 +508,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     if (_step == 3 && !_formKey.currentState!.validate()) {
       return;
     }
+    if (_step == 2 && _scheduleDefinition.validate().isNotEmpty) {
+      return;
+    }
     if (_step < 5) {
       if (_step == 1) {
         const catalog = ProgramCatalog();
@@ -378,8 +532,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           displayName: _name.text.trim(),
           unit: _unit,
           roundingIncrement: _unit == WeightUnit.kilograms ? 2.5 : 5,
-          startDate: _startDate,
-          trainingDaysPerWeek: _daysPerWeek,
+          schedule: _scheduleDefinition,
           persistentPresetId: _selectedPresetId,
           presetVersion: const ProgramCatalog()
               .preset(_selectedPresetId)
@@ -404,6 +557,96 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     }
   }
 
+  List<TrainingWeekday> get _sortedWeekdays =>
+      [..._selectedWeekdays]
+        ..sort((left, right) => left.isoValue.compareTo(right.isoValue));
+
+  TrainingScheduleDefinition get _scheduleDefinition =>
+      TrainingScheduleDefinition(
+        startsOn: _startDate,
+        frequency: _daysPerWeek,
+        selectedWeekdays: _sortedWeekdays,
+        liftOrder: _liftOrder,
+        mode: _daysPerWeek == 4
+            ? TrainingScheduleMode.fixedWeekdayAssignment
+            : TrainingScheduleMode.rotatingAcrossSelectedDays,
+        weekdayAssignments: _daysPerWeek == 4 && _selectedWeekdays.length == 4
+            ? [
+                for (var index = 0; index < 4; index++)
+                  TrainingDayAssignment(
+                    weekday: _sortedWeekdays[index],
+                    lift: _liftOrder[index],
+                  ),
+              ]
+            : const [],
+      );
+
+  List<ScheduledSessionSlot> get _schedulePreview {
+    if (_scheduleDefinition.validate().isNotEmpty) return const [];
+    return const SessionScheduleBuilder().build(_scheduleDefinition);
+  }
+
+  bool get _hasConsecutiveWarning {
+    final values = _sortedWeekdays.map((day) => day.isoValue).toList();
+    var run = 1;
+    for (var index = 1; index < values.length; index++) {
+      run = values[index] == values[index - 1] + 1 ? run + 1 : 1;
+      if (run >= 3) return true;
+    }
+    return false;
+  }
+
+  void _changeFrequency(int frequency) {
+    setState(() {
+      _daysPerWeek = frequency;
+      _selectedWeekdays = frequency == 4
+          ? const [
+              TrainingWeekday.monday,
+              TrainingWeekday.tuesday,
+              TrainingWeekday.thursday,
+              TrainingWeekday.saturday,
+            ]
+          : const [
+              TrainingWeekday.monday,
+              TrainingWeekday.wednesday,
+              TrainingWeekday.friday,
+            ];
+    });
+  }
+
+  void _toggleWeekday(TrainingWeekday day) {
+    setState(() {
+      if (_selectedWeekdays.contains(day)) {
+        _selectedWeekdays = [..._selectedWeekdays]..remove(day);
+      } else if (_selectedWeekdays.length < _daysPerWeek) {
+        _selectedWeekdays = [..._selectedWeekdays, day];
+      }
+    });
+  }
+
+  void _moveLift(int from, int to) {
+    setState(() {
+      final updated = [..._liftOrder];
+      final lift = updated.removeAt(from);
+      updated.insert(to, lift);
+      _liftOrder = updated;
+    });
+  }
+
+  void _setStartDate(DateTime value) =>
+      setState(() => _startDate = DateTime(value.year, value.month, value.day));
+
+  void _nextMonday() {
+    final today = DateTime.now();
+    final days = (DateTime.monday - today.weekday + 7) % 7;
+    _setStartDate(today.add(Duration(days: days == 0 ? 7 : days)));
+  }
+
+  String _dateLabel(DateTime date) =>
+      MaterialLocalizations.of(context).formatMediumDate(date);
+  int _calendarWeeks(List<ScheduledSessionSlot> slots) =>
+      slots.last.date.difference(slots.first.date).inDays ~/ 7 + 1;
+
   Future<void> _openLibrary({
     MethodGeneration? origin,
     bool showAll = false,
@@ -424,10 +667,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       setState(() => _selectedPresetId = selected);
     }
   }
-
-  String _frCalendar(AppStrings strings) => strings.languageCode == 'fr'
-      ? '12 séances réparties sur 3 semaines calendaires.'
-      : '12 workouts spread over 3 calendar weeks.';
 
   Future<void> _pickDate() async {
     final selected = await showDatePicker(

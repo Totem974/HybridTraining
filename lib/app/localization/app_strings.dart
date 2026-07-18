@@ -130,6 +130,29 @@ class AppStrings {
       _fr ? 'Combien de jours par semaine ?' : 'How many days per week?';
   String get threeDays => _fr ? '3 jours' : '3 days';
   String get fourDays => _fr ? '4 jours' : '4 days';
+  String get today => _fr ? 'Aujourd’hui' : 'Today';
+  String get tomorrow => _fr ? 'Demain' : 'Tomorrow';
+  String get nextMonday => _fr ? 'Prochain lundi' : 'Next Monday';
+  String get trainingDays => _fr ? 'Jours de la semaine' : 'Weekdays';
+  String daysSelected(int selected, int expected) =>
+      _fr ? '$selected/$expected sélectionnés' : '$selected/$expected selected';
+  String get consecutiveDaysWarning => _fr
+      ? 'Cette répartition comporte au moins trois journées consécutives.'
+      : 'This schedule contains at least three consecutive training days.';
+  String get fixedAssignments =>
+      _fr ? 'Affectation fixe par jour' : 'Fixed weekday assignment';
+  String get rotationAcrossDays => _fr
+      ? 'Rotation sur les jours sélectionnés'
+      : 'Rotation across selected days';
+  String get moveUp => _fr ? 'Monter' : 'Move up';
+  String get moveDown => _fr ? 'Descendre' : 'Move down';
+  String get schedulePreview => _fr ? 'Aperçu du planning' : 'Schedule preview';
+  String get firstSession => _fr ? 'Première séance' : 'First workout';
+  String get lastSession => _fr ? 'Dernière séance' : 'Last workout';
+  String get programWeeks =>
+      _fr ? 'semaines de programmation' : 'program weeks';
+  String get calendarWeeks => _fr ? 'semaines calendaires' : 'calendar weeks';
+  String get liftOrder => _fr ? 'Ordre des mouvements' : 'Lift order';
   String get readyMessage => _fr
       ? 'Votre premier cycle est prêt à être créé.'
       : 'Your first cycle is ready to be created.';
@@ -314,5 +337,39 @@ class AppStrings {
     (_, 'deadlift') => 'Deadlift',
     (_, 'overheadPress') => 'Overhead press',
     _ => id,
+  };
+
+  String weekdayShort(int iso) => switch ((languageCode, iso)) {
+    ('fr', 1) => 'Lun',
+    ('fr', 2) => 'Mar',
+    ('fr', 3) => 'Mer',
+    ('fr', 4) => 'Jeu',
+    ('fr', 5) => 'Ven',
+    ('fr', 6) => 'Sam',
+    ('fr', 7) => 'Dim',
+    (_, 1) => 'Mon',
+    (_, 2) => 'Tue',
+    (_, 3) => 'Wed',
+    (_, 4) => 'Thu',
+    (_, 5) => 'Fri',
+    (_, 6) => 'Sat',
+    _ => 'Sun',
+  };
+
+  String weekdayLong(int iso) => switch ((languageCode, iso)) {
+    ('fr', 1) => 'Lundi',
+    ('fr', 2) => 'Mardi',
+    ('fr', 3) => 'Mercredi',
+    ('fr', 4) => 'Jeudi',
+    ('fr', 5) => 'Vendredi',
+    ('fr', 6) => 'Samedi',
+    ('fr', 7) => 'Dimanche',
+    (_, 1) => 'Monday',
+    (_, 2) => 'Tuesday',
+    (_, 3) => 'Wednesday',
+    (_, 4) => 'Thursday',
+    (_, 5) => 'Friday',
+    (_, 6) => 'Saturday',
+    _ => 'Sunday',
   };
 }

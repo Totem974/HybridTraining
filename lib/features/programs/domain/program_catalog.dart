@@ -231,17 +231,19 @@ class ProgramCatalog {
     (item) =>
         item.recommended && item.availability == ProductAvailability.available,
   );
-  ProgramPresetDefinition? presetForConcept(String conceptId) {
-    for (final preset in presets) {
-      if (revision(preset.mainRevisionId).conceptId == conceptId ||
-          (preset.supplementalRevisionId != null &&
-              revision(preset.supplementalRevisionId!).conceptId ==
-                  conceptId)) {
-        return preset;
-      }
-    }
-    return null;
-  }
+  List<ProgramPresetDefinition> presetsForConcept(String conceptId) => presets
+      .where(
+        (preset) =>
+            revision(preset.mainRevisionId).conceptId == conceptId ||
+            (preset.supplementalRevisionId != null &&
+                revision(preset.supplementalRevisionId!).conceptId ==
+                    conceptId),
+      )
+      .toList(growable: false);
+
+  @Deprecated('Use presetsForConcept for the future multi-preset model.')
+  ProgramPresetDefinition? presetForConcept(String conceptId) =>
+      presetsForConcept(conceptId).firstOrNull;
 
   ProductAvailability availabilityFor(String conceptId) =>
       presetForConcept(conceptId)?.availability ??

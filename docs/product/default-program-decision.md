@@ -10,6 +10,10 @@ révision supplémentaire `forever-first-set-last-5x5-v1`. Il conserve un
 Training Max applicatif à 90 %, cinq séries FSL, quatre jours recommandés et
 trois jours comme adaptation produit.
 
+Le preset fournit quatre jours comme fréquence recommandée. Le planning choisit
+explicitement les jours et l’ordre stable Deadlift, Squat, Bench Press,
+Overhead Press, sans modifier les règles numériques du moteur.
+
 Seul un preset complet et disponible peut générer un cycle. Un concept, une
 origine ou une génération ne peut jamais être persisté comme programme actif.
 

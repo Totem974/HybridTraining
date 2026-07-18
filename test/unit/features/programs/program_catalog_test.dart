@@ -49,6 +49,10 @@ void main() {
     expect(catalog.validate().errors, isEmpty);
     expect(catalog.concepts, hasLength(10));
     expect(catalog.selectablePresets, hasLength(1));
+    expect(
+      catalog.presetsForConcept('original-531').single.persistentPresetId,
+      'forever-original-fsl-v1',
+    );
   });
 
   test('validator detects duplicate and broken references', () {

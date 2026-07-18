@@ -114,3 +114,9 @@ canonique exacte. Conversion, affichage et arrondi sont trois opérations sépar
 - `prod` : `fr.totem974.hybridtraining`, aucun affichage de diagnostic ni secret.
 
 Les deux flavors doivent pouvoir cohabiter sur un appareil.
+## Planning initial
+
+`TrainingScheduleDefinition` valide les jours ISO, l’ordre et les affectations.
+`SessionScheduleBuilder` produit les douze dates en Dart pur avant l’ouverture
+de la transaction SQLite. Le store persiste les réglages versionnés et les
+séances résultantes.
