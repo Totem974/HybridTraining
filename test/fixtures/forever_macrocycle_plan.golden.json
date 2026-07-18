@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "test.forever.v1",
+  "blueprintVersion": 1,
+  "blueprintSnapshot": "{\"id\":\"test.forever.v1\",\"version\":1}",
+  "unit": "kilograms",
+  "seed": 0,
+  "blocks": [
+    {
+      "id": "block-1-leader",
+      "role": "leader",
+      "seventhWeekPurpose": null,
+      "rule": {
+        "document": "LIFE-PHASE-001",
+        "location": "cycle-lifecycle-specification.md"
+      },
+      "cycles": [
+        {
+          "number": 1,
+          "weeks": [
+            {
+              "number": 1,
+              "sessions": [
+                {
+                  "id": "session-1",
+                  "date": "2026-07-20",
+                  "blocks": [
+                    {
+                      "kind": "mainWork",
+                      "prescriptions": [
+                        {
+                          "movement": "squat",
+                          "setKind": "main",
+                          "percentage": 0.7,
+                          "repetitions": 5,
+                          "trainingMax": 100.0,
+                          "unroundedLoad": 70.0,
+                          "load": 70.0,
+                          "roundingIncrement": 2.5,
+                          "isPerformanceSet": false,
+                          "rule": {
+                            "document": "MAIN-ORDER-001",
+                            "location": "main-work-specification.md"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "transitions": [],
+  "events": [
+    {
+      "kind": "trainingMaxProgression",
+      "afterBlockId": "block-1-leader",
+      "afterCycleNumber": 1,
+      "rule": {
+        "document": "TM-PROG-001",
+        "location": "training-max-specification.md"
+      }
+    }
+  ]
+}
