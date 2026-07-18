@@ -42,7 +42,13 @@ class BeginnerPrepSchoolBlueprint {
         'core': {'abWheel', 'hangingLegRaise'},
       },
       allowedConditioningSelections: const {
-        'run': {'oneToThreeMiles', 'track100', 'track200', 'track400', 'track800'},
+        'run': {
+          'oneToThreeMiles',
+          'track100',
+          'track200',
+          'track400',
+          'track800',
+        },
       },
     );
   }
@@ -52,7 +58,9 @@ class BeginnerPrepSchoolBlueprint {
     List<List<MainLift>> pattern,
     Map<MainLift, double> ratios,
   ) => WeekTemplate(
-    sessions: [for (final movements in pattern) _session(week, movements, ratios)],
+    sessions: [
+      for (final movements in pattern) _session(week, movements, ratios),
+    ],
   );
 
   static SessionTemplate _session(
@@ -75,16 +83,28 @@ class BeginnerPrepSchoolBlueprint {
           '10-20 contacts: box jump or standing broad jump; no depth jumps.',
         ],
       ),
-      SessionBlockTemplate(
-        kind: GeneratedSessionBlockKind.mainWork,
-        movements: [for (final lift in movements) _main(lift, week)],
-        instructions: const ['5\'s Pro; crisp speed and sound technique.'],
-      ),
-      SessionBlockTemplate(
-        kind: GeneratedSessionBlockKind.supplemental,
-        movements: [for (final lift in movements) _supplemental(lift, week, ratios[lift]!)],
-        instructions: const ['5x5; FSL at 90% TM, SSL at 85% TM.'],
-      ),
+      for (var index = 0; index < movements.length; index++) ...[
+        SessionBlockTemplate(
+          kind: GeneratedSessionBlockKind.mainWork,
+          movements: [_main(movements[index], week)],
+          instructions: const ['5\'s Pro; crisp speed and sound technique.'],
+        ),
+        SessionBlockTemplate(
+          kind: GeneratedSessionBlockKind.supplemental,
+          movements: [
+            _supplemental(movements[index], week, ratios[movements[index]]!),
+          ],
+          instructions: const ['5x5; FSL at 90% TM, SSL at 85% TM.'],
+        ),
+        if (index == 0)
+          SessionBlockTemplate(
+            kind: GeneratedSessionBlockKind.transition,
+            movements: const [],
+            instructions: const [
+              'Transition to the second barbell lift; excluded from the time target per lift.',
+            ],
+          ),
+      ],
       SessionBlockTemplate(
         kind: GeneratedSessionBlockKind.assistance,
         movements: const [],
@@ -141,17 +161,33 @@ class BeginnerPrepSchoolBlueprint {
     source: RuleReference(document: id, location: location),
   );
 
-  static Map<String, Object?> _canonical(Map<MainLift, double> ratios, int cycles) => {
+  static Map<String, Object?> _canonical(
+    Map<MainLift, double> ratios,
+    int cycles,
+  ) => {
     'id': beginnerPrepSchoolPresetId,
     'version': 1,
-    'audience': 'beginners, including high-school athletes and adults lacking a base',
-    'trainingMaxRatios': {for (final lift in MainLift.values) lift.name: ratios[lift]},
+    'audience':
+        'beginners, including high-school athletes and adults lacking a base',
+    'trainingMaxRatios': {
+      for (final lift in MainLift.values) lift.name: ratios[lift],
+    },
     'schedule': {'daysPerWeek': 3, 'alternation': 'A-B-A / B-A-B'},
-    'sessions': {'A': ['squat', 'benchPress'], 'B': ['deadlift', 'overheadPress']},
+    'sessions': {
+      'A': ['squat', 'benchPress'],
+      'B': ['deadlift', 'overheadPress'],
+    },
     'cycleCount': cycles,
     'duration': 'no fixed duration; continue while productive',
-    'progression': 'after each cycle; upper body max +5 lb, lower body max +10 lb; weaker squat/deadlift may use +5 lb, repeats or microloads',
-    'exitCriteria': ['barbell work within prescribed time', 'assistance circuit within 20 minutes', 'run one mile', 'jump and land correctly', 'balanced training base'],
+    'progression':
+        'after each cycle; upper body max +5 lb, lower body max +10 lb; weaker squat/deadlift may use +5 lb, repeats or microloads',
+    'exitCriteria': [
+      'barbell work within prescribed time',
+      'assistance circuit within 20 minutes',
+      'run one mile',
+      'jump and land correctly',
+      'balanced training base',
+    ],
     'references': ['5/3/1 Forever PDF 50-57', 'forever-program-catalog.md'],
   };
 
@@ -163,7 +199,7 @@ class BeginnerPrepSchoolBlueprint {
     [.75, .85, .95],
   ];
 
-  static const _blueprint = ProgramBlueprint(
+  static final _blueprint = ProgramBlueprint(
     id: ProgramBlueprintId(beginnerPrepSchoolPresetId),
     version: ProgramVersion(1),
     revisionIds: [ProgramRevisionId('forever-beginner-prep-school-v1')],
@@ -175,19 +211,70 @@ class BeginnerPrepSchoolBlueprint {
       ProgramCapability.athleticWork,
       ProgramCapability.multipleMainMovements,
     },
-    trainingMaxPolicy: TrainingMaxPolicy(PolicyId('bps-tm'), ProgramVersion(1), ruleStatus: RuleStatus.verified),
-    mainWorkPolicy: MainWorkPolicy(PolicyId('bps-main'), ProgramVersion(1), ruleStatus: RuleStatus.verified),
-    supplementalPolicy: SupplementalPolicy(PolicyId('bps-supplemental'), ProgramVersion(1), ruleStatus: RuleStatus.verified),
-    assistancePolicy: AssistancePolicy(PolicyId('bps-assistance'), ProgramVersion(1), ruleStatus: RuleStatus.verified),
-    conditioningPolicy: ConditioningPolicy(PolicyId('bps-conditioning'), ProgramVersion(1), ruleStatus: RuleStatus.verified),
-    athleticWorkPolicy: AthleticWorkPolicy(PolicyId('bps-athletic'), ProgramVersion(1), ruleStatus: RuleStatus.verified),
-    schedulePolicy: SchedulePolicy(PolicyId('bps-schedule'), ProgramVersion(1), supportedFrequencies: {3}, recommendedFrequency: 3, mainMovementsPerSession: 2, ruleStatus: RuleStatus.verified),
-    blockTemplates: [BlockTemplate(id: BlockTemplateId('bps-leader'), role: BlockRole.leader)],
-    blockSequence: BlockSequence(blocks: [BlockSequenceEntry(templateId: BlockTemplateId('bps-leader'), order: 0)]),
-    transitionPolicy: TransitionPolicy(PolicyId('bps-transition'), ProgramVersion(1), allowedTransitions: {BlockTransition(BlockRole.leader, BlockRole.leader)}, ruleStatus: RuleStatus.verified),
-    compatibility: CompatibilityConstraint(supportedFrequencies: {3}, requiredCapabilities: {ProgramCapability.multipleMainMovements}),
+    trainingMaxPolicy: TrainingMaxPolicy(
+      PolicyId('bps-tm'),
+      ProgramVersion(1),
+      ruleStatus: RuleStatus.verified,
+    ),
+    mainWorkPolicy: MainWorkPolicy(
+      PolicyId('bps-main'),
+      ProgramVersion(1),
+      ruleStatus: RuleStatus.verified,
+    ),
+    supplementalPolicy: SupplementalPolicy(
+      PolicyId('bps-supplemental'),
+      ProgramVersion(1),
+      ruleStatus: RuleStatus.verified,
+    ),
+    assistancePolicy: AssistancePolicy(
+      PolicyId('bps-assistance'),
+      ProgramVersion(1),
+      ruleStatus: RuleStatus.verified,
+    ),
+    conditioningPolicy: ConditioningPolicy(
+      PolicyId('bps-conditioning'),
+      ProgramVersion(1),
+      ruleStatus: RuleStatus.verified,
+    ),
+    athleticWorkPolicy: AthleticWorkPolicy(
+      PolicyId('bps-athletic'),
+      ProgramVersion(1),
+      ruleStatus: RuleStatus.verified,
+    ),
+    schedulePolicy: SchedulePolicy(
+      PolicyId('bps-schedule'),
+      ProgramVersion(1),
+      supportedFrequencies: {3},
+      recommendedFrequency: 3,
+      mainMovementsPerSession: 2,
+      ruleStatus: RuleStatus.verified,
+    ),
+    blockTemplates: [
+      BlockTemplate(id: BlockTemplateId('bps-leader'), role: BlockRole.leader),
+    ],
+    blockSequence: BlockSequence(
+      blocks: [
+        BlockSequenceEntry(templateId: BlockTemplateId('bps-leader'), order: 0),
+      ],
+    ),
+    transitionPolicy: TransitionPolicy(
+      PolicyId('bps-transition'),
+      ProgramVersion(1),
+      allowedTransitions: const {},
+      ruleStatus: RuleStatus.verified,
+    ),
+    compatibility: CompatibilityConstraint(
+      supportedFrequencies: {3},
+      requiredCapabilities: {ProgramCapability.multipleMainMovements},
+    ),
     implementationStatus: ImplementationStatus.available,
     generatorId: 'beginner-prep-school',
-    references: [RuleReference(document: '5/3/1 Forever', location: 'PDF 50-57'), RuleReference(document: 'forever-program-catalog.md', location: 'Beginner Prep School')],
+    references: [
+      RuleReference(document: '5/3/1 Forever', location: 'PDF 50-57'),
+      RuleReference(
+        document: 'forever-program-catalog.md',
+        location: 'Beginner Prep School',
+      ),
+    ],
   );
 }

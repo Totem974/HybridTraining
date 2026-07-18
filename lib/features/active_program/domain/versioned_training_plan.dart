@@ -123,7 +123,14 @@ class VersionedTrainingPlan {
                                       sequence: sessionBlockIndex,
                                       kind: sessionBlock.kind.name,
                                       movementId: movement,
-                                      ruleProvenance: ruleJson(block.rule),
+                                      ruleProvenance: {
+                                        ...ruleJson(block.rule),
+                                        if (sessionBlock
+                                            .instructions
+                                            .isNotEmpty)
+                                          'instructions':
+                                              sessionBlock.instructions,
+                                      },
                                       prescriptions: [
                                         for (
                                           var setIndex = 0;

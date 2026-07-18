@@ -53,4 +53,26 @@ void main() {
     expect(find.text('First Set Last'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('Beginner Prep School can be selected outside onboarding', (
+    tester,
+  ) async {
+    await pumpLibrary(tester);
+    await tester.enterText(
+      find.byKey(const Key('program-search')),
+      'Beginner Prep School',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const Key('entry-preset-forever-beginner-prep-school')),
+    );
+    await tester.pumpAndSettle();
+    final button = tester.widget<FilledButton>(
+      find.byKey(const Key('select-program')),
+    );
+    expect(button.onPressed, isNotNull);
+    button.onPressed!();
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -96,7 +96,7 @@ class GeneratedSessionBlock {
   Map<String, Object?> toJson() => {
     'kind': kind.name,
     'prescriptions': prescriptions.map((e) => e.toJson()).toList(),
-    'instructions': instructions,
+    if (instructions.isNotEmpty) 'instructions': instructions,
   };
 }
 

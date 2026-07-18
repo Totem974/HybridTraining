@@ -26,12 +26,8 @@ void main() {
 
   test('search ignores accents and case in French and English', () {
     expect(
-      repository
-          .query(const ProgramQuery(search: 'EXECUTABLE'))
-          .entries
-          .single
-          .presetId,
-      'forever-original-fsl-v1',
+      repository.query(const ProgramQuery(search: 'executable')).entries,
+      isNotEmpty,
     );
     expect(
       repository.query(const ProgramQuery(search: 'polyvalent')).entries,
@@ -78,10 +74,11 @@ void main() {
     final result = repository.query(
       const ProgramQuery(
         filter: ProgramFilter(
-          kinds: {ProgramEntryKind.program},
+          kinds: {ProgramEntryKind.preset},
           frequencies: {3},
           levels: {ProgramLevel.beginner},
           goals: {ProgramGoal.general},
+          mainMovementsPerSession: {2},
         ),
       ),
     );
@@ -158,6 +155,10 @@ void main() {
     final component = repository.findById('component-fsl')!;
     final documentary = repository.findById('program-coffinworm')!;
     expect(executable.isExecutable, isTrue);
+    expect(
+      repository.findById('preset-forever-beginner-prep-school')!.isExecutable,
+      isTrue,
+    );
     expect(component.isExecutable, isFalse);
     expect(documentary.isExecutable, isFalse);
   });

@@ -4,7 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/core/database/local_database.dart';
 import 'package:hybrid_training/features/active_program/data/sqlite_versioned_plan_store.dart';
 import 'package:hybrid_training/features/active_program/domain/versioned_training_plan.dart';
+import 'package:hybrid_training/features/programs/domain/load_rounding.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
+import 'package:hybrid_training/features/programs/domain/v2/generation/beginner_prep_school_blueprint.dart';
+import 'package:hybrid_training/features/programs/domain/v2/generation/forever_macrocycle_generator.dart';
 import 'package:hybrid_training/features/programs/domain/v2/generation/generated_training_plan.dart';
 import 'package:hybrid_training/features/programs/domain/v2/program_domain.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -206,6 +209,56 @@ void main() {
     final cycles = blocks.single['cycles']! as List<Map<String, Object?>>;
     final sessions = cycles.single['sessions']! as List<Map<String, Object?>>;
     expect(sessions.single['scheduled_for'], '2026-07-20');
+  });
+
+  test('persists and reopens a complete Beginner Prep School plan', () async {
+    final generated = const ForeverMacrocycleGenerator().generate(
+      snapshot: BeginnerPrepSchoolBlueprint.create(
+        trainingMaxRatios: const {
+          MainLift.squat: .85,
+          MainLift.benchPress: .90,
+          MainLift.deadlift: .85,
+          MainLift.overheadPress: .90,
+        },
+      ),
+      athlete: AthletePlanConfiguration(
+        trainingMaxes: const {
+          MainLift.squat: 100,
+          MainLift.benchPress: 75,
+          MainLift.deadlift: 120,
+          MainLift.overheadPress: 50,
+        },
+        unit: WeightUnit.kilograms,
+        trainingWeekdays: const [1, 3, 5],
+        startDate: const LocalDate(2026, 7, 20),
+        rounder: const LoadRounder(increment: 2.5),
+      ),
+    );
+    await store.createPlan(
+      VersionedTrainingPlan.fromGenerated(
+        id: 'bps-plan',
+        athleteId: 'athlete',
+        macrocycle: 1,
+        createdAt: DateTime.utc(2026, 7, 18),
+        generated: generated,
+      ),
+    );
+    await local.close();
+    final reloaded = await store.loadPlan('bps-plan');
+    expect(reloaded?['blueprint_id'], beginnerPrepSchoolPresetId);
+    final blocks = reloaded?['blocks']! as List<Map<String, Object?>>;
+    final cycles = blocks.single['cycles']! as List<Map<String, Object?>>;
+    final sessions = cycles.single['sessions']! as List<Map<String, Object?>>;
+    expect(sessions, hasLength(9));
+    final sessionBlocks =
+        sessions.first['blocks']! as List<Map<String, Object?>>;
+    expect(
+      sessionBlocks.where((block) => block['kind'] == 'mainWork'),
+      hasLength(2),
+    );
+    final provenance =
+        sessionBlocks.first['ruleProvenance']! as Map<String, Object?>;
+    expect(provenance['instructions'], contains(contains('3 rounds')));
   });
 }
 

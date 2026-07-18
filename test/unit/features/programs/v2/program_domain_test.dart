@@ -215,7 +215,13 @@ void main() {
     final converted = const ProgramV1Adapter().convert(
       const v1.ProgramCatalog(),
     );
-    expect(converted.blueprints.single.id.value, 'forever-original-fsl-v1');
+    expect(
+      converted.blueprints
+          .singleWhere((item) => item.id.value == 'forever-original-fsl-v1')
+          .id
+          .value,
+      'forever-original-fsl-v1',
+    );
     expect(const ProgramDomainValidator().validate(converted).isValid, isTrue);
   });
   test('id serialization is stable', () {
