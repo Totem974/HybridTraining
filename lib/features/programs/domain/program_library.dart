@@ -369,11 +369,14 @@ const canonicalProgramEntries = <ProgramLibraryEntry>[
     complexity: 1,
     revisionId: 'original-original-531-v1',
   ),
-  ProgramLibraryEntry.foreverDocumentary(
-    id: 'program-beginner-prep-school',
+  ProgramLibraryEntry(
+    id: 'preset-forever-beginner-prep-school',
     conceptId: 'program.beginner-prep-school',
     titleFr: 'Beginner Prep School',
     titleEn: 'Beginner Prep School',
+    kind: ProgramEntryKind.preset,
+    origin: MethodGeneration.forever,
+    generation: MethodGeneration.forever,
     foreverStatus: ForeverStatus.current,
     documentationStatus: ProgramValidationStatus.rulesReviewed,
     phases: {ProgramPhase.prep, ProgramPhase.leader},
@@ -383,7 +386,15 @@ const canonicalProgramEntries = <ProgramLibraryEntry>[
     mainMovementsPerSession: 2,
     equipment: {..._basicEquipment, ProgramEquipment.bodyweight},
     tmRange: ProgramTmRange(.85, .90),
+    implementationStatus: ProgramImplementationStatus.productionReady,
     complexity: 2,
+    presetId: 'forever-beginner-prep-school-v1',
+    revisionId: 'forever-beginner-prep-school-v1',
+    recommended: false,
+    summaryFr:
+        'Programme débutant Forever sur 3 jours, alternance A/B, deux mouvements principaux par séance. Exige une course régulière, des sauts maîtrisés et un circuit d’assistance chronométré.',
+    summaryEn:
+        'Three-day Forever beginner program with A/B alternation and two main lifts per session. Requires regular running, sound jumping mechanics, and a timed assistance circuit.',
   ),
   ProgramLibraryEntry.foreverDocumentary(
     id: 'component-bbb',

@@ -49,9 +49,12 @@ class SessionBlockTemplate {
   SessionBlockTemplate({
     required this.kind,
     required List<MovementTemplate> movements,
-  }) : movements = List.unmodifiable(movements);
+    List<String> instructions = const [],
+  }) : movements = List.unmodifiable(movements),
+       instructions = List.unmodifiable(instructions);
   final GeneratedSessionBlockKind kind;
   final List<MovementTemplate> movements;
+  final List<String> instructions;
 }
 
 class SessionTemplate {
@@ -297,6 +300,7 @@ class ForeverMacrocycleGenerator {
       for (final block in template.blocks)
         GeneratedSessionBlock(
           kind: block.kind,
+          instructions: block.instructions,
           prescriptions: [
             for (final movement in block.movements)
               for (final set in movement.sets)

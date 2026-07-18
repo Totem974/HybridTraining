@@ -87,12 +87,16 @@ class GeneratedSessionBlock {
   GeneratedSessionBlock({
     required this.kind,
     required List<GeneratedPrescription> prescriptions,
-  }) : prescriptions = List.unmodifiable(prescriptions);
+    List<String> instructions = const [],
+  }) : prescriptions = List.unmodifiable(prescriptions),
+       instructions = List.unmodifiable(instructions);
   final GeneratedSessionBlockKind kind;
   final List<GeneratedPrescription> prescriptions;
+  final List<String> instructions;
   Map<String, Object?> toJson() => {
     'kind': kind.name,
     'prescriptions': prescriptions.map((e) => e.toJson()).toList(),
+    'instructions': instructions,
   };
 }
 

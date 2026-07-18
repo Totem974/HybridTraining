@@ -87,6 +87,13 @@ class ProgramCatalog {
 
   static const defaultConcepts = <ProgramConcept>[
     ProgramConcept(
+      id: 'beginner-prep-school',
+      titleKey: 'program.beginner_prep_school',
+      type: ProgramConceptType.standaloneProgram,
+      originGeneration: MethodGeneration.forever,
+      documentationStatus: ProgramValidationStatus.rulesReviewed,
+    ),
+    ProgramConcept(
       id: 'original-531',
       titleKey: 'program.original_531',
       type: ProgramConceptType.mainMethod,
@@ -160,6 +167,21 @@ class ProgramCatalog {
 
   static const defaultRevisions = <ProgramRevision>[
     ProgramRevision(
+      id: 'forever-beginner-prep-school-v1',
+      conceptId: 'beginner-prep-school',
+      generation: MethodGeneration.forever,
+      version: 1,
+      foreverStatus: ForeverStatus.current,
+      documentationStatus: ProgramValidationStatus.rulesReviewed,
+      references: [
+        ProgramDocumentReference(
+          title: '5/3/1 Forever',
+          bookPages: '38-45',
+          pdfPages: '50-57',
+        ),
+      ],
+    ),
+    ProgramRevision(
       id: 'original-original-531-v1',
       conceptId: 'original-531',
       generation: MethodGeneration.original,
@@ -202,6 +224,20 @@ class ProgramCatalog {
   ];
 
   static const defaultPresets = <ProgramPresetDefinition>[
+    ProgramPresetDefinition(
+      persistentPresetId: 'forever-beginner-prep-school-v1',
+      version: 1,
+      rulesetGeneration: MethodGeneration.forever,
+      mainRevisionId: 'forever-beginner-prep-school-v1',
+      supplementalRevisionId: null,
+      supportedFrequencies: {3},
+      recommendedFrequency: 3,
+      availability: ProductAvailability.available,
+      recommended: false,
+      legacyCompatible: false,
+      implementationStatus: ProgramImplementationStatus.productionReady,
+      generatorId: 'beginner-prep-school',
+    ),
     ProgramPresetDefinition(
       persistentPresetId: 'forever-original-fsl-v1',
       version: 1,
@@ -261,6 +297,7 @@ class ProgramCatalog {
   ProgramCatalogValidation validate({
     Map<String, String> generators = const {
       'forever-original-fsl-v1': 'original-fsl',
+      'forever-beginner-prep-school-v1': 'beginner-prep-school',
     },
   }) {
     final errors = <String>[];
