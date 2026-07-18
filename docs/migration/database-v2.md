@@ -2,7 +2,8 @@
 
 ## Ouverture
 
-`DatabaseSchema.version` vaut 2. Une base neuve crée d’abord le schéma v1 puis
+`LEGACY` — ce document décrit l'étape v2. `DatabaseSchema.version` vaut désormais
+3 ; voir [Migration v3](database-v3.md). Une base neuve crée d’abord le schéma v1 puis
 les tables additives v2. Une base v1 exécute la même partie additive dans la
 transaction d’upgrade SQLite. Les tables v1 et leurs lignes ne sont jamais
 supprimées.
@@ -31,8 +32,8 @@ d’une table sonde et la conservation d’une ligne v1.
 
 ## Sauvegardes
 
-Le format d’export passe à la version 2 et inclut toutes les tables. L’inspection
-d’import accepte les versions 1 et 2. Pour une sauvegarde v1, les tables v2
+À cette étape historique, le format d’export passait à la version 2 et incluait
+les tables v1/v2. L'import actuel accepte les versions 1, 2 et 3. Pour une sauvegarde v1, les tables v2
 absentes sont normalisées en listes vides avant l’application atomique. Le
 dry-run effectue la même validation sans écriture. Toute erreur de contrainte ou
 d’insertion annule le remplacement complet.

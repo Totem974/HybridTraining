@@ -26,3 +26,13 @@ du produit, de l'architecture ou des audits.
 | 2026-07-18 | Bibliothèque et onboarding par lignées | [Rapport final](2026-07-18-bibliotheque-onboarding-lignees.md) |
 | 2026-07-18 | Stabilisation Base0 et identité Forever par défaut | [Rapport final](2026-07-18-stabilisation-base0-forever.md) |
 | 2026-07-18 | Lot 0A — audit black-box de l'application d'origine | [Rapport final](2026-07-18-lot-0a-audit-application-origine.md) |
+| 2026-07-18 | Audit du catalogue | [Rapport final](2026-07-18-audit-catalogue-programmes.md) |
+| 2026-07-18 | Audit des composants de séance | [Rapport final](2026-07-18-audit-composants-seance.md) |
+| 2026-07-18 | Audit du noyau Forever | [Rapport final](2026-07-18-audit-noyau-forever.md) |
+| 2026-07-18 | Beginner Prep School | [Rapport final](2026-07-18-beginner-prep-school.md) |
+| 2026-07-18 | Bibliothèque canonique | [Rapport final](2026-07-18-bibliotheque-canonique.md) |
+| 2026-07-18 | Domaine composable | [Rapport final](2026-07-18-domaine-programmes-composable.md) |
+| 2026-07-18 | Générateur de macrocycles | [Rapport final](2026-07-18-generateur-macrocycles-forever.md) |
+| 2026-07-18 | Moteur de séance composable | [Rapport final](2026-07-18-moteur-seance-composable.md) |
+| 2026-07-18 | Persistance des plans versionnés | [Rapport final](2026-07-18-persistance-plans-versionnes.md) |
+| 2026-07-18 | Stabilisation du POC | [Rapport final](2026-07-18-poc-stabilization.md) |

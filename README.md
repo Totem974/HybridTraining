@@ -21,7 +21,7 @@ les trois jours sélectionnés pendant quatre semaines calendaires.
 - un téléphone Android avec le débogage USB activé, ou un émulateur ;
 - Git pour Windows.
 
-Sur le poste principal, Flutter est installé dans `D:\SDK\flutter`.
+Sur le poste principal, repérer le dossier du SDK Flutter (`<CHEMIN_FLUTTER>`).
 
 Si la commande `flutter` n'est pas reconnue après l'installation, fermer puis
 rouvrir Android Studio et PowerShell.
@@ -29,14 +29,14 @@ rouvrir Android Studio et PowerShell.
 ## Ouvrir le projet dans Android Studio
 
 1. Ouvrir Android Studio.
-2. Choisir **Open** et sélectionner `D:\GitHub\HybridTraining`.
+2. Choisir **Open** et sélectionner `<RACINE_PROJET>`.
 3. Ne pas utiliser **New Project from Existing Sources**.
-4. Si Android Studio demande le SDK Flutter, sélectionner `D:\SDK\flutter`.
+4. Si Android Studio demande le SDK Flutter, sélectionner `<CHEMIN_FLUTTER>`.
 5. Attendre la fin de l'indexation et de la récupération des dépendances.
 
 ## Préparer le projet
 
-Dans PowerShell, depuis `D:\GitHub\HybridTraining` :
+Dans PowerShell, depuis `<RACINE_PROJET>` :
 
 ```powershell
 flutter pub get
@@ -126,7 +126,7 @@ de ces comportements n'est déduit des données de démonstration du prototype.
 Redémarrer Android Studio et PowerShell, puis vérifier :
 
 ```powershell
-D:\SDK\flutter\bin\flutter.bat --version
+<CHEMIN_FLUTTER>\bin\flutter.bat --version
 ```
 
 ### Le téléphone n'apparaît pas
@@ -144,7 +144,7 @@ compilations suivantes sont nettement plus rapides.
 
 ### Android Studio demande un SDK Flutter
 
-Utiliser `D:\SDK\flutter`, sans ajouter `\bin` dans ce champ.
+Utiliser `<CHEMIN_FLUTTER>`, sans ajouter `\bin` dans ce champ.
 
 ## Documentation technique
 
@@ -167,7 +167,7 @@ Utiliser `D:\SDK\flutter`, sans ajouter `\bin` dans ce champ.
 - l'export/import utilise pour l'instant un copier-coller JSON, sans partage de
   fichier natif ; les notifications locales ne sont pas encore actives ;
 - les statistiques avancées et graphiques restent informatifs ;
-- la bibliothèque expose les programmes indexés, mais seul Original + FSL est activable ;
+- la bibliothèque expose les programmes indexés ; seul Original + FSL est activable, tandis que Beginner Prep School reste consultable jusqu'au raccordement du parcours v2 ;
 - le sélecteur anglais n'est pas encore exposé ;
 - l'import de l'ancienne application attend un export anonymisé.
 

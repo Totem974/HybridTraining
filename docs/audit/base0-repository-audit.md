@@ -161,7 +161,7 @@ encore vérifiables dans le bac à sable, car `flutter` et `dart` n'y sont pas d
 ## Mise à jour après l'audit initial
 
 Le 17 juillet 2026, Flutter stable `3.44.6` et Dart `3.12.2` ont été installés dans
-`D:\SDK\flutter`. Les plugins Flutter et Dart sont installés dans Android Studio.
+`<CHEMIN_FLUTTER>`. Les plugins Flutter et Dart sont installés dans Android Studio.
 Le squelette Android natif a été remplacé par un projet Flutter Android/iOS généré
 avec le CLI officiel.
 
