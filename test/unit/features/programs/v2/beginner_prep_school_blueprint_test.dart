@@ -159,6 +159,45 @@ void main() {
     }
   });
 
+  test('warm-up, jumps, assistance and conditioning are executable', () {
+    final plan = const ForeverMacrocycleGenerator().generate(
+      snapshot: BeginnerPrepSchoolBlueprint.create(trainingMaxRatios: ratios),
+      athlete: AthletePlanConfiguration(
+        trainingMaxes: const {
+          MainLift.squat: 100,
+          MainLift.benchPress: 100,
+          MainLift.deadlift: 100,
+          MainLift.overheadPress: 100,
+        },
+        unit: WeightUnit.kilograms,
+        trainingWeekdays: const [1, 3, 5],
+        startDate: const LocalDate(2026, 7, 20),
+        rounder: const LoadRounder(increment: 2.5),
+      ),
+    );
+    final activities = plan.blocks
+        .expand((block) => block.cycles)
+        .expand((cycle) => cycle.weeks)
+        .expand((week) => week.sessions)
+        .expand((session) => session.blocks)
+        .expand((block) => block.activities)
+        .toList();
+    expect(activities, hasLength(81));
+    expect(activities.map((activity) => activity.kind).toSet(), {
+      PrescriptionKind.warmUp,
+      PrescriptionKind.jumpsOrThrows,
+      PrescriptionKind.assistance,
+      PrescriptionKind.easyConditioning,
+    });
+    for (final activity in activities) {
+      expect(
+        const ProgramDomainValidator().validatePrescription(activity).isValid,
+        isTrue,
+        reason: activity.id.value,
+      );
+    }
+  });
+
   test('uses the injected rounding policy for kg and lb', () {
     for (final data in [
       (WeightUnit.kilograms, 2.5),

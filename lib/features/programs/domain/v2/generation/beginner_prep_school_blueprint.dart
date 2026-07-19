@@ -75,12 +75,56 @@ class BeginnerPrepSchoolBlueprint {
         instructions: const [
           '3 rounds: 25 jumping jacks; 10 bodyweight squats; 10 mountain climbers per leg.',
         ],
+        activities: [
+          _activity(
+            'jumping-jack',
+            const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 75,
+            ),
+            PrescriptionKind.warmUp,
+            'BPS-WARMUP-001',
+            'Forever PDF 50',
+          ),
+          _activity(
+            'bodyweight-squat',
+            const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 30,
+            ),
+            PrescriptionKind.warmUp,
+            'BPS-WARMUP-002',
+            'Forever PDF 50',
+          ),
+          _activity(
+            'mountain-climber',
+            const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 60,
+            ),
+            PrescriptionKind.warmUp,
+            'BPS-WARMUP-003',
+            'Forever PDF 50',
+          ),
+        ],
       ),
       SessionBlockTemplate(
         kind: GeneratedSessionBlockKind.athletic,
         movements: const [],
         instructions: const [
           '10-20 contacts: box jump or standing broad jump; no depth jumps.',
+        ],
+        activities: [
+          _activity(
+            'box-or-standing-broad-jump',
+            const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 10,
+            ),
+            PrescriptionKind.jumpsOrThrows,
+            'BPS-JUMPS-001',
+            'Forever PDF 50-51',
+          ),
         ],
       ),
       for (var index = 0; index < movements.length; index++) ...[
@@ -112,12 +156,66 @@ class BeginnerPrepSchoolBlueprint {
           'Circuit of 4 exercises for 3-5 rounds; target 20 minutes.',
           'Lower and push: 25-100 total reps; pull and core: 25-50 total reps.',
         ],
+        activities: [
+          _activity(
+            'assistance-lower-choice',
+            const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 25,
+            ),
+            PrescriptionKind.assistance,
+            'BPS-ASSISTANCE-LOWER-001',
+            'Forever PDF 54',
+          ),
+          _activity(
+            'assistance-push-choice',
+            const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 25,
+            ),
+            PrescriptionKind.assistance,
+            'BPS-ASSISTANCE-PUSH-001',
+            'Forever PDF 54',
+          ),
+          _activity(
+            'assistance-pull-choice',
+            const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 25,
+            ),
+            PrescriptionKind.assistance,
+            'BPS-ASSISTANCE-PULL-001',
+            'Forever PDF 54',
+          ),
+          _activity(
+            'assistance-core-choice',
+            const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 25,
+            ),
+            PrescriptionKind.assistance,
+            'BPS-ASSISTANCE-CORE-001',
+            'Forever PDF 54',
+          ),
+        ],
       ),
       SessionBlockTemplate(
         kind: GeneratedSessionBlockKind.conditioning,
         movements: const [],
         instructions: const [
           'Run 3 times per week for 1-3 miles, unless exempted by in-season sport.',
+        ],
+        activities: [
+          _activity(
+            'easy-run',
+            const PrescriptionTarget(
+              type: PrescriptionTargetType.distance,
+              meters: 1609.344,
+            ),
+            PrescriptionKind.easyConditioning,
+            'BPS-CONDITIONING-001',
+            'Forever PDF 55',
+          ),
         ],
       ),
     ],
@@ -134,6 +232,19 @@ class BeginnerPrepSchoolBlueprint {
           rule: _rule('BPS-MAIN-00${week + 1}', 'Forever PDF 52'),
         ),
     ],
+  );
+
+  static ActivityTemplate _activity(
+    String id,
+    PrescriptionTarget target,
+    PrescriptionKind kind,
+    String ruleId,
+    String location,
+  ) => ActivityTemplate(
+    activityId: ActivityId(id),
+    target: target,
+    kind: kind,
+    rule: _rule(ruleId, location),
   );
 
   static MovementTemplate _supplemental(MainLift lift, int week, double ratio) {

@@ -41,6 +41,18 @@ class CanonicalGenerationBlueprint {
     ),
   );
 
+  static const foreverOriginalFsl = CanonicalGenerationBlueprint(
+    id: ProgramBlueprintId('forever-original-531-fsl-2l1a-v1'),
+    version: ProgramVersion(1),
+    sourceEdition: SourceEdition.forever,
+    generation: MethodGeneration.forever,
+    cycleModel: CanonicalCycleModel.alternative351,
+    source: RuleReference(
+      document: '5/3/1 Forever',
+      location: 'PDF pages 29-33 and 180-182',
+    ),
+  );
+
   final ProgramBlueprintId id;
   final ProgramVersion version;
   final SourceEdition sourceEdition;
@@ -59,13 +71,18 @@ class CanonicalAthleteConfiguration {
     required this.unit,
     required this.rounder,
     Map<MovementId, double>? confirmedBeyondTrainingMaxes,
+    Map<int, Map<MovementId, double>> confirmedTrainingMaxesByWeek = const {},
   }) : movementOrder = List.unmodifiable(movementOrder),
        trainingMaxes = Map.unmodifiable(trainingMaxes),
        progressionIncrements = Map.unmodifiable(progressionIncrements),
        trainingWeekdays = List.unmodifiable(trainingWeekdays),
        confirmedBeyondTrainingMaxes = confirmedBeyondTrainingMaxes == null
            ? null
-           : Map.unmodifiable(confirmedBeyondTrainingMaxes);
+           : Map.unmodifiable(confirmedBeyondTrainingMaxes),
+       confirmedTrainingMaxesByWeek = Map.unmodifiable({
+         for (final entry in confirmedTrainingMaxesByWeek.entries)
+           entry.key: Map<MovementId, double>.unmodifiable(entry.value),
+       });
 
   final List<MovementId> movementOrder;
   final Map<MovementId, double> trainingMaxes;
@@ -75,6 +92,7 @@ class CanonicalAthleteConfiguration {
   final WeightUnit unit;
   final LoadRounder rounder;
   final Map<MovementId, double>? confirmedBeyondTrainingMaxes;
+  final Map<int, Map<MovementId, double>> confirmedTrainingMaxesByWeek;
 }
 
 class CanonicalGeneratedSession {
@@ -128,6 +146,7 @@ class CanonicalGeneratedBlock {
     required this.generation,
     required this.source,
     required List<CanonicalProgrammingWeek> weeks,
+    this.seventhWeekPurpose,
   }) : weeks = List.unmodifiable(weeks);
 
   final String id;
@@ -136,6 +155,7 @@ class CanonicalGeneratedBlock {
   final SourceEdition sourceEdition;
   final MethodGeneration generation;
   final RuleReference source;
+  final SeventhWeekPurpose? seventhWeekPurpose;
   final List<CanonicalProgrammingWeek> weeks;
 
   Map<String, Object?> toJson() => {
@@ -145,6 +165,7 @@ class CanonicalGeneratedBlock {
     'sourceEdition': sourceEdition.name,
     'generation': generation.name,
     'source': _sourceJson(source),
+    'seventhWeekPurpose': seventhWeekPurpose?.name,
     'weeks': weeks.map((week) => week.toJson()).toList(),
   };
 }
@@ -241,6 +262,7 @@ class CanonicalPlanGenerator {
     return switch (blueprint.generation) {
       MethodGeneration.powerlifting => _standard(blueprint, athlete),
       MethodGeneration.beyond => _beyond(blueprint, athlete),
+      MethodGeneration.forever => _forever(blueprint, athlete),
       _ => throw StateError(
         'No canonical generator registered for ${blueprint.generation.name}.',
       ),
@@ -454,6 +476,216 @@ class CanonicalPlanGenerator {
     );
   }
 
+  CanonicalGeneratedPlan _forever(
+    CanonicalGenerationBlueprint blueprint,
+    CanonicalAthleteConfiguration athlete,
+  ) {
+    var cursor = athlete.startDate;
+    var sessionNumber = 0;
+    var programmingWeek = 1;
+    var currentTrainingMaxes = athlete.trainingMaxes;
+    final blocks = <CanonicalGeneratedBlock>[];
+    final timeline = <TrainingMaxTimelineDecision>[];
+
+    CanonicalGeneratedBlock workCycle({
+      required String id,
+      required BlockRole role,
+      required List<_WeekScheme> schemes,
+      required int cycleNumber,
+      required RuleReference source,
+    }) {
+      final weeks = <CanonicalProgrammingWeek>[];
+      for (final scheme in schemes) {
+        final generated = _week(
+          blueprint: blueprint,
+          athlete: athlete,
+          trainingMaxes: currentTrainingMaxes,
+          scheme: scheme,
+          programmingWeek: programmingWeek,
+          cycleNumber: cycleNumber,
+          cursor: cursor,
+          firstSessionNumber: sessionNumber,
+        );
+        weeks.add(generated.week);
+        cursor = generated.nextDate;
+        sessionNumber += athlete.movementOrder.length;
+        programmingWeek++;
+      }
+      return CanonicalGeneratedBlock(
+        id: id,
+        type: BlockType.cycle,
+        role: role,
+        sourceEdition: blueprint.sourceEdition,
+        generation: blueprint.generation,
+        source: source,
+        weeks: weeks,
+      );
+    }
+
+    bool confirmCheckpoint(int afterWeek, RuleReference source) {
+      final confirmed = athlete.confirmedTrainingMaxesByWeek[afterWeek];
+      if (confirmed != null) {
+        for (final movement in athlete.movementOrder) {
+          final maximum =
+              currentTrainingMaxes[movement]! +
+              athlete.progressionIncrements[movement]!;
+          final value = confirmed[movement];
+          if (value == null || value <= 0 || value > maximum) {
+            throw StateError(
+              'Forever TM decisions may hold, reset, or use at most the source-defined increment.',
+            );
+          }
+        }
+      }
+      timeline.addAll(
+        _decisions(
+          athlete: athlete,
+          previous: currentTrainingMaxes,
+          afterProgrammingWeek: afterWeek,
+          confirmed: confirmed,
+          source: source,
+          sequenceOffset: timeline.length,
+        ),
+      );
+      if (confirmed == null) return false;
+      currentTrainingMaxes = confirmed;
+      return true;
+    }
+
+    blocks.add(
+      workCycle(
+        id: 'forever-leader-1',
+        role: BlockRole.leader,
+        schemes: _foreverLeaderWeeks,
+        cycleNumber: 1,
+        source: _foreverOriginalFslSource,
+      ),
+    );
+    if (!confirmCheckpoint(3, _foreverProgressionSource)) {
+      return _foreverPlan(blueprint, athlete, blocks, timeline, true);
+    }
+
+    blocks.add(
+      workCycle(
+        id: 'forever-leader-2',
+        role: BlockRole.leader,
+        schemes: _foreverLeaderWeeks,
+        cycleNumber: 2,
+        source: _foreverOriginalFslSource,
+      ),
+    );
+    if (!confirmCheckpoint(6, _foreverProgressionSource)) {
+      return _foreverPlan(blueprint, athlete, blocks, timeline, true);
+    }
+
+    final deload = _week(
+      blueprint: blueprint,
+      athlete: athlete,
+      trainingMaxes: currentTrainingMaxes,
+      scheme: _foreverDeload,
+      programmingWeek: 7,
+      cycleNumber: 2,
+      cursor: cursor,
+      firstSessionNumber: sessionNumber,
+    );
+    blocks.add(
+      CanonicalGeneratedBlock(
+        id: 'forever-seventh-week-deload',
+        type: BlockType.deload,
+        role: BlockRole.seventhWeek,
+        seventhWeekPurpose: SeventhWeekPurpose.deload,
+        sourceEdition: blueprint.sourceEdition,
+        generation: blueprint.generation,
+        source: _foreverDeloadSource,
+        weeks: [deload.week],
+      ),
+    );
+    cursor = deload.nextDate;
+    sessionNumber += athlete.movementOrder.length;
+    programmingWeek = 8;
+
+    blocks.add(
+      workCycle(
+        id: 'forever-anchor-1',
+        role: BlockRole.anchor,
+        schemes: _foreverAnchorWeeks,
+        cycleNumber: 3,
+        source: _foreverOriginalFslSource,
+      ),
+    );
+    if (!confirmCheckpoint(10, _foreverProgressionSource)) {
+      return _foreverPlan(blueprint, athlete, blocks, timeline, true);
+    }
+
+    final test = _week(
+      blueprint: blueprint,
+      athlete: athlete,
+      trainingMaxes: currentTrainingMaxes,
+      scheme: _foreverTrainingMaxTest,
+      programmingWeek: 11,
+      cycleNumber: 3,
+      cursor: cursor,
+      firstSessionNumber: sessionNumber,
+    );
+    blocks.add(
+      CanonicalGeneratedBlock(
+        id: 'forever-seventh-week-tm-test',
+        type: BlockType.test,
+        role: BlockRole.trainingMaxTest,
+        seventhWeekPurpose: SeventhWeekPurpose.trainingMaxTest,
+        sourceEdition: blueprint.sourceEdition,
+        generation: blueprint.generation,
+        source: _foreverTrainingMaxTestSource,
+        weeks: [test.week],
+      ),
+    );
+    timeline.addAll(
+      _testDecisions(
+        athlete: athlete,
+        trainingMaxes: currentTrainingMaxes,
+        sequenceOffset: timeline.length,
+      ),
+    );
+    return _foreverPlan(blueprint, athlete, blocks, timeline, true);
+  }
+
+  CanonicalGeneratedPlan _foreverPlan(
+    CanonicalGenerationBlueprint blueprint,
+    CanonicalAthleteConfiguration athlete,
+    List<CanonicalGeneratedBlock> blocks,
+    List<TrainingMaxTimelineDecision> timeline,
+    bool awaitingConfirmation,
+  ) => CanonicalGeneratedPlan(
+    schemaVersion: 5,
+    blueprintId: blueprint.id,
+    blueprintVersion: blueprint.version,
+    sourceEdition: blueprint.sourceEdition,
+    generation: blueprint.generation,
+    unit: athlete.unit,
+    blocks: blocks,
+    trainingMaxTimeline: timeline,
+    awaitingTrainingMaxConfirmation: awaitingConfirmation,
+  );
+
+  List<TrainingMaxTimelineDecision> _testDecisions({
+    required CanonicalAthleteConfiguration athlete,
+    required Map<MovementId, double> trainingMaxes,
+    required int sequenceOffset,
+  }) => [
+    for (final movementEntry in athlete.movementOrder.indexed)
+      TrainingMaxTimelineDecision(
+        id: 'tm-test-week-11-${movementEntry.$2.value}',
+        sequence: sequenceOffset + movementEntry.$1,
+        movementId: movementEntry.$2,
+        afterProgrammingWeek: 11,
+        previousTrainingMax: trainingMaxes[movementEntry.$2]!,
+        proposedTrainingMax: trainingMaxes[movementEntry.$2]!,
+        state: TrainingMaxDecisionState.previewed,
+        reason: 'TM Test result must confirm hold, progress, or reset.',
+        source: _foreverTrainingMaxTestSource,
+      ),
+  ];
+
   ({CanonicalProgrammingWeek week, LocalDate nextDate}) _week({
     required CanonicalGenerationBlueprint blueprint,
     required CanonicalAthleteConfiguration athlete,
@@ -487,9 +719,11 @@ class CanonicalPlanGenerator {
               sets: 1,
               repetitionsPerSet: set.repetitions,
             ),
-            kind: set.performance
-                ? PrescriptionKind.performanceSet
-                : PrescriptionKind.mainWork,
+            kind:
+                set.kind ??
+                (set.performance
+                    ? PrescriptionKind.performanceSet
+                    : PrescriptionKind.mainWork),
             ruleId: set.ruleId,
             sourceEdition: blueprint.sourceEdition,
             generation: blueprint.generation,
@@ -595,6 +829,23 @@ class CanonicalPlanGenerator {
         }
       }
     }
+    for (final checkpoint in athlete.confirmedTrainingMaxesByWeek.entries) {
+      if (!{3, 6, 10}.contains(checkpoint.key)) {
+        throw StateError(
+          'Unsupported Forever TM checkpoint: ${checkpoint.key}.',
+        );
+      }
+      for (final movement in athlete.movementOrder) {
+        if (checkpoint.value[movement] == null ||
+            checkpoint.value[movement]! <= 0) {
+          throw StateError('Every confirmed Forever checkpoint needs all TMs.');
+        }
+      }
+    }
+    if (blueprint.generation == MethodGeneration.forever &&
+        athlete.trainingWeekdays.length != 4) {
+      throw StateError('This reviewed Forever preset requires four days.');
+    }
   }
 
   LocalDate _nextTrainingDate(LocalDate from, List<int> weekdays) {
@@ -613,12 +864,14 @@ class _SetScheme {
     required this.performance,
     required this.ruleId,
     required this.source,
+    this.kind,
   });
   final double percentage;
   final int repetitions;
   final bool performance;
   final String ruleId;
   final RuleReference source;
+  final PrescriptionKind? kind;
 }
 
 class _WeekScheme {
@@ -633,6 +886,22 @@ const _powerliftingSetsSource = RuleReference(
 const _powerliftingDeloadSource = RuleReference(
   document: '5/3/1 for Powerlifting',
   location: 'PDF pages 11 and 13',
+);
+const _foreverOriginalFslSource = RuleReference(
+  document: '5/3/1 Forever',
+  location: 'PDF pages 180-182',
+);
+const _foreverDeloadSource = RuleReference(
+  document: '5/3/1 Forever',
+  location: 'PDF pages 31 and 33',
+);
+const _foreverTrainingMaxTestSource = RuleReference(
+  document: '5/3/1 Forever',
+  location: 'PDF pages 31-33',
+);
+const _foreverProgressionSource = RuleReference(
+  document: '5/3/1 Forever',
+  location: 'PDF pages 15 and 32-33',
 );
 
 const _standardWeeks = [
@@ -778,6 +1047,162 @@ const _deload = _WeekScheme([
     performance: false,
     ruleId: 'POWERLIFTING-DELOAD-S3',
     source: _powerliftingDeloadSource,
+  ),
+]);
+
+final _foreverLeaderWeeks = [
+  _foreverWorkWeek(
+    week: 1,
+    main: const [
+      (percentage: .70, reps: 3),
+      (percentage: .80, reps: 3),
+      (percentage: .90, reps: 3),
+    ],
+    performance: true,
+    fslPercentage: .70,
+  ),
+  _foreverWorkWeek(
+    week: 2,
+    main: const [
+      (percentage: .65, reps: 5),
+      (percentage: .75, reps: 5),
+      (percentage: .85, reps: 5),
+    ],
+    performance: false,
+    fslPercentage: .65,
+  ),
+  _foreverWorkWeek(
+    week: 3,
+    main: const [
+      (percentage: .75, reps: 5),
+      (percentage: .85, reps: 3),
+      (percentage: .95, reps: 1),
+    ],
+    performance: true,
+    fslPercentage: .75,
+  ),
+];
+
+final _foreverAnchorWeeks = [
+  _foreverAnchorWeek(1, const [
+    (percentage: .65, reps: 5),
+    (percentage: .75, reps: 5),
+    (percentage: .85, reps: 5),
+  ]),
+  _foreverAnchorWeek(2, const [
+    (percentage: .70, reps: 3),
+    (percentage: .80, reps: 3),
+    (percentage: .90, reps: 3),
+  ]),
+  _foreverAnchorWeek(3, const [
+    (percentage: .75, reps: 5),
+    (percentage: .85, reps: 3),
+    (percentage: .95, reps: 1),
+  ]),
+];
+
+_WeekScheme _foreverWorkWeek({
+  required int week,
+  required List<({double percentage, int reps})> main,
+  required bool performance,
+  required double fslPercentage,
+}) => _WeekScheme([
+  for (final set in main.indexed)
+    _SetScheme(
+      percentage: set.$2.percentage,
+      repetitions: set.$2.reps,
+      performance: performance && set.$1 == main.length - 1,
+      ruleId: 'FOREVER-ORIGINAL-FSL-L-W$week-M${set.$1 + 1}',
+      source: _foreverOriginalFslSource,
+    ),
+  for (var set = 1; set <= 5; set++)
+    _SetScheme(
+      percentage: fslPercentage,
+      repetitions: 5,
+      performance: false,
+      kind: PrescriptionKind.supplemental,
+      ruleId: 'FOREVER-ORIGINAL-FSL-L-W$week-FSL-$set',
+      source: _foreverOriginalFslSource,
+    ),
+]);
+
+_WeekScheme _foreverAnchorWeek(
+  int week,
+  List<({double percentage, int reps})> main,
+) => _WeekScheme([
+  for (final set in main.indexed)
+    _SetScheme(
+      percentage: set.$2.percentage,
+      repetitions: set.$2.reps,
+      performance: set.$1 == main.length - 1,
+      ruleId: 'FOREVER-ORIGINAL-FSL-A-W$week-M${set.$1 + 1}',
+      source: _foreverOriginalFslSource,
+    ),
+]);
+
+const _foreverDeload = _WeekScheme([
+  _SetScheme(
+    percentage: .70,
+    repetitions: 5,
+    performance: false,
+    ruleId: 'FOREVER-7W-DELOAD-70',
+    source: _foreverDeloadSource,
+  ),
+  _SetScheme(
+    percentage: .80,
+    repetitions: 3,
+    performance: false,
+    ruleId: 'FOREVER-7W-DELOAD-80',
+    source: _foreverDeloadSource,
+  ),
+  _SetScheme(
+    percentage: .90,
+    repetitions: 1,
+    performance: false,
+    ruleId: 'FOREVER-7W-DELOAD-90',
+    source: _foreverDeloadSource,
+  ),
+  _SetScheme(
+    percentage: 1,
+    repetitions: 1,
+    performance: false,
+    ruleId: 'FOREVER-7W-DELOAD-TM',
+    source: _foreverDeloadSource,
+  ),
+]);
+
+const _foreverTrainingMaxTest = _WeekScheme([
+  _SetScheme(
+    percentage: .70,
+    repetitions: 5,
+    performance: false,
+    kind: PrescriptionKind.trainingMaxTest,
+    ruleId: 'FOREVER-7W-TMTEST-70',
+    source: _foreverTrainingMaxTestSource,
+  ),
+  _SetScheme(
+    percentage: .80,
+    repetitions: 5,
+    performance: false,
+    kind: PrescriptionKind.trainingMaxTest,
+    ruleId: 'FOREVER-7W-TMTEST-80',
+    source: _foreverTrainingMaxTestSource,
+  ),
+  _SetScheme(
+    percentage: .90,
+    repetitions: 5,
+    performance: false,
+    kind: PrescriptionKind.trainingMaxTest,
+    ruleId: 'FOREVER-7W-TMTEST-90',
+    source: _foreverTrainingMaxTestSource,
+  ),
+  _SetScheme(
+    percentage: 1,
+    repetitions: 3,
+    performance: false,
+    kind: PrescriptionKind.trainingMaxTest,
+    ruleId: 'FOREVER-7W-TMTEST-TM',
+    source: _foreverTrainingMaxTestSource,
   ),
 ]);
 

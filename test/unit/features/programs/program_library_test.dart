@@ -151,10 +151,10 @@ void main() {
   });
 
   test('only fully reviewed production presets can be executable', () {
-    final unsafeLegacy = repository.findById('preset-forever-original-fsl')!;
+    final reviewedForever = repository.findById('preset-forever-original-fsl')!;
     final component = repository.findById('component-fsl')!;
     final documentary = repository.findById('program-coffinworm')!;
-    expect(unsafeLegacy.isExecutable, isFalse);
+    expect(reviewedForever.isExecutable, isTrue);
     expect(
       repository.findById('preset-forever-beginner-prep-school')!.isExecutable,
       isTrue,

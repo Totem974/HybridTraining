@@ -46,6 +46,18 @@ class VersionedTrainingPlan {
       for (final transition in generated.transitions) ruleJson(transition.rule),
       for (final event in generated.events) ruleJson(event.rule),
     ];
+    final generatedTrainingMaxes = <String, double>{
+      for (final prescription
+          in generated.blocks
+              .expand((block) => block.cycles)
+              .expand((cycle) => cycle.weeks)
+              .expand((week) => week.sessions)
+              .expand((session) => session.blocks)
+              .expand((block) => block.prescriptions))
+        prescription.movement.name: prescription.trainingMax,
+    };
+    final isBeginnerPrepSchool =
+        generated.blueprintId.value == 'forever-beginner-prep-school-v1';
     return VersionedTrainingPlan(
       id: id,
       athleteId: athleteId,
@@ -55,6 +67,41 @@ class VersionedTrainingPlan {
       ruleProvenance: provenance,
       macrocycle: macrocycle,
       createdAt: createdAt,
+      sourceEdition: generated.sourceEdition,
+      generation: generated.generation,
+      trainingMaxTimeline: isBeginnerPrepSchool
+          ? [
+              for (final movementEntry
+                  in generatedTrainingMaxes.entries.indexed)
+                {
+                  'id': 'bps-cycle-1-${movementEntry.$2.key}',
+                  'sequence': movementEntry.$1,
+                  'movementId': movementEntry.$2.key,
+                  'afterProgrammingWeek': 3,
+                  'previousTrainingMax': movementEntry.$2.value,
+                  'proposedTrainingMax': movementEntry.$2.value,
+                  'confirmedTrainingMax': null,
+                  'state': 'previewed',
+                  'reason':
+                      'BPS requires an explicit post-cycle progression decision.',
+                  'source': {
+                    'document': '5/3/1 Forever',
+                    'location': 'PDF page 56',
+                  },
+                },
+            ]
+          : const [],
+      plannedEvents: [
+        for (final eventEntry in generated.events.indexed)
+          {
+            'id': '$id-event-${eventEntry.$1}',
+            'sequence': eventEntry.$1,
+            'eventType': eventEntry.$2.kind.name,
+            'payload': eventEntry.$2.toJson(),
+            'ruleId': eventEntry.$2.rule.document,
+            'source': ruleJson(eventEntry.$2.rule),
+          },
+      ],
       blocks: [
         for (
           var blockIndex = 0;
@@ -77,9 +124,15 @@ class VersionedTrainingPlan {
                 )
                   () {
                     final cycle = block.cycles[cycleIndex];
-                    final sessions = cycle.weeks
-                        .expand((week) => week.sessions)
-                        .toList(growable: false);
+                    final sessions = [
+                      for (final week in cycle.weeks)
+                        for (final sessionEntry in week.sessions.indexed)
+                          (
+                            week: week,
+                            position: sessionEntry.$1,
+                            session: sessionEntry.$2,
+                          ),
+                    ];
                     if (sessions.isEmpty) {
                       throw ArgumentError(
                         'A generated cycle requires sessions.',
@@ -88,7 +141,9 @@ class VersionedTrainingPlan {
                     return PlannedCycle(
                       id: '$blockId-cycle-${cycle.number}',
                       sequence: cycleIndex,
-                      startsOn: DateTime.parse(sessions.first.date.iso8601),
+                      startsOn: DateTime.parse(
+                        sessions.first.session.date.iso8601,
+                      ),
                       sessions: [
                         for (
                           var sessionIndex = 0;
@@ -96,11 +151,14 @@ class VersionedTrainingPlan {
                           sessionIndex++
                         )
                           () {
-                            final session = sessions[sessionIndex];
+                            final sessionRecord = sessions[sessionIndex];
+                            final session = sessionRecord.session;
                             final sessionId = '$id-${session.id}';
                             return PlannedSession(
                               id: sessionId,
                               sequence: sessionIndex,
+                              programmingWeekNumber: sessionRecord.week.number,
+                              position: sessionRecord.position,
                               scheduledFor: DateTime.parse(
                                 session.date.iso8601,
                               ),
@@ -166,6 +224,42 @@ class VersionedTrainingPlan {
                                               ),
                                             );
                                           }(),
+                                      ],
+                                      activities: [
+                                        for (final activity
+                                            in sessionBlock.activities)
+                                          PlannedActivityPrescription(
+                                            id: '$id-${activity.id.value}',
+                                            sequence: activity.position,
+                                            movementOrActivityId:
+                                                activity.movementId?.value ??
+                                                activity.activityId.value,
+                                            targetType:
+                                                activity.target.type.name,
+                                            target: {
+                                              'sets': activity.target.sets,
+                                              'repetitionsPerSet': activity
+                                                  .target
+                                                  .repetitionsPerSet,
+                                              'totalRepetitions': activity
+                                                  .target
+                                                  .totalRepetitions,
+                                              'seconds':
+                                                  activity.target.seconds,
+                                              'meters': activity.target.meters,
+                                              'rounds': activity.target.rounds,
+                                              'qualitativeGoal': activity
+                                                  .target
+                                                  .qualitativeGoal,
+                                            },
+                                            kind: activity.kind.name,
+                                            ruleId: activity.ruleId,
+                                            sourceEdition:
+                                                activity.sourceEdition.name,
+                                            generation:
+                                                activity.generation.name,
+                                            source: ruleJson(activity.source),
+                                          ),
                                       ],
                                     );
                                   }(),
@@ -387,6 +481,7 @@ PlannedTrainingBlock _canonicalBlock(
     sequence: blockSequence,
     role: block.role.name,
     type: block.type.name,
+    seventhWeekPurpose: block.seventhWeekPurpose?.name,
     templateId: block.id,
     cycles: [
       for (final cycleEntry in cycleNumbers.indexed)

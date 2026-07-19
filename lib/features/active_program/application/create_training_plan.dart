@@ -55,6 +55,8 @@ class CreateTrainingPlan {
         source: CanonicalGenerationBlueprint.standardPowerlifting.source,
       ),
       'canonical-beyond' => CanonicalGenerationBlueprint.beyondSixWeek,
+      'canonical-forever-original-fsl' =>
+        CanonicalGenerationBlueprint.foreverOriginalFsl,
       _ => throw StateError(
         'Preset uses a different creation contract: ${request.presetId}',
       ),

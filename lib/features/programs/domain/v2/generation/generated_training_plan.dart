@@ -88,17 +88,45 @@ class GeneratedSessionBlock {
     required this.kind,
     required List<GeneratedPrescription> prescriptions,
     List<String> instructions = const [],
+    List<ActivityPrescription> activities = const [],
   }) : prescriptions = List.unmodifiable(prescriptions),
-       instructions = List.unmodifiable(instructions);
+       instructions = List.unmodifiable(instructions),
+       activities = List.unmodifiable(activities);
   final GeneratedSessionBlockKind kind;
   final List<GeneratedPrescription> prescriptions;
   final List<String> instructions;
+  final List<ActivityPrescription> activities;
   Map<String, Object?> toJson() => {
     'kind': kind.name,
     'prescriptions': prescriptions.map((e) => e.toJson()).toList(),
+    if (activities.isNotEmpty)
+      'activities': activities.map(_activityJson).toList(),
     if (instructions.isNotEmpty) 'instructions': instructions,
   };
 }
+
+Map<String, Object?> _activityJson(ActivityPrescription activity) => {
+  'id': activity.id.value,
+  'position': activity.position,
+  'activityId': activity.activityId.value,
+  'movementId': activity.movementId?.value,
+  'targetType': activity.target.type.name,
+  'sets': activity.target.sets,
+  'repetitionsPerSet': activity.target.repetitionsPerSet,
+  'totalRepetitions': activity.target.totalRepetitions,
+  'seconds': activity.target.seconds,
+  'meters': activity.target.meters,
+  'rounds': activity.target.rounds,
+  'qualitativeGoal': activity.target.qualitativeGoal,
+  'kind': activity.kind.name,
+  'ruleId': activity.ruleId,
+  'sourceEdition': activity.sourceEdition.name,
+  'generation': activity.generation.name,
+  'source': {
+    'document': activity.source.document,
+    'location': activity.source.location,
+  },
+};
 
 class GeneratedSession {
   GeneratedSession({
@@ -210,6 +238,8 @@ class GeneratedTrainingPlan {
     required List<GeneratedPlanBlock> blocks,
     required List<GeneratedTransition> transitions,
     required List<PlannedTrainingEvent> events,
+    this.sourceEdition,
+    this.generation,
   }) : blocks = List.unmodifiable(blocks),
        transitions = List.unmodifiable(transitions),
        events = List.unmodifiable(events);
@@ -223,6 +253,8 @@ class GeneratedTrainingPlan {
   final List<GeneratedPlanBlock> blocks;
   final List<GeneratedTransition> transitions;
   final List<PlannedTrainingEvent> events;
+  final SourceEdition? sourceEdition;
+  final MethodGeneration? generation;
 
   Map<String, Object?> toJson() => {
     'schemaVersion': schemaVersion,
@@ -231,6 +263,8 @@ class GeneratedTrainingPlan {
     'blueprintSnapshot': blueprintSnapshot,
     'unit': unit.name,
     'seed': seed,
+    if (sourceEdition != null) 'sourceEdition': sourceEdition!.name,
+    if (generation != null) 'generation': generation!.name,
     'blocks': blocks.map((e) => e.toJson()).toList(),
     'transitions': transitions.map((e) => e.toJson()).toList(),
     'events': events.map((e) => e.toJson()).toList(),

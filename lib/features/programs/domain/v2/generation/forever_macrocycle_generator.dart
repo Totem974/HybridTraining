@@ -45,16 +45,36 @@ class MovementTemplate {
   final List<SetTemplate> sets;
 }
 
+class ActivityTemplate {
+  const ActivityTemplate({
+    required this.activityId,
+    required this.target,
+    required this.kind,
+    required this.rule,
+    this.sourceEdition = SourceEdition.forever,
+    this.generation = MethodGeneration.forever,
+  });
+  final ActivityId activityId;
+  final PrescriptionTarget target;
+  final PrescriptionKind kind;
+  final ReviewedRule rule;
+  final SourceEdition sourceEdition;
+  final MethodGeneration generation;
+}
+
 class SessionBlockTemplate {
   SessionBlockTemplate({
     required this.kind,
     required List<MovementTemplate> movements,
     List<String> instructions = const [],
+    List<ActivityTemplate> activities = const [],
   }) : movements = List.unmodifiable(movements),
-       instructions = List.unmodifiable(instructions);
+       instructions = List.unmodifiable(instructions),
+       activities = List.unmodifiable(activities);
   final GeneratedSessionBlockKind kind;
   final List<MovementTemplate> movements;
   final List<String> instructions;
+  final List<ActivityTemplate> activities;
 }
 
 class SessionTemplate {
@@ -282,6 +302,8 @@ class ForeverMacrocycleGenerator {
       blueprintSnapshot: snapshot.stableJson(),
       unit: athlete.unit,
       seed: athlete.seed,
+      sourceEdition: snapshot.blueprint.sourceEdition,
+      generation: snapshot.blueprint.generation,
       blocks: blocks,
       transitions: transitions,
       events: events,
@@ -320,6 +342,22 @@ class ForeverMacrocycleGenerator {
                   isPerformanceSet: set.isPerformanceSet,
                   rule: set.rule.source,
                 ),
+          ],
+          activities: [
+            for (final activityEntry in block.activities.indexed)
+              ActivityPrescription(
+                id: PrescriptionId(
+                  '$id:${block.kind.name}:${activityEntry.$1 + 1}',
+                ),
+                position: activityEntry.$1,
+                activityId: activityEntry.$2.activityId,
+                target: activityEntry.$2.target,
+                kind: activityEntry.$2.kind,
+                ruleId: activityEntry.$2.rule.id,
+                sourceEdition: activityEntry.$2.sourceEdition,
+                generation: activityEntry.$2.generation,
+                source: activityEntry.$2.rule.source,
+              ),
           ],
         ),
     ],
@@ -394,9 +432,11 @@ class ForeverMacrocycleGenerator {
         block.rule,
         for (final week in block.weeks)
           for (final session in week.sessions)
-            for (final sessionBlock in session.blocks)
+            for (final sessionBlock in session.blocks) ...[
               for (final movement in sessionBlock.movements)
                 for (final set in movement.sets) set.rule,
+              for (final activity in sessionBlock.activities) activity.rule,
+            ],
       ],
     ];
     if (rules.any((rule) => rule.status != RuleStatus.verified)) {

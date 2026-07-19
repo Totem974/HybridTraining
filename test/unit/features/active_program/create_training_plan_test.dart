@@ -157,4 +157,112 @@ void main() {
       expect(cycleTwo.single['calculated_load'], 67.5);
     },
   );
+
+  test(
+    'CreateTrainingPlan persists complete typed Forever 2L/1A data',
+    () async {
+      final temporary = await Directory.systemTemp.createTemp(
+        'create-forever-plan-',
+      );
+      addTearDown(() => temporary.delete(recursive: true));
+      final local = LocalDatabase(
+        factory: databaseFactoryFfi,
+        databasePath: '${temporary.path}/plan.db',
+      );
+      addTearDown(local.close);
+      var database = await local.open();
+      const now = '2026-07-19T08:00:00.000Z';
+      await database.insert('athlete_profiles', {
+        'id': 'athlete-forever',
+        'display_name': 'Fictitious Forever Athlete',
+        'preferred_unit': 'kg',
+        'rounding_increment': 2.5,
+        'created_at': now,
+        'updated_at': now,
+      });
+      const movements = [
+        MovementId.squat,
+        MovementId.benchPress,
+        MovementId.deadlift,
+        MovementId.overheadPress,
+      ];
+      final initial = {
+        MovementId.squat: 100.0,
+        MovementId.benchPress: 80.0,
+        MovementId.deadlift: 120.0,
+        MovementId.overheadPress: 60.0,
+      };
+      final increments = {
+        MovementId.squat: 5.0,
+        MovementId.benchPress: 2.5,
+        MovementId.deadlift: 5.0,
+        MovementId.overheadPress: 2.5,
+      };
+      Map<MovementId, double> progressed(Map<MovementId, double> values) => {
+        for (final movement in movements)
+          movement: values[movement]! + increments[movement]!,
+      };
+      final afterThree = progressed(initial);
+      final afterSix = progressed(afterThree);
+      final afterTen = progressed(afterSix);
+      final store = SqliteVersionedPlanStore(localDatabase: local);
+      await CreateTrainingPlan(
+        repository: store,
+        clock: () => DateTime.utc(2026, 7, 19, 8),
+      )(
+        CreateTrainingPlanRequest(
+          planId: 'forever-plan-1',
+          athleteId: 'athlete-forever',
+          presetId: 'forever-original-531-fsl-2l1a-v1',
+          athlete: CanonicalAthleteConfiguration(
+            movementOrder: movements,
+            trainingMaxes: initial,
+            progressionIncrements: increments,
+            trainingWeekdays: const [1, 2, 4, 5],
+            startDate: const LocalDate(2026, 7, 20),
+            unit: WeightUnit.kilograms,
+            rounder: const LoadRounder(increment: 2.5),
+            confirmedTrainingMaxesByWeek: {
+              3: afterThree,
+              6: afterSix,
+              10: afterTen,
+            },
+          ),
+        ),
+      );
+
+      await local.close();
+      database = await local.open();
+      final reopened = await store.loadPlan('forever-plan-1');
+      expect(reopened, isNotNull);
+      expect(reopened!['source_edition'], 'forever');
+      expect(reopened['ruleset_generation'], 'forever');
+      final blocks = reopened['blocks']! as List<Map<String, Object?>>;
+      expect(blocks.map((block) => block['ruleset_role']), [
+        'leader',
+        'leader',
+        'seventhWeek',
+        'anchor',
+        'trainingMaxTest',
+      ]);
+      expect(blocks.map((block) => block['seventh_week_purpose']), [
+        null,
+        null,
+        'deload',
+        null,
+        'trainingMaxTest',
+      ]);
+      final weeks = await database.rawQuery(
+        'SELECT DISTINCT programming_week_number FROM plan_training_sessions '
+        'ORDER BY programming_week_number',
+      );
+      expect(
+        weeks.map((row) => row['programming_week_number']),
+        List.generate(11, (index) => index + 1),
+      );
+      expect(await database.query('activity_prescriptions'), hasLength(260));
+      expect(reopened['trainingMaxTimeline'], hasLength(16));
+      expect(reopened['plannedEvents'], hasLength(16));
+    },
+  );
 }

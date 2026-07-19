@@ -251,6 +251,10 @@ void main() {
     final cycles = blocks.single['cycles']! as List<Map<String, Object?>>;
     final sessions = cycles.single['sessions']! as List<Map<String, Object?>>;
     expect(sessions, hasLength(9));
+    expect(
+      sessions.map((session) => session['programming_week_number']).toSet(),
+      {1, 2, 3},
+    );
     final sessionBlocks =
         sessions.first['blocks']! as List<Map<String, Object?>>;
     expect(
@@ -260,6 +264,21 @@ void main() {
     final provenance =
         sessionBlocks.first['ruleProvenance']! as Map<String, Object?>;
     expect(provenance['instructions'], contains(contains('3 rounds')));
+    final activities = sessions
+        .expand(
+          (session) =>
+              (session['blocks']! as List<Map<String, Object?>>).expand(
+                (block) => block['activities']! as List<Map<String, Object?>>,
+              ),
+        )
+        .toList();
+    expect(activities, hasLength(81));
+    expect(
+      activities.map((activity) => activity['prescription_kind']).toSet(),
+      {'warmUp', 'jumpsOrThrows', 'assistance', 'easyConditioning'},
+    );
+    expect(reloaded!['plannedEvents'], hasLength(1));
+    expect(reloaded['trainingMaxTimeline'], hasLength(4));
   });
 
   test(

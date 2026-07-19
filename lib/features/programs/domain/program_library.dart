@@ -312,6 +312,7 @@ class InMemoryProgramLibraryRepository implements ProgramLibraryRepository {
     Set<String> registeredGenerators = const {
       'canonical-powerlifting',
       'canonical-beyond',
+      'canonical-forever-original-fsl',
       'beginner-prep-school',
     },
   }) {
@@ -507,20 +508,34 @@ const canonicalProgramEntries = <ProgramLibraryEntry>[
     phases: _allPhases,
     level: ProgramLevel.beginner,
     goals: {ProgramGoal.strength, ProgramGoal.general},
-    frequencies: {3, 4},
+    frequencies: {4},
     mainMovementsPerSession: 1,
     equipment: _basicEquipment,
     tmRange: ProgramTmRange(.85, .90),
-    documentationStatus: ProgramValidationStatus.needsReview,
-    implementationStatus: ProgramImplementationStatus.experimental,
+    documentationStatus: ProgramValidationStatus.rulesReviewed,
+    implementationStatus: ProgramImplementationStatus.productionReady,
     complexity: 1,
-    presetId: 'forever-original-fsl-v1',
-    revisionId: 'forever-original-531-v1',
+    presetId: 'forever-original-531-fsl-2l1a-v1',
+    revisionId: 'forever-original-531-fsl-v1',
     recommended: false,
+    sourceEdition: canonical.SourceEdition.forever,
+    references: [
+      canonical.RuleReference(
+        document: '5/3/1 Forever',
+        location: 'PDF pages 29-33 and 180-182',
+      ),
+    ],
+    generatorId: 'canonical-forever-original-fsl',
+    blueprintVersion: 1,
+    aliases: {'forever-original-fsl-v1'},
+    capabilities: {
+      canonical.ProgramCapability.mainWork,
+      canonical.ProgramCapability.supplementalWork,
+    },
     summaryFr:
-        'Compatibilité historique non activable tant que les règles manquantes ne sont pas revues.',
+        'Deux Leaders 3/5/1 + FSL, deload typé, Anchor Original, puis TM Test typé.',
     summaryEn:
-        'Historical compatibility entry, unavailable until missing rules are reviewed.',
+        'Two 3/5/1 + FSL Leaders, typed deload, Original Anchor, then typed TM Test.',
   ),
   ProgramLibraryEntry(
     id: 'revision-original-531',

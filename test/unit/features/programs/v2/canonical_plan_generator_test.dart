@@ -29,6 +29,7 @@ void main() {
   CanonicalAthleteConfiguration athlete({
     List<int> weekdays = const [1, 2, 4, 5],
     Map<MovementId, double>? confirmed,
+    Map<int, Map<MovementId, double>> foreverConfirmations = const {},
   }) => CanonicalAthleteConfiguration(
     movementOrder: movements,
     trainingMaxes: trainingMaxes,
@@ -38,6 +39,7 @@ void main() {
     unit: WeightUnit.kilograms,
     rounder: const LoadRounder(increment: 2.5),
     confirmedBeyondTrainingMaxes: confirmed,
+    confirmedTrainingMaxesByWeek: foreverConfirmations,
   );
 
   test('Powerlifting standard creates three work weeks and typed deload', () {
@@ -208,6 +210,90 @@ void main() {
         ),
       ),
       throwsStateError,
+    );
+  });
+
+  test('Forever is staged at every source-defined TM checkpoint', () {
+    final plan = const CanonicalPlanGenerator().generate(
+      blueprint: CanonicalGenerationBlueprint.foreverOriginalFsl,
+      athlete: athlete(),
+    );
+
+    expect(plan.weeks, hasLength(3));
+    expect(plan.blocks.single.role, BlockRole.leader);
+    expect(plan.trainingMaxTimeline, hasLength(4));
+    expect(plan.trainingMaxTimeline.first.afterProgrammingWeek, 3);
+    expect(plan.awaitingTrainingMaxConfirmation, isTrue);
+  });
+
+  test('Forever generates the sourced 11-week 2L/1A sequence', () {
+    final afterThree = {
+      MovementId.squat: 105.0,
+      MovementId.benchPress: 82.5,
+      MovementId.deadlift: 125.0,
+      MovementId.overheadPress: 62.5,
+    };
+    final afterSix = {
+      MovementId.squat: 110.0,
+      MovementId.benchPress: 85.0,
+      MovementId.deadlift: 130.0,
+      MovementId.overheadPress: 65.0,
+    };
+    final afterTen = {
+      MovementId.squat: 115.0,
+      MovementId.benchPress: 87.5,
+      MovementId.deadlift: 135.0,
+      MovementId.overheadPress: 67.5,
+    };
+    final plan = const CanonicalPlanGenerator().generate(
+      blueprint: CanonicalGenerationBlueprint.foreverOriginalFsl,
+      athlete: athlete(
+        foreverConfirmations: {3: afterThree, 6: afterSix, 10: afterTen},
+      ),
+    );
+
+    expect(
+      plan.weeks.map((week) => week.number),
+      List.generate(11, (i) => i + 1),
+    );
+    expect(plan.blocks.map((block) => block.role), [
+      BlockRole.leader,
+      BlockRole.leader,
+      BlockRole.seventhWeek,
+      BlockRole.anchor,
+      BlockRole.trainingMaxTest,
+    ]);
+    expect(plan.blocks[2].seventhWeekPurpose, SeventhWeekPurpose.deload);
+    expect(
+      plan.blocks.last.seventhWeekPurpose,
+      SeventhWeekPurpose.trainingMaxTest,
+    );
+    expect(plan.trainingMaxTimeline, hasLength(16));
+    expect(
+      plan.weeks.first.sessions.first.prescriptions.where(
+        (set) => set.kind == PrescriptionKind.supplemental,
+      ),
+      hasLength(5),
+    );
+    expect(
+      plan.weeks[1].sessions
+          .expand((session) => session.prescriptions)
+          .any((set) => set.kind == PrescriptionKind.performanceSet),
+      isFalse,
+    );
+    expect(
+      plan.weeks[7].sessions.first.prescriptions.any(
+        (set) => set.kind == PrescriptionKind.supplemental,
+      ),
+      isFalse,
+    );
+    expect(
+      plan.weeks.last.sessions.first.prescriptions.last.kind,
+      PrescriptionKind.trainingMaxTest,
+    );
+    expect(
+      plan.weeks.last.sessions.first.prescriptions.last.calculatedLoad,
+      115,
     );
   });
 }
