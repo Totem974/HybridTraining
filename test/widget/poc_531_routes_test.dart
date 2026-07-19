@@ -1,8 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/features/poc_531/presentation/poc_531_routes.dart';
+import 'package:hybrid_training/app/bootstrap/app_environment.dart';
+import 'package:hybrid_training/app/hybrid_training_app.dart';
 
 void main() {
+  testWidgets('web POC mode starts without constructing SQLite', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const HybridTrainingApp(
+        environment: AppEnvironment.dev,
+        pocOnlyMode: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('poc-531-landing')), findsOneWidget);
+  });
+
   testWidgets('isolated landing routes to onboarding and generator', (
     tester,
   ) async {
