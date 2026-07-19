@@ -39,3 +39,24 @@ class ProgramSwitchRequest {
   final String reason;
   final ActiveSessionDisposition activeSessionDisposition;
 }
+
+abstract interface class ProgramSwitchRepository {
+  Future<ProgramSwitchPreview> previewProgramSwitch(
+    ProgramSwitchRequest request,
+  );
+  Future<void> applyProgramSwitch(ProgramSwitchRequest request);
+}
+
+class PreviewProgramSwitch {
+  const PreviewProgramSwitch(this.repository);
+  final ProgramSwitchRepository repository;
+  Future<ProgramSwitchPreview> call(ProgramSwitchRequest request) =>
+      repository.previewProgramSwitch(request);
+}
+
+class ApplyProgramSwitch {
+  const ApplyProgramSwitch(this.repository);
+  final ProgramSwitchRepository repository;
+  Future<void> call(ProgramSwitchRequest request) =>
+      repository.applyProgramSwitch(request);
+}

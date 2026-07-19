@@ -7,7 +7,8 @@ import 'package:hybrid_training/features/active_program/domain/versioned_trainin
 import 'package:hybrid_training/features/programs/domain/v2/program_domain.dart';
 import 'package:sqflite/sqflite.dart';
 
-class SqliteVersionedPlanStore implements PlanRepository {
+class SqliteVersionedPlanStore
+    implements PlanRepository, ProgramSwitchRepository {
   const SqliteVersionedPlanStore({required this.localDatabase});
 
   final LocalDatabase localDatabase;
@@ -21,6 +22,7 @@ class SqliteVersionedPlanStore implements PlanRepository {
     await database.transaction((tx) => _insertPlan(tx, plan));
   }
 
+  @override
   Future<ProgramSwitchPreview> previewProgramSwitch(
     ProgramSwitchRequest request,
   ) async {
@@ -42,6 +44,7 @@ class SqliteVersionedPlanStore implements PlanRepository {
     );
   }
 
+  @override
   Future<void> applyProgramSwitch(ProgramSwitchRequest request) async {
     _validateSwitchRequest(request);
     final database = await localDatabase.open();
@@ -487,10 +490,8 @@ class SqliteVersionedPlanStore implements PlanRepository {
         whereArgs: [planId],
         orderBy: 'sequence, movement_id',
       ))
-        {
-          ...row,
-          'source': jsonDecode(row['source_reference_json']! as String),
-        }..remove('source_reference_json'),
+        {...row, 'source': jsonDecode(row['source_reference_json']! as String)}
+          ..remove('source_reference_json'),
     ];
     result['plannedEvents'] = [
       for (final row in await database.query(
@@ -500,10 +501,10 @@ class SqliteVersionedPlanStore implements PlanRepository {
         orderBy: 'sequence',
       ))
         {
-          ...row,
-          'payload': jsonDecode(row['payload_json']! as String),
-          'source': jsonDecode(row['source_reference_json']! as String),
-        }
+            ...row,
+            'payload': jsonDecode(row['payload_json']! as String),
+            'source': jsonDecode(row['source_reference_json']! as String),
+          }
           ..remove('payload_json')
           ..remove('source_reference_json'),
     ];
@@ -572,10 +573,7 @@ class SqliteVersionedPlanStore implements PlanRepository {
             database,
             block['id']! as String,
           ),
-          'activities': await _loadActivities(
-            database,
-            block['id']! as String,
-          ),
+          'activities': await _loadActivities(database, block['id']! as String),
         }..remove('rule_provenance_json'),
     ];
   }
@@ -596,19 +594,19 @@ class SqliteVersionedPlanStore implements PlanRepository {
     return [
       for (final row in rows)
         {
-          ...row,
-          'target': jsonDecode(row['target_json']! as String),
-          'source': jsonDecode(row['source_reference_json']! as String),
-          if (row['actual_json'] != null)
-            'result': {
-              'status': row['result_status'],
-              'actual': jsonDecode(row['actual_json']! as String),
-              'rpe': row['rpe'],
-              'notes': row['result_notes'],
-              'recorded_at': row['recorded_at'],
-              'updated_at': row['updated_at'],
-            },
-        }
+            ...row,
+            'target': jsonDecode(row['target_json']! as String),
+            'source': jsonDecode(row['source_reference_json']! as String),
+            if (row['actual_json'] != null)
+              'result': {
+                'status': row['result_status'],
+                'actual': jsonDecode(row['actual_json']! as String),
+                'rpe': row['rpe'],
+                'notes': row['result_notes'],
+                'recorded_at': row['recorded_at'],
+                'updated_at': row['updated_at'],
+              },
+          }
           ..remove('target_json')
           ..remove('source_reference_json')
           ..remove('actual_json')
