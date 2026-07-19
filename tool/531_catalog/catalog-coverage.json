@@ -1,0 +1,44 @@
+{
+    "schemaVersion":  1,
+    "sourceWorkbook":  "catalogue_exhaustif_531_3_livres.xlsx",
+    "imported":  354,
+    "classified":  354,
+    "executable":  4,
+    "nonExecutable":  350,
+    "ambiguous":  350,
+    "canonical":  329,
+    "supplement":  25,
+    "byGeneration":  {
+                         "original":  40,
+                         "beyond":  107,
+                         "forever":  182
+                     },
+    "byKind":  {
+                   "executableTemplate":  4,
+                   "component":  34,
+                   "rule":  12,
+                   "schedule":  23,
+                   "protocol":  42,
+                   "transition":  13,
+                   "documentation":  226
+               },
+    "executableMappings":  [
+                               {
+                                   "catalogId":  "BY-026",
+                                   "generatorId":  "canonical-beyond"
+                               },
+                               {
+                                   "catalogId":  "FV-141",
+                                   "generatorId":  "canonical-bps"
+                               },
+                               {
+                                   "catalogId":  "FV-236",
+                                   "generatorId":  "canonical-forever-original-fsl"
+                               },
+                               {
+                                   "catalogId":  "PL-001",
+                                   "generatorId":  "canonical-powerlifting"
+                               }
+                           ],
+    "limitation":  "All non-executable rows remain NEEDS_REVIEW; documentary classification is complete, executable coverage is intentionally limited to validated Core v5 strategies."
+}
