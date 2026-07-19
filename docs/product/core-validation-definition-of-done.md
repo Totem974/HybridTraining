@@ -1,33 +1,24 @@
-# Core Validation Shell definition of done
+# Définition de fini — Core Validation Shell
 
-The shell is a temporary engine verification tool, not the future product UI.
+Le shell est un outil temporaire et sobre. Il n’est pas la future UI produit.
 
-## Active destinations
+## Validé
 
-1. Engine: shows the sole reviewed preset and can create a deterministic DEV
-   fixture and persisted plan.
-2. Tracking: shows only aggregates derived from persisted outcomes. Tonnage is
-   unavailable until an actual load is recorded.
-3. Profile: shows the local athlete and unit without calculating business
-   values in widgets.
-4. Settings: exports a complete backup and provides a confirmed local reset.
+- démarrage direct sans onboarding ; quatre destinations maximum ;
+- fixture fictive et bannière uniquement en DEV ; aucune fixture en PROD ;
+- seul Beginner Prep School v1 est activable ;
+- génération et inspection d’un plan versionné ;
+- exécution série par série avec succès, échec, saut, charge, reps, RPE, note,
+  repos, pause/reprise, annulation et fin ;
+- reprise après reconstruction de l’application ;
+- statistiques fondées sur les résultats réels ;
+- aperçu de changement de programme sans écriture ;
+- export, simulation détaillée et import atomique ;
+- suppression globale avec portée affichée et confirmation ;
+- test complet sur Redmi Note 7 Android 13 ; APK DEV et PROD compilés.
 
-## Flavor rules
+## Hors périmètre assumé
 
-- DEV displays a permanent validation-tool banner and may create one explicitly
-  fictitious athlete.
-- PROD contains no automatic fixture and exposes no fixture action.
-- Both flavors start without onboarding.
-
-## Current validation
-
-- Widget tests cover direct startup, four destinations, DEV-only fixture,
-  absence of PROD demo data and unavailable actual tonnage.
-- SQLite tests prove idempotent Beginner plan creation and that tonnage uses
-  actual successful load rather than prescription.
-- The Redmi integration test covers direct startup, persisted restart and
-  backup export.
-
-Workout execution, program switching and import UI remain separate completion
-items for the full engine rebuild and are not claimed complete here.
-
+- design produit, animations et onboarding ;
+- activation d’un preset dont le contrat reste incomplet ;
+- suppression ou push distant sans approbation propriétaire.

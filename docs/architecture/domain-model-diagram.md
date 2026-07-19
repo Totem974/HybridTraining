@@ -2,17 +2,24 @@
 
 ```mermaid
 classDiagram
-  ProgramConcept "1" --> "many" ProgramRevision
-  ProgramRevision "many" --> "many" ProgramBlueprint
-  ProgramBlueprint --> MacrocycleBlueprint
-  MacrocycleBlueprint --> TrainingBlock
-  TrainingBlock --> TrainingCycle
-  TrainingCycle --> PlannedSession
-  PlannedSession --> SessionBlock
-  SessionBlock --> SetPrescription
-  PlannedSession --> ComposableWorkout
-  ComposableWorkout --> WorkoutBlock
-  WorkoutBlock --> WorkoutPrescription
+  class ProgramBlueprintSnapshot
+  class ForeverMacrocycleGenerator
+  class GeneratedTrainingPlan
+  class VersionedTrainingPlan
+  class WorkoutExecution
+  class SetOutcome
+  class TmAdjustmentDecision
+  class TrainingStatistics
+
+  ProgramBlueprintSnapshot --> ForeverMacrocycleGenerator
+  ForeverMacrocycleGenerator --> GeneratedTrainingPlan
+  GeneratedTrainingPlan --> VersionedTrainingPlan
+  VersionedTrainingPlan "1" *-- "many" WorkoutExecution
+  WorkoutExecution "1" *-- "many" SetOutcome
+  SetOutcome --> TrainingStatistics
+  TmAdjustmentDecision --> VersionedTrainingPlan : plan event
 ```
 
-`CURRENT` : ces concepts Dart purs existent et sont testés. `POC_TARGET` : leur raccordement au contrôleur et aux écrans. Les IDs persistants sont en anglais stable et indépendants des libellés.
+Les snapshots et décisions portent identifiants stables, versions et provenance.
+Les classes du domaine sont en Dart pur ; contrôleurs Flutter et dépôts SQLite
+restent dans les couches présentation et données.

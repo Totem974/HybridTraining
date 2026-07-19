@@ -1,40 +1,54 @@
-# Forever engine core rebuild - 2026-07-19
+# Rapport — reconstruction du cœur Forever — 2026-07-19
 
-## Baseline
+## Base et sécurité
 
-| Check | Result |
+- Base : `5e538572a298961866412acbd7a2775fd72955a1`, descendante de `kevin`.
+- Branche : `rebuild/forever-engine-core-20260719`.
+- Bundle Git : 6 454 963 octets, SHA-256
+  `73E19F686AA1CC37BC424F13DEFAEA3FFB908415482F1387CA2A7D743CE1DA75`, vérifié.
+- Archive `.SOURCE` : 4 669 fichiers, 128 819 792 octets avant compression,
+  SHA-256 `39D3FFF8AEC8E110D80C4FA5C36535ECA507400A640CFFF03F208A4436F1C3CA`,
+  extraction vérifiée sans fichier manquant ni hash divergent.
+
+## Architecture et programmes
+
+L’ancienne UI et l’onboarding ont quitté le chemin compilé. Le Core Validation
+Shell appelle des interfaces application, des domaines Dart purs et des dépôts
+SQLite. Beginner Prep School v1 est le seul preset exécutable. Original 5/3/1,
+Original + FSL et les autres entrées indexées restent non activables lorsque des
+règles indispensables sont `NEEDS_REVIEW`.
+
+Le schéma v4 ajoute `workout_executions`, `workout_set_outcomes` et
+`workout_execution_events`. Il permet pause/reprise, repos, RPE, résultats réels,
+annulation ordonnée et journal atomique. Les migrations v1/v2/v3→v4 et les
+sauvegardes v1/v2/v3→v4 sont testées.
+
+Le changement de programme génère le prochain plan avant transaction, fournit un
+aperçu, exige une décision pour la séance active et préserve les séances
+terminées, performances, records et TM. Les décisions TM portent RuleId, source,
+génération et motif.
+
+## Validation exacte
+
+| Validation | Résultat |
 | --- | --- |
 | `flutter pub get` | PASS |
-| `dart format --set-exit-if-changed .` | PASS, 71 files unchanged |
-| `flutter analyze` | PASS, no issues |
-| `flutter test` | PASS, 112 tests |
-| Dev debug APK | PASS |
-| Prod debug APK | PASS |
-| Redmi Note 7 integration baseline | FAIL |
+| formatage | PASS |
+| `flutter analyze` | PASS, 0 problème |
+| `flutter test` / couverture | PASS, 128 tests |
+| couverture domaines critiques | 1 284 / 1 348 lignes, 95,25 % |
+| intégration Redmi Note 7 Android 13 | PASS, scénario complet en 39 s |
+| APK DEV debug | PASS |
+| APK PROD debug | PASS |
 
-The existing integration test fails at `integration_test/app_flow_test.dart:126`:
-it expects `overheadPress` but reads `deadlift`. This is a captured baseline defect;
-it must not be hidden. The test also exercises the rejected onboarding and will be
-replaced by the core validation flow with an explicit regression test.
+Le scénario Redmi démarre sans onboarding, crée uniquement la fixture DEV,
+génère BPS, exécute plusieurs résultats, reprend après reconstruction, termine,
+vérifie 405 de tonnage réel, simule un changement, exporte/importe et confirme
+l’absence de fixture en PROD.
 
-## Audit decisions
+## Limites déclarées
 
-- The v1 stack is the only production-connected path. The v2 program domain,
-  versioned plan store and composable workout runtime are tested but disconnected.
-- v2 is the canonical target. v1 remains only as a temporary compatibility and
-  migration path until end-to-end tests prove replacement safety.
-- Original 5/3/1 and Original + FSL remain non-executable while conditioning,
-  rounding and transition rules are incomplete.
-- Beginner Prep School is `READY_TO_IMPLEMENT`, but its two catalogues and rule
-  references must be reconciled before exposure.
-- The Original/Classic book is still absent. `531_Powerlifting.pdf` is a readable
-  2011 Powerlifting work, not a substitute for Original/Classic.
-- Persisted v1 and v2/v3 workout state currently form two unsynchronised sources
-  of truth. Program switching, ordered undo and actual-load statistics require
-  explicit application services and transactional tests.
-
-## Current status
-
-Implementation has not yet been declared complete. No source reference was
-modified, copied into the product, or committed. No remote write occurred.
-
+- aucune branche distante n’est poussée ou supprimée ;
+- les worktrees de recherche et de l’UI rejetée restent présents ;
+- les programmes incomplets restent documentaires ;
+- le shell est fonctionnel mais volontairement non destiné au produit final.

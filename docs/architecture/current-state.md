@@ -1,23 +1,28 @@
-# Current state
+# État courant
 
-The active application starts directly in the Core Validation Shell. The
-rejected onboarding, dashboard, visual calendar, visual program library and
-guided workout presentation were removed from the compiled source tree.
+L’application démarre directement dans le Core Validation Shell. L’onboarding,
+le dashboard, le calendrier visuel, la bibliothèque visuelle et l’ancienne
+séance guidée ne sont plus compilés. Le shell est un outil de validation, pas la
+future interface produit.
 
-The active dependency direction is:
+Beginner Prep School v1 est le seul preset exécutable. Original 5/3/1 et
+Original + FSL restent documentaires ou réservés à la réouverture des données
+historiques tant que leurs contrats complets restent `NEEDS_REVIEW`.
+
+Le chemin canonique actif est :
 
 ```text
-Core Validation presentation
-  -> application use cases and repository interfaces
-  -> pure Dart program and plan domain
-  <- SQLite repository implementations
+Core Validation Shell
+  → contrôleur / interfaces application
+  → domaines Dart purs (programme, runtime, TM, statistiques)
+  → dépôts SQLite transactionnels
+  → schéma v4 et sauvegarde v4 compatible v1/v2/v3
 ```
 
-Beginner Prep School v1 is the only executable preset. Its generation flows
-through `GenerateBeginnerPlan`, `ForeverMacrocycleGenerator`,
-`VersionedTrainingPlan` and `PlanRepository`. Original + FSL remains available
-only to the isolated legacy persistence compatibility path and cannot be
-selected by the active application.
+Le runtime v4 persiste un état immuable, les résultats réels et un journal
+ordonné après chaque action. Les anciennes tables v1 et le runtime v3 restent
+lisibles uniquement pour migration et compatibilité des sauvegardes.
 
-SQLite schema v3 is still in use. The v1 tables remain readable for migration
-and backup compatibility; new shell plans use the versioned v2/v3 tables.
+Le changement de programme possède un aperçu sans écriture et une application
+atomique. Une séance active exige une décision explicite. Les séances terminées,
+records et historiques de TM ne sont jamais réécrits.
