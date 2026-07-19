@@ -6,6 +6,7 @@ import 'package:hybrid_training/features/core_validation/application/core_valida
 import 'package:hybrid_training/features/core_validation/data/sqlite_core_validation_repository.dart';
 import 'package:hybrid_training/features/core_validation/presentation/core_validation_controller.dart';
 import 'package:hybrid_training/features/core_validation/presentation/core_validation_shell.dart';
+import 'package:hybrid_training/features/poc_531/presentation/poc_531_routes.dart';
 
 class HybridTrainingApp extends StatefulWidget {
   const HybridTrainingApp({
@@ -52,6 +53,7 @@ class _HybridTrainingAppState extends State<HybridTrainingApp> {
       ),
       useMaterial3: true,
     ),
+    onGenerateRoute: buildPoc531Route,
     home: CoreValidationShell(
       environment: widget.environment,
       controller: controller,

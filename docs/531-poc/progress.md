@@ -28,3 +28,26 @@
 - Every executable catalogue row references a registered Core v5 strategy.
 - Powerlifting remains a supplement and is excluded from primary generations.
 - Targeted Core and catalogue test suites pass.
+
+## Checkpoint 5 — complete
+
+- Responsive Flutter Web generator added with live CORE validation.
+- Results, provenance, warnings, plate loading, JSON export, configuration copy,
+  example, reset, and print guidance are available.
+- Generator widget tests pass.
+
+## Checkpoint 6 — complete
+
+- Ten-step reversible onboarding added.
+- Recommendations and final configuration use the same public CORE API.
+- Onboarding widget tests pass, including the validated hand-off value.
+
+## Checkpoint 7 — complete
+
+- Isolated routes and landing page integrated without changing the default
+  validation-shell route.
+- Flutter Web scaffolding added and release build passes.
+- Route and configuration transport tests pass.
+- E2E scenarios for Original, Beyond, and Forever are checked in. Browser
+  execution currently requires an Edge/Chrome WebDriver on port 4444; Android
+  fallback execution timed out while installing on the connected device.

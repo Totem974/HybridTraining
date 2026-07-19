@@ -22,11 +22,42 @@ void main() {
     });
 
     test('classifies every entry and links every executable strategy', () {
+      final summary = getCatalogSummary();
+      expect(summary.total, 354);
+      expect(summary.byGeneration[Generation.original], 40);
+      expect(summary.byGeneration[Generation.beyond], 107);
+      expect(summary.byGeneration[Generation.forever], 182);
       final report = getCatalogCoverageReport();
       expect(report.total, report.classified);
       expect(report.executable, 4);
       expect(report.ambiguous, 350);
       expect(report.isComplete, isFalse);
+      expect(
+        listPrograms(
+          const ProgramFilters(
+            generation: Generation.original,
+            includeLegacy: true,
+            executableOnly: false,
+          ),
+        ),
+        everyElement(
+          predicate<ProgramDefinition>(
+            (program) =>
+                program.generation == Generation.original &&
+                program.sourceKind == SourceKind.canonical,
+          ),
+        ),
+      );
+      expect(
+        listPrograms(
+          const ProgramFilters(
+            executableOnly: false,
+            includeSupplements: true,
+            includeLegacy: true,
+          ),
+        ).where((program) => program.id.startsWith('PL-')),
+        hasLength(25),
+      );
     });
   });
 
@@ -75,6 +106,17 @@ void main() {
         ratio: .9,
       );
       expect(tm.oneRepMax, 200);
+      expect(
+        () => deriveTrainingMax(
+          input: const LiftInput(
+            lift: MainLift.squat,
+            kind: LiftInputKind.trainingMax,
+            weight: 0,
+          ),
+          ratio: .9,
+        ),
+        throwsArgumentError,
+      );
     });
   });
 
@@ -105,6 +147,42 @@ void main() {
       );
     });
 
+    test('reports invalid ratios, rounding, rep maxes and supplements', () {
+      final invalid = ProgramConfiguration(
+        programId: 'original-fsl-v1',
+        generation: Generation.original,
+        unit: WeightUnit.kilograms,
+        lifts: {
+          for (final lift in MainLift.values)
+            lift: LiftInput(
+              lift: lift,
+              kind: LiftInputKind.repetitionMax,
+              weight: 100,
+              repetitions: 0,
+            ),
+        },
+        trainingMaxRatio: 1.1,
+        daysPerWeek: 4,
+        trainingWeekdays: const [1, 1, 2, 3],
+        roundingIncrement: 0,
+        startDate: DateTime.utc(2026, 7, 20),
+      );
+      expect(
+        validateProgramConfiguration(invalid).map((issue) => issue.code),
+        containsAll([
+          'invalid_frequency',
+          'invalid_tm_ratio',
+          'invalid_rounding',
+          'invalid_lift',
+        ]),
+      );
+      final supplement = _configuration('PL-001', Generation.original, days: 4);
+      expect(
+        validateProgramConfiguration(supplement).map((issue) => issue.code),
+        contains('supplement_not_generation'),
+      );
+    });
+
     test('recommendations are stable and never promote the supplement', () {
       const profile = UserProfile(
         goal: TrainingGoal.strength,
@@ -125,6 +203,17 @@ void main() {
         explainRecommendation(first.first),
         contains(first.first.program.name),
       );
+      final preferred = recommendPrograms(
+        const UserProfile(
+          goal: TrainingGoal.hypertrophy,
+          level: ExperienceLevel.beginner,
+          preferredGeneration: Generation.forever,
+          constraints: UserConstraints(daysPerWeek: 4, allowLegacy: true),
+        ),
+      );
+      expect(preferred, isNotEmpty);
+      expect(preferred.first.reasons, contains('Génération préférée'));
+      expect(preferred.first.tradeoffs, isNotEmpty);
     });
   });
 
@@ -190,6 +279,25 @@ void main() {
         () => deserializeProgram('{"schemaVersion":99}'),
         throwsFormatException,
       );
+      expect(explainGeneratedProgram(plan), contains('schéma 1'));
+    });
+
+    test('all executable imported templates resolve to a Core strategy', () {
+      final configurations = [
+        _configuration('BY-026', Generation.beyond, days: 3),
+        _configuration('FV-141', Generation.forever, days: 3, ratio: .85),
+        _configuration('FV-236', Generation.forever, days: 4),
+        _configuration(
+          'PL-001',
+          Generation.original,
+          days: 4,
+          powerliftingExtension: true,
+        ),
+      ];
+      for (final configuration in configurations) {
+        expect(validateProgramConfiguration(configuration), isEmpty);
+        expect(generateProgram(configuration).payload['blocks'], isNotEmpty);
+      }
     });
   });
 }
@@ -199,6 +307,7 @@ ProgramConfiguration _configuration(
   Generation generation, {
   required int days,
   double ratio = .9,
+  bool powerliftingExtension = false,
 }) {
   const weights = {
     MainLift.squat: 160.0,
@@ -222,6 +331,9 @@ ProgramConfiguration _configuration(
     daysPerWeek: days,
     trainingWeekdays: days == 3 ? const [1, 3, 5] : const [1, 2, 4, 5],
     roundingIncrement: 2.5,
+    options: GenerationSpecificOptions(
+      enablePowerliftingExtension: powerliftingExtension,
+    ),
     startDate: DateTime.utc(2026, 7, 20),
   );
 }

@@ -1,0 +1,35 @@
+{
+    "name": "Hybrid 5/3/1 — POC",
+    "short_name": "Hybrid 5/3/1",
+    "start_url": "/poc/531",
+    "display": "standalone",
+    "background_color": "#12110f",
+    "theme_color": "#e87820",
+    "description": "POC local du générateur Hybrid 5/3/1.",
+    "orientation": "any",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
