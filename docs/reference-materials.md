@@ -1,58 +1,17 @@
-# Matériaux de référence locaux
+# Reference materials
 
-Les références sont locales, non versionnées et en lecture seule. Sur ce poste,
-elles sont actuellement conservées dans :
+Reference materials are local, ignored and read-only. They are used only for
+rule verification, black-box evidence and historical design context.
 
-```text
-.SOURCE/
-```
+| Role | Status | Permitted use |
+| --- | --- | --- |
+| `531_Powerlifting.pdf` | Readable first book / original classic generation, as designated by the owner | Source only for explicitly attributable Powerlifting rules |
+| `Beyond_531_-_Jim_Wendler.pdf` | Readable second book | Source for Beyond revisions and comparisons |
+| `5-3-1-forever-simple-and-effective-programming-for-size-speed-and-strength-first-edition-high-powered-plyometrics.pdf` | Readable third book and primary application source | Source for reviewed Forever presets |
+| Original application captures/packages | Archived evidence | Black-box behavior only; never a business-rule source |
+| HTML prototypes | Archived design evidence | No active product implementation |
 
-Ce dossier contient notamment des captures, des PDF, un XAPK, ses APK divisés et
-une sortie APKTool. Il est explicitement ignoré par Git.
-
-## Structure cible acceptée
-
-Pour de futurs ajouts, la structure recommandée reste :
-
-```text
-reference/
-  legacy-app/
-    xapk/
-    extracted/
-  books/
-  captures/
-    screenshots/
-    videos/
-  imports/
-    legacy-json/
-```
-
-`reference/` est également ignoré par Git. La migration physique de `.SOURCE/`
-vers cette structure n'est pas requise pour Base0 et ne doit pas être faite sans
-accord du propriétaire.
-
-## Règles impératives
-
-- Ne jamais commiter un PDF, XAPK, APK, fichier décompilé, certificat, capture
-  personnelle, vidéo ou export JSON réel.
-- Ne jamais modifier les fichiers décompilés ou les binaires historiques.
-- Ne jamais copier du code décompilé dans le nouveau projet.
-- Ne jamais récupérer de clé, secret, configuration Firebase, identifiant de
-  facturation ou signature depuis l'ancienne application.
-- Ne jamais reprendre une icône, un logo, une illustration ou une police sans
-  licence confirmée.
-- Conserver tout export utilisateur réel intact et hors de Git.
-
-## Utilisation permise
-
-Les références peuvent servir à relever les comportements observables, la
-navigation, les champs, les validations, les formats de données et les règles de
-calcul vérifiées indépendamment. Les livres peuvent être synthétisés sous forme de
-spécifications structurées sans reproduction substantielle de leur prose.
-
-## Éléments encore nécessaires
-
-- un export JSON historique réel et anonymisé ;
-- la confirmation des captures faisant autorité pour chaque écran ;
-- la confirmation des licences de toute ressource graphique ou typographique que
-  le propriétaire souhaiterait réutiliser.
+Powerlifting contains historical material but remains a distinct bibliographic
+revision. Ambiguous attribution to Original/Classic is marked `NEEDS_REVIEW`.
+No protected text, local personal path, key, signature, certificate or asset is
+copied into the repository.
