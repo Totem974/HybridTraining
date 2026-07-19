@@ -5,7 +5,28 @@
 - Starting branch head: `6ee747a`.
 - Branch: `rebuild/forever-engine-core-20260719`.
 - Remote: `GitHub`; GiTea remained unused.
+- Branch URL: https://github.com/Totem974/HybridTraining/tree/rebuild/forever-engine-core-20260719
 - Final branch SHA is reported in the release handoff after the report commit.
+
+## Commit inventory
+
+- `cb9318d` — establish the Core v5 repository contract.
+- `f6afd78` — add the additive Core v5 persistence schema.
+- `39ef362` — migrate native backups to schema v5.
+- `3b46393` — generalize the canonical Core domain.
+- `1c6b441` — add canonical Powerlifting and Beyond generation.
+- `b0ea1a1` — persist canonical generated plans.
+- `86d44e4` — implement Forever and executable BPS plans.
+- `9a0ce5d` — unify generic workout activity execution.
+- `0d8fc70` — add future-safe plan amendments and lifecycle.
+- `4a3ecf6` — add four canonical Core v5 plan goldens.
+- `6d6e0a5` — consolidate canonical plan execution.
+- `1bad836` — publish concise Core v5 contracts and archive old docs.
+- `df91a7d` — publish the initial release validation report and driver.
+- `5f42827` — pass the corrected full Core flow on Android 13.
+
+The final documentation-only publication commit and exact terminal SHA are
+necessarily reported by the Git handoff after this file is committed.
 
 ## Delivered architecture
 
@@ -50,6 +71,12 @@ documentation set. Eighty-six historical files moved to
 `docs/archive/legacy-2026-07-19/`. No PDFs, `.SOURCE/` files, protected assets,
 decompiled code, secrets, screenshots, or personal data were added. The POC and
 product onboarding were not integrated; PROD exposes no fixture/demo action.
+
+No source or migration data was deleted. Superseded active documentation was
+moved, not discarded. V1–v4 tables, backup readers, legacy identifiers, catalog
+adapters, and runtime adapters were retained strictly for migration/restore
+compatibility. New plan creation, selection, persistence, and execution use the
+canonical v5 paths.
 
 ## Verification results
 
