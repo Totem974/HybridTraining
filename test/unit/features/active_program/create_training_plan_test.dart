@@ -130,6 +130,7 @@ void main() {
       expect(reopened['ruleset_generation'], 'beyond');
       expect(reopened['trainingMaxTimeline'], hasLength(8));
       expect(reopened['plannedEvents'], hasLength(8));
+      expect(reopened['transitions'], hasLength(2));
       final reopenedBlocks = reopened['blocks']! as List<Map<String, Object?>>;
       final reopenedActivities = reopenedBlocks
           .expand(
@@ -263,6 +264,7 @@ void main() {
       expect(await database.query('activity_prescriptions'), hasLength(260));
       expect(reopened['trainingMaxTimeline'], hasLength(16));
       expect(reopened['plannedEvents'], hasLength(16));
+      expect(reopened['transitions'], hasLength(4));
     },
   );
 }

@@ -236,6 +236,35 @@ class CanonicalGeneratedPlan {
   List<CanonicalProgrammingWeek> get weeks =>
       blocks.expand((block) => block.weeks).toList(growable: false);
 
+  List<Map<String, Object?>> get transitions => [
+    for (var index = 1; index < blocks.length; index++)
+      {
+        'id': 'transition-${index - 1}-$index',
+        'sequence': index - 1,
+        'fromBlockId': blocks[index - 1].id,
+        'toBlockId': blocks[index].id,
+        'transitionType':
+            '${blocks[index - 1].role.name}To${blocks[index].role.name}',
+        'ruleId': blocks[index].source.document,
+        'source': _sourceJson(blocks[index].source),
+      },
+  ];
+
+  List<Map<String, Object?>> get plannedEvents => [
+    for (final decision in trainingMaxTimeline)
+      {
+        'id': 'event-${decision.id}',
+        'sequence': decision.sequence,
+        'eventType': decision.afterProgrammingWeek == 11
+            ? 'trainingMaxTest'
+            : 'trainingMaxDecision',
+        'programmingWeekNumber': decision.afterProgrammingWeek,
+        'payload': decision.toJson(),
+        'ruleId': decision.source.document,
+        'source': _sourceJson(decision.source),
+      },
+  ];
+
   Map<String, Object?> toJson() => {
     'schemaVersion': schemaVersion,
     'blueprintId': blueprintId.value,
@@ -248,6 +277,8 @@ class CanonicalGeneratedPlan {
     'trainingMaxTimeline': trainingMaxTimeline
         .map((decision) => decision.toJson())
         .toList(),
+    'transitions': transitions,
+    'plannedEvents': plannedEvents,
   };
 }
 

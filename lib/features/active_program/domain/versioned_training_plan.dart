@@ -19,6 +19,7 @@ class VersionedTrainingPlan {
     this.generation,
     this.trainingMaxTimeline = const [],
     this.plannedEvents = const [],
+    this.transitions = const [],
   }) {
     if (blueprintVersion <= 0 || macrocycle <= 0 || blocks.isEmpty) {
       throw ArgumentError('A versioned plan requires a version and blocks.');
@@ -100,6 +101,18 @@ class VersionedTrainingPlan {
             'payload': eventEntry.$2.toJson(),
             'ruleId': eventEntry.$2.rule.document,
             'source': ruleJson(eventEntry.$2.rule),
+          },
+      ],
+      transitions: [
+        for (final transitionEntry in generated.transitions.indexed)
+          {
+            'id': '$id-transition-${transitionEntry.$1}',
+            'sequence': transitionEntry.$1,
+            'fromBlockId': '$id-${transitionEntry.$2.fromBlockId}',
+            'toBlockId': '$id-${transitionEntry.$2.toBlockId}',
+            'transitionType': 'generated',
+            'ruleId': transitionEntry.$2.rule.document,
+            'source': ruleJson(transitionEntry.$2.rule),
           },
       ],
       blocks: [
@@ -306,15 +319,16 @@ class VersionedTrainingPlan {
         for (final decision in generated.trainingMaxTimeline) decision.toJson(),
       ],
       plannedEvents: [
-        for (final decision in generated.trainingMaxTimeline)
+        for (final event in generated.plannedEvents)
+          {...event, 'id': '$id-${event['id']}'},
+      ],
+      transitions: [
+        for (final transition in generated.transitions)
           {
-            'id': '$id-event-${decision.sequence}',
-            'sequence': decision.sequence,
-            'eventType': 'trainingMaxDecision',
-            'programmingWeekNumber': decision.afterProgrammingWeek,
-            'payload': decision.toJson(),
-            'ruleId': 'TM-${decision.afterProgrammingWeek}',
-            'source': sourceJson(decision.source),
+            ...transition,
+            'id': '$id-${transition['id']}',
+            'fromBlockId': '$id-${transition['fromBlockId']}',
+            'toBlockId': '$id-${transition['toBlockId']}',
           },
       ],
       blocks: [
@@ -337,6 +351,7 @@ class VersionedTrainingPlan {
   final MethodGeneration? generation;
   final List<Map<String, Object?>> trainingMaxTimeline;
   final List<Map<String, Object?>> plannedEvents;
+  final List<Map<String, Object?>> transitions;
 }
 
 class PlannedTrainingBlock {

@@ -1,0 +1,2441 @@
+{
+  "schemaVersion": 5,
+  "blueprintId": "beyond-six-week-cycle-v1",
+  "blueprintVersion": 1,
+  "sourceEdition": "beyond",
+  "generation": "beyond",
+  "unit": "kilograms",
+  "awaitingTrainingMaxConfirmation": true,
+  "blocks": [
+    {
+      "id": "beyond-cycle-1",
+      "type": "cycle",
+      "role": "beyondCycle",
+      "sourceEdition": "beyond",
+      "generation": "beyond",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF pages 9, 11-12"
+      },
+      "seventhWeekPurpose": null,
+      "weeks": [
+        {
+          "number": 1,
+          "cycleNumber": 1,
+          "sessions": [
+            {
+              "id": "session-1",
+              "position": 0,
+              "date": "2026-07-20",
+              "movementId": "barbell.back-squat",
+              "prescriptions": [
+                {
+                  "id": "session-1:set-1",
+                  "position": 0,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.65,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 65.0,
+                  "unroundedLoad": 65.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-1:set-2",
+                  "position": 1,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 75.0,
+                  "unroundedLoad": 75.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-1:set-3",
+                  "position": 2,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W1-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 85.0,
+                  "unroundedLoad": 85.0,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-2",
+              "position": 1,
+              "date": "2026-07-21",
+              "movementId": "barbell.bench-press",
+              "prescriptions": [
+                {
+                  "id": "session-2:set-1",
+                  "position": 0,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.65,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 52.5,
+                  "unroundedLoad": 52.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-2:set-2",
+                  "position": 1,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 60.0,
+                  "unroundedLoad": 60.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-2:set-3",
+                  "position": 2,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W1-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 67.5,
+                  "unroundedLoad": 68.0,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-3",
+              "position": 2,
+              "date": "2026-07-23",
+              "movementId": "barbell.deadlift",
+              "prescriptions": [
+                {
+                  "id": "session-3:set-1",
+                  "position": 0,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.65,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 77.5,
+                  "unroundedLoad": 78.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-3:set-2",
+                  "position": 1,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 90.0,
+                  "unroundedLoad": 90.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-3:set-3",
+                  "position": 2,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W1-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 102.5,
+                  "unroundedLoad": 102.0,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-4",
+              "position": 3,
+              "date": "2026-07-24",
+              "movementId": "barbell.overhead-press",
+              "prescriptions": [
+                {
+                  "id": "session-4:set-1",
+                  "position": 0,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.65,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 40.0,
+                  "unroundedLoad": 39.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-4:set-2",
+                  "position": 1,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 45.0,
+                  "unroundedLoad": 45.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-4:set-3",
+                  "position": 2,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W1-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 50.0,
+                  "unroundedLoad": 51.0,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "cycleNumber": 1,
+          "sessions": [
+            {
+              "id": "session-5",
+              "position": 0,
+              "date": "2026-07-27",
+              "movementId": "barbell.back-squat",
+              "prescriptions": [
+                {
+                  "id": "session-5:set-1",
+                  "position": 0,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.7,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 70.0,
+                  "unroundedLoad": 70.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-5:set-2",
+                  "position": 1,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.8,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 80.0,
+                  "unroundedLoad": 80.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-5:set-3",
+                  "position": 2,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.9,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W2-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 90.0,
+                  "unroundedLoad": 90.0,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-6",
+              "position": 1,
+              "date": "2026-07-28",
+              "movementId": "barbell.bench-press",
+              "prescriptions": [
+                {
+                  "id": "session-6:set-1",
+                  "position": 0,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.7,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 55.0,
+                  "unroundedLoad": 56.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-6:set-2",
+                  "position": 1,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.8,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 65.0,
+                  "unroundedLoad": 64.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-6:set-3",
+                  "position": 2,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.9,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W2-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 72.5,
+                  "unroundedLoad": 72.0,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-7",
+              "position": 2,
+              "date": "2026-07-30",
+              "movementId": "barbell.deadlift",
+              "prescriptions": [
+                {
+                  "id": "session-7:set-1",
+                  "position": 0,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.7,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 85.0,
+                  "unroundedLoad": 84.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-7:set-2",
+                  "position": 1,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.8,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 95.0,
+                  "unroundedLoad": 96.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-7:set-3",
+                  "position": 2,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.9,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W2-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 107.5,
+                  "unroundedLoad": 108.0,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-8",
+              "position": 3,
+              "date": "2026-07-31",
+              "movementId": "barbell.overhead-press",
+              "prescriptions": [
+                {
+                  "id": "session-8:set-1",
+                  "position": 0,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.7,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 42.5,
+                  "unroundedLoad": 42.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-8:set-2",
+                  "position": 1,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.8,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 47.5,
+                  "unroundedLoad": 48.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-8:set-3",
+                  "position": 2,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.9,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W2-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 55.0,
+                  "unroundedLoad": 54.0,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "number": 3,
+          "cycleNumber": 1,
+          "sessions": [
+            {
+              "id": "session-9",
+              "position": 0,
+              "date": "2026-08-03",
+              "movementId": "barbell.back-squat",
+              "prescriptions": [
+                {
+                  "id": "session-9:set-1",
+                  "position": 0,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 75.0,
+                  "unroundedLoad": 75.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-9:set-2",
+                  "position": 1,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 85.0,
+                  "unroundedLoad": 85.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-9:set-3",
+                  "position": 2,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.95,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 1,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W3-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 95.0,
+                  "unroundedLoad": 95.0,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-10",
+              "position": 1,
+              "date": "2026-08-04",
+              "movementId": "barbell.bench-press",
+              "prescriptions": [
+                {
+                  "id": "session-10:set-1",
+                  "position": 0,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 60.0,
+                  "unroundedLoad": 60.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-10:set-2",
+                  "position": 1,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 67.5,
+                  "unroundedLoad": 68.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-10:set-3",
+                  "position": 2,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.95,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 1,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W3-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 75.0,
+                  "unroundedLoad": 76.0,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-11",
+              "position": 2,
+              "date": "2026-08-06",
+              "movementId": "barbell.deadlift",
+              "prescriptions": [
+                {
+                  "id": "session-11:set-1",
+                  "position": 0,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 90.0,
+                  "unroundedLoad": 90.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-11:set-2",
+                  "position": 1,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 102.5,
+                  "unroundedLoad": 102.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-11:set-3",
+                  "position": 2,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.95,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 1,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W3-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 115.0,
+                  "unroundedLoad": 114.0,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-12",
+              "position": 3,
+              "date": "2026-08-07",
+              "movementId": "barbell.overhead-press",
+              "prescriptions": [
+                {
+                  "id": "session-12:set-1",
+                  "position": 0,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 45.0,
+                  "unroundedLoad": 45.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-12:set-2",
+                  "position": 1,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 50.0,
+                  "unroundedLoad": 51.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-12:set-3",
+                  "position": 2,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.95,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 1,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W3-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 57.5,
+                  "unroundedLoad": 57.0,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "beyond-cycle-2",
+      "type": "cycle",
+      "role": "beyondCycle",
+      "sourceEdition": "beyond",
+      "generation": "beyond",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF pages 9, 11-12"
+      },
+      "seventhWeekPurpose": null,
+      "weeks": [
+        {
+          "number": 4,
+          "cycleNumber": 2,
+          "sessions": [
+            {
+              "id": "session-13",
+              "position": 0,
+              "date": "2026-08-10",
+              "movementId": "barbell.back-squat",
+              "prescriptions": [
+                {
+                  "id": "session-13:set-1",
+                  "position": 0,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.65,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 67.5,
+                  "unroundedLoad": 68.25,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-13:set-2",
+                  "position": 1,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 80.0,
+                  "unroundedLoad": 78.75,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-13:set-3",
+                  "position": 2,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W1-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 90.0,
+                  "unroundedLoad": 89.25,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-14",
+              "position": 1,
+              "date": "2026-08-11",
+              "movementId": "barbell.bench-press",
+              "prescriptions": [
+                {
+                  "id": "session-14:set-1",
+                  "position": 0,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.65,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 52.5,
+                  "unroundedLoad": 53.625,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-14:set-2",
+                  "position": 1,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 62.5,
+                  "unroundedLoad": 61.875,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-14:set-3",
+                  "position": 2,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W1-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 70.0,
+                  "unroundedLoad": 70.125,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-15",
+              "position": 2,
+              "date": "2026-08-13",
+              "movementId": "barbell.deadlift",
+              "prescriptions": [
+                {
+                  "id": "session-15:set-1",
+                  "position": 0,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.65,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 82.5,
+                  "unroundedLoad": 81.25,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-15:set-2",
+                  "position": 1,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 95.0,
+                  "unroundedLoad": 93.75,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-15:set-3",
+                  "position": 2,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W1-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 107.5,
+                  "unroundedLoad": 106.25,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-16",
+              "position": 3,
+              "date": "2026-08-14",
+              "movementId": "barbell.overhead-press",
+              "prescriptions": [
+                {
+                  "id": "session-16:set-1",
+                  "position": 0,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.65,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 40.0,
+                  "unroundedLoad": 40.625,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-16:set-2",
+                  "position": 1,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W1-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 47.5,
+                  "unroundedLoad": 46.875,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-16:set-3",
+                  "position": 2,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W1-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 52.5,
+                  "unroundedLoad": 53.125,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "number": 5,
+          "cycleNumber": 2,
+          "sessions": [
+            {
+              "id": "session-17",
+              "position": 0,
+              "date": "2026-08-17",
+              "movementId": "barbell.back-squat",
+              "prescriptions": [
+                {
+                  "id": "session-17:set-1",
+                  "position": 0,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.7,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 72.5,
+                  "unroundedLoad": 73.5,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-17:set-2",
+                  "position": 1,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.8,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 85.0,
+                  "unroundedLoad": 84.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-17:set-3",
+                  "position": 2,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.9,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W2-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 95.0,
+                  "unroundedLoad": 94.5,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-18",
+              "position": 1,
+              "date": "2026-08-18",
+              "movementId": "barbell.bench-press",
+              "prescriptions": [
+                {
+                  "id": "session-18:set-1",
+                  "position": 0,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.7,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 57.5,
+                  "unroundedLoad": 57.74999999999999,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-18:set-2",
+                  "position": 1,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.8,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 65.0,
+                  "unroundedLoad": 66.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-18:set-3",
+                  "position": 2,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.9,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W2-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 75.0,
+                  "unroundedLoad": 74.25,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-19",
+              "position": 2,
+              "date": "2026-08-20",
+              "movementId": "barbell.deadlift",
+              "prescriptions": [
+                {
+                  "id": "session-19:set-1",
+                  "position": 0,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.7,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 87.5,
+                  "unroundedLoad": 87.5,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-19:set-2",
+                  "position": 1,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.8,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 100.0,
+                  "unroundedLoad": 100.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-19:set-3",
+                  "position": 2,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.9,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W2-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 112.5,
+                  "unroundedLoad": 112.5,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-20",
+              "position": 3,
+              "date": "2026-08-21",
+              "movementId": "barbell.overhead-press",
+              "prescriptions": [
+                {
+                  "id": "session-20:set-1",
+                  "position": 0,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.7,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 45.0,
+                  "unroundedLoad": 43.75,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-20:set-2",
+                  "position": 1,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.8,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W2-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 50.0,
+                  "unroundedLoad": 50.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-20:set-3",
+                  "position": 2,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.9,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W2-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 57.5,
+                  "unroundedLoad": 56.25,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "number": 6,
+          "cycleNumber": 2,
+          "sessions": [
+            {
+              "id": "session-21",
+              "position": 0,
+              "date": "2026-08-24",
+              "movementId": "barbell.back-squat",
+              "prescriptions": [
+                {
+                  "id": "session-21:set-1",
+                  "position": 0,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 80.0,
+                  "unroundedLoad": 78.75,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-21:set-2",
+                  "position": 1,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 90.0,
+                  "unroundedLoad": 89.25,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-21:set-3",
+                  "position": 2,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.95,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 1,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W3-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 100.0,
+                  "unroundedLoad": 99.75,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-22",
+              "position": 1,
+              "date": "2026-08-25",
+              "movementId": "barbell.bench-press",
+              "prescriptions": [
+                {
+                  "id": "session-22:set-1",
+                  "position": 0,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 62.5,
+                  "unroundedLoad": 61.875,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-22:set-2",
+                  "position": 1,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 70.0,
+                  "unroundedLoad": 70.125,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-22:set-3",
+                  "position": 2,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.95,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 1,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W3-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 77.5,
+                  "unroundedLoad": 78.375,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-23",
+              "position": 2,
+              "date": "2026-08-27",
+              "movementId": "barbell.deadlift",
+              "prescriptions": [
+                {
+                  "id": "session-23:set-1",
+                  "position": 0,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 95.0,
+                  "unroundedLoad": 93.75,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-23:set-2",
+                  "position": 1,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 107.5,
+                  "unroundedLoad": 106.25,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-23:set-3",
+                  "position": 2,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.95,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 1,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W3-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 120.0,
+                  "unroundedLoad": 118.75,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-24",
+              "position": 3,
+              "date": "2026-08-28",
+              "movementId": "barbell.overhead-press",
+              "prescriptions": [
+                {
+                  "id": "session-24:set-1",
+                  "position": 0,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.75,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 47.5,
+                  "unroundedLoad": 46.875,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-24:set-2",
+                  "position": 1,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.85,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 3,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-531-W3-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 52.5,
+                  "unroundedLoad": 53.125,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-24:set-3",
+                  "position": 2,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.95,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 1,
+                  "kind": "performanceSet",
+                  "ruleId": "POWERLIFTING-531-W3-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF page 11"
+                  },
+                  "calculatedLoad": 60.0,
+                  "unroundedLoad": 59.375,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "beyond-deload-1",
+      "type": "deload",
+      "role": "deload",
+      "sourceEdition": "beyond",
+      "generation": "beyond",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 12"
+      },
+      "seventhWeekPurpose": null,
+      "weeks": [
+        {
+          "number": 7,
+          "cycleNumber": 2,
+          "sessions": [
+            {
+              "id": "session-25",
+              "position": 0,
+              "date": "2026-08-31",
+              "movementId": "barbell.back-squat",
+              "prescriptions": [
+                {
+                  "id": "session-25:set-1",
+                  "position": 0,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.4,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-DELOAD-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF pages 11 and 13"
+                  },
+                  "calculatedLoad": 42.5,
+                  "unroundedLoad": 42.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-25:set-2",
+                  "position": 1,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.5,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-DELOAD-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF pages 11 and 13"
+                  },
+                  "calculatedLoad": 52.5,
+                  "unroundedLoad": 52.5,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-25:set-3",
+                  "position": 2,
+                  "activityId": "barbell.back-squat",
+                  "movementId": "barbell.back-squat",
+                  "percentage": 0.6,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-DELOAD-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF pages 11 and 13"
+                  },
+                  "calculatedLoad": 62.5,
+                  "unroundedLoad": 63.0,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-26",
+              "position": 1,
+              "date": "2026-09-01",
+              "movementId": "barbell.bench-press",
+              "prescriptions": [
+                {
+                  "id": "session-26:set-1",
+                  "position": 0,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.4,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-DELOAD-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF pages 11 and 13"
+                  },
+                  "calculatedLoad": 32.5,
+                  "unroundedLoad": 33.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-26:set-2",
+                  "position": 1,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.5,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-DELOAD-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF pages 11 and 13"
+                  },
+                  "calculatedLoad": 42.5,
+                  "unroundedLoad": 41.25,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-26:set-3",
+                  "position": 2,
+                  "activityId": "barbell.bench-press",
+                  "movementId": "barbell.bench-press",
+                  "percentage": 0.6,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-DELOAD-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF pages 11 and 13"
+                  },
+                  "calculatedLoad": 50.0,
+                  "unroundedLoad": 49.5,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-27",
+              "position": 2,
+              "date": "2026-09-03",
+              "movementId": "barbell.deadlift",
+              "prescriptions": [
+                {
+                  "id": "session-27:set-1",
+                  "position": 0,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.4,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-DELOAD-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF pages 11 and 13"
+                  },
+                  "calculatedLoad": 50.0,
+                  "unroundedLoad": 50.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-27:set-2",
+                  "position": 1,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.5,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-DELOAD-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF pages 11 and 13"
+                  },
+                  "calculatedLoad": 62.5,
+                  "unroundedLoad": 62.5,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-27:set-3",
+                  "position": 2,
+                  "activityId": "barbell.deadlift",
+                  "movementId": "barbell.deadlift",
+                  "percentage": 0.6,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-DELOAD-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF pages 11 and 13"
+                  },
+                  "calculatedLoad": 75.0,
+                  "unroundedLoad": 75.0,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            },
+            {
+              "id": "session-28",
+              "position": 3,
+              "date": "2026-09-04",
+              "movementId": "barbell.overhead-press",
+              "prescriptions": [
+                {
+                  "id": "session-28:set-1",
+                  "position": 0,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.4,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-DELOAD-S1",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF pages 11 and 13"
+                  },
+                  "calculatedLoad": 25.0,
+                  "unroundedLoad": 25.0,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-28:set-2",
+                  "position": 1,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.5,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-DELOAD-S2",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF pages 11 and 13"
+                  },
+                  "calculatedLoad": 32.5,
+                  "unroundedLoad": 31.25,
+                  "roundingIncrement": 2.5
+                },
+                {
+                  "id": "session-28:set-3",
+                  "position": 2,
+                  "activityId": "barbell.overhead-press",
+                  "movementId": "barbell.overhead-press",
+                  "percentage": 0.6,
+                  "targetType": "setsRepetitionsLoad",
+                  "sets": 1,
+                  "repetitionsPerSet": 5,
+                  "kind": "mainWork",
+                  "ruleId": "POWERLIFTING-DELOAD-S3",
+                  "sourceEdition": "beyond",
+                  "generation": "beyond",
+                  "source": {
+                    "document": "5/3/1 for Powerlifting",
+                    "location": "PDF pages 11 and 13"
+                  },
+                  "calculatedLoad": 37.5,
+                  "unroundedLoad": 37.5,
+                  "roundingIncrement": 2.5
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "trainingMaxTimeline": [
+    {
+      "id": "tm-week-3-barbell.back-squat",
+      "sequence": 0,
+      "movementId": "barbell.back-squat",
+      "afterProgrammingWeek": 3,
+      "previousTrainingMax": 100.0,
+      "proposedTrainingMax": 105.0,
+      "confirmedTrainingMax": 105.0,
+      "state": "confirmed",
+      "reason": "Source-defined end-of-cycle training max progression.",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 11"
+      }
+    },
+    {
+      "id": "tm-week-3-barbell.bench-press",
+      "sequence": 1,
+      "movementId": "barbell.bench-press",
+      "afterProgrammingWeek": 3,
+      "previousTrainingMax": 80.0,
+      "proposedTrainingMax": 82.5,
+      "confirmedTrainingMax": 82.5,
+      "state": "confirmed",
+      "reason": "Source-defined end-of-cycle training max progression.",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 11"
+      }
+    },
+    {
+      "id": "tm-week-3-barbell.deadlift",
+      "sequence": 2,
+      "movementId": "barbell.deadlift",
+      "afterProgrammingWeek": 3,
+      "previousTrainingMax": 120.0,
+      "proposedTrainingMax": 125.0,
+      "confirmedTrainingMax": 125.0,
+      "state": "confirmed",
+      "reason": "Source-defined end-of-cycle training max progression.",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 11"
+      }
+    },
+    {
+      "id": "tm-week-3-barbell.overhead-press",
+      "sequence": 3,
+      "movementId": "barbell.overhead-press",
+      "afterProgrammingWeek": 3,
+      "previousTrainingMax": 60.0,
+      "proposedTrainingMax": 62.5,
+      "confirmedTrainingMax": 62.5,
+      "state": "confirmed",
+      "reason": "Source-defined end-of-cycle training max progression.",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 11"
+      }
+    },
+    {
+      "id": "tm-week-7-barbell.back-squat",
+      "sequence": 4,
+      "movementId": "barbell.back-squat",
+      "afterProgrammingWeek": 7,
+      "previousTrainingMax": 105.0,
+      "proposedTrainingMax": 110.0,
+      "confirmedTrainingMax": null,
+      "state": "previewed",
+      "reason": "Source-defined end-of-cycle training max progression.",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 12"
+      }
+    },
+    {
+      "id": "tm-week-7-barbell.bench-press",
+      "sequence": 5,
+      "movementId": "barbell.bench-press",
+      "afterProgrammingWeek": 7,
+      "previousTrainingMax": 82.5,
+      "proposedTrainingMax": 85.0,
+      "confirmedTrainingMax": null,
+      "state": "previewed",
+      "reason": "Source-defined end-of-cycle training max progression.",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 12"
+      }
+    },
+    {
+      "id": "tm-week-7-barbell.deadlift",
+      "sequence": 6,
+      "movementId": "barbell.deadlift",
+      "afterProgrammingWeek": 7,
+      "previousTrainingMax": 125.0,
+      "proposedTrainingMax": 130.0,
+      "confirmedTrainingMax": null,
+      "state": "previewed",
+      "reason": "Source-defined end-of-cycle training max progression.",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 12"
+      }
+    },
+    {
+      "id": "tm-week-7-barbell.overhead-press",
+      "sequence": 7,
+      "movementId": "barbell.overhead-press",
+      "afterProgrammingWeek": 7,
+      "previousTrainingMax": 62.5,
+      "proposedTrainingMax": 65.0,
+      "confirmedTrainingMax": null,
+      "state": "previewed",
+      "reason": "Source-defined end-of-cycle training max progression.",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 12"
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "id": "transition-0-1",
+      "sequence": 0,
+      "fromBlockId": "beyond-cycle-1",
+      "toBlockId": "beyond-cycle-2",
+      "transitionType": "beyondCycleTobeyondCycle",
+      "ruleId": "Beyond 5/3/1",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF pages 9, 11-12"
+      }
+    },
+    {
+      "id": "transition-1-2",
+      "sequence": 1,
+      "fromBlockId": "beyond-cycle-2",
+      "toBlockId": "beyond-deload-1",
+      "transitionType": "beyondCycleTodeload",
+      "ruleId": "Beyond 5/3/1",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 12"
+      }
+    }
+  ],
+  "plannedEvents": [
+    {
+      "id": "event-tm-week-3-barbell.back-squat",
+      "sequence": 0,
+      "eventType": "trainingMaxDecision",
+      "programmingWeekNumber": 3,
+      "payload": {
+        "id": "tm-week-3-barbell.back-squat",
+        "sequence": 0,
+        "movementId": "barbell.back-squat",
+        "afterProgrammingWeek": 3,
+        "previousTrainingMax": 100.0,
+        "proposedTrainingMax": 105.0,
+        "confirmedTrainingMax": 105.0,
+        "state": "confirmed",
+        "reason": "Source-defined end-of-cycle training max progression.",
+        "source": {
+          "document": "Beyond 5/3/1",
+          "location": "PDF page 11"
+        }
+      },
+      "ruleId": "Beyond 5/3/1",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 11"
+      }
+    },
+    {
+      "id": "event-tm-week-3-barbell.bench-press",
+      "sequence": 1,
+      "eventType": "trainingMaxDecision",
+      "programmingWeekNumber": 3,
+      "payload": {
+        "id": "tm-week-3-barbell.bench-press",
+        "sequence": 1,
+        "movementId": "barbell.bench-press",
+        "afterProgrammingWeek": 3,
+        "previousTrainingMax": 80.0,
+        "proposedTrainingMax": 82.5,
+        "confirmedTrainingMax": 82.5,
+        "state": "confirmed",
+        "reason": "Source-defined end-of-cycle training max progression.",
+        "source": {
+          "document": "Beyond 5/3/1",
+          "location": "PDF page 11"
+        }
+      },
+      "ruleId": "Beyond 5/3/1",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 11"
+      }
+    },
+    {
+      "id": "event-tm-week-3-barbell.deadlift",
+      "sequence": 2,
+      "eventType": "trainingMaxDecision",
+      "programmingWeekNumber": 3,
+      "payload": {
+        "id": "tm-week-3-barbell.deadlift",
+        "sequence": 2,
+        "movementId": "barbell.deadlift",
+        "afterProgrammingWeek": 3,
+        "previousTrainingMax": 120.0,
+        "proposedTrainingMax": 125.0,
+        "confirmedTrainingMax": 125.0,
+        "state": "confirmed",
+        "reason": "Source-defined end-of-cycle training max progression.",
+        "source": {
+          "document": "Beyond 5/3/1",
+          "location": "PDF page 11"
+        }
+      },
+      "ruleId": "Beyond 5/3/1",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 11"
+      }
+    },
+    {
+      "id": "event-tm-week-3-barbell.overhead-press",
+      "sequence": 3,
+      "eventType": "trainingMaxDecision",
+      "programmingWeekNumber": 3,
+      "payload": {
+        "id": "tm-week-3-barbell.overhead-press",
+        "sequence": 3,
+        "movementId": "barbell.overhead-press",
+        "afterProgrammingWeek": 3,
+        "previousTrainingMax": 60.0,
+        "proposedTrainingMax": 62.5,
+        "confirmedTrainingMax": 62.5,
+        "state": "confirmed",
+        "reason": "Source-defined end-of-cycle training max progression.",
+        "source": {
+          "document": "Beyond 5/3/1",
+          "location": "PDF page 11"
+        }
+      },
+      "ruleId": "Beyond 5/3/1",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 11"
+      }
+    },
+    {
+      "id": "event-tm-week-7-barbell.back-squat",
+      "sequence": 4,
+      "eventType": "trainingMaxDecision",
+      "programmingWeekNumber": 7,
+      "payload": {
+        "id": "tm-week-7-barbell.back-squat",
+        "sequence": 4,
+        "movementId": "barbell.back-squat",
+        "afterProgrammingWeek": 7,
+        "previousTrainingMax": 105.0,
+        "proposedTrainingMax": 110.0,
+        "confirmedTrainingMax": null,
+        "state": "previewed",
+        "reason": "Source-defined end-of-cycle training max progression.",
+        "source": {
+          "document": "Beyond 5/3/1",
+          "location": "PDF page 12"
+        }
+      },
+      "ruleId": "Beyond 5/3/1",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 12"
+      }
+    },
+    {
+      "id": "event-tm-week-7-barbell.bench-press",
+      "sequence": 5,
+      "eventType": "trainingMaxDecision",
+      "programmingWeekNumber": 7,
+      "payload": {
+        "id": "tm-week-7-barbell.bench-press",
+        "sequence": 5,
+        "movementId": "barbell.bench-press",
+        "afterProgrammingWeek": 7,
+        "previousTrainingMax": 82.5,
+        "proposedTrainingMax": 85.0,
+        "confirmedTrainingMax": null,
+        "state": "previewed",
+        "reason": "Source-defined end-of-cycle training max progression.",
+        "source": {
+          "document": "Beyond 5/3/1",
+          "location": "PDF page 12"
+        }
+      },
+      "ruleId": "Beyond 5/3/1",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 12"
+      }
+    },
+    {
+      "id": "event-tm-week-7-barbell.deadlift",
+      "sequence": 6,
+      "eventType": "trainingMaxDecision",
+      "programmingWeekNumber": 7,
+      "payload": {
+        "id": "tm-week-7-barbell.deadlift",
+        "sequence": 6,
+        "movementId": "barbell.deadlift",
+        "afterProgrammingWeek": 7,
+        "previousTrainingMax": 125.0,
+        "proposedTrainingMax": 130.0,
+        "confirmedTrainingMax": null,
+        "state": "previewed",
+        "reason": "Source-defined end-of-cycle training max progression.",
+        "source": {
+          "document": "Beyond 5/3/1",
+          "location": "PDF page 12"
+        }
+      },
+      "ruleId": "Beyond 5/3/1",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 12"
+      }
+    },
+    {
+      "id": "event-tm-week-7-barbell.overhead-press",
+      "sequence": 7,
+      "eventType": "trainingMaxDecision",
+      "programmingWeekNumber": 7,
+      "payload": {
+        "id": "tm-week-7-barbell.overhead-press",
+        "sequence": 7,
+        "movementId": "barbell.overhead-press",
+        "afterProgrammingWeek": 7,
+        "previousTrainingMax": 62.5,
+        "proposedTrainingMax": 65.0,
+        "confirmedTrainingMax": null,
+        "state": "previewed",
+        "reason": "Source-defined end-of-cycle training max progression.",
+        "source": {
+          "document": "Beyond 5/3/1",
+          "location": "PDF page 12"
+        }
+      },
+      "ruleId": "Beyond 5/3/1",
+      "source": {
+        "document": "Beyond 5/3/1",
+        "location": "PDF page 12"
+      }
+    }
+  ]
+}

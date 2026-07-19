@@ -265,6 +265,18 @@ class SqliteVersionedPlanStore
         'source_reference_json': canonicalJson(event['source']),
       });
     }
+    for (final transition in plan.transitions) {
+      await tx.insert('plan_transitions_v5', {
+        'id': transition['id'],
+        'plan_id': plan.id,
+        'sequence': transition['sequence'],
+        'from_block_id': transition['fromBlockId'],
+        'to_block_id': transition['toBlockId'],
+        'transition_type': transition['transitionType'],
+        'rule_id': transition['ruleId'],
+        'source_reference_json': canonicalJson(transition['source']),
+      });
+    }
   }
 
   void _validateSwitchRequest(ProgramSwitchRequest request) {
@@ -506,6 +518,16 @@ class SqliteVersionedPlanStore
             'source': jsonDecode(row['source_reference_json']! as String),
           }
           ..remove('payload_json')
+          ..remove('source_reference_json'),
+    ];
+    result['transitions'] = [
+      for (final row in await database.query(
+        'plan_transitions_v5',
+        where: 'plan_id = ?',
+        whereArgs: [planId],
+        orderBy: 'sequence',
+      ))
+        {...row, 'source': jsonDecode(row['source_reference_json']! as String)}
           ..remove('source_reference_json'),
     ];
     return result;
