@@ -1,6 +1,7 @@
 import 'program_identity.dart';
+import 'v2/program_domain.dart' as canonical;
 
-enum ProgramEntryKind { program, component, protocol, preset, revision }
+typedef ProgramEntryKind = canonical.ProgramEntryKind;
 
 enum ProgramPhase { prep, leader, anchor, transition }
 
@@ -53,6 +54,13 @@ class ProgramLibraryEntry {
     this.presetId,
     this.revisionId,
     this.recommended = false,
+    this.sourceEdition,
+    this.references = const [],
+    this.generatorId,
+    this.blueprintVersion,
+    this.aliases = const {},
+    this.capabilities = const {},
+    this.restrictions = const {},
     this.summaryFr = '',
     this.summaryEn = '',
   });
@@ -81,7 +89,14 @@ class ProgramLibraryEntry {
        implementationStatus = null,
        presetId = null,
        revisionId = null,
-       recommended = false;
+       recommended = false,
+       sourceEdition = canonical.SourceEdition.forever,
+       references = const [],
+       generatorId = null,
+       blueprintVersion = null,
+       aliases = const {},
+       capabilities = const {},
+       restrictions = const {};
 
   final String id;
   final String conceptId;
@@ -104,6 +119,13 @@ class ProgramLibraryEntry {
   final String? presetId;
   final String? revisionId;
   final bool recommended;
+  final canonical.SourceEdition? sourceEdition;
+  final List<canonical.RuleReference> references;
+  final String? generatorId;
+  final int? blueprintVersion;
+  final Set<String> aliases;
+  final Set<canonical.ProgramCapability> capabilities;
+  final Set<String> restrictions;
   final String summaryFr;
   final String summaryEn;
 
@@ -111,7 +133,17 @@ class ProgramLibraryEntry {
       kind == ProgramEntryKind.preset &&
       presetId != null &&
       documentationStatus == ProgramValidationStatus.rulesReviewed &&
-      implementationStatus == ProgramImplementationStatus.productionReady;
+      implementationStatus == ProgramImplementationStatus.productionReady &&
+      sourceEdition != null &&
+      references.isNotEmpty &&
+      references.every(
+        (reference) =>
+            reference.document.trim().isNotEmpty &&
+            (reference.location?.trim().isNotEmpty ?? false),
+      ) &&
+      generatorId != null &&
+      generatorId!.isNotEmpty &&
+      (blueprintVersion ?? 0) > 0;
 }
 
 class ProgramFilter {
@@ -197,6 +229,14 @@ abstract interface class ProgramLibraryRepository {
   ProgramLibraryResult query(ProgramQuery query);
   ProgramLibraryEntry? findById(String id);
   List<ProgramLibraryEntry> presetsForConcept(String conceptId);
+  ProgramLibraryEntry? findByPresetId(String presetId);
+  ProgramLibraryValidation validate({Set<String> registeredGenerators});
+}
+
+class ProgramLibraryValidation {
+  const ProgramLibraryValidation(this.errors);
+  final List<String> errors;
+  bool get isValid => errors.isEmpty;
 }
 
 class InMemoryProgramLibraryRepository implements ProgramLibraryRepository {
@@ -256,6 +296,69 @@ class InMemoryProgramLibraryRepository implements ProgramLibraryRepository {
               entry.kind == ProgramEntryKind.preset,
         ),
       );
+
+  @override
+  ProgramLibraryEntry? findByPresetId(String presetId) {
+    for (final entry in entries) {
+      if (entry.presetId == presetId || entry.aliases.contains(presetId)) {
+        return entry;
+      }
+    }
+    return null;
+  }
+
+  @override
+  ProgramLibraryValidation validate({
+    Set<String> registeredGenerators = const {
+      'canonical-powerlifting',
+      'canonical-beyond',
+      'beginner-prep-school',
+    },
+  }) {
+    final errors = <String>[];
+    _duplicates(entries.map((entry) => entry.id), 'entry', errors);
+    _duplicates(
+      entries.map((entry) => entry.presetId).whereType<String>(),
+      'preset',
+      errors,
+    );
+    final aliases = <String>{};
+    for (final entry in entries) {
+      for (final alias in entry.aliases) {
+        if (!aliases.add(alias)) errors.add('Duplicate alias: $alias');
+      }
+      if (entry.frequencies.any(
+        (frequency) => frequency < 1 || frequency > 7,
+      )) {
+        errors.add('Invalid frequency: ${entry.id}');
+      }
+      if (entry.documentationStatus == ProgramValidationStatus.rulesReviewed &&
+          (entry.sourceEdition == null || entry.references.isEmpty)) {
+        errors.add('Reviewed entry without source: ${entry.id}');
+      }
+      if (entry.implementationStatus ==
+              ProgramImplementationStatus.productionReady &&
+          !entry.isExecutable) {
+        errors.add('Production entry is not executable: ${entry.id}');
+      }
+      if (entry.isExecutable &&
+          !registeredGenerators.contains(entry.generatorId)) {
+        errors.add('Missing generator: ${entry.id}');
+      }
+    }
+    return ProgramLibraryValidation(List.unmodifiable(errors));
+  }
+
+  static void _duplicates(
+    Iterable<String> values,
+    String kind,
+    List<String> errors,
+  ) {
+    final seen = <String>{};
+    for (final value in values) {
+      if (!seen.add(value)) errors.add('Duplicate $kind: $value');
+    }
+  }
 
   static int _compare(
     ProgramLibraryEntry a,
@@ -326,6 +429,73 @@ const _basicEquipment = {
 
 const canonicalProgramEntries = <ProgramLibraryEntry>[
   ProgramLibraryEntry(
+    id: 'preset-powerlifting-standard-531',
+    conceptId: 'standard-531',
+    titleFr: '5/3/1 Standard - Powerlifting',
+    titleEn: 'Standard 5/3/1 - Powerlifting',
+    kind: ProgramEntryKind.preset,
+    origin: MethodGeneration.original,
+    generation: MethodGeneration.powerlifting,
+    foreverStatus: ForeverStatus.unknown,
+    phases: {ProgramPhase.transition},
+    level: ProgramLevel.intermediate,
+    goals: {ProgramGoal.strength},
+    frequencies: {3, 4},
+    mainMovementsPerSession: 1,
+    equipment: _basicEquipment,
+    tmRange: ProgramTmRange(.90, .90),
+    documentationStatus: ProgramValidationStatus.rulesReviewed,
+    implementationStatus: ProgramImplementationStatus.productionReady,
+    complexity: 1,
+    presetId: 'powerlifting-standard-531-v1',
+    revisionId: 'powerlifting-standard-531-v1',
+    recommended: false,
+    sourceEdition: canonical.SourceEdition.powerlifting,
+    references: [
+      canonical.RuleReference(
+        document: '5/3/1 for Powerlifting',
+        location: 'PDF pages 10-16',
+      ),
+    ],
+    generatorId: 'canonical-powerlifting',
+    blueprintVersion: 1,
+    aliases: {'standard-531-v1'},
+    capabilities: {canonical.ProgramCapability.mainWork},
+  ),
+  ProgramLibraryEntry(
+    id: 'preset-beyond-six-week-cycle',
+    conceptId: 'beyond-six-week-cycle',
+    titleFr: 'Beyond - deux cycles et deload',
+    titleEn: 'Beyond - two cycles and deload',
+    kind: ProgramEntryKind.preset,
+    origin: MethodGeneration.beyond,
+    generation: MethodGeneration.beyond,
+    foreverStatus: ForeverStatus.unknown,
+    phases: {ProgramPhase.transition},
+    level: ProgramLevel.intermediate,
+    goals: {ProgramGoal.strength},
+    frequencies: {3, 4},
+    mainMovementsPerSession: 1,
+    equipment: _basicEquipment,
+    tmRange: ProgramTmRange(.85, .90),
+    documentationStatus: ProgramValidationStatus.rulesReviewed,
+    implementationStatus: ProgramImplementationStatus.productionReady,
+    complexity: 2,
+    presetId: 'beyond-six-week-cycle-v1',
+    revisionId: 'beyond-six-week-cycle-v1',
+    recommended: false,
+    sourceEdition: canonical.SourceEdition.beyond,
+    references: [
+      canonical.RuleReference(
+        document: 'Beyond 5/3/1',
+        location: 'PDF pages 9, 11-12',
+      ),
+    ],
+    generatorId: 'canonical-beyond',
+    blueprintVersion: 1,
+    capabilities: {canonical.ProgramCapability.mainWork},
+  ),
+  ProgramLibraryEntry(
     id: 'preset-forever-original-fsl',
     conceptId: 'program.original-531-fsl',
     titleFr: 'Original + First Set Last',
@@ -393,6 +563,24 @@ const canonicalProgramEntries = <ProgramLibraryEntry>[
     presetId: 'forever-beginner-prep-school-v1',
     revisionId: 'forever-beginner-prep-school-v1',
     recommended: true,
+    sourceEdition: canonical.SourceEdition.forever,
+    references: [
+      canonical.RuleReference(
+        document: '5/3/1 Forever',
+        location: 'PDF pages 50-57',
+      ),
+    ],
+    generatorId: 'beginner-prep-school',
+    blueprintVersion: 1,
+    aliases: {'beginner-prep-school-v1'},
+    capabilities: {
+      canonical.ProgramCapability.mainWork,
+      canonical.ProgramCapability.supplementalWork,
+      canonical.ProgramCapability.assistance,
+      canonical.ProgramCapability.conditioning,
+      canonical.ProgramCapability.athleticWork,
+      canonical.ProgramCapability.multipleMainMovements,
+    },
     summaryFr:
         'Programme débutant Forever sur 3 jours, alternance A/B, deux mouvements principaux par séance. Exige une course régulière, des sauts maîtrisés et un circuit d’assistance chronométré.',
     summaryEn:

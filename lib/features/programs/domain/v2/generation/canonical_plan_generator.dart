@@ -481,6 +481,7 @@ class CanonicalPlanGenerator {
             position: setEntry.$1,
             activityId: ActivityId(movement.value),
             movementId: movement,
+            percentage: set.percentage,
             target: PrescriptionTarget(
               type: PrescriptionTargetType.setsRepetitionsLoad,
               sets: 1,
@@ -790,6 +791,7 @@ Map<String, Object?> _prescriptionJson(ActivityPrescription prescription) => {
   'position': prescription.position,
   'activityId': prescription.activityId.value,
   'movementId': prescription.movementId?.value,
+  'percentage': prescription.percentage,
   'targetType': prescription.target.type.name,
   'sets': prescription.target.sets,
   'repetitionsPerSet': prescription.target.repetitionsPerSet,

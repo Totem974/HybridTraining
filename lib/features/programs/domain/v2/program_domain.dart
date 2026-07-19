@@ -176,6 +176,7 @@ class ActivityPrescription {
     required this.generation,
     required this.source,
     this.movementId,
+    this.percentage,
     this.calculatedLoad,
     this.unroundedLoad,
     this.roundingIncrement,
@@ -185,6 +186,7 @@ class ActivityPrescription {
   final int position;
   final ActivityId activityId;
   final MovementId? movementId;
+  final double? percentage;
   final PrescriptionTarget target;
   final PrescriptionKind kind;
   final String ruleId;

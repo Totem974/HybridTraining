@@ -162,4 +162,48 @@ void main() {
     expect(component.isExecutable, isFalse);
     expect(documentary.isExecutable, isFalse);
   });
+
+  test('canonical library validates sources, generators and aliases', () {
+    expect(repository.validate().errors, isEmpty);
+    expect(
+      repository.findByPresetId('powerlifting-standard-531-v1')?.generatorId,
+      'canonical-powerlifting',
+    );
+    expect(
+      repository.findByPresetId('standard-531-v1')?.presetId,
+      'powerlifting-standard-531-v1',
+    );
+    expect(
+      repository.findByPresetId('beyond-six-week-cycle-v1')?.isExecutable,
+      isTrue,
+    );
+  });
+
+  test('validator refuses an unsourced production entry', () {
+    const unsafe = InMemoryProgramLibraryRepository([
+      ProgramLibraryEntry(
+        id: 'unsafe',
+        conceptId: 'unsafe',
+        titleFr: 'Unsafe',
+        titleEn: 'Unsafe',
+        kind: ProgramEntryKind.preset,
+        origin: MethodGeneration.forever,
+        generation: MethodGeneration.forever,
+        foreverStatus: ForeverStatus.current,
+        documentationStatus: ProgramValidationStatus.rulesReviewed,
+        implementationStatus: ProgramImplementationStatus.productionReady,
+        presetId: 'unsafe-v1',
+        generatorId: 'missing',
+        blueprintVersion: 1,
+      ),
+    ]);
+    expect(
+      unsafe.validate(registeredGenerators: const {}).errors.join('\n'),
+      contains('Reviewed entry without source'),
+    );
+    expect(
+      unsafe.validate(registeredGenerators: const {}).errors.join('\n'),
+      contains('Production entry is not executable'),
+    );
+  });
 }

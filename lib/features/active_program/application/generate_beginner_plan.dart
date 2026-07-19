@@ -1,6 +1,5 @@
 import '../../programs/domain/load_rounding.dart';
-import '../../programs/domain/program_catalog.dart';
-import '../../programs/domain/program_identity.dart';
+import '../../programs/domain/program_library.dart';
 import '../../programs/domain/training_models.dart';
 import '../../programs/domain/v2/generation/beginner_prep_school_blueprint.dart';
 import '../../programs/domain/v2/generation/forever_macrocycle_generator.dart';
@@ -47,23 +46,21 @@ class GenerateBeginnerPlanRequest {
 class GenerateBeginnerPlan {
   const GenerateBeginnerPlan({
     required this.repository,
-    this.catalog = const ProgramCatalog(),
+    this.library = const InMemoryProgramLibraryRepository(),
     this.generator = const ForeverMacrocycleGenerator(),
     required this.clock,
   });
 
   final PlanRepository repository;
-  final ProgramCatalog catalog;
+  final ProgramLibraryRepository library;
   final ForeverMacrocycleGenerator generator;
   final DateTime Function() clock;
 
   Future<VersionedTrainingPlan> call(
     GenerateBeginnerPlanRequest request,
   ) async {
-    final preset = catalog.preset(beginnerPrepSchoolPresetId);
-    if (preset.availability != ProductAvailability.available ||
-        preset.implementationStatus !=
-            ProgramImplementationStatus.productionReady) {
+    final preset = library.findByPresetId(beginnerPrepSchoolPresetId);
+    if (preset == null || !preset.isExecutable) {
       throw StateError('Beginner Prep School is not executable.');
     }
     if (request.planId.trim().isEmpty || request.athleteId.trim().isEmpty) {

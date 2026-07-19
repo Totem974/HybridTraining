@@ -4,6 +4,7 @@ import 'package:hybrid_training/core/database/local_database.dart';
 import 'package:hybrid_training/features/active_program/application/plan_repository.dart';
 import 'package:hybrid_training/features/active_program/application/program_switch.dart';
 import 'package:hybrid_training/features/active_program/domain/versioned_training_plan.dart';
+import 'package:hybrid_training/features/programs/domain/v2/program_domain.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SqliteVersionedPlanStore implements PlanRepository {
@@ -146,13 +147,19 @@ class SqliteVersionedPlanStore implements PlanRepository {
       'macrocycle': plan.macrocycle,
       'status': 'active',
       'created_at': plan.createdAt.toUtc().toIso8601String(),
+      'source_edition': plan.sourceEdition?.name,
+      'ruleset_generation': plan.generation?.name,
     });
     for (final block in plan.blocks) {
       await tx.insert('training_blocks', {
         'id': block.id,
         'plan_id': plan.id,
         'sequence': block.sequence,
-        'role': block.role,
+        'role': _legacyRole(block.role),
+        'block_type': block.type,
+        'ruleset_role': block.role,
+        'seventh_week_purpose': block.seventhWeekPurpose,
+        'programming_block_number': block.sequence + 1,
         'template_id': block.templateId,
         'status': block.sequence == 0 ? 'active' : 'planned',
         'started_at': block.sequence == 0
@@ -166,6 +173,7 @@ class SqliteVersionedPlanStore implements PlanRepository {
           'sequence': cycle.sequence,
           'starts_on': _date(cycle.startsOn),
           'status': 'planned',
+          'programming_cycle_number': cycle.programmingCycleNumber,
         });
         for (final session in cycle.sessions) {
           await tx.insert('plan_training_sessions', {
@@ -174,6 +182,8 @@ class SqliteVersionedPlanStore implements PlanRepository {
             'sequence': session.sequence,
             'scheduled_for': _date(session.scheduledFor),
             'status': 'planned',
+            'programming_week_number': session.programmingWeekNumber,
+            'session_position': session.position,
           });
           for (final sessionBlock in session.blocks) {
             await tx.insert('session_blocks', {
@@ -201,9 +211,56 @@ class SqliteVersionedPlanStore implements PlanRepository {
                 'rule_provenance_json': canonicalJson(set.ruleProvenance),
               });
             }
+            for (final activity in sessionBlock.activities) {
+              await tx.insert('activity_prescriptions', {
+                'id': activity.id,
+                'session_block_id': sessionBlock.id,
+                'sequence': activity.sequence,
+                'movement_or_activity_id': activity.movementOrActivityId,
+                'target_type': _targetType(activity.targetType),
+                'target_json': canonicalJson(activity.target),
+                'prescription_kind': activity.kind,
+                'rule_id': activity.ruleId,
+                'source_edition': activity.sourceEdition,
+                'ruleset_generation': activity.generation,
+                'source_reference_json': canonicalJson(activity.source),
+                'calculated_load': activity.calculatedLoad,
+                'unrounded_load': activity.unroundedLoad,
+                'rounding_increment': activity.roundingIncrement,
+              });
+            }
           }
         }
       }
+    }
+    for (final decision in plan.trainingMaxTimeline) {
+      await tx.insert('training_max_timeline', {
+        'id': '${plan.id}-${decision['id']}',
+        'plan_id': plan.id,
+        'sequence': decision['sequence'],
+        'movement_id': decision['movementId'],
+        'checkpoint_type': 'cycleProgression',
+        'state': decision['state'],
+        'previous_training_max': decision['previousTrainingMax'],
+        'proposed_training_max': decision['proposedTrainingMax'],
+        'confirmed_training_max': decision['confirmedTrainingMax'],
+        'reason': decision['reason'],
+        'rule_id': 'TM-${decision['afterProgrammingWeek']}',
+        'source_reference_json': canonicalJson(decision['source']),
+        'created_at': plan.createdAt.toUtc().toIso8601String(),
+      });
+    }
+    for (final event in plan.plannedEvents) {
+      await tx.insert('planned_events_v5', {
+        'id': event['id'],
+        'plan_id': plan.id,
+        'sequence': event['sequence'],
+        'event_type': event['eventType'],
+        'programming_week_number': event['programmingWeekNumber'],
+        'payload_json': canonicalJson(event['payload']),
+        'rule_id': event['ruleId'],
+        'source_reference_json': canonicalJson(event['source']),
+      });
     }
   }
 
@@ -423,6 +480,33 @@ class SqliteVersionedPlanStore implements PlanRepository {
           'cycles': await _loadCycles(database, block['id']! as String),
         },
     ];
+    result['trainingMaxTimeline'] = [
+      for (final row in await database.query(
+        'training_max_timeline',
+        where: 'plan_id = ?',
+        whereArgs: [planId],
+        orderBy: 'sequence, movement_id',
+      ))
+        {
+          ...row,
+          'source': jsonDecode(row['source_reference_json']! as String),
+        }..remove('source_reference_json'),
+    ];
+    result['plannedEvents'] = [
+      for (final row in await database.query(
+        'planned_events_v5',
+        where: 'plan_id = ?',
+        whereArgs: [planId],
+        orderBy: 'sequence',
+      ))
+        {
+          ...row,
+          'payload': jsonDecode(row['payload_json']! as String),
+          'source': jsonDecode(row['source_reference_json']! as String),
+        }
+          ..remove('payload_json')
+          ..remove('source_reference_json'),
+    ];
     return result;
   }
 
@@ -488,7 +572,51 @@ class SqliteVersionedPlanStore implements PlanRepository {
             database,
             block['id']! as String,
           ),
+          'activities': await _loadActivities(
+            database,
+            block['id']! as String,
+          ),
         }..remove('rule_provenance_json'),
+    ];
+  }
+
+  Future<List<Map<String, Object?>>> _loadActivities(
+    Database database,
+    String sessionBlockId,
+  ) async {
+    final rows = await database.rawQuery(
+      '''SELECT p.*, r.actual_json, r.status AS result_status, r.rpe,
+                r.notes AS result_notes, r.recorded_at, r.updated_at
+         FROM activity_prescriptions p
+         LEFT JOIN activity_results r ON r.prescription_id = p.id
+         WHERE p.session_block_id = ?
+         ORDER BY p.sequence''',
+      [sessionBlockId],
+    );
+    return [
+      for (final row in rows)
+        {
+          ...row,
+          'target': jsonDecode(row['target_json']! as String),
+          'source': jsonDecode(row['source_reference_json']! as String),
+          if (row['actual_json'] != null)
+            'result': {
+              'status': row['result_status'],
+              'actual': jsonDecode(row['actual_json']! as String),
+              'rpe': row['rpe'],
+              'notes': row['result_notes'],
+              'recorded_at': row['recorded_at'],
+              'updated_at': row['updated_at'],
+            },
+        }
+          ..remove('target_json')
+          ..remove('source_reference_json')
+          ..remove('actual_json')
+          ..remove('result_status')
+          ..remove('rpe')
+          ..remove('result_notes')
+          ..remove('recorded_at')
+          ..remove('updated_at'),
     ];
   }
 
@@ -536,7 +664,7 @@ class SqliteVersionedPlanStore implements PlanRepository {
   }
 
   void _validate(VersionedTrainingPlan plan) {
-    const roles = {'prep', 'leader', 'seventhWeek', 'anchor'};
+    final roles = BlockRole.values.map((role) => role.name).toSet();
     if (plan.blocks.any((block) => !roles.contains(block.role))) {
       throw ArgumentError('Unknown training block role.');
     }
@@ -566,4 +694,12 @@ class SqliteVersionedPlanStore implements PlanRepository {
   }
 
   String _date(DateTime value) => value.toIso8601String().substring(0, 10);
+
+  String _legacyRole(String role) => switch (role) {
+    'leader' || 'anchor' || 'seventhWeek' || 'prep' => role,
+    _ => 'prep',
+  };
+
+  String _targetType(String value) =>
+      value == 'setsRepetitionsLoad' ? 'setsRepsLoad' : value;
 }
