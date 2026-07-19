@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:hybrid_training/core/database/local_database.dart';
 import 'package:hybrid_training/features/active_program/application/plan_repository.dart';
+import 'package:hybrid_training/features/active_program/application/program_switch.dart';
 import 'package:hybrid_training/features/active_program/domain/versioned_training_plan.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -15,103 +16,306 @@ class SqliteVersionedPlanStore implements PlanRepository {
   @override
   Future<void> createPlan(VersionedTrainingPlan plan) async {
     _validate(plan);
+    final database = await localDatabase.open();
+    await database.transaction((tx) => _insertPlan(tx, plan));
+  }
+
+  Future<ProgramSwitchPreview> previewProgramSwitch(
+    ProgramSwitchRequest request,
+  ) async {
+    _validateSwitchRequest(request);
+    final database = await localDatabase.open();
+    final current = await _activePlan(database, request.currentPlanId);
+    await _validateCompatibility(database, current, request.nextPlan);
+    final counts = await _sessionStatusCounts(database, request.currentPlanId);
+    final activeIds = await _activeSessionIds(database, request.currentPlanId);
+    return ProgramSwitchPreview(
+      currentPlanId: request.currentPlanId,
+      nextPlanId: request.nextPlan.id,
+      currentBlueprintId: current['blueprint_id']! as String,
+      nextBlueprintId: request.nextPlan.blueprintId,
+      completedSessionsPreserved: counts['complete'] ?? 0,
+      plannedSessionsCancelled: counts['planned'] ?? 0,
+      activeSessionIds: List.unmodifiable(activeIds),
+      nextStartDate: _firstSessionDate(request.nextPlan),
+    );
+  }
+
+  Future<void> applyProgramSwitch(ProgramSwitchRequest request) async {
+    _validateSwitchRequest(request);
+    final database = await localDatabase.open();
+    await database.transaction((tx) async {
+      final current = await _activePlan(tx, request.currentPlanId);
+      await _validateCompatibility(tx, current, request.nextPlan);
+      final activeIds = await _activeSessionIds(tx, request.currentPlanId);
+      if (activeIds.isNotEmpty &&
+          request.activeSessionDisposition == ActiveSessionDisposition.reject) {
+        throw StateError('An active session requires an explicit decision.');
+      }
+      final occurredAt = request.nextPlan.createdAt.toUtc().toIso8601String();
+      if (activeIds.isNotEmpty) {
+        await tx.rawUpdate(
+          '''UPDATE plan_training_sessions
+             SET status = 'cancelled', completed_at = ?,
+                 notes = CASE WHEN notes = '' THEN ? ELSE notes || '\n' || ? END,
+                 rest_until = NULL
+             WHERE id IN (${List.filled(activeIds.length, '?').join(',')})''',
+          [occurredAt, request.reason, request.reason, ...activeIds],
+        );
+        await tx.rawUpdate(
+          '''UPDATE workout_executions
+             SET state = 'abandoned', rest_until = NULL, paused_from = NULL,
+                 reversible_stack_json = '[]', updated_at = ?, ended_at = ?
+             WHERE session_id IN (${List.filled(activeIds.length, '?').join(',')})
+               AND state NOT IN ('completed','abandoned','skipped')''',
+          [occurredAt, occurredAt, ...activeIds],
+        );
+      }
+      await tx.rawUpdate(
+        '''UPDATE plan_training_sessions SET status = 'cancelled', completed_at = ?
+           WHERE status = 'planned' AND cycle_id IN (
+             SELECT c.id FROM plan_training_cycles c
+             JOIN training_blocks b ON b.id = c.block_id WHERE b.plan_id = ?
+           )''',
+        [occurredAt, request.currentPlanId],
+      );
+      final closed = await tx.update(
+        'training_plans',
+        {'status': 'cancelled', 'completed_at': occurredAt},
+        where: "id = ? AND status = 'active'",
+        whereArgs: [request.currentPlanId],
+      );
+      if (closed != 1) throw StateError('The current plan changed.');
+      final eventSequence =
+          Sqflite.firstIntValue(
+            await tx.rawQuery(
+              'SELECT COALESCE(MAX(sequence), -1) + 1 FROM plan_events WHERE plan_id = ?',
+              [request.currentPlanId],
+            ),
+          ) ??
+          0;
+      await tx.insert('plan_events', {
+        'id': '${request.currentPlanId}-program-switch-$eventSequence',
+        'plan_id': request.currentPlanId,
+        'sequence': eventSequence,
+        'event_type': 'programSwitch',
+        'rule_provenance_json': canonicalJson({
+          'reason': request.reason,
+          'nextPlanId': request.nextPlan.id,
+          'nextBlueprintId': request.nextPlan.blueprintId,
+          'activeSessionDisposition': request.activeSessionDisposition.name,
+        }),
+        'occurred_at': occurredAt,
+      });
+      await _insertPlan(tx, request.nextPlan);
+    });
+  }
+
+  Future<void> _insertPlan(
+    DatabaseExecutor tx,
+    VersionedTrainingPlan plan,
+  ) async {
     final snapshotJson = canonicalJson(plan.blueprintSnapshot);
     final provenanceJson = canonicalJson(plan.ruleProvenance);
     final snapshotId = '${plan.blueprintId}-v${plan.blueprintVersion}';
-    final database = await localDatabase.open();
-    await database.transaction((tx) async {
-      await tx.insert(
-        'program_definition_snapshots',
-        {
-          'id': snapshotId,
-          'blueprint_id': plan.blueprintId,
-          'blueprint_version': plan.blueprintVersion,
-          'snapshot_json': snapshotJson,
-          'rule_provenance_json': provenanceJson,
-          'created_at': plan.createdAt.toUtc().toIso8601String(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.ignore,
-      );
-      final existing = await tx.query(
-        'program_definition_snapshots',
-        where: 'id = ?',
-        whereArgs: [snapshotId],
-        limit: 1,
-      );
-      if (existing.length != 1 ||
-          existing.single['snapshot_json'] != snapshotJson ||
-          existing.single['rule_provenance_json'] != provenanceJson) {
-        throw StateError('A blueprint snapshot is immutable.');
-      }
-      await tx.insert('training_plans', {
-        'id': plan.id,
-        'athlete_id': plan.athleteId,
-        'blueprint_id': plan.blueprintId,
-        'blueprint_version': plan.blueprintVersion,
-        'definition_snapshot_id': snapshotId,
-        'macrocycle': plan.macrocycle,
-        'status': 'active',
-        'created_at': plan.createdAt.toUtc().toIso8601String(),
+    await tx.insert('program_definition_snapshots', {
+      'id': snapshotId,
+      'blueprint_id': plan.blueprintId,
+      'blueprint_version': plan.blueprintVersion,
+      'snapshot_json': snapshotJson,
+      'rule_provenance_json': provenanceJson,
+      'created_at': plan.createdAt.toUtc().toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    final existing = await tx.query(
+      'program_definition_snapshots',
+      where: 'id = ?',
+      whereArgs: [snapshotId],
+      limit: 1,
+    );
+    if (existing.length != 1 ||
+        existing.single['snapshot_json'] != snapshotJson ||
+        existing.single['rule_provenance_json'] != provenanceJson) {
+      throw StateError('A blueprint snapshot is immutable.');
+    }
+    await tx.insert('training_plans', {
+      'id': plan.id,
+      'athlete_id': plan.athleteId,
+      'blueprint_id': plan.blueprintId,
+      'blueprint_version': plan.blueprintVersion,
+      'definition_snapshot_id': snapshotId,
+      'macrocycle': plan.macrocycle,
+      'status': 'active',
+      'created_at': plan.createdAt.toUtc().toIso8601String(),
+    });
+    for (final block in plan.blocks) {
+      await tx.insert('training_blocks', {
+        'id': block.id,
+        'plan_id': plan.id,
+        'sequence': block.sequence,
+        'role': block.role,
+        'template_id': block.templateId,
+        'status': block.sequence == 0 ? 'active' : 'planned',
+        'started_at': block.sequence == 0
+            ? plan.createdAt.toUtc().toIso8601String()
+            : null,
       });
-      for (final block in plan.blocks) {
-        await tx.insert('training_blocks', {
-          'id': block.id,
-          'plan_id': plan.id,
-          'sequence': block.sequence,
-          'role': block.role,
-          'template_id': block.templateId,
-          'status': block.sequence == 0 ? 'active' : 'planned',
-          'started_at': block.sequence == 0
-              ? plan.createdAt.toUtc().toIso8601String()
-              : null,
+      for (final cycle in block.cycles) {
+        await tx.insert('plan_training_cycles', {
+          'id': cycle.id,
+          'block_id': block.id,
+          'sequence': cycle.sequence,
+          'starts_on': _date(cycle.startsOn),
+          'status': 'planned',
         });
-        for (final cycle in block.cycles) {
-          await tx.insert('plan_training_cycles', {
-            'id': cycle.id,
-            'block_id': block.id,
-            'sequence': cycle.sequence,
-            'starts_on': _date(cycle.startsOn),
+        for (final session in cycle.sessions) {
+          await tx.insert('plan_training_sessions', {
+            'id': session.id,
+            'cycle_id': cycle.id,
+            'sequence': session.sequence,
+            'scheduled_for': _date(session.scheduledFor),
             'status': 'planned',
           });
-          for (final session in cycle.sessions) {
-            await tx.insert('plan_training_sessions', {
-              'id': session.id,
-              'cycle_id': cycle.id,
-              'sequence': session.sequence,
-              'scheduled_for': _date(session.scheduledFor),
-              'status': 'planned',
+          for (final sessionBlock in session.blocks) {
+            await tx.insert('session_blocks', {
+              'id': sessionBlock.id,
+              'session_id': session.id,
+              'sequence': sessionBlock.sequence,
+              'kind': sessionBlock.kind,
+              'movement_id': sessionBlock.movementId,
+              'rule_provenance_json': canonicalJson(
+                sessionBlock.ruleProvenance,
+              ),
             });
-            for (final sessionBlock in session.blocks) {
-              await tx.insert('session_blocks', {
-                'id': sessionBlock.id,
-                'session_id': session.id,
-                'sequence': sessionBlock.sequence,
-                'kind': sessionBlock.kind,
-                'movement_id': sessionBlock.movementId,
-                'rule_provenance_json': canonicalJson(
-                  sessionBlock.ruleProvenance,
-                ),
+            for (final set in sessionBlock.prescriptions) {
+              await tx.insert('set_prescriptions', {
+                'id': set.id,
+                'session_block_id': sessionBlock.id,
+                'sequence': set.sequence,
+                'training_max': set.trainingMax,
+                'percentage': set.percentage,
+                'unrounded_load': set.unroundedLoad,
+                'rounding_increment': set.roundingIncrement,
+                'prescribed_load': set.prescribedLoad,
+                'prescribed_reps': set.prescribedReps,
+                'prescription_json': canonicalJson(set.details),
+                'rule_provenance_json': canonicalJson(set.ruleProvenance),
               });
-              for (final set in sessionBlock.prescriptions) {
-                await tx.insert('set_prescriptions', {
-                  'id': set.id,
-                  'session_block_id': sessionBlock.id,
-                  'sequence': set.sequence,
-                  'training_max': set.trainingMax,
-                  'percentage': set.percentage,
-                  'unrounded_load': set.unroundedLoad,
-                  'rounding_increment': set.roundingIncrement,
-                  'prescribed_load': set.prescribedLoad,
-                  'prescribed_reps': set.prescribedReps,
-                  'prescription_json': canonicalJson(set.details),
-                  'rule_provenance_json': canonicalJson(set.ruleProvenance),
-                });
-              }
             }
           }
         }
       }
-    });
+    }
+  }
+
+  void _validateSwitchRequest(ProgramSwitchRequest request) {
+    _validate(request.nextPlan);
+    if (request.currentPlanId.trim().isEmpty ||
+        request.reason.trim().isEmpty ||
+        request.nextPlan.id == request.currentPlanId) {
+      throw ArgumentError(
+        'A program switch requires distinct plans and a reason.',
+      );
+    }
+    _firstSessionDate(request.nextPlan);
+  }
+
+  Future<Map<String, Object?>> _activePlan(
+    DatabaseExecutor database,
+    String id,
+  ) async {
+    final rows = await database.query(
+      'training_plans',
+      where: "id = ? AND status = 'active'",
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (rows.isEmpty) throw StateError('Active plan not found: $id');
+    return rows.single;
+  }
+
+  Future<void> _validateCompatibility(
+    DatabaseExecutor database,
+    Map<String, Object?> current,
+    VersionedTrainingPlan next,
+  ) async {
+    if (current['athlete_id'] != next.athleteId) {
+      throw StateError('A program switch cannot change the athlete.');
+    }
+    final profiles = await database.query(
+      'athlete_profiles',
+      columns: ['preferred_unit'],
+      where: 'id = ? AND deleted_at IS NULL',
+      whereArgs: [next.athleteId],
+      limit: 1,
+    );
+    if (profiles.isEmpty) {
+      throw StateError('The athlete profile is unavailable.');
+    }
+    final unit = profiles.single['preferred_unit']! as String;
+    final movements = next.blocks
+        .expand((block) => block.cycles)
+        .expand((cycle) => cycle.sessions)
+        .expand((session) => session.blocks)
+        .map((block) => block.movementId)
+        .whereType<String>()
+        .toSet();
+    if (movements.isEmpty) {
+      throw StateError('The replacement plan has no compatible movement.');
+    }
+    for (final movement in movements) {
+      final history = await database.query(
+        'training_max_history',
+        columns: ['unit'],
+        where: 'athlete_id = ? AND exercise_id = ?',
+        whereArgs: [next.athleteId, movement],
+        orderBy: 'effective_at DESC',
+        limit: 1,
+      );
+      if (history.isEmpty || history.single['unit'] != unit) {
+        throw StateError(
+          'A compatible $unit Training Max is required for $movement.',
+        );
+      }
+    }
+  }
+
+  Future<Map<String, int>> _sessionStatusCounts(
+    DatabaseExecutor database,
+    String planId,
+  ) async {
+    final rows = await database.rawQuery(
+      '''SELECT s.status, COUNT(*) AS count FROM plan_training_sessions s
+         JOIN plan_training_cycles c ON c.id = s.cycle_id
+         JOIN training_blocks b ON b.id = c.block_id
+         WHERE b.plan_id = ? GROUP BY s.status''',
+      [planId],
+    );
+    return {
+      for (final row in rows) row['status']! as String: row['count']! as int,
+    };
+  }
+
+  Future<List<String>> _activeSessionIds(
+    DatabaseExecutor database,
+    String planId,
+  ) async => (await database.rawQuery(
+    '''SELECT s.id FROM plan_training_sessions s
+           JOIN plan_training_cycles c ON c.id = s.cycle_id
+           JOIN training_blocks b ON b.id = c.block_id
+           WHERE b.plan_id = ? AND s.status = 'started' ORDER BY s.id''',
+    [planId],
+  )).map((row) => row['id']! as String).toList(growable: false);
+
+  DateTime _firstSessionDate(VersionedTrainingPlan plan) {
+    final sessions = plan.blocks
+        .expand((block) => block.cycles)
+        .expand((cycle) => cycle.sessions)
+        .toList(growable: false);
+    if (sessions.isEmpty) {
+      throw ArgumentError('The replacement plan requires a scheduled session.');
+    }
+    sessions.sort((a, b) => a.scheduledFor.compareTo(b.scheduledFor));
+    return sessions.first.scheduledFor;
   }
 
   Future<void> recordPerformance({

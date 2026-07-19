@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/core/database/local_database.dart';
 import 'package:hybrid_training/features/active_program/data/sqlite_versioned_plan_store.dart';
+import 'package:hybrid_training/features/active_program/application/program_switch.dart';
 import 'package:hybrid_training/features/active_program/domain/versioned_training_plan.dart';
 import 'package:hybrid_training/features/programs/domain/load_rounding.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
@@ -44,11 +45,11 @@ void main() {
     await store.createPlan(_plan());
     final db = await local.open();
     expect(await db.query('training_blocks'), hasLength(2));
-    expect(await db.query('session_blocks'), hasLength(2));
-    expect(await db.query('set_prescriptions'), hasLength(2));
+    expect(await db.query('session_blocks'), hasLength(3));
+    expect(await db.query('set_prescriptions'), hasLength(3));
     expect(
       (await db.query('set_prescriptions')).map((row) => row['training_max']),
-      containsAll([150.0, 100.0]),
+      containsAll([150.0, 100.0, 180.0]),
     );
     await store.recordPerformance(
       id: 'performance-1',
@@ -260,6 +261,113 @@ void main() {
         sessionBlocks.first['ruleProvenance']! as Map<String, Object?>;
     expect(provenance['instructions'], contains(contains('3 rounds')));
   });
+
+  test(
+    'program switch previews, requires active decision and is atomic',
+    () async {
+      await store.createPlan(_plan());
+      final db = await local.open();
+      await db.insert('exercises', {
+        'id': 'squat',
+        'name_key': 'exercise.squat',
+        'category': 'mainLift',
+        'is_main_lift': 1,
+        'created_at': '2026-07-18T00:00:00Z',
+      });
+      await db.insert('training_max_history', {
+        'id': 'switch-squat-tm',
+        'athlete_id': 'athlete',
+        'exercise_id': 'squat',
+        'one_rep_max': 175.0,
+        'training_max': 150.0,
+        'unit': 'kg',
+        'effective_at': '2026-07-18T00:00:00Z',
+      });
+      await db.update(
+        'plan_training_sessions',
+        {'status': 'complete', 'completed_at': '2026-07-21T10:00:00Z'},
+        where: 'id = ?',
+        whereArgs: ['session-1'],
+      );
+      await db.update(
+        'plan_training_sessions',
+        {'status': 'started', 'started_at': '2026-07-22T10:00:00Z'},
+        where: 'id = ?',
+        whereArgs: ['session-2'],
+      );
+      await db.insert('set_performances', {
+        'id': 'preserved-performance',
+        'prescription_id': 'squat-block-set',
+        'result': 'success',
+        'completed_reps': 5,
+        'actual_load': 97.5,
+        'notes': 'Historical result',
+        'recorded_at': '2026-07-21T10:00:00Z',
+      });
+      await db.insert('workout_executions', {
+        'session_id': 'session-2',
+        'state': 'activeSet',
+        'active_set_index': 0,
+        'notes': '',
+        'reversible_stack_json': '[]',
+        'updated_at': '2026-07-22T10:00:00Z',
+      });
+      final replacement = _replacementPlan();
+      final request = ProgramSwitchRequest(
+        currentPlanId: 'plan-1',
+        nextPlan: replacement,
+        reason: 'Owner requested tested variant',
+      );
+
+      final preview = await store.previewProgramSwitch(request);
+      expect(preview.completedSessionsPreserved, 1);
+      expect(preview.activeSessionIds, ['session-2']);
+      expect(preview.requiresActiveSessionDecision, isTrue);
+      expect(await db.query('training_plans'), hasLength(1));
+
+      await expectLater(store.applyProgramSwitch(request), throwsStateError);
+      expect((await db.query('training_plans')).single['status'], 'active');
+      expect(await db.query('plan_events'), isEmpty);
+
+      await store.applyProgramSwitch(
+        ProgramSwitchRequest(
+          currentPlanId: 'plan-1',
+          nextPlan: replacement,
+          reason: 'Owner requested tested variant',
+          activeSessionDisposition: ActiveSessionDisposition.abandon,
+        ),
+      );
+      expect(
+        (await db.query(
+          'training_plans',
+          where: "id = 'plan-1'",
+        )).single['status'],
+        'cancelled',
+      );
+      expect(
+        (await db.query(
+          'training_plans',
+          where: "id = 'replacement-plan'",
+        )).single['status'],
+        'active',
+      );
+      expect(
+        (await db.query(
+          'plan_training_sessions',
+          where: "id = 'session-1'",
+        )).single['status'],
+        'complete',
+      );
+      expect(await db.query('set_performances'), hasLength(1));
+      expect(
+        (await db.query('workout_executions')).single['state'],
+        'abandoned',
+      );
+      final event = (await db.query('plan_events')).single;
+      expect(event['event_type'], 'programSwitch');
+      expect(event['rule_provenance_json'], contains('Owner requested'));
+    },
+  );
 }
 
 VersionedTrainingPlan _plan({
@@ -306,6 +414,12 @@ VersionedTrainingPlan _plan({
                 ),
               ],
             ),
+            PlannedSession(
+              id: 'session-2',
+              sequence: 1,
+              scheduledFor: DateTime(2026, 7, 22),
+              blocks: [_sessionBlock('deadlift-block', 0, 'deadlift', 180)],
+            ),
           ],
         ),
       ],
@@ -316,6 +430,44 @@ VersionedTrainingPlan _plan({
       role: 'anchor',
       templateId: 'anchor-template',
       cycles: [],
+    ),
+  ],
+);
+
+VersionedTrainingPlan _replacementPlan() => VersionedTrainingPlan(
+  id: 'replacement-plan',
+  athleteId: 'athlete',
+  blueprintId: 'reviewed-replacement-v1',
+  blueprintVersion: 1,
+  blueprintSnapshot: const {'id': 'reviewed-replacement-v1', 'version': 1},
+  ruleProvenance: const [
+    {'document': 'verified-fixture', 'status': 'verified'},
+  ],
+  macrocycle: 1,
+  createdAt: DateTime.utc(2026, 8, 1),
+  blocks: [
+    PlannedTrainingBlock(
+      id: 'replacement-leader',
+      sequence: 0,
+      role: 'leader',
+      templateId: 'replacement-template',
+      cycles: [
+        PlannedCycle(
+          id: 'replacement-cycle',
+          sequence: 0,
+          startsOn: DateTime(2026, 8, 3),
+          sessions: [
+            PlannedSession(
+              id: 'replacement-session',
+              sequence: 0,
+              scheduledFor: DateTime(2026, 8, 3),
+              blocks: [
+                _sessionBlock('replacement-squat-block', 0, 'squat', 150),
+              ],
+            ),
+          ],
+        ),
+      ],
     ),
   ],
 );
