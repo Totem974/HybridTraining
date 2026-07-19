@@ -21,6 +21,7 @@ class ProgramV1Adapter {
                 id: ProgramRevisionId(item.id),
                 conceptId: ProgramConceptId(item.conceptId),
                 generation: _generation(item.generation)!,
+                sourceEdition: _source(item.generation),
                 version: ProgramVersion(item.version),
                 ruleStatus: _status(item.documentationStatus),
                 references: item.references
@@ -37,14 +38,23 @@ class ProgramV1Adapter {
               ),
             )
             .toList(growable: false),
-        blueprints: source.presets.map(_blueprint).toList(growable: false),
+        blueprints: source.presets
+            .map((preset) => _blueprint(source, preset))
+            .toList(growable: false),
       );
-  ProgramBlueprint _blueprint(v1.ProgramPresetDefinition preset) {
+  ProgramBlueprint _blueprint(
+    v1.ProgramCatalog source,
+    v1.ProgramPresetDefinition preset,
+  ) {
     const verified = RuleStatus.verified;
     final policyVersion = ProgramVersion(preset.version);
-    const leader = BlockTemplate(
+    final generation = _generation(preset.rulesetGeneration)!;
+    final sourceEdition = _source(preset.rulesetGeneration);
+    final leader = BlockTemplate(
       id: BlockTemplateId('legacy-cycle'),
       role: BlockRole.leader,
+      sourceEdition: sourceEdition,
+      generation: generation,
     );
     return ProgramBlueprint(
       id: ProgramBlueprintId(preset.persistentPresetId),
@@ -83,7 +93,7 @@ class ProgramV1Adapter {
         recommendedFrequency: preset.recommendedFrequency,
         ruleStatus: verified,
       ),
-      blockTemplates: const [leader],
+      blockTemplates: [leader],
       blockSequence: const BlockSequence(
         blocks: [
           BlockSequenceEntry(
@@ -106,15 +116,40 @@ class ProgramV1Adapter {
           ? ImplementationStatus.available
           : ImplementationStatus.documentationOnly,
       generatorId: preset.generatorId,
+      sourceEdition: sourceEdition,
+      generation: generation,
+      references: source.revisions
+          .where(
+            (revision) =>
+                revision.id == preset.mainRevisionId ||
+                revision.id == preset.supplementalRevisionId,
+          )
+          .expand((revision) => revision.references)
+          .map(
+            (reference) => RuleReference(
+              document: reference.title,
+              location: '${reference.bookPages}; ${reference.pdfPages}',
+            ),
+          )
+          .toList(growable: false),
     );
   }
 
   static MethodGeneration? _generation(v1_identity.MethodGeneration? value) =>
       switch (value) {
         v1_identity.MethodGeneration.original => MethodGeneration.original,
+        v1_identity.MethodGeneration.powerlifting =>
+          MethodGeneration.powerlifting,
         v1_identity.MethodGeneration.beyond => MethodGeneration.beyond,
         v1_identity.MethodGeneration.forever => MethodGeneration.forever,
         null => null,
+      };
+  static SourceEdition _source(v1_identity.MethodGeneration value) =>
+      switch (value) {
+        v1_identity.MethodGeneration.original => SourceEdition.original,
+        v1_identity.MethodGeneration.powerlifting => SourceEdition.powerlifting,
+        v1_identity.MethodGeneration.beyond => SourceEdition.beyond,
+        v1_identity.MethodGeneration.forever => SourceEdition.forever,
       };
   static RuleStatus _status(v1_identity.ProgramValidationStatus value) =>
       value == v1_identity.ProgramValidationStatus.rulesReviewed

@@ -9,6 +9,7 @@ void main() {
   test('generations and classic compatibility are stable', () {
     expect(MethodGeneration.values, [
       MethodGeneration.original,
+      MethodGeneration.powerlifting,
       MethodGeneration.beyond,
       MethodGeneration.forever,
     ]);

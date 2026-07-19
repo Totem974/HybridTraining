@@ -12,6 +12,7 @@ void main() {
     id: ProgramConceptId('shared'),
     titleKey: 'shared',
     origin: MethodGeneration.original,
+    historicalOrigin: HistoricalConceptOrigin.fiveThreeOne,
   );
   const revision1 = ProgramRevision(
     id: ProgramRevisionId('shared-v1'),
@@ -19,6 +20,8 @@ void main() {
     generation: MethodGeneration.original,
     version: ProgramVersion(1),
     ruleStatus: RuleStatus.verified,
+    sourceEdition: SourceEdition.original,
+    references: [RuleReference(document: 'Source', location: 'page 1')],
   );
   const revision2 = ProgramRevision(
     id: ProgramRevisionId('shared-v2'),
@@ -26,6 +29,8 @@ void main() {
     generation: MethodGeneration.forever,
     version: ProgramVersion(2),
     ruleStatus: RuleStatus.verified,
+    sourceEdition: SourceEdition.forever,
+    references: [RuleReference(document: 'Source', location: 'page 2')],
     supersedes: ProgramRevisionId('shared-v1'),
   );
 
@@ -68,7 +73,73 @@ void main() {
     compatibility: const CompatibilityConstraint(supportedFrequencies: {3, 4}),
     implementationStatus: ImplementationStatus.available,
     generatorId: 'test-generator',
+    sourceEdition: SourceEdition.forever,
+    generation: MethodGeneration.forever,
+    references: const [RuleReference(document: 'Source', location: 'page 2')],
   );
+
+  test('movement ids are stable and extensible beyond the four lifts', () {
+    expect(MovementId.squat.value, 'barbell.back-squat');
+    expect(MovementId.powerClean, const MovementId('barbell.power-clean'));
+    expect(
+      const MovementId('bodyweight.pull-up'),
+      isNot(MovementId.overheadPress),
+    );
+  });
+
+  test('generic prescriptions separate targets from actual results', () {
+    const prescription = ActivityPrescription(
+      id: PrescriptionId('session-1:jump:0'),
+      position: 0,
+      activityId: ActivityId('athletic.box-jump'),
+      target: PrescriptionTarget(
+        type: PrescriptionTargetType.totalRepetitions,
+        totalRepetitions: 10,
+      ),
+      kind: PrescriptionKind.jumpsOrThrows,
+      ruleId: 'BPS-JUMP-001',
+      sourceEdition: SourceEdition.forever,
+      generation: MethodGeneration.forever,
+      source: RuleReference(document: '5/3/1 Forever', location: 'PDF 51'),
+    );
+    const result = ActivityResult(
+      prescriptionId: PrescriptionId('session-1:jump:0'),
+      status: ActivityResultStatus.success,
+      actualRepetitions: 8,
+      rpe: 6,
+    );
+    expect(
+      const ProgramDomainValidator().validatePrescription(prescription).isValid,
+      isTrue,
+    );
+    expect(prescription.target.totalRepetitions, 10);
+    expect(result.actualRepetitions, 8);
+  });
+
+  test('generic prescription validator rejects implicit rules', () {
+    const invalid = ActivityPrescription(
+      id: PrescriptionId('invalid'),
+      position: -1,
+      activityId: ActivityId('conditioning.run'),
+      target: PrescriptionTarget(type: PrescriptionTargetType.distance),
+      kind: PrescriptionKind.easyConditioning,
+      ruleId: '',
+      sourceEdition: SourceEdition.forever,
+      generation: MethodGeneration.forever,
+      source: RuleReference(document: '', location: null),
+    );
+    final codes = const ProgramDomainValidator()
+        .validatePrescription(invalid)
+        .issues
+        .map((issue) => issue.code);
+    expect(
+      codes,
+      containsAll([
+        ProgramDomainIssueCode.missingSource,
+        ProgramDomainIssueCode.invalidPrescription,
+      ]),
+    );
+  });
 
   test('minimal composition and two revisions of one concept are valid', () {
     final item = blueprint(

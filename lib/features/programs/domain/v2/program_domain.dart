@@ -1,6 +1,28 @@
-enum MethodGeneration { original, beyond, forever }
+enum MethodGeneration { original, powerlifting, beyond, forever }
 
-enum BlockRole { prep, leader, seventhWeek, anchor }
+enum SourceEdition { original, powerlifting, beyond, forever }
+
+enum HistoricalConceptOrigin { fiveThreeOne, powerlifting, beyond, forever }
+
+enum ProgramEntryKind { program, component, protocol, revision, preset }
+
+enum BlockType { cycle, deload, preparation, competition, transition, test }
+
+enum BlockRole {
+  classicCycle,
+  beyondCycle,
+  deload,
+  prep,
+  offSeason,
+  preMeet,
+  meetPreparation,
+  leader,
+  seventhWeek,
+  anchor,
+  transition,
+  trainingMaxTest,
+  personalRecordTest,
+}
 
 enum SeventhWeekPurpose {
   deload,
@@ -56,6 +78,25 @@ class BlockTemplateId extends StableId {
   const BlockTemplateId(super.value);
 }
 
+class MovementId extends StableId {
+  const MovementId(super.value);
+
+  static const squat = MovementId('barbell.back-squat');
+  static const benchPress = MovementId('barbell.bench-press');
+  static const deadlift = MovementId('barbell.deadlift');
+  static const overheadPress = MovementId('barbell.overhead-press');
+  static const powerClean = MovementId('barbell.power-clean');
+  static const frontSquat = MovementId('barbell.front-squat');
+}
+
+class ActivityId extends StableId {
+  const ActivityId(super.value);
+}
+
+class PrescriptionId extends StableId {
+  const PrescriptionId(super.value);
+}
+
 class ProgramVersion implements Comparable<ProgramVersion> {
   const ProgramVersion(this.value) : assert(value >= 0);
   final int value;
@@ -75,15 +116,123 @@ class RuleReference {
   final String? location;
 }
 
+enum PrescriptionTargetType {
+  setsRepetitionsLoad,
+  bodyweightSets,
+  totalRepetitions,
+  duration,
+  distance,
+  rounds,
+  completion,
+  qualitative,
+}
+
+enum PrescriptionKind {
+  warmUp,
+  mainWork,
+  supplemental,
+  performanceSet,
+  personalRecordSet,
+  jokerSet,
+  trainingMaxTest,
+  personalRecordTest,
+  jumpsOrThrows,
+  assistance,
+  easyConditioning,
+  hardConditioning,
+}
+
+class PrescriptionTarget {
+  const PrescriptionTarget({
+    required this.type,
+    this.sets,
+    this.repetitionsPerSet,
+    this.totalRepetitions,
+    this.seconds,
+    this.meters,
+    this.rounds,
+    this.qualitativeGoal,
+  });
+
+  final PrescriptionTargetType type;
+  final int? sets;
+  final int? repetitionsPerSet;
+  final int? totalRepetitions;
+  final int? seconds;
+  final double? meters;
+  final int? rounds;
+  final String? qualitativeGoal;
+}
+
+class ActivityPrescription {
+  const ActivityPrescription({
+    required this.id,
+    required this.position,
+    required this.activityId,
+    required this.target,
+    required this.kind,
+    required this.ruleId,
+    required this.sourceEdition,
+    required this.generation,
+    required this.source,
+    this.movementId,
+    this.calculatedLoad,
+    this.unroundedLoad,
+    this.roundingIncrement,
+  });
+
+  final PrescriptionId id;
+  final int position;
+  final ActivityId activityId;
+  final MovementId? movementId;
+  final PrescriptionTarget target;
+  final PrescriptionKind kind;
+  final String ruleId;
+  final SourceEdition sourceEdition;
+  final MethodGeneration generation;
+  final RuleReference source;
+  final double? calculatedLoad;
+  final double? unroundedLoad;
+  final double? roundingIncrement;
+}
+
+enum ActivityResultStatus { pending, success, failure, skipped }
+
+class ActivityResult {
+  const ActivityResult({
+    required this.prescriptionId,
+    required this.status,
+    this.actualLoad,
+    this.actualRepetitions,
+    this.actualSeconds,
+    this.actualMeters,
+    this.actualRounds,
+    this.rpe,
+    this.notes = '',
+  });
+
+  final PrescriptionId prescriptionId;
+  final ActivityResultStatus status;
+  final double? actualLoad;
+  final int? actualRepetitions;
+  final int? actualSeconds;
+  final double? actualMeters;
+  final int? actualRounds;
+  final double? rpe;
+  final String notes;
+}
+
 class ProgramConcept {
   const ProgramConcept({
     required this.id,
     required this.titleKey,
     required this.origin,
+    this.historicalOrigin,
   });
   final ProgramConceptId id;
   final String titleKey;
   final MethodGeneration? origin;
+  final HistoricalConceptOrigin? historicalOrigin;
 }
 
 class ProgramRevision {
@@ -93,6 +242,7 @@ class ProgramRevision {
     required this.generation,
     required this.version,
     required this.ruleStatus,
+    this.sourceEdition,
     this.references = const [],
     this.supersedes,
   });
@@ -101,6 +251,7 @@ class ProgramRevision {
   final MethodGeneration generation;
   final ProgramVersion version;
   final RuleStatus ruleStatus;
+  final SourceEdition? sourceEdition;
   final List<RuleReference> references;
   final ProgramRevisionId? supersedes;
 }
@@ -158,10 +309,16 @@ class BlockTemplate {
   const BlockTemplate({
     required this.id,
     required this.role,
+    this.type = BlockType.cycle,
+    this.sourceEdition,
+    this.generation,
     this.seventhWeekPurpose,
   });
   final BlockTemplateId id;
   final BlockRole role;
+  final BlockType type;
+  final SourceEdition? sourceEdition;
+  final MethodGeneration? generation;
   final SeventhWeekPurpose? seventhWeekPurpose;
 }
 
@@ -221,6 +378,9 @@ class ProgramBlueprint {
     required this.compatibility,
     required this.implementationStatus,
     required this.generatorId,
+    this.entryKind = ProgramEntryKind.preset,
+    this.sourceEdition,
+    this.generation,
     this.supplementalPolicy,
     this.assistancePolicy,
     this.conditioningPolicy,
@@ -245,6 +405,9 @@ class ProgramBlueprint {
   final List<RuleReference> references;
   final ImplementationStatus implementationStatus;
   final String? generatorId;
+  final ProgramEntryKind entryKind;
+  final SourceEdition? sourceEdition;
+  final MethodGeneration? generation;
 }
 
 class ComposableProgramDomain {

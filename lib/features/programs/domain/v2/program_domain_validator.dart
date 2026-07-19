@@ -11,6 +11,8 @@ enum ProgramDomainIssueCode {
   unverifiedAvailableRule,
   incompatibleFrequency,
   missingGenerator,
+  missingSource,
+  invalidPrescription,
   unorderedCycle,
 }
 
@@ -28,6 +30,52 @@ class ProgramDomainValidation {
 
 class ProgramDomainValidator {
   const ProgramDomainValidator();
+
+  ProgramDomainValidation validatePrescription(
+    ActivityPrescription prescription,
+  ) {
+    final issues = <ProgramDomainIssue>[];
+    if (prescription.position < 0 ||
+        prescription.ruleId.trim().isEmpty ||
+        prescription.source.document.trim().isEmpty ||
+        (prescription.source.location?.trim().isEmpty ?? true)) {
+      _add(
+        issues,
+        ProgramDomainIssueCode.missingSource,
+        '${prescription.id} lacks position, rule, or exact source.',
+      );
+    }
+    final target = prescription.target;
+    final validTarget = switch (target.type) {
+      PrescriptionTargetType.setsRepetitionsLoad =>
+        (target.sets ?? 0) > 0 &&
+            (target.repetitionsPerSet ?? 0) > 0 &&
+            (prescription.calculatedLoad ?? 0) >= 0,
+      PrescriptionTargetType.bodyweightSets =>
+        (target.sets ?? 0) > 0 && (target.repetitionsPerSet ?? 0) > 0,
+      PrescriptionTargetType.totalRepetitions =>
+        (target.totalRepetitions ?? 0) > 0,
+      PrescriptionTargetType.duration => (target.seconds ?? 0) > 0,
+      PrescriptionTargetType.distance => (target.meters ?? 0) > 0,
+      PrescriptionTargetType.rounds => (target.rounds ?? 0) > 0,
+      PrescriptionTargetType.completion => true,
+      PrescriptionTargetType.qualitative =>
+        target.qualitativeGoal?.trim().isNotEmpty ?? false,
+    };
+    final validLoad =
+        prescription.calculatedLoad == null ||
+        ((prescription.unroundedLoad ?? -1) >= 0 &&
+            (prescription.roundingIncrement ?? 0) > 0);
+    if (!validTarget || !validLoad) {
+      _add(
+        issues,
+        ProgramDomainIssueCode.invalidPrescription,
+        '${prescription.id} has an incomplete target or load calculation.',
+      );
+    }
+    return ProgramDomainValidation(List.unmodifiable(issues));
+  }
+
   ProgramDomainValidation validate(ComposableProgramDomain domain) {
     final issues = <ProgramDomainIssue>[];
     _duplicates(domain.concepts.map((e) => e.id.value), 'concept', issues);
@@ -191,6 +239,21 @@ class ProgramDomainValidator {
           issues,
           ProgramDomainIssueCode.missingGenerator,
           '${blueprint.id} has no generator.',
+        );
+      }
+      if (blueprint.implementationStatus == ImplementationStatus.available &&
+          (blueprint.sourceEdition == null ||
+              blueprint.generation == null ||
+              blueprint.references.isEmpty ||
+              blueprint.references.any(
+                (reference) =>
+                    reference.document.trim().isEmpty ||
+                    (reference.location?.trim().isEmpty ?? true),
+              ))) {
+        _add(
+          issues,
+          ProgramDomainIssueCode.missingSource,
+          '${blueprint.id} lacks exact source edition or generation.',
         );
       }
     }

@@ -1,9 +1,39 @@
-# Domaine de programmes composable
+# Domaine canonique multi-génération
 
-Le domaine v2 se trouve sous `lib/features/programs/domain/v2`. Il sépare les concepts historiques, leurs révisions et les blueprints exécutables. Un blueprint compose des policies versionnées, des blocs ordonnés, des transitions, des capacités et des contraintes; aucune règle numérique provenant d'un ouvrage n'est encodée dans un enum.
+Le contrat Dart pur actuellement conservé sous
+`lib/features/programs/domain/v2` est le domaine canonique en cours de migration
+vers Core v5. Il sépare explicitement :
 
-Les identifiants sont des types valeur stables. La sérialisation reste dans `program_domain_serializer.dart`. Le validateur agrège les erreurs de structure et de disponibilité avant qu'un blueprint atteigne un générateur.
+- l'origine historique d'un concept ;
+- l'édition source (`Original`, `Powerlifting`, `Beyond`, `Forever`) ;
+- la génération du ruleset exécuté ;
+- les identifiants stables de concept, révision et blueprint ;
+- le type structurel d'un bloc, son rôle et la finalité typée d'un protocole
+  7th Week.
 
-Le v1 demeure inchangé. `ProgramV1Adapter` traduit explicitement son catalogue vers le v2 et conserve `forever-original-fsl-v1`. La lecture `ProgramDefinitionRef.fromJson`, l'alias `classic` et le schéma SQLite v1 restent donc compatibles.
+`MethodGeneration` n'est défini qu'ici. `program_identity.dart` expose désormais
+un alias de migration vers ce type canonique afin de préserver les imports et
+identifiants persistants historiques sans maintenir un second enum concurrent.
 
-Ce lot modélise les séquences et plusieurs mouvements principaux par séance, mais ne génère pas encore de macrocycle et n'ajoute aucun programme ou écran.
+## Mouvements et prescriptions
+
+`MovementId` est une valeur extensible. Les quatre mouvements historiques sont
+des constantes, au même titre que power clean et front squat, mais aucune boucle
+du nouveau domaine ne dépend d'une liste enum fermée.
+
+`ActivityPrescription` représente séries/répétitions/charge, séries au poids du
+corps, répétitions totales, durée, distance, rounds, completion ou objectif
+qualitatif. La prescription conserve position, mouvement ou activité, type,
+règle, édition, génération, référence exacte et détails d'arrondi. Le résultat
+réel est un objet séparé.
+
+## Validation et compatibilité
+
+Le validateur agrège doublons, références manquantes, versions absentes,
+transitions impossibles, fréquences incompatibles, générateurs manquants, règles
+non revues et provenance absente. Il rejette aussi toute prescription dont la
+cible ou la source est incomplète.
+
+`ProgramV1Adapter` reste un adaptateur de migration : il convertit les anciens
+catalogues vers ces types, conserve les identifiants persistants et renseigne
+explicitement édition et génération. Il ne constitue plus un second domaine.

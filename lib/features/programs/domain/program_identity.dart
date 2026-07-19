@@ -1,4 +1,6 @@
-enum MethodGeneration { original, beyond, forever }
+import 'v2/program_domain.dart' as canonical;
+
+typedef MethodGeneration = canonical.MethodGeneration;
 
 enum ForeverStatus {
   current,
@@ -96,6 +98,7 @@ class ProgramDefinitionRef {
 
   static MethodGeneration? parseGeneration(Object? value) => switch (value) {
     'original' || 'classic' => MethodGeneration.original,
+    'powerlifting' => MethodGeneration.powerlifting,
     'beyond' => MethodGeneration.beyond,
     'forever' => MethodGeneration.forever,
     _ => null,

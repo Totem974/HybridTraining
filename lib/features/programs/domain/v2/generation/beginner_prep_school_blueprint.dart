@@ -253,7 +253,13 @@ class BeginnerPrepSchoolBlueprint {
       ruleStatus: RuleStatus.verified,
     ),
     blockTemplates: [
-      BlockTemplate(id: BlockTemplateId('bps-leader'), role: BlockRole.leader),
+      BlockTemplate(
+        id: BlockTemplateId('bps-leader'),
+        role: BlockRole.leader,
+        type: BlockType.cycle,
+        sourceEdition: SourceEdition.forever,
+        generation: MethodGeneration.forever,
+      ),
     ],
     blockSequence: BlockSequence(
       blocks: [
@@ -272,6 +278,8 @@ class BeginnerPrepSchoolBlueprint {
     ),
     implementationStatus: ImplementationStatus.available,
     generatorId: 'beginner-prep-school',
+    sourceEdition: SourceEdition.forever,
+    generation: MethodGeneration.forever,
     references: [
       RuleReference(document: '5/3/1 Forever', location: 'PDF 50-57'),
       RuleReference(
