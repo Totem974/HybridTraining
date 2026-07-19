@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/features/programs/domain/load_rounding.dart';
-import 'package:hybrid_training/features/programs/domain/original_fsl_program.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
 import 'package:hybrid_training/features/programs/domain/v2/generation/forever_macrocycle_generator.dart';
 import 'package:hybrid_training/features/programs/domain/v2/generation/generated_training_plan.dart';
@@ -187,65 +186,35 @@ void main() {
     });
   });
 
-  test('adapter reproduit exactement forever-original-fsl-v1', () {
-    const rounder = LoadRounder(increment: 2.5);
-    final athlete = AthletePlanConfiguration(
-      trainingMaxes: const {
-        MainLift.squat: 180,
-        MainLift.benchPress: 120,
-        MainLift.deadlift: 200,
-        MainLift.overheadPress: 80,
-      },
-      unit: WeightUnit.kilograms,
-      trainingWeekdays: const [1, 2, 4, 5],
-      startDate: const LocalDate(2026, 7, 20),
-      rounder: rounder,
-    );
-    final plan = const OriginalFslMacrocycleAdapter().generate(
-      athlete: athlete,
-      movementOrder: const [
-        MainLift.squat,
-        MainLift.benchPress,
-        MainLift.deadlift,
-        MainLift.overheadPress,
-      ],
-    );
-    final weeks = plan.blocks.single.cycles.single.weeks;
-    for (var week = 1; week <= 3; week++) {
-      for (var movementIndex = 0; movementIndex < 4; movementIndex++) {
-        final movement = athlete.trainingMaxes.keys.elementAt(movementIndex);
-        final historical = const OriginalFslProgram().buildSession(
-          week: week,
-          liftMax: LiftMax(
-            lift: movement,
-            oneRepMax: athlete.trainingMaxes[movement]! / 0.9,
-            trainingMaxRatio: 0.9,
-            unit: WeightUnit.kilograms,
-          ),
-          rounder: rounder,
-        );
-        final generated = weeks[week - 1].sessions[movementIndex].blocks
-            .expand((block) => block.prescriptions)
-            .toList();
-        expect(
-          generated.map((set) => set.percentage),
-          historical.sets.map((set) => set.percentage),
-        );
-        expect(
-          generated.map((set) => set.repetitions),
-          historical.sets.map((set) => set.repetitions),
-        );
-        expect(
-          generated.map((set) => set.load),
-          historical.sets.map((set) => set.load),
-        );
-        expect(
-          generated.map((set) => set.isPerformanceSet),
-          historical.sets.map((set) => set.isPerformanceSet),
-        );
-      }
-    }
-  });
+  test(
+    'adapter Original FSL reste non exécutable tant que les règles manquent',
+    () {
+      final athlete = AthletePlanConfiguration(
+        trainingMaxes: const {
+          MainLift.squat: 180,
+          MainLift.benchPress: 120,
+          MainLift.deadlift: 200,
+          MainLift.overheadPress: 80,
+        },
+        unit: WeightUnit.kilograms,
+        trainingWeekdays: const [1, 2, 4, 5],
+        startDate: const LocalDate(2026, 7, 20),
+        rounder: const LoadRounder(increment: 2.5),
+      );
+      expect(
+        () => const OriginalFslMacrocycleAdapter().generate(
+          athlete: athlete,
+          movementOrder: const [
+            MainLift.squat,
+            MainLift.benchPress,
+            MainLift.deadlift,
+            MainLift.overheadPress,
+          ],
+        ),
+        throwsA(isA<MacrocycleGenerationException>()),
+      );
+    },
+  );
 }
 
 const _verifiedMain = ReviewedRule(

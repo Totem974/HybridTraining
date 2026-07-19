@@ -102,7 +102,7 @@ class SqliteTrainingStore implements TrainingStore {
         'trainingDaysPerWeek',
       );
     }
-    final program = const ProgramGeneratorFactory().resolve(
+    final program = const ProgramGeneratorFactory().resolveLegacy(
       input.persistentPresetId,
     );
     input.schedule.ensureValid();

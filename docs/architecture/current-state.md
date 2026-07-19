@@ -1,30 +1,23 @@
-# Architecture actuelle
+# Current state
 
-Source : code au `2080a27`, revu le 18 juillet 2026.
+The active application starts directly in the Core Validation Shell. The
+rejected onboarding, dashboard, visual calendar, visual program library and
+guided workout presentation were removed from the compiled source tree.
 
-## CURRENT
+The active dependency direction is:
 
-```mermaid
-flowchart TD
-  Entry["main / main_dev / main_prod"] --> App["HybridTrainingApp"]
-  App --> Controller["FoundationController"]
-  Controller --> Store["TrainingStore"]
-  Store --> Legacy["SqliteTrainingStore — parcours UI v1"]
-  Legacy --> Factory["ProgramGeneratorFactory — Original FSL"]
-  Legacy --> DB[("SQLite schema 3")]
-  App --> Setup["ProfileSetup / DevelopmentBootstrap"]
-  App --> Home["TrainingHomeScreen"]
-  Home --> Library["ProgramLibraryScreen"]
-  V2["Domaine/générateurs v2"] --> PlanStore["SqliteVersionedPlanStore"]
-  Runtime["ComposableWorkout"] --> RuntimeStore["SqliteWorkoutRuntimeStore"]
-  PlanStore --> DB
-  RuntimeStore --> DB
-  V2 -. "non raccordé à l'app" .-> App
-  Runtime -. "non raccordé à l'app" .-> App
+```text
+Core Validation presentation
+  -> application use cases and repository interfaces
+  -> pure Dart program and plan domain
+  <- SQLite repository implementations
 ```
 
-La navigation est actuellement impérative (`MaterialPageRoute`). L'organisation feature-first existe, mais `TrainingHomeScreen` regroupe encore plusieurs destinations. Le schéma v2/v3 et ses stores sont testés isolément ; ils ne décrivent pas encore le parcours produit actif.
+Beginner Prep School v1 is the only executable preset. Its generation flows
+through `GenerateBeginnerPlan`, `ForeverMacrocycleGenerator`,
+`VersionedTrainingPlan` and `PlanRepository`. Original + FSL remains available
+only to the isolated legacy persistence compatibility path and cannot be
+selected by the active application.
 
-## TARGET
-
-Présentation par feature, état injecté testable, navigation déclarative et raccordement du plan versionné/runtime composable, tout en conservant un adaptateur de lecture v1.
+SQLite schema v3 is still in use. The v1 tables remain readable for migration
+and backup compatibility; new shell plans use the versioned v2/v3 tables.

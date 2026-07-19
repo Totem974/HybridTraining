@@ -2,375 +2,64 @@ class AppStrings {
   const AppStrings() : languageCode = 'fr';
   const AppStrings.english() : languageCode = 'en';
 
+  factory AppStrings.forLanguage(String languageCode) =>
+      languageCode == 'fr' ? const AppStrings() : const AppStrings.english();
+
   final String languageCode;
   bool get _fr => languageCode == 'fr';
 
-  String get setupTitle =>
-      _fr ? 'Créer votre profil local' : 'Create your local profile';
-  String get compatibilityPresetNotice => _fr
-      ? 'Preset de compatibilité disponible pendant la construction du moteur Forever.'
-      : 'Compatibility preset available while the Forever engine is being built.';
-  String get developmentBootstrapTitle =>
-      _fr ? 'Données de démonstration' : 'Demo data';
-  String get developmentBootstrapDescription => _fr
-      ? 'Crée un profil fictif et un plan déterministe réservé au flavor dev.'
-      : 'Creates a fictional profile and deterministic plan for the dev flavor only.';
-  String get createDevelopmentDemo =>
-      _fr ? 'Créer le profil de démonstration' : 'Create demo profile';
-  String get displayName => _fr ? 'Prénom ou pseudonyme' : 'Name or nickname';
+  String get coreValidationTitle =>
+      _fr ? 'Validation du moteur' : 'Engine validation';
+  String get developmentValidationBanner => _fr
+      ? 'OUTIL DEV — DONNÉES FICTIVES DE VALIDATION'
+      : 'DEV TOOL — FICTIONAL VALIDATION DATA';
+  String get engine => _fr ? 'Moteur' : 'Engine';
+  String get tracking => _fr ? 'Suivi' : 'Tracking';
+  String get profile => _fr ? 'Profil' : 'Profile';
+  String get settings => _fr ? 'Réglages' : 'Settings';
+  String get onlyReviewedPreset => _fr
+      ? 'Seul le preset entièrement revu est activable.'
+      : 'Only the fully reviewed preset is executable.';
+  String get activePlans => _fr ? 'Plans actifs' : 'Active plans';
+  String get plannedSessions => _fr ? 'Séances planifiées' : 'Planned workouts';
+  String get completedSessions =>
+      _fr ? 'Séances terminées' : 'Completed workouts';
+  String get successfulSetCount => _fr ? 'Séries réussies' : 'Successful sets';
+  String get failedSetCount => _fr ? 'Séries échouées' : 'Failed sets';
+  String get skippedSetCount => _fr ? 'Séries sautées' : 'Skipped sets';
+  String get actualTonnage => _fr ? 'Tonnage réel' : 'Actual tonnage';
+  String get actualTonnageUnavailable => _fr
+      ? 'Tonnage réel indisponible : aucune charge réalisée.'
+      : 'Actual tonnage unavailable: no performed load recorded.';
+  String get createDevelopmentFixture => _fr
+      ? 'Créer le profil fictif DEV et générer le plan'
+      : 'Create DEV fixture profile and generate plan';
+  String get noProductionDemo => _fr
+      ? 'Aucune donnée de démonstration n’est créée en production.'
+      : 'No demo data is created in production.';
+  String get noLocalProfile => _fr ? 'Aucun profil local' : 'No local profile';
   String get unit => _fr ? 'Unité' : 'Unit';
-  String get maxInstructions => _fr
-      ? 'Saisissez votre 1RM pour les quatre mouvements.'
-      : 'Enter your one-rep max for all four lifts.';
-  String get selectedProgram =>
-      '${_fr ? 'Programme' : 'Program'} : ${programLabel('program.forever_original_fsl')}';
-  String get createCycle => _fr ? 'Créer mon cycle' : 'Create my cycle';
-  String get workout => _fr ? 'Séance' : 'Workout';
-  String get home => _fr ? 'Accueil' : 'Home';
-  String get previousBlock => _fr ? 'Précédent' : 'Previous';
-  String get nextBlock => _fr ? 'Suivant' : 'Next';
-  String get successfulResult => _fr ? 'Réussi' : 'Success';
-  String get failedResult => _fr ? 'Échoué' : 'Failure';
-  String get skippedResult => _fr ? 'Sauté' : 'Skipped';
-  String workoutBlockRole(String role) => switch ((languageCode, role)) {
-    ('fr', 'mobility') => 'Mobilité',
-    ('fr', 'warmUp') => 'Échauffement',
-    ('fr', 'jumpsThrows') => 'Sauts et lancers',
-    ('fr', 'mainWork') => 'Travail principal',
-    ('fr', 'performanceSet') => 'Série de performance',
-    ('fr', 'supplemental') => 'Complément',
-    ('fr', 'assistancePush') => 'Assistance poussée',
-    ('fr', 'assistancePull') => 'Assistance tirage',
-    ('fr', 'assistanceSingleLegCore') => 'Unilatéral et tronc',
-    ('fr', 'conditioningEasy') => 'Conditionnement facile',
-    ('fr', 'conditioningHard') => 'Conditionnement difficile',
-    ('fr', 'trainingMaxTest') => 'Test Training Max',
-    ('fr', 'personalRecordTest') => 'Test record personnel',
-    (_, 'mobility') => 'Mobility',
-    (_, 'warmUp') => 'Warm-up',
-    (_, 'jumpsThrows') => 'Jumps and throws',
-    (_, 'mainWork') => 'Main work',
-    (_, 'performanceSet') => 'Performance set',
-    (_, 'supplemental') => 'Supplemental',
-    (_, 'assistancePush') => 'Push assistance',
-    (_, 'assistancePull') => 'Pull assistance',
-    (_, 'assistanceSingleLegCore') => 'Single-leg and core',
-    (_, 'conditioningEasy') => 'Easy conditioning',
-    (_, 'conditioningHard') => 'Hard conditioning',
-    (_, 'trainingMaxTest') => 'Training Max test',
-    (_, 'personalRecordTest') => 'Personal record test',
-    _ => role,
-  };
-  String get history => _fr ? 'Historique' : 'History';
-  String get noSession =>
-      _fr ? 'Aucune séance planifiée.' : 'No planned workout.';
-  String get noHistory =>
-      _fr ? 'Aucune séance terminée.' : 'No completed workout.';
-  String get finishSession => _fr ? 'Terminer la séance' : 'Finish workout';
-  String get done => _fr ? 'Fait' : 'Done';
+  String get exportData => _fr ? 'Exporter les données' : 'Export data';
+  String get exportReady => _fr ? 'Sauvegarde prête' : 'Backup ready';
+  String get deleteData => _fr ? 'Effacer les données' : 'Delete data';
+  String get deleteDataWarning => _fr
+      ? 'Cette action efface le profil, les plans, les séances et les résultats locaux.'
+      : 'This deletes the local profile, plans, workouts, and results.';
+  String get cancel => _fr ? 'Annuler' : 'Cancel';
+  String get delete => _fr ? 'Effacer' : 'Delete';
   String get retry => _fr ? 'Réessayer' : 'Retry';
   String get genericError =>
       _fr ? 'Une erreur locale est survenue.' : 'A local error occurred.';
-  String get writeFailed => _fr
-      ? 'Enregistrement impossible. Vous pouvez réessayer.'
-      : 'Could not save. You can try again.';
-  List<String> get onboardingTitles => _fr
-      ? [
-          'Introduction',
-          'Programme',
-          'Planning',
-          'Charge maximum',
-          'Validation',
-          'Votre plan',
-        ]
-      : [
-          'Introduction',
-          'Program',
-          'Schedule',
-          'Maximum load',
-          'Validation',
-          'Your plan',
-        ];
-  String get introMessage => _fr
-      ? 'Configurez votre premier cycle 5/3/1. Vous pourrez le personnaliser plus tard.'
-      : 'Set up your first 5/3/1 cycle. You can customize it later.';
-  String get standardProgram => 'Standard';
-  String get fullBodyProgram => 'Full Body';
-  String get recommended => _fr ? 'RECOMMANDÉ' : 'RECOMMENDED';
-  String get selectedProgramBadge => _fr ? 'SÉLECTIONNÉ' : 'SELECTED';
-  String get currentFilter => _fr ? 'Actuels' : 'Current';
-  String get legacyFilter => 'Legacy';
-  String get allFilter => _fr ? 'Tous' : 'All';
-  String get origin => _fr ? 'Origine' : 'Origin';
-  String get allOrigins => _fr ? 'Toutes' : 'All';
-  String get originalGeneration => 'Original';
-  String get beyondGeneration => 'Beyond';
-  String get foreverGeneration => 'Forever';
-  String get revision => _fr ? 'Révision' : 'Revision';
-  String get foreverState => _fr ? 'Statut dans Forever' : 'Forever status';
-  String get productAvailability => _fr ? 'Disponibilité' : 'Availability';
-  String get noProgramsForFilter => _fr
-      ? 'Aucun programme documenté dans ce filtre.'
-      : 'No documented program in this filter.';
-  String get toReview => _fr ? 'À vérifier' : 'Needs review';
-  String get chooseProgram =>
-      _fr ? 'Choisir ce programme' : 'Choose this program';
-  String get programSelected =>
-      _fr ? 'Programme sélectionné' : 'Program selected';
-  String get conceptType => _fr ? 'Type de concept' : 'Concept type';
-  String get revisionHistory =>
-      _fr ? 'Historique des révisions' : 'Revision history';
-  String get rulesNeedReview => _fr ? 'Règles à valider' : 'Rules need review';
-  String get presetDetails => _fr ? 'Preset disponible' : 'Available preset';
-  String get persistentPreset =>
-      _fr ? 'Identifiant persistant' : 'Persistent identifier';
-  String get rulesGeneration =>
-      _fr ? 'Génération des règles' : 'Rules generation';
-  String get mainWork => _fr ? 'Travail principal' : 'Main work';
-  String get supplementalWork =>
-      _fr ? 'Travail supplémentaire' : 'Supplemental work';
-  String get trainingMax => 'Training Max';
-  String get supportedFrequencies =>
-      _fr ? 'Fréquences supportées' : 'Supported frequencies';
-  String get recommendedFrequency =>
-      _fr ? 'Fréquence recommandée' : 'Recommended frequency';
-  String get version => 'Version';
-  String get viewCurrentPrograms =>
-      _fr ? 'Voir les programmes actuels' : 'View current programs';
-  String get browseLibrary =>
-      _fr ? 'Parcourir toute la bibliothèque' : 'Browse the full library';
-  String exploreOrigin(String generation) => _fr
-      ? 'Explorer les concepts issus de $generation'
-      : 'Explore concepts originating in $generation';
-  String get currentVerifiedAvailable => _fr
-      ? 'ACTUEL · RÈGLES VÉRIFIÉES · DISPONIBLE'
-      : 'CURRENT · RULES REVIEWED · AVAILABLE';
-  String get fourDaysRecommended =>
-      _fr ? '4 jours recommandés' : '4 days recommended';
-  String get threeDayCalendar => _fr
-      ? '12 séances réparties sur 4 semaines calendaires.'
-      : '12 workouts spread over 4 calendar weeks.';
-  String get validationMessage => _fr
-      ? 'Vérifiez vos charges avant de générer le cycle.'
-      : 'Review your loads before generating the cycle.';
-  String get requiredField => _fr ? 'Champ obligatoire' : 'Required field';
-  String get positiveValueRequired =>
-      _fr ? 'Valeur positive obligatoire' : 'Positive value required';
-  String get back => _fr ? 'Retour' : 'Back';
-  String get continueLabel => _fr ? 'Continuer' : 'Continue';
-  String get creating => _fr ? 'Création…' : 'Creating…';
-  String get programPrompt =>
-      _fr ? 'Choisissez votre point de départ' : 'Choose your starting point';
-  String get foundationProgram => programLabel('program.forever_original_fsl');
-  String get foundationProgramDescription => _fr
-      ? 'Le programme validé pour ce premier POC.'
-      : 'The program validated for this first POC.';
-  String get pocProgramNotice => _fr
-      ? 'Les autres variantes seront ajoutées progressivement.'
-      : 'Other variants will be added progressively.';
-  String get startPrompt =>
-      _fr ? 'Quand voulez-vous commencer ?' : 'When do you want to start?';
-  String get startDate => _fr ? 'Date de début' : 'Start date';
-  String get frequencyPrompt =>
-      _fr ? 'Combien de jours par semaine ?' : 'How many days per week?';
-  String get threeDays => _fr ? '3 jours' : '3 days';
-  String get fourDays => _fr ? '4 jours' : '4 days';
-  String get today => _fr ? 'Aujourd’hui' : 'Today';
-  String get tomorrow => _fr ? 'Demain' : 'Tomorrow';
-  String get nextMonday => _fr ? 'Prochain lundi' : 'Next Monday';
-  String get trainingDays => _fr ? 'Jours de la semaine' : 'Weekdays';
-  String daysSelected(int selected, int expected) =>
-      _fr ? '$selected/$expected sélectionnés' : '$selected/$expected selected';
-  String get consecutiveDaysWarning => _fr
-      ? 'Cette répartition comporte au moins trois journées consécutives.'
-      : 'This schedule contains at least three consecutive training days.';
-  String get fixedAssignments =>
-      _fr ? 'Affectation fixe par jour' : 'Fixed weekday assignment';
-  String get rotationAcrossDays => _fr
-      ? 'Rotation sur les jours sélectionnés'
-      : 'Rotation across selected days';
-  String get moveUp => _fr ? 'Monter' : 'Move up';
-  String get moveDown => _fr ? 'Descendre' : 'Move down';
-  String get schedulePreview => _fr ? 'Aperçu du planning' : 'Schedule preview';
-  String get firstSession => _fr ? 'Première séance' : 'First workout';
-  String get lastSession => _fr ? 'Dernière séance' : 'Last workout';
-  String get programWeeks =>
-      _fr ? 'semaines de programmation' : 'program weeks';
-  String get calendarWeeks => _fr ? 'semaines calendaires' : 'calendar weeks';
-  String get liftOrder => _fr ? 'Ordre des mouvements' : 'Lift order';
-  String get readyMessage => _fr
-      ? 'Votre premier cycle est prêt à être créé.'
-      : 'Your first cycle is ready to be created.';
-  String get frequency => _fr ? 'Jours par semaine' : 'Days per week';
-  String get settings => _fr ? 'Réglages' : 'Settings';
-  String get settingsComingSoon => _fr
-      ? 'Les réglages arrivent dans le prochain lot.'
-      : 'Settings are coming in the next batch.';
-  String get hello => _fr ? 'Bonjour' : 'Hello';
-  String get thisWeek => _fr ? 'Cette semaine' : 'This week';
-  String get currentCycle => _fr ? 'Cycle en cours' : 'Current cycle';
-  String get edit => _fr ? 'Modifier' : 'Edit';
-  String get cycleDescription => _fr
-      ? 'Cycle local de trois semaines · progression sauvegardée automatiquement.'
-      : 'Local three-week cycle · progress saved automatically.';
-  String get topSet => _fr ? 'Série max' : 'Top set';
-  String get mainSets => _fr ? 'Séries principales' : 'Main sets';
-  String get firstSetLast => 'First Set Last';
-  String get startWorkout => _fr ? 'Commencer' : 'Start';
-  String get resumeWorkout => _fr ? 'Reprendre' : 'Resume';
-  String get activeWorkout => _fr ? 'Séance en cours' : 'Active workout';
-  String get next => _fr ? 'Suivant' : 'Next';
-  String get workoutComplete => _fr ? 'Séance terminée' : 'Workout complete';
-  String get rest => _fr ? 'Repos' : 'Rest';
-  String get skipRest => _fr ? 'Passer le repos' : 'Skip rest';
-  String get sessionNotes => _fr ? 'Notes de séance' : 'Workout notes';
-  String get setComplete => _fr ? 'Série terminée' : 'Set complete';
-  String get setsCompleted => _fr ? 'séries terminées' : 'sets completed';
-  String get amrapRepetitions =>
-      _fr ? 'Répétitions réalisées' : 'Completed repetitions';
-  String get setFailed => _fr ? 'Échec' : 'Failed';
-  String get skipSet => _fr ? 'Passer' : 'Skip';
-  String get successfulSets => _fr ? 'réussies' : 'successful';
-  String get failedSets => _fr ? 'échouées' : 'failed';
-  String get skippedSets => _fr ? 'passées' : 'skipped';
-  String get perSide => _fr ? 'Par côté' : 'Per side';
-  String get emptyBar => _fr ? 'barre seule' : 'empty bar';
-  String get noExactPlateLoad => _fr
-      ? 'Charge exacte indisponible avec les plaques par défaut.'
-      : 'Exact load unavailable with the default plates.';
-  String get notifications => _fr ? 'Notifications' : 'Notifications';
-  String get statistics => _fr ? 'Statistiques' : 'Statistics';
-  String get sessions => _fr ? 'séances' : 'workouts';
-  String get cycleWeek => _fr ? 'semaine cycle' : 'cycle week';
-  String get recordsComingFromWorkouts => _fr
-      ? 'Les statistiques détaillées apparaîtront au fil des séances enregistrées.'
-      : 'Detailed statistics will appear as workouts are recorded.';
-  String get profile => _fr ? 'Profil' : 'Profile';
-  String get editLoads => _fr ? 'Modifier mes charges' : 'Edit my loads';
-  String get preferences => _fr ? 'PRÉFÉRENCES' : 'PREFERENCES';
-  String get units => _fr ? 'Unités' : 'Units';
-  String get program => _fr ? 'PROGRAMME' : 'PROGRAM';
-  String get manageProgram => _fr ? 'Gérer mon programme' : 'Manage my program';
-  String get editCycle => _fr ? 'Modifier le cycle' : 'Edit cycle';
-  String get library => _fr ? 'Bibliothèque' : 'Library';
-  String get libraryDescription => _fr
-      ? 'Liste des programmes indexés. Seules les règles vérifiées sont activables.'
-      : 'Indexed programs. Only verified rules can be enabled.';
-  String get programDetails => _fr ? 'Fiche détaillée' : 'Program details';
-  String get programFamily => _fr ? 'Famille' : 'Family';
-  String get programTemplate => 'Template';
-  String get validationStatus =>
-      _fr ? 'Statut documentaire' : 'Documentation status';
   String get rulesReviewed => _fr ? 'Règles vérifiées' : 'Rules reviewed';
-  String get indexedOnly => _fr ? 'Règles à vérifier' : 'Rules need review';
-  String get documentarySource => _fr ? 'Source' : 'Source';
-  String get bookPages => _fr ? 'pages livre' : 'book pages';
-  String get pdfPages => _fr ? 'pages PDF' : 'PDF pages';
-  String get programRulesValidated => _fr
-      ? 'Les règles de ce programme sont validées et utilisées par le POC.'
-      : 'This program rules are validated and used by the POC.';
-  String get programRulesNeedReview => _fr
-      ? 'Programme indexé, mais ses règles doivent encore être vérifiées avant activation.'
-      : 'Indexed program, but its rules still need review before activation.';
-  String get currentProgram => _fr ? 'Programme actuel' : 'Current program';
-  String get comingSoon => _fr ? 'Bientôt disponible' : 'Coming soon';
-  String get save => _fr ? 'Enregistrer' : 'Save';
-  String get trainingMaxExplanation => _fr
-      ? 'Ajustez vos Training Max. Seules les séries futures non réalisées seront recalculées.'
-      : 'Adjust your Training Maxes. Only future unrecorded sets will be recalculated.';
-  String get data => _fr ? 'DONNÉES' : 'DATA';
-  String get exportData => _fr ? 'Exporter les données' : 'Export data';
-  String get importData => _fr ? 'Importer les données' : 'Import data';
-  String get deleteData => _fr ? 'Effacer les données' : 'Delete data';
-  String get exportReady => _fr ? 'Sauvegarde prête' : 'Backup ready';
-  String get copyJson => _fr ? 'Copier le JSON' : 'Copy JSON';
-  String get importInstructions => _fr
-      ? 'Collez une sauvegarde Hybrid 5/3/1. La simulation est obligatoire avant import.'
-      : 'Paste a Hybrid 5/3/1 backup. A dry run is required before import.';
-  String get simulateImport => _fr ? 'Simuler l’import' : 'Dry run';
-  String get applyImport => _fr ? 'Importer maintenant' : 'Import now';
-  String get importInvalid => _fr ? 'Import impossible' : 'Import invalid';
-  String get importValid => _fr ? 'Sauvegarde valide' : 'Backup valid';
-  String get deleteDataWarning => _fr
-      ? 'Cette action efface définitivement le profil, les cycles, les séances et les records locaux.'
-      : 'This permanently deletes the local profile, cycles, workouts, and records.';
-  String get cancel => _fr ? 'Annuler' : 'Cancel';
-  String get delete => _fr ? 'Effacer' : 'Delete';
+  String get compatibilityPresetNotice => _fr
+      ? 'Preset de compatibilité disponible pendant la construction du moteur Forever.'
+      : 'Compatibility preset available while the Forever engine is being built.';
 
   String programLabel(String key) => switch (key) {
     'program.forever_original_fsl' =>
       '5/3/1 Forever — Original + First Set Last',
-    'program.forever_boring_but_big' => 'Boring But Big',
-    'program.forever_full_body_1000' => 'Full Body (1000% Awesome)',
-    'program.beyond_catalog' => '5/3/1 Beyond',
-    'program.classic_catalog' => '5/3/1 Classic',
-    'program.original_531' => 'Original 5/3/1',
-    'program.first_set_last' => 'First Set Last',
-    'program.boring_but_big' => 'Boring But Big',
-    'program.joker_sets' => 'Joker Sets',
-    'program.boring_but_strong' => 'Boring But Strong',
-    'program.full_body_1000' => 'Full Body (1000% Awesome)',
-    'program.coffinworm' => 'Coffinworm',
-    'program.pervertor' => 'Pervertor',
-    'program.god_is_a_beast' => 'God Is a Beast',
-    'program.krypteia' => 'Krypteia',
+    'program.beginner_prep_school' => 'Beginner Prep School',
     _ => key,
-  };
-
-  String generationLabel(String? value) => switch (value) {
-    'original' => 'Original',
-    'beyond' => 'Beyond',
-    'forever' => 'Forever',
-    _ => toReview,
-  };
-
-  String foreverStatusLabel(String? value) => switch (value) {
-    'current' => _fr ? 'Actuel' : 'Current',
-    'currentWithRestrictions' =>
-      _fr ? 'Actuel avec restrictions' : 'Current with restrictions',
-    'legacy' => 'Legacy',
-    'superseded' => _fr ? 'Remplacé' : 'Superseded',
-    _ => toReview,
-  };
-
-  String documentationStatusLabel(String value) => switch (value) {
-    'rulesReviewed' => rulesReviewed,
-    'indexed' => _fr ? 'Indexé' : 'Indexed',
-    _ => rulesNeedReview,
-  };
-
-  String availabilityLabel(String value) => switch (value) {
-    'available' => _fr ? 'Disponible' : 'Available',
-    'comingSoon' => comingSoon,
-    _ => _fr ? 'Documentation uniquement' : 'Documentation only',
-  };
-
-  String availabilityAction(String availability, String documentation) {
-    if (documentation == 'needsReview') return rulesNeedReview;
-    return availability == 'comingSoon'
-        ? comingSoon
-        : (_fr ? 'Documentation uniquement' : 'Documentation only');
-  }
-
-  String conceptTypeLabel(String value) => switch (value) {
-    'mainMethod' => _fr ? 'Méthode principale' : 'Main method',
-    'supplementalWork' => _fr ? 'Travail supplémentaire' : 'Supplemental work',
-    'assistance' => 'Assistance',
-    'cycleProtocol' => _fr ? 'Protocole de cycle' : 'Cycle protocol',
-    'completePreset' => 'Preset',
-    _ => _fr ? 'Programme autonome' : 'Standalone program',
-  };
-
-  String familyLabel(String family) => switch (family) {
-    'forever' => 'Forever',
-    'beyond' => 'Beyond',
-    'classic' => 'Classic',
-    _ => family,
-  };
-
-  String templateLabel(String key) => switch (key) {
-    'program.forever_original_fsl' => 'Original + First Set Last',
-    _ => programLabel(key),
   };
 
   String lift(String id) => switch ((languageCode, id)) {
@@ -382,39 +71,5 @@ class AppStrings {
     (_, 'deadlift') => 'Deadlift',
     (_, 'overheadPress') => 'Overhead press',
     _ => id,
-  };
-
-  String weekdayShort(int iso) => switch ((languageCode, iso)) {
-    ('fr', 1) => 'Lun',
-    ('fr', 2) => 'Mar',
-    ('fr', 3) => 'Mer',
-    ('fr', 4) => 'Jeu',
-    ('fr', 5) => 'Ven',
-    ('fr', 6) => 'Sam',
-    ('fr', 7) => 'Dim',
-    (_, 1) => 'Mon',
-    (_, 2) => 'Tue',
-    (_, 3) => 'Wed',
-    (_, 4) => 'Thu',
-    (_, 5) => 'Fri',
-    (_, 6) => 'Sat',
-    _ => 'Sun',
-  };
-
-  String weekdayLong(int iso) => switch ((languageCode, iso)) {
-    ('fr', 1) => 'Lundi',
-    ('fr', 2) => 'Mardi',
-    ('fr', 3) => 'Mercredi',
-    ('fr', 4) => 'Jeudi',
-    ('fr', 5) => 'Vendredi',
-    ('fr', 6) => 'Samedi',
-    ('fr', 7) => 'Dimanche',
-    (_, 1) => 'Monday',
-    (_, 2) => 'Tuesday',
-    (_, 3) => 'Wednesday',
-    (_, 4) => 'Thursday',
-    (_, 5) => 'Friday',
-    (_, 6) => 'Saturday',
-    _ => 'Sunday',
   };
 }

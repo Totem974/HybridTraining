@@ -250,7 +250,7 @@ class ProgramCatalog {
       recommended: false,
       legacyCompatible: true,
       implementationStatus: ProgramImplementationStatus.experimental,
-      generatorId: null,
+      generatorId: 'original-fsl',
     ),
   ];
 
