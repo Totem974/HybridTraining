@@ -7,6 +7,7 @@ class HybridBackupHandler implements ImportFormatHandler {
 
   static const _legacyTableCount = 12;
   static const _version2TableCount = 21;
+  static const _version3TableCount = 24;
 
   static const tables = [
     'athlete_profiles',
@@ -33,6 +34,10 @@ class HybridBackupHandler implements ImportFormatHandler {
     'workout_runtime_sessions',
     'workout_runtime_blocks',
     'workout_activities',
+    'import_runs',
+    'workout_executions',
+    'workout_set_outcomes',
+    'workout_execution_events',
   ];
 
   static const columns = <String, Set<String>>{
@@ -249,6 +254,47 @@ class HybridBackupHandler implements ImportFormatHandler {
       'result_json',
       'updated_at',
     },
+    'import_runs': {
+      'id',
+      'source_format',
+      'source_schema_version',
+      'source_digest',
+      'dry_run',
+      'status',
+      'report_json',
+      'created_at',
+    },
+    'workout_executions': {
+      'session_id',
+      'state',
+      'active_set_index',
+      'rest_until',
+      'paused_from',
+      'notes',
+      'reversible_stack_json',
+      'updated_at',
+      'ended_at',
+    },
+    'workout_set_outcomes': {
+      'prescription_id',
+      'session_id',
+      'sequence',
+      'status',
+      'actual_repetitions',
+      'actual_load',
+      'rpe',
+      'notes',
+      'recorded_at',
+      'updated_at',
+    },
+    'workout_execution_events': {
+      'id',
+      'session_id',
+      'sequence',
+      'event_type',
+      'payload_json',
+      'occurred_at',
+    },
   };
 
   static const requiredColumns = <String, Set<String>>{
@@ -290,6 +336,37 @@ class HybridBackupHandler implements ImportFormatHandler {
       'status',
       'updated_at',
     },
+    'import_runs': {
+      'id',
+      'source_format',
+      'source_digest',
+      'dry_run',
+      'status',
+      'report_json',
+      'created_at',
+    },
+    'workout_executions': {
+      'session_id',
+      'state',
+      'active_set_index',
+      'reversible_stack_json',
+      'updated_at',
+    },
+    'workout_set_outcomes': {
+      'prescription_id',
+      'session_id',
+      'sequence',
+      'status',
+      'updated_at',
+    },
+    'workout_execution_events': {
+      'id',
+      'session_id',
+      'sequence',
+      'event_type',
+      'payload_json',
+      'occurred_at',
+    },
   };
 
   @override
@@ -302,6 +379,7 @@ class HybridBackupHandler implements ImportFormatHandler {
     final sourceVersion = document['schemaVersion'];
     if (sourceVersion != 1 &&
         sourceVersion != 2 &&
+        sourceVersion != 3 &&
         sourceVersion != BackupEnvelope.schemaVersion) {
       issues.add(
         const ImportIssue(
@@ -337,6 +415,7 @@ class HybridBackupHandler implements ImportFormatHandler {
     final expectedTableCount = switch (sourceVersion) {
       1 => _legacyTableCount,
       2 => _version2TableCount,
+      3 => _version3TableCount,
       _ => tables.length,
     };
     final expectedTables = tables.take(expectedTableCount);
@@ -388,7 +467,7 @@ class HybridBackupHandler implements ImportFormatHandler {
         }
       }
     }
-    if (sourceVersion == 1 || sourceVersion == 2) {
+    if (sourceVersion == 1 || sourceVersion == 2 || sourceVersion == 3) {
       for (final table in tables.skip(expectedTableCount)) {
         normalizedPayload[table] = <Object?>[];
       }

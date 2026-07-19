@@ -8,7 +8,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 void main() {
   sqfliteFfiInit();
 
-  test('empty database creates v1 to v3 tables with constraints', () async {
+  test('empty database creates v1 to v4 tables with constraints', () async {
     final database = await databaseFactoryFfi.openDatabase(
       inMemoryDatabasePath,
       options: OpenDatabaseOptions(
@@ -18,6 +18,7 @@ void main() {
           await DatabaseSchema.createV1(db);
           await DatabaseSchema.createV2(db);
           await DatabaseSchema.createV3(db);
+          await DatabaseSchema.createV4(db);
         },
       ),
     );
@@ -42,11 +43,60 @@ void main() {
         'workout_runtime_sessions',
         'workout_runtime_blocks',
         'workout_activities',
+        'workout_executions',
+        'workout_set_outcomes',
+        'workout_execution_events',
       }),
     );
   });
 
-  test('v1 to v3 migration preserves legacy rows', () async {
+  for (final sourceVersion in [2, 3]) {
+    test('v$sourceVersion to v4 migration preserves existing rows', () async {
+      final temporary = await Directory.systemTemp.createTemp(
+        'db-v$sourceVersion-v4-',
+      );
+      addTearDown(() => temporary.delete(recursive: true));
+      final path = '${temporary.path}/migration.db';
+      var database = await databaseFactoryFfi.openDatabase(
+        path,
+        options: OpenDatabaseOptions(
+          version: sourceVersion,
+          onCreate: (db, version) async {
+            await DatabaseSchema.createV1(db);
+            await DatabaseSchema.createV2(db);
+            if (version >= 3) await DatabaseSchema.createV3(db);
+          },
+        ),
+      );
+      await database.insert('app_metadata', {
+        'key': 'source-version',
+        'value': '$sourceVersion',
+      });
+      await database.close();
+
+      final local = LocalDatabase(
+        factory: databaseFactoryFfi,
+        databasePath: path,
+      );
+      database = await local.open();
+      addTearDown(local.close);
+
+      expect(await database.getVersion(), 4);
+      expect(await database.query('app_metadata'), [
+        {'key': 'source-version', 'value': '$sourceVersion'},
+      ]);
+      expect(
+        await _tables(database),
+        containsAll([
+          'workout_executions',
+          'workout_set_outcomes',
+          'workout_execution_events',
+        ]),
+      );
+    });
+  }
+
+  test('v1 to v4 migration preserves legacy rows', () async {
     final temporary = await Directory.systemTemp.createTemp('db-v1-v2-');
     addTearDown(() => temporary.delete(recursive: true));
     final path = '${temporary.path}/migration.db';
@@ -71,7 +121,15 @@ void main() {
     ]);
     expect(await database.query('training_plans'), isEmpty);
     expect(await database.query('workout_runtime_sessions'), isEmpty);
-    expect(await database.getVersion(), 3);
+    expect(await database.getVersion(), 4);
+    expect(
+      await _tables(database),
+      containsAll([
+        'workout_executions',
+        'workout_set_outcomes',
+        'workout_execution_events',
+      ]),
+    );
   });
 
   test('interrupted migration rolls back and leaves v1 restorable', () async {
@@ -127,3 +185,8 @@ void main() {
     );
   });
 }
+
+Future<Set<Object?>> _tables(Database database) async =>
+    (await database.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table'",
+    )).map((row) => row['name']).toSet();

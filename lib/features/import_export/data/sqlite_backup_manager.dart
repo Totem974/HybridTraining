@@ -14,6 +14,9 @@ class SqliteBackupManager implements AtomicImportTarget {
 
   static const _insertOrder = HybridBackupHandler.tables;
   static const _deleteOrder = [
+    'workout_execution_events',
+    'workout_set_outcomes',
+    'workout_executions',
     'workout_activities',
     'workout_runtime_blocks',
     'workout_runtime_sessions',
@@ -37,8 +40,8 @@ class SqliteBackupManager implements AtomicImportTarget {
     'athlete_profiles',
     'program_definitions',
     'exercises',
-    'app_metadata',
     'import_runs',
+    'app_metadata',
   ];
 
   Future<String> exportBackup({required String appVersion}) async {

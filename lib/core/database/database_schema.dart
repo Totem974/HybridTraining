@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 abstract final class DatabaseSchema {
-  static const version = 3;
+  static const version = 4;
 
   static Future<void> createV1(DatabaseExecutor database) async {
     await database.execute('''
@@ -178,7 +178,8 @@ abstract final class DatabaseSchema {
     if (oldVersion == newVersion) return;
     if (oldVersion < 2 && newVersion >= 2) await createV2(database);
     if (oldVersion < 3 && newVersion >= 3) await createV3(database);
-    if (oldVersion >= 1 && newVersion <= 3) return;
+    if (oldVersion < 4 && newVersion >= 4) await createV4(database);
+    if (oldVersion >= 1 && newVersion <= 4) return;
     throw StateError(
       'No database migration registered from $oldVersion to $newVersion.',
     );
@@ -338,6 +339,69 @@ abstract final class DatabaseSchema {
     );
     await database.execute(
       'CREATE INDEX workout_activities_block_idx ON workout_activities(session_block_id, sequence)',
+    );
+  }
+
+  /// Canonical immutable execution state and ordered event journal.
+  /// v3 tables remain readable for backup and migration compatibility.
+  static Future<void> createV4(DatabaseExecutor database) async {
+    await database.execute('''
+      CREATE TABLE workout_executions (
+        session_id TEXT PRIMARY KEY,
+        state TEXT NOT NULL CHECK(state IN (
+          'planned','ready','activeSet','resting','paused',
+          'completed','abandoned','skipped'
+        )),
+        active_set_index INTEGER NOT NULL CHECK(active_set_index >= 0),
+        rest_until TEXT,
+        paused_from TEXT CHECK(paused_from IN ('activeSet','resting')),
+        notes TEXT NOT NULL DEFAULT '',
+        reversible_stack_json TEXT NOT NULL DEFAULT '[]',
+        updated_at TEXT NOT NULL,
+        ended_at TEXT,
+        FOREIGN KEY(session_id) REFERENCES plan_training_sessions(id)
+          ON DELETE CASCADE
+      )
+    ''');
+    await database.execute('''
+      CREATE TABLE workout_set_outcomes (
+        prescription_id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        sequence INTEGER NOT NULL CHECK(sequence >= 0),
+        status TEXT NOT NULL CHECK(status IN (
+          'pending','success','failure','skipped'
+        )),
+        actual_repetitions INTEGER CHECK(actual_repetitions >= 0),
+        actual_load REAL CHECK(actual_load >= 0),
+        rpe REAL CHECK(rpe >= 1 AND rpe <= 10),
+        notes TEXT NOT NULL DEFAULT '',
+        recorded_at TEXT,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY(prescription_id) REFERENCES set_prescriptions(id)
+          ON DELETE CASCADE,
+        FOREIGN KEY(session_id) REFERENCES plan_training_sessions(id)
+          ON DELETE CASCADE,
+        UNIQUE(session_id, sequence)
+      )
+    ''');
+    await database.execute('''
+      CREATE TABLE workout_execution_events (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        sequence INTEGER NOT NULL CHECK(sequence >= 0),
+        event_type TEXT NOT NULL,
+        payload_json TEXT NOT NULL,
+        occurred_at TEXT NOT NULL,
+        FOREIGN KEY(session_id) REFERENCES workout_executions(session_id)
+          ON DELETE CASCADE,
+        UNIQUE(session_id, sequence)
+      )
+    ''');
+    await database.execute(
+      'CREATE INDEX workout_outcomes_session_idx ON workout_set_outcomes(session_id, sequence)',
+    );
+    await database.execute(
+      'CREATE INDEX workout_events_session_idx ON workout_execution_events(session_id, sequence)',
     );
   }
 }
