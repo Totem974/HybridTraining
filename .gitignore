@@ -13,3 +13,17 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Local agent/reference material
+/.SOURCE/
+
+# Generated caches and temporary tooling output
+/.dart_tool/
+/.flutter-plugins-dependencies
+/.kotlin/
+/tmp/
+
+# Machine-specific IDE state
+/.idea/deviceManager.xml
+/.idea/markdown.xml
+/.idea/runConfigurations/
