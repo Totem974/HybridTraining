@@ -111,4 +111,57 @@ void main() {
     expect(execution.updatedAt, t0);
     expect(execution.notes, 'persist me');
   });
+
+  test('rejects malformed executions and invalid state actions', () {
+    expect(
+      () => WorkoutExecution(
+        sessionId: '',
+        sets: const [SetOutcome(setId: 'a')],
+      ),
+      throwsArgumentError,
+    );
+    expect(
+      () => WorkoutExecution(
+        sessionId: 'duplicate',
+        sets: const [
+          SetOutcome(setId: 'a'),
+          SetOutcome(setId: 'a'),
+        ],
+      ),
+      throwsArgumentError,
+    );
+    expect(
+      () => WorkoutExecution(
+        sessionId: 'index',
+        sets: const [SetOutcome(setId: 'a')],
+        activeSetIndex: 2,
+      ),
+      throwsArgumentError,
+    );
+    expect(
+      () => const SetOutcome(
+        setId: 'a',
+      ).record(status: SetOutcomeStatus.pending, recordedAt: t0),
+      throwsArgumentError,
+    );
+    final active = planned().start(t0);
+    expect(() => active.beginRest(t0, t0), throwsArgumentError);
+    expect(() => planned().pause(t0), throwsStateError);
+    expect(() => active.skip(t0), throwsStateError);
+    final recorded = active.recordActiveSet(
+      status: SetOutcomeStatus.success,
+      at: t0,
+      actualRepetitions: 5,
+      actualLoad: 80,
+    );
+    expect(
+      () => WorkoutExecution(
+        sessionId: recorded.sessionId,
+        sets: recorded.sets,
+        state: WorkoutExecutionState.activeSet,
+        activeSetIndex: 0,
+      ).recordActiveSet(status: SetOutcomeStatus.success, at: t0),
+      throwsStateError,
+    );
+  });
 }

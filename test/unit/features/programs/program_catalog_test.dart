@@ -84,6 +84,22 @@ void main() {
     },
   );
 
+  test(
+    'legacy generator factory cannot impersonate the canonical v2 engine',
+    () {
+      const factory = ProgramGeneratorFactory();
+      expect(
+        () => factory.resolve('forever-beginner-prep-school-v1'),
+        throwsA(isA<StateError>()),
+      );
+      expect(
+        () => factory.resolveLegacy('forever-beginner-prep-school-v1'),
+        throwsStateError,
+      );
+      expect(factory.resolveLegacy('forever-original-fsl-v1'), isNotNull);
+    },
+  );
+
   test('available presets require reviewed revisions and production code', () {
     final invalid = ProgramCatalog(
       concepts: catalog.concepts,

@@ -35,4 +35,23 @@ void main() {
       310,
     );
   });
+
+  test('rejects invalid max inputs', () {
+    expect(
+      () => calculator.estimateOneRepMax(load: 0, repetitions: 5),
+      throwsArgumentError,
+    );
+    expect(
+      () => calculator.trainingMax(oneRepMax: 200, ratio: 1.1),
+      throwsArgumentError,
+    );
+    expect(
+      () => calculator.progressedTrainingMax(
+        current: 0,
+        lift: MainLift.squat,
+        unit: WeightUnit.kilograms,
+      ),
+      throwsArgumentError,
+    );
+  });
 }

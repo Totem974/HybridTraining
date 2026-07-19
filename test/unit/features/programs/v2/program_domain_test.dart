@@ -232,6 +232,82 @@ void main() {
       ),
       'forever-original-fsl-v1',
     );
+    expect(
+      serializer.conceptId(serializer.parseConceptId('concept')),
+      'concept',
+    );
+    expect(
+      serializer.revisionId(serializer.parseRevisionId('revision')),
+      'revision',
+    );
+  });
+  test('validator reports every unsafe blueprint contract', () {
+    const malformedRevision = ProgramRevision(
+      id: ProgramRevisionId('missing-parent'),
+      conceptId: ProgramConceptId('absent-concept'),
+      generation: MethodGeneration.forever,
+      version: ProgramVersion(1),
+      ruleStatus: RuleStatus.needsReview,
+      supersedes: ProgramRevisionId('absent-revision'),
+    );
+    const malformed = ProgramBlueprint(
+      id: ProgramBlueprintId('malformed'),
+      version: ProgramVersion(0),
+      revisionIds: [
+        ProgramRevisionId('missing-parent'),
+        ProgramRevisionId('absent'),
+      ],
+      capabilities: {},
+      trainingMaxPolicy: null,
+      mainWorkPolicy: null,
+      schedulePolicy: SchedulePolicy(
+        PolicyId('bad-schedule'),
+        ProgramVersion(1),
+        supportedFrequencies: {4},
+        recommendedFrequency: 3,
+        ruleStatus: RuleStatus.needsReview,
+      ),
+      blockTemplates: [
+        BlockTemplate(id: BlockTemplateId('leader'), role: BlockRole.leader),
+        BlockTemplate(id: BlockTemplateId('anchor'), role: BlockRole.anchor),
+      ],
+      blockSequence: BlockSequence(
+        blocks: [
+          BlockSequenceEntry(templateId: BlockTemplateId('leader'), order: 0),
+          BlockSequenceEntry(templateId: BlockTemplateId('missing'), order: 0),
+          BlockSequenceEntry(templateId: BlockTemplateId('anchor'), order: 2),
+        ],
+      ),
+      transitionPolicy: null,
+      compatibility: CompatibilityConstraint(
+        supportedFrequencies: {3},
+        requiredCapabilities: {ProgramCapability.conditioning},
+      ),
+      implementationStatus: ImplementationStatus.available,
+      generatorId: '',
+    );
+    final result = const ProgramDomainValidator().validate(
+      const ComposableProgramDomain(
+        concepts: [concept, concept],
+        revisions: [revision1, revision1, malformedRevision],
+        blueprints: [malformed, malformed],
+      ),
+    );
+    final codes = result.issues.map((issue) => issue.code).toSet();
+    expect(
+      codes,
+      containsAll({
+        ProgramDomainIssueCode.duplicateId,
+        ProgramDomainIssueCode.missingReference,
+        ProgramDomainIssueCode.blueprintWithoutVersion,
+        ProgramDomainIssueCode.missingRequiredPolicy,
+        ProgramDomainIssueCode.incompatibleFrequency,
+        ProgramDomainIssueCode.unorderedCycle,
+        ProgramDomainIssueCode.invalidTransition,
+        ProgramDomainIssueCode.unverifiedAvailableRule,
+        ProgramDomainIssueCode.missingGenerator,
+      }),
+    );
   });
   test('v2 domain has no Flutter dependency', () {
     final files = Directory(
