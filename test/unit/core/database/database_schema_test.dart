@@ -72,6 +72,7 @@ void main() {
         'key': 'source-version',
         'value': '$sourceVersion',
       });
+      if (sourceVersion == 3) await _seedInterruptedV3Workout(database);
       await database.close();
 
       final local = LocalDatabase(
@@ -93,6 +94,25 @@ void main() {
           'workout_execution_events',
         ]),
       );
+      if (sourceVersion == 3) {
+        expect(await database.query('workout_executions'), [
+          containsPair('state', 'activeSet'),
+        ]);
+        expect(await database.query('workout_set_outcomes'), [
+          allOf(
+            containsPair('prescription_id', 'prescription-1'),
+            containsPair('status', 'success'),
+            containsPair('actual_repetitions', 5),
+            containsPair('actual_load', 80.0),
+          ),
+        ]);
+        expect(
+          (await database.query(
+            'workout_execution_events',
+          )).single['event_type'],
+          'migratedFromV3',
+        );
+      }
     });
   }
 
@@ -190,3 +210,100 @@ Future<Set<Object?>> _tables(Database database) async =>
     (await database.rawQuery(
       "SELECT name FROM sqlite_master WHERE type = 'table'",
     )).map((row) => row['name']).toSet();
+
+Future<void> _seedInterruptedV3Workout(Database database) async {
+  const at = '2026-07-19T10:00:00.000Z';
+  await database.insert('athlete_profiles', {
+    'id': 'athlete-1',
+    'display_name': 'Migration Athlete',
+    'preferred_unit': 'kg',
+    'rounding_increment': 2.5,
+    'created_at': at,
+    'updated_at': at,
+  });
+  await database.insert('program_definition_snapshots', {
+    'id': 'snapshot-1',
+    'blueprint_id': 'bps',
+    'blueprint_version': 1,
+    'snapshot_json': '{}',
+    'rule_provenance_json': '{}',
+    'created_at': at,
+  });
+  await database.insert('training_plans', {
+    'id': 'plan-1',
+    'athlete_id': 'athlete-1',
+    'blueprint_id': 'bps',
+    'blueprint_version': 1,
+    'definition_snapshot_id': 'snapshot-1',
+    'macrocycle': 1,
+    'status': 'active',
+    'created_at': at,
+  });
+  await database.insert('training_blocks', {
+    'id': 'block-1',
+    'plan_id': 'plan-1',
+    'sequence': 0,
+    'role': 'prep',
+    'template_id': 'template-1',
+    'status': 'active',
+  });
+  await database.insert('plan_training_cycles', {
+    'id': 'cycle-1',
+    'block_id': 'block-1',
+    'sequence': 0,
+    'starts_on': '2026-07-19',
+    'status': 'active',
+  });
+  await database.insert('plan_training_sessions', {
+    'id': 'session-1',
+    'cycle_id': 'cycle-1',
+    'sequence': 0,
+    'scheduled_for': '2026-07-19',
+    'status': 'started',
+    'started_at': at,
+  });
+  await database.insert('session_blocks', {
+    'id': 'session-block-1',
+    'session_id': 'session-1',
+    'sequence': 0,
+    'kind': 'main',
+    'rule_provenance_json': '{}',
+  });
+  await database.insert('set_prescriptions', {
+    'id': 'prescription-1',
+    'session_block_id': 'session-block-1',
+    'sequence': 0,
+    'training_max': 100.0,
+    'percentage': .8,
+    'unrounded_load': 80.0,
+    'rounding_increment': 2.5,
+    'prescribed_load': 80.0,
+    'prescribed_reps': 5,
+    'prescription_json': '{}',
+    'rule_provenance_json': '{}',
+  });
+  await database.insert('workout_runtime_sessions', {
+    'session_id': 'session-1',
+    'status': 'started',
+    'active_block_sequence': 0,
+    'notes': 'Interrupted but resumable',
+    'started_at': at,
+    'updated_at': at,
+  });
+  await database.insert('workout_runtime_blocks', {
+    'session_block_id': 'session-block-1',
+    'status': 'active',
+    'updated_at': at,
+  });
+  await database.insert('workout_activities', {
+    'id': 'prescription-1',
+    'session_block_id': 'session-block-1',
+    'sequence': 0,
+    'label': 'Migrated set',
+    'target_type': 'setsRepsLoad',
+    'target_json': '{}',
+    'status': 'success',
+    'result_json': '{"completedReps":5,"actualLoad":80.0}',
+    'updated_at': at,
+  });
+}

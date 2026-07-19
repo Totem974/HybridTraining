@@ -29,7 +29,18 @@ abstract interface class CoreValidationRepository {
 
   Future<void> completeWorkout();
 
+  Future<void> abandonWorkout();
+
+  Future<void> skipWorkout();
+
+  Future<void> rescheduleWorkout(DateTime date);
+
   Future<ProgramSwitchPreview> previewProgramSwitch(DateTime startDate);
+
+  Future<void> applyProgramSwitch(
+    DateTime startDate, {
+    required bool abandonActiveSession,
+  });
 
   Future<String> exportBackup();
 

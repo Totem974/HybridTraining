@@ -99,6 +99,47 @@ void main() {
     expect(find.byKey(const Key('actual-tonnage')), findsOneWidget);
     expect(find.textContaining('405'), findsOneWidget);
 
+    await tester.tap(find.byKey(const Key('destination-engine')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('switch-start-date')),
+      '2026-08-03',
+    );
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    await _tapEngine(tester, find.byKey(const Key('preview-program-switch')));
+    await tester.pumpAndSettle();
+    final switchShell = tester.widget<CoreValidationShell>(
+      find.byType(CoreValidationShell),
+    );
+    await switchShell.controller.applyProgramSwitch(
+      DateTime.utc(2026, 8, 3),
+      abandonActiveSession: false,
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<CoreValidationShell>(find.byType(CoreValidationShell))
+          .controller
+          .lastError,
+      isNull,
+    );
+    final workoutDate = find.byKey(const Key('workout-date'));
+    await tester.ensureVisible(workoutDate);
+    await tester.enterText(workoutDate, '2026-08-04');
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pumpAndSettle();
+    await _tapEngine(tester, find.byKey(const Key('reschedule-workout')));
+    await tester.pumpAndSettle();
+    await _tapEngine(tester, find.byKey(const Key('skip-workout')));
+    await tester.pumpAndSettle();
+    await _tapEngine(tester, find.byKey(const Key('start-workout')));
+    await tester.pumpAndSettle();
+    await _tapEngine(tester, find.byKey(const Key('abandon-workout')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-abandon-workout')));
+    await tester.pumpAndSettle();
+
     await tester.tap(find.byKey(const Key('destination-settings')));
     await tester.pumpAndSettle();
     final export = find.byKey(const Key('export-backup'));

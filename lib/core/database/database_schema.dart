@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:sqflite/sqflite.dart';
 
 abstract final class DatabaseSchema {
@@ -178,7 +180,10 @@ abstract final class DatabaseSchema {
     if (oldVersion == newVersion) return;
     if (oldVersion < 2 && newVersion >= 2) await createV2(database);
     if (oldVersion < 3 && newVersion >= 3) await createV3(database);
-    if (oldVersion < 4 && newVersion >= 4) await createV4(database);
+    if (oldVersion < 4 && newVersion >= 4) {
+      await createV4(database);
+      if (oldVersion >= 3) await migrateV3RuntimeToV4(database);
+    }
     if (oldVersion >= 1 && newVersion <= 4) return;
     throw StateError(
       'No database migration registered from $oldVersion to $newVersion.',
@@ -403,5 +408,86 @@ abstract final class DatabaseSchema {
     await database.execute(
       'CREATE INDEX workout_events_session_idx ON workout_execution_events(session_id, sequence)',
     );
+  }
+
+  /// Converts the resumable v3 runtime into the single canonical v4 model.
+  /// The old tables remain untouched so backup compatibility is preserved.
+  static Future<void> migrateV3RuntimeToV4(DatabaseExecutor database) async {
+    final sessions = await database.query('workout_runtime_sessions');
+    for (final session in sessions) {
+      final sessionId = session['session_id']! as String;
+      final prescriptions = await database.rawQuery(
+        '''SELECT sp.id, sp.sequence, sb.sequence AS block_sequence,
+                  COALESCE(p.result, NULLIF(wa.status, 'pending')) AS result,
+                  p.completed_reps, p.actual_load, p.notes, p.recorded_at,
+                  wa.result_json, wa.updated_at AS activity_updated_at
+           FROM set_prescriptions sp
+           JOIN session_blocks sb ON sb.id = sp.session_block_id
+           LEFT JOIN set_performances p ON p.prescription_id = sp.id
+           LEFT JOIN workout_activities wa ON wa.id = sp.id
+           WHERE sb.session_id = ?
+           ORDER BY sb.sequence, sp.sequence''',
+        [sessionId],
+      );
+      if (prescriptions.isEmpty) continue;
+      final completedIndexes = <int>[];
+      var firstPending = 0;
+      var foundPending = false;
+      for (final entry in prescriptions.indexed) {
+        if (entry.$2['result'] == null && !foundPending) {
+          firstPending = entry.$1;
+          foundPending = true;
+        } else if (entry.$2['result'] != null) {
+          completedIndexes.add(entry.$1);
+        }
+      }
+      if (!foundPending) firstPending = prescriptions.length - 1;
+      final legacyState = session['status']! as String;
+      final state = switch (legacyState) {
+        'started' => 'activeSet',
+        'completed' => 'completed',
+        'abandoned' => 'abandoned',
+        'skipped' => 'skipped',
+        _ => 'planned',
+      };
+      final updatedAt = session['updated_at']! as String;
+      await database.insert('workout_executions', {
+        'session_id': sessionId,
+        'state': state,
+        'active_set_index': firstPending,
+        'notes': session['notes'] ?? '',
+        'reversible_stack_json': '[${completedIndexes.join(',')}]',
+        'updated_at': updatedAt,
+        'ended_at': session['ended_at'],
+      });
+      for (final entry in prescriptions.indexed) {
+        final row = entry.$2;
+        final activityResult = row['result_json'] == null
+            ? const <String, Object?>{}
+            : (jsonDecode(row['result_json']! as String)
+                  as Map<String, Object?>);
+        await database.insert('workout_set_outcomes', {
+          'prescription_id': row['id'],
+          'session_id': sessionId,
+          'sequence': entry.$1,
+          'status': row['result'] ?? 'pending',
+          'actual_repetitions':
+              row['completed_reps'] ?? activityResult['completedReps'],
+          'actual_load': row['actual_load'] ?? activityResult['actualLoad'],
+          'notes': row['notes'] ?? '',
+          'recorded_at': row['recorded_at'] ?? row['activity_updated_at'],
+          'updated_at':
+              row['recorded_at'] ?? row['activity_updated_at'] ?? updatedAt,
+        });
+      }
+      await database.insert('workout_execution_events', {
+        'id': '$sessionId:event:0',
+        'session_id': sessionId,
+        'sequence': 0,
+        'event_type': 'migratedFromV3',
+        'payload_json': '{"sourceSchemaVersion":3}',
+        'occurred_at': updatedAt,
+      });
+    }
   }
 }

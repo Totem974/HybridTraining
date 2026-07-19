@@ -59,6 +59,73 @@ void main() {
   });
 
   test(
+    'confirmed program switch preserves history and activates next plan',
+    () async {
+      await repository.createDevelopmentFixture();
+      await repository.applyProgramSwitch(
+        DateTime.utc(2026, 8, 3),
+        abandonActiveSession: false,
+      );
+      final database = await local.open();
+      final plans = await database.query(
+        'training_plans',
+        orderBy: 'created_at',
+      );
+      expect(plans, hasLength(2));
+      expect(plans.first['status'], 'cancelled');
+      expect(plans.last['status'], 'active');
+      expect(await database.query('plan_events'), hasLength(1));
+    },
+  );
+
+  test('planned workout can be rescheduled then skipped', () async {
+    await repository.createDevelopmentFixture();
+    final sessionId = (await repository.loadFirstWorkout())!.sessionId;
+    await repository.rescheduleWorkout(DateTime.utc(2026, 9, 1));
+    final database = await local.open();
+    expect(
+      (await database.query(
+        'plan_training_sessions',
+        columns: ['scheduled_for'],
+        where: 'id = ?',
+        whereArgs: [sessionId],
+      )).single['scheduled_for'],
+      '2026-09-01',
+    );
+    await repository.skipWorkout();
+    expect(
+      (await database.query('workout_executions', where: "state = 'skipped'")),
+      hasLength(1),
+    );
+  });
+
+  test(
+    'active workout requires explicit abandonment and preserves outcomes',
+    () async {
+      await repository.createDevelopmentFixture();
+      await repository.startFirstWorkout();
+      await repository.recordCurrentSet(
+        status: SetOutcomeStatus.success,
+        actualRepetitions: 5,
+        actualLoad: 40,
+      );
+      await repository.abandonWorkout();
+      final database = await local.open();
+      expect(
+        (await database.query('workout_executions')).single['state'],
+        'abandoned',
+      );
+      expect(
+        (await database.query(
+          'workout_set_outcomes',
+          where: "status = 'success'",
+        )),
+        hasLength(1),
+      );
+    },
+  );
+
+  test(
     'tonnage uses actual successful load and never prescribed load',
     () async {
       await repository.createDevelopmentFixture();

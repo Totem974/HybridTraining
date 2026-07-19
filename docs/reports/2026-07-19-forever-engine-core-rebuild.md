@@ -20,8 +20,9 @@ règles indispensables sont `NEEDS_REVIEW`.
 
 Le schéma v4 ajoute `workout_executions`, `workout_set_outcomes` et
 `workout_execution_events`. Il permet pause/reprise, repos, RPE, résultats réels,
-annulation ordonnée et journal atomique. Les migrations v1/v2/v3→v4 et les
-sauvegardes v1/v2/v3→v4 sont testées.
+annulation ordonnée et journal atomique. La migration v3→v4 convertit une séance
+interrompue, sa position et ses résultats vers le runtime canonique ; les
+migrations v1/v2/v3→v4 et les sauvegardes v1/v2/v3→v4 sont testées.
 
 Le changement de programme génère le prochain plan avant transaction, fournit un
 aperçu, exige une décision pour la séance active et préserve les séances
@@ -35,16 +36,18 @@ génération et motif.
 | `flutter pub get` | PASS |
 | formatage | PASS |
 | `flutter analyze` | PASS, 0 problème |
-| `flutter test` / couverture | PASS, 128 tests |
+| `flutter test` / couverture | PASS, 131 tests |
 | couverture domaines critiques | 1 284 / 1 348 lignes, 95,25 % |
-| intégration Redmi Note 7 Android 13 | PASS, scénario complet en 39 s |
+| intégration Redmi Note 7 Android 13 | PASS, scénario complet en 46 s |
 | APK DEV debug | PASS |
 | APK PROD debug | PASS |
 
 Le scénario Redmi démarre sans onboarding, crée uniquement la fixture DEV,
 génère BPS, exécute plusieurs résultats, reprend après reconstruction, termine,
-vérifie 405 de tonnage réel, simule un changement, exporte/importe et confirme
-l’absence de fixture en PROD.
+vérifie 405 de tonnage réel, simule puis applique un changement, déplace et saute
+une séance, abandonne explicitement une séance active, exporte/importe et confirme
+l’absence de fixture en PROD. Le dialogue de confirmation est couvert par le test
+widget ; le service transactionnel est exécuté sur le Redmi.
 
 ## Limites déclarées
 

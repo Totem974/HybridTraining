@@ -145,6 +145,7 @@ class _EnginePanelState extends State<_EnginePanel> {
   final notes = TextEditingController();
   final restSeconds = TextEditingController(text: '60');
   final nextPlanStart = TextEditingController();
+  final workoutDate = TextEditingController();
 
   AppStrings get strings => widget.strings;
   CoreValidationController get controller => widget.controller;
@@ -158,6 +159,7 @@ class _EnginePanelState extends State<_EnginePanel> {
     notes.dispose();
     restSeconds.dispose();
     nextPlanStart.dispose();
+    workoutDate.dispose();
     super.dispose();
   }
 
@@ -167,7 +169,7 @@ class _EnginePanelState extends State<_EnginePanel> {
     padding: const EdgeInsets.fromLTRB(16, 16, 16, 160),
     children: [
       Text(
-        'Beginner Prep School',
+        strings.programLabel('program.beginner_prep_school'),
         style: Theme.of(context).textTheme.titleLarge,
       ),
       const SizedBox(height: 8),
@@ -197,13 +199,19 @@ class _EnginePanelState extends State<_EnginePanel> {
                 ),
           child: Text(strings.switchPreview),
         ),
-        if (controller.programSwitchPreview != null)
+        if (controller.programSwitchPreview != null) ...[
           Text(
             '${strings.switchPreviewReady}: '
             '${controller.programSwitchPreview!.currentPlanId} → '
             '${controller.programSwitchPreview!.nextPlanId}',
             key: const Key('program-switch-preview-ready'),
           ),
+          FilledButton(
+            key: const Key('apply-program-switch'),
+            onPressed: () => _confirmProgramSwitch(context),
+            child: Text(strings.applyProgramSwitch),
+          ),
+        ],
       ],
       if (allowFixture && !controller.snapshot.hasProfile)
         FilledButton(
@@ -252,12 +260,38 @@ class _EnginePanelState extends State<_EnginePanel> {
       Text(
         '${strings.prescribed}: ${workout.prescribedRepetitions} × ${workout.prescribedLoad}',
       ),
-      if (workout.canStart)
+      if (workout.canStart) ...[
         FilledButton(
           key: const Key('start-workout'),
           onPressed: controller.startWorkout,
           child: Text(strings.startWorkout),
         ),
+        TextField(
+          key: const Key('workout-date'),
+          controller: workoutDate,
+          decoration: InputDecoration(labelText: strings.workoutDate),
+          onChanged: (_) => setState(() {}),
+        ),
+        Wrap(
+          spacing: 8,
+          children: [
+            TextButton(
+              key: const Key('reschedule-workout'),
+              onPressed: DateTime.tryParse(workoutDate.text) == null
+                  ? null
+                  : () => controller.rescheduleWorkout(
+                      DateTime.parse(workoutDate.text),
+                    ),
+              child: Text(strings.rescheduleWorkout),
+            ),
+            TextButton(
+              key: const Key('skip-workout'),
+              onPressed: controller.skipWorkout,
+              child: Text(strings.skipWorkout),
+            ),
+          ],
+        ),
+      ],
       if (workout.canRecord) ...[
         TextField(
           key: const Key('actual-repetitions'),
@@ -277,7 +311,7 @@ class _EnginePanelState extends State<_EnginePanel> {
           key: const Key('actual-rpe'),
           controller: rpe,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(labelText: 'RPE (1–10)'),
+          decoration: InputDecoration(labelText: strings.rpeRange),
           onChanged: (_) => setState(() {}),
         ),
         TextField(
@@ -373,6 +407,12 @@ class _EnginePanelState extends State<_EnginePanel> {
           onPressed: controller.completeWorkout,
           child: Text(strings.completeWorkout),
         ),
+      if (!workout.canStart && !workout.isClosed)
+        TextButton(
+          key: const Key('abandon-workout'),
+          onPressed: () => _confirmAbandonWorkout(context),
+          child: Text(strings.abandonWorkout),
+        ),
     ];
   }
 
@@ -388,6 +428,62 @@ class _EnginePanelState extends State<_EnginePanel> {
     rpe: actualRpe,
     notes: notes.text,
   );
+
+  Future<void> _confirmProgramSwitch(BuildContext context) async {
+    final preview = controller.programSwitchPreview;
+    final startDate = DateTime.tryParse(nextPlanStart.text);
+    if (preview == null || startDate == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(strings.applyProgramSwitch),
+        content: Text(
+          preview.requiresActiveSessionDecision
+              ? strings.abandonActiveForSwitch
+              : strings.switchPreviewReady,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(strings.cancel),
+          ),
+          FilledButton(
+            key: const Key('confirm-program-switch'),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(strings.confirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await controller.applyProgramSwitch(
+        startDate,
+        abandonActiveSession: preview.requiresActiveSessionDecision,
+      );
+    }
+  }
+
+  Future<void> _confirmAbandonWorkout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(strings.abandonWorkout),
+        content: Text(strings.abandonWorkoutWarning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(strings.cancel),
+          ),
+          FilledButton(
+            key: const Key('confirm-abandon-workout'),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(strings.confirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await controller.abandonWorkout();
+  }
 }
 
 class _TrackingPanel extends StatelessWidget {

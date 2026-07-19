@@ -75,9 +75,31 @@ class CoreValidationController extends ChangeNotifier {
 
   Future<void> completeWorkout() => _workoutAction(repository.completeWorkout);
 
+  Future<void> abandonWorkout() => _workoutAction(repository.abandonWorkout);
+
+  Future<void> skipWorkout() => _workoutAction(repository.skipWorkout);
+
+  Future<void> rescheduleWorkout(DateTime date) =>
+      _workoutAction(() => repository.rescheduleWorkout(date));
+
   Future<void> previewProgramSwitch(DateTime startDate) async {
     await _run(() async {
       programSwitchPreview = await repository.previewProgramSwitch(startDate);
+    });
+  }
+
+  Future<void> applyProgramSwitch(
+    DateTime startDate, {
+    required bool abandonActiveSession,
+  }) async {
+    await _run(() async {
+      await repository.applyProgramSwitch(
+        startDate,
+        abandonActiveSession: abandonActiveSession,
+      );
+      programSwitchPreview = null;
+      snapshot = await repository.load();
+      workout = await repository.loadFirstWorkout();
     });
   }
 

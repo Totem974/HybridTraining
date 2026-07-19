@@ -32,6 +32,7 @@ class AppStrings {
   String get actualRepetitions =>
       _fr ? 'Répétitions réelles' : 'Actual repetitions';
   String get actualLoad => _fr ? 'Charge réelle' : 'Actual load';
+  String get rpeRange => 'RPE (1–10)';
   String get notes => _fr ? 'Notes' : 'Notes';
   String get success => _fr ? 'Réussite' : 'Success';
   String get failure => _fr ? 'Échec' : 'Failure';
@@ -44,6 +45,15 @@ class AppStrings {
   String get startRest => _fr ? 'Lancer le repos' : 'Start rest';
   String get endRest => _fr ? 'Terminer le repos' : 'End rest';
   String get completeWorkout => _fr ? 'Terminer la séance' : 'Complete workout';
+  String get abandonWorkout => _fr ? 'Abandonner la séance' : 'Abandon workout';
+  String get abandonWorkoutWarning => _fr
+      ? 'La séance sera fermée comme abandonnée. Les résultats déjà saisis seront conservés.'
+      : 'The workout will be closed as abandoned. Existing results will be preserved.';
+  String get skipWorkout => _fr ? 'Sauter la séance' : 'Skip workout';
+  String get rescheduleWorkout =>
+      _fr ? 'Déplacer la séance' : 'Reschedule workout';
+  String get workoutDate =>
+      _fr ? 'Nouvelle date (AAAA-MM-JJ)' : 'New date (YYYY-MM-DD)';
   String get switchPreview =>
       _fr ? 'Simuler un nouveau plan' : 'Preview a new plan';
   String get nextPlanStart =>
@@ -51,6 +61,12 @@ class AppStrings {
   String get switchPreviewReady => _fr
       ? 'Aperçu prêt, aucune écriture effectuée'
       : 'Preview ready, no data written';
+  String get applyProgramSwitch =>
+      _fr ? 'Confirmer le changement' : 'Confirm program switch';
+  String get abandonActiveForSwitch => _fr
+      ? 'La séance en cours sera abandonnée. Son historique restera conservé.'
+      : 'The active workout will be abandoned. Its history will be preserved.';
+  String get confirm => _fr ? 'Confirmer' : 'Confirm';
   String get completedSessions =>
       _fr ? 'Séances terminées' : 'Completed workouts';
   String get successfulSetCount => _fr ? 'Séries réussies' : 'Successful sets';

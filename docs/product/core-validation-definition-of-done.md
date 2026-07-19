@@ -12,7 +12,10 @@ Le shell est un outil temporaire et sobre. Il n’est pas la future UI produit.
   repos, pause/reprise, annulation et fin ;
 - reprise après reconstruction de l’application ;
 - statistiques fondées sur les résultats réels ;
-- aperçu de changement de programme sans écriture ;
+- aperçu puis application atomique du changement de programme, avec décision
+  explicite d’abandon pour une séance active et historique préservé ;
+- déplacement ou saut d’une séance planifiée, abandon confirmé d’une séance
+  active avec résultats déjà saisis conservés ;
 - export, simulation détaillée et import atomique ;
 - suppression globale avec portée affichée et confirmation ;
 - test complet sur Redmi Note 7 Android 13 ; APK DEV et PROD compilés.

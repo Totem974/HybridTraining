@@ -229,7 +229,74 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
   );
 
   @override
+  Future<void> abandonWorkout() => _mutateWorkout(
+    eventType: 'abandoned',
+    action: (current, at) => current.abandon(at),
+    updateSession: (tx, sessionId, next, at) => tx.update(
+      'plan_training_sessions',
+      {'status': 'cancelled', 'completed_at': at.toIso8601String()},
+      where: "id = ? AND status = 'started'",
+      whereArgs: [sessionId],
+    ),
+  );
+
+  @override
+  Future<void> skipWorkout() => _mutateWorkout(
+    eventType: 'skipped',
+    action: (current, at) => current.skip(at),
+    updateSession: (tx, sessionId, next, at) => tx.update(
+      'plan_training_sessions',
+      {'status': 'cancelled', 'completed_at': at.toIso8601String()},
+      where: "id = ? AND status = 'planned'",
+      whereArgs: [sessionId],
+    ),
+  );
+
+  @override
+  Future<void> rescheduleWorkout(DateTime date) async {
+    final database = await localDatabase.open();
+    await database.transaction((tx) async {
+      final session = await _firstOpenSession(tx);
+      if (session == null || session['status'] != 'planned') {
+        throw StateError('Only a planned workout can be rescheduled.');
+      }
+      final value = date.toIso8601String().substring(0, 10);
+      final updated = await tx.update(
+        'plan_training_sessions',
+        {'scheduled_for': value},
+        where: "id = ? AND status = 'planned'",
+        whereArgs: [session['id']],
+      );
+      if (updated != 1) throw StateError('The planned workout changed.');
+    });
+  }
+
+  @override
   Future<ProgramSwitchPreview> previewProgramSwitch(DateTime startDate) async {
+    final request = await _programSwitchRequest(startDate);
+    return SqliteVersionedPlanStore(
+      localDatabase: localDatabase,
+    ).previewProgramSwitch(request);
+  }
+
+  @override
+  Future<void> applyProgramSwitch(
+    DateTime startDate, {
+    required bool abandonActiveSession,
+  }) async {
+    final request = await _programSwitchRequest(
+      startDate,
+      abandonActiveSession: abandonActiveSession,
+    );
+    await SqliteVersionedPlanStore(
+      localDatabase: localDatabase,
+    ).applyProgramSwitch(request);
+  }
+
+  Future<ProgramSwitchRequest> _programSwitchRequest(
+    DateTime startDate, {
+    bool abandonActiveSession = false,
+  }) async {
     final database = await localDatabase.open();
     final rows = await database.rawQuery('''
       SELECT p.id, p.athlete_id, s.snapshot_json, a.preferred_unit,
@@ -287,14 +354,13 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
       createdAt: _clock().toUtc(),
       generated: generated,
     );
-    return SqliteVersionedPlanStore(
-      localDatabase: localDatabase,
-    ).previewProgramSwitch(
-      ProgramSwitchRequest(
-        currentPlanId: row['id']! as String,
-        nextPlan: next,
-        reason: 'Core Validation Shell preview',
-      ),
+    return ProgramSwitchRequest(
+      currentPlanId: row['id']! as String,
+      nextPlan: next,
+      reason: 'Program switch confirmed by the local athlete',
+      activeSessionDisposition: abandonActiveSession
+          ? ActiveSessionDisposition.abandon
+          : ActiveSessionDisposition.reject,
     );
   }
 

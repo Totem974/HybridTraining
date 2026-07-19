@@ -74,6 +74,13 @@ void main() {
     await tester.tap(button);
     await tester.pumpAndSettle();
     expect(repository.previewRequested, isTrue);
+    final apply = find.byKey(const Key('apply-program-switch'));
+    await tester.ensureVisible(apply);
+    await tester.tap(apply);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-program-switch')));
+    await tester.pumpAndSettle();
+    expect(repository.switchApplied, isTrue);
   });
 
   testWidgets('production exposes no fixture action or demo data', (
@@ -153,6 +160,13 @@ class _FakeCoreRepository implements CoreValidationRepository {
   bool fixtureCreated = false;
   final List<bool> importDryRuns = [];
   bool previewRequested = false;
+  bool switchApplied = false;
+
+  @override
+  Future<void> applyProgramSwitch(
+    DateTime startDate, {
+    required bool abandonActiveSession,
+  }) async => switchApplied = true;
 
   @override
   Future<void> createDevelopmentFixture() async => fixtureCreated = true;
@@ -165,6 +179,15 @@ class _FakeCoreRepository implements CoreValidationRepository {
 
   @override
   Future<void> completeWorkout() async {}
+
+  @override
+  Future<void> abandonWorkout() async {}
+
+  @override
+  Future<void> skipWorkout() async {}
+
+  @override
+  Future<void> rescheduleWorkout(DateTime date) async {}
 
   @override
   Future<String> exportBackup() async => '{}';
