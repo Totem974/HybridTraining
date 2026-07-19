@@ -50,6 +50,32 @@ void main() {
     expect(find.byKey(const Key('active-plan-count')), findsOneWidget);
   });
 
+  testWidgets('program switch preview requires and uses a start date', (
+    tester,
+  ) async {
+    final repository = _FakeCoreRepository();
+    await tester.pumpWidget(
+      HybridTrainingApp(
+        environment: AppEnvironment.dev,
+        repository: repository,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('create-dev-fixture')));
+    await tester.pumpAndSettle();
+    final button = find.byKey(const Key('preview-program-switch'));
+    expect(tester.widget<FilledButton>(button).onPressed, isNull);
+    await tester.enterText(
+      find.byKey(const Key('switch-start-date')),
+      '2026-08-03',
+    );
+    await tester.pump();
+    expect(tester.widget<FilledButton>(button).onPressed, isNotNull);
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    expect(repository.previewRequested, isTrue);
+  });
+
   testWidgets('production exposes no fixture action or demo data', (
     tester,
   ) async {
@@ -126,6 +152,7 @@ void main() {
 class _FakeCoreRepository implements CoreValidationRepository {
   bool fixtureCreated = false;
   final List<bool> importDryRuns = [];
+  bool previewRequested = false;
 
   @override
   Future<void> createDevelopmentFixture() async => fixtureCreated = true;
@@ -149,17 +176,19 @@ class _FakeCoreRepository implements CoreValidationRepository {
   Future<void> pauseOrResumeWorkout() async {}
 
   @override
-  Future<ProgramSwitchPreview> previewProgramSwitch(DateTime startDate) async =>
-      ProgramSwitchPreview(
-        currentPlanId: 'current',
-        nextPlanId: 'next',
-        currentBlueprintId: 'bps',
-        nextBlueprintId: 'bps',
-        completedSessionsPreserved: 0,
-        plannedSessionsCancelled: 9,
-        activeSessionIds: const [],
-        nextStartDate: startDate,
-      );
+  Future<ProgramSwitchPreview> previewProgramSwitch(DateTime startDate) async {
+    previewRequested = true;
+    return ProgramSwitchPreview(
+      currentPlanId: 'current',
+      nextPlanId: 'next',
+      currentBlueprintId: 'bps',
+      nextBlueprintId: 'bps',
+      completedSessionsPreserved: 0,
+      plannedSessionsCancelled: 9,
+      activeSessionIds: const [],
+      nextStartDate: startDate,
+    );
+  }
 
   @override
   Future<void> recordCurrentSet({

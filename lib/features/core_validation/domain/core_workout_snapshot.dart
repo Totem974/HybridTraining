@@ -28,7 +28,8 @@ class CoreWorkoutSnapshot {
   bool get canStart =>
       state == WorkoutExecutionState.planned ||
       state == WorkoutExecutionState.ready;
-  bool get canRecord => state == WorkoutExecutionState.activeSet;
+  bool get canRecord =>
+      state == WorkoutExecutionState.activeSet && completedSets < totalSets;
   bool get canComplete => completedSets == totalSets && !isClosed;
   bool get isClosed => const {
     WorkoutExecutionState.completed,

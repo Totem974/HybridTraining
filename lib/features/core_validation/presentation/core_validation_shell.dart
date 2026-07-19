@@ -164,7 +164,7 @@ class _EnginePanelState extends State<_EnginePanel> {
   @override
   Widget build(BuildContext context) => ListView(
     key: const Key('engine-panel'),
-    padding: const EdgeInsets.all(16),
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 160),
     children: [
       Text(
         'Beginner Prep School',
@@ -535,6 +535,7 @@ class _SettingsPanelState extends State<_SettingsPanel> {
             child: Text(strings.cancel),
           ),
           FilledButton(
+            key: const Key('confirm-delete-data'),
             onPressed: () => Navigator.pop(context, true),
             child: Text(strings.delete),
           ),
