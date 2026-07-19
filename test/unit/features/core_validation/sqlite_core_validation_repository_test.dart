@@ -104,6 +104,7 @@ void main() {
     () async {
       await repository.createDevelopmentFixture();
       await repository.startFirstWorkout();
+      await _advanceToLoadedSet(repository);
       await repository.recordCurrentSet(
         status: SetOutcomeStatus.success,
         actualRepetitions: 5,
@@ -160,6 +161,7 @@ void main() {
       );
 
       await repository.startFirstWorkout();
+      final precedingActivities = await _advanceToLoadedSet(repository);
       await repository.recordCurrentSet(
         status: SetOutcomeStatus.success,
         actualRepetitions: 6,
@@ -184,7 +186,10 @@ void main() {
       );
       await repository.pauseOrResumeWorkout();
       await repository.undoLastSet();
-      expect((await repository.loadFirstWorkout())?.completedSets, 0);
+      expect(
+        (await repository.loadFirstWorkout())?.completedSets,
+        precedingActivities,
+      );
       await repository.recordCurrentSet(
         status: SetOutcomeStatus.success,
         actualRepetitions: 6,
@@ -199,7 +204,6 @@ void main() {
       await repository.beginOrEndRest(duration: const Duration(seconds: 45));
 
       var workout = await repository.loadFirstWorkout();
-      final totalSets = workout!.totalSets;
       while (workout!.completedSets < workout.totalSets) {
         await repository.recordCurrentSet(status: SetOutcomeStatus.skipped);
         workout = await repository.loadFirstWorkout();
@@ -210,7 +214,8 @@ void main() {
       final snapshot = await repository.load();
       expect(snapshot.completedSessions, 1);
       expect(snapshot.successfulSets, 1);
-      expect(snapshot.skippedSets, totalSets - 1);
+      expect(snapshot.skippedSets, 15);
+      expect(snapshot.successfulSets + snapshot.skippedSets, 16);
       expect(snapshot.actualTonnage, 255);
       final database = await local.open();
       expect(
@@ -219,4 +224,17 @@ void main() {
       );
     },
   );
+}
+
+Future<int> _advanceToLoadedSet(
+  SqliteCoreValidationRepository repository,
+) async {
+  var skipped = 0;
+  var workout = await repository.loadFirstWorkout();
+  while (workout!.itemKind == ExecutionItemKind.activity) {
+    await repository.recordCurrentSet(status: SetOutcomeStatus.skipped);
+    skipped++;
+    workout = await repository.loadFirstWorkout();
+  }
+  return skipped;
 }

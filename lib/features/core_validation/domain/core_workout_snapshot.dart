@@ -12,6 +12,7 @@ class CoreWorkoutSnapshot {
     required this.prescribedLoad,
     required this.completedSets,
     required this.restUntil,
+    required this.itemKind,
   });
 
   final String sessionId;
@@ -24,6 +25,7 @@ class CoreWorkoutSnapshot {
   final double prescribedLoad;
   final int completedSets;
   final DateTime? restUntil;
+  final ExecutionItemKind itemKind;
 
   bool get canStart =>
       state == WorkoutExecutionState.planned ||

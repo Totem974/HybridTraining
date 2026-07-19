@@ -11,24 +11,38 @@ enum WorkoutExecutionState {
 
 enum SetOutcomeStatus { pending, success, failure, skipped }
 
+enum ExecutionItemKind { loadedSet, activity }
+
 class SetOutcome {
   const SetOutcome({
     required this.setId,
+    this.kind = ExecutionItemKind.loadedSet,
     this.status = SetOutcomeStatus.pending,
     this.actualRepetitions,
     this.actualLoad,
     this.rpe,
     this.notes = '',
     this.recordedAt,
+    this.actualTotalRepetitions,
+    this.actualDurationSeconds,
+    this.actualDistanceMeters,
+    this.actualRounds,
+    this.completed,
   });
 
   final String setId;
   final SetOutcomeStatus status;
+  final ExecutionItemKind kind;
   final int? actualRepetitions;
   final double? actualLoad;
   final double? rpe;
   final String notes;
   final DateTime? recordedAt;
+  final int? actualTotalRepetitions;
+  final int? actualDurationSeconds;
+  final double? actualDistanceMeters;
+  final int? actualRounds;
+  final bool? completed;
 
   bool get isPending => status == SetOutcomeStatus.pending;
 
@@ -39,28 +53,44 @@ class SetOutcome {
     double? actualLoad,
     double? rpe,
     String notes = '',
+    int? actualTotalRepetitions,
+    int? actualDurationSeconds,
+    double? actualDistanceMeters,
+    int? actualRounds,
+    bool? completed,
   }) {
     if (status == SetOutcomeStatus.pending) {
       throw ArgumentError('A recorded outcome cannot be pending.');
     }
-    if ((actualRepetitions ?? 0) < 0 || (actualLoad ?? 0) < 0) {
-      throw ArgumentError('Actual repetitions and load cannot be negative.');
+    if ((actualRepetitions ?? 0) < 0 ||
+        (actualLoad ?? 0) < 0 ||
+        (actualTotalRepetitions ?? 0) < 0 ||
+        (actualDurationSeconds ?? 0) < 0 ||
+        (actualDistanceMeters ?? 0) < 0 ||
+        (actualRounds ?? 0) < 0) {
+      throw ArgumentError('Actual activity values cannot be negative.');
     }
     if (rpe != null && (rpe < 1 || rpe > 10)) {
       throw ArgumentError.value(rpe, 'rpe', 'RPE must be between 1 and 10.');
     }
     return SetOutcome(
       setId: setId,
+      kind: kind,
       status: status,
       actualRepetitions: actualRepetitions,
       actualLoad: actualLoad,
       rpe: rpe,
       notes: notes,
       recordedAt: recordedAt.toUtc(),
+      actualTotalRepetitions: actualTotalRepetitions,
+      actualDurationSeconds: actualDurationSeconds,
+      actualDistanceMeters: actualDistanceMeters,
+      actualRounds: actualRounds,
+      completed: completed,
     );
   }
 
-  SetOutcome clear() => SetOutcome(setId: setId);
+  SetOutcome clear() => SetOutcome(setId: setId, kind: kind);
 }
 
 class WorkoutExecution {
@@ -124,6 +154,11 @@ class WorkoutExecution {
     double? actualLoad,
     double? rpe,
     String notes = '',
+    int? actualTotalRepetitions,
+    int? actualDurationSeconds,
+    double? actualDistanceMeters,
+    int? actualRounds,
+    bool? completed,
   }) {
     _require(WorkoutExecutionState.activeSet);
     if (!activeSet.isPending) {
@@ -137,6 +172,11 @@ class WorkoutExecution {
       actualLoad: actualLoad,
       rpe: rpe,
       notes: notes,
+      actualTotalRepetitions: actualTotalRepetitions,
+      actualDurationSeconds: actualDurationSeconds,
+      actualDistanceMeters: actualDistanceMeters,
+      actualRounds: actualRounds,
+      completed: completed,
     );
     final nextIndex = _nextPending(next, activeSetIndex + 1) ?? activeSetIndex;
     return _copy(

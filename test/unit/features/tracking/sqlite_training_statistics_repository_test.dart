@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/core/database/local_database.dart';
@@ -38,6 +39,11 @@ void main() {
     'separates actual and prescribed work and aggregates by scope',
     () async {
       await runtime.startFirstWorkout();
+      var current = await runtime.loadFirstWorkout();
+      while (current!.itemKind == ExecutionItemKind.activity) {
+        await runtime.recordCurrentSet(status: SetOutcomeStatus.skipped);
+        current = await runtime.loadFirstWorkout();
+      }
       await runtime.recordCurrentSet(
         status: SetOutcomeStatus.success,
         actualRepetitions: 6,
@@ -60,7 +66,8 @@ void main() {
       expect(all.failedSessions, 1);
       expect(all.successfulSets, 1);
       expect(all.failedSets, 1);
-      expect(all.skippedSets, workout.totalSets - 2);
+      expect(all.skippedSets, 14);
+      expect(all.successfulSets + all.failedSets + all.skippedSets, 16);
       expect(all.actualRepetitions, 9);
       expect(all.actualTonnage, 405);
       expect(all.prescribedTonnageForRecordedSets, isNot(all.actualTonnage));
@@ -93,4 +100,61 @@ void main() {
     expect(result.actualRepetitions, 0);
     expect(result.prescribedTonnageForRecordedSets, 0);
   });
+
+  test(
+    'aggregates generic repetitions, duration, distance and rounds',
+    () async {
+      final database = await local.open();
+      final existingBlock = (await database.query(
+        'session_blocks',
+        orderBy: 'sequence',
+        limit: 1,
+      )).single;
+      const sessionBlock = 'statistics-activity-block';
+      await database.insert('session_blocks', {
+        'id': sessionBlock,
+        'session_id': existingBlock['session_id'],
+        'sequence': 99,
+        'kind': 'assistance',
+        'rule_provenance_json': '{}',
+      });
+      for (final entry in const [
+        ('reps', 'totalRepetitions', {'totalRepetitions': 40}),
+        ('duration', 'duration', {'durationSeconds': 900}),
+        ('distance', 'distance', {'distanceMeters': 1609.344}),
+        ('rounds', 'rounds', {'rounds': 5}),
+      ].indexed) {
+        await database.insert('activity_prescriptions', {
+          'id': entry.$2.$1,
+          'session_block_id': sessionBlock,
+          'sequence': entry.$1,
+          'movement_or_activity_id': entry.$2.$1,
+          'target_type': entry.$2.$2,
+          'target_json': '{}',
+          'prescription_kind': 'assistance',
+          'rule_id': 'STAT-${entry.$1}',
+          'source_edition': 'forever',
+          'ruleset_generation': 'forever',
+          'source_reference_json': '{}',
+        });
+        await database.insert('activity_results', {
+          'prescription_id': entry.$2.$1,
+          'status': entry.$1 == 3 ? 'failure' : 'success',
+          'actual_json': jsonEncode(entry.$2.$3),
+          'notes': '',
+          'recorded_at': '2026-07-20T10:00:00.000Z',
+          'updated_at': '2026-07-20T10:00:00.000Z',
+        });
+      }
+
+      final result = await statistics.load();
+      expect(result.actualRepetitions, 40);
+      expect(result.actualDurationSeconds, 900);
+      expect(result.actualDistanceMeters, 1609.344);
+      expect(result.actualRounds, 5);
+      expect(result.successfulActivities, 3);
+      expect(result.failedActivities, 1);
+      expect(result.activitySuccessRate, .75);
+    },
+  );
 }

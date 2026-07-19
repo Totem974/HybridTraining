@@ -30,7 +30,7 @@ void main() {
       isNotEmpty,
     );
     expect(
-      repository.query(const ProgramQuery(search: 'compatibilite')).entries,
+      repository.query(const ProgramQuery(search: 'deload type')).entries,
       hasLength(1),
     );
   });

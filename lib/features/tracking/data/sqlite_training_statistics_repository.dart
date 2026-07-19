@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:hybrid_training/core/database/local_database.dart';
 import 'package:hybrid_training/features/tracking/application/training_statistics_repository.dart';
 import 'package:hybrid_training/features/tracking/domain/training_statistics.dart';
@@ -54,6 +56,30 @@ class SqliteTrainingStatisticsRepository
       )
     ''');
     final sets = setRows.where((row) => _inScope(row, scope)).toList();
+    final activityRows = await database.rawQuery('''
+      SELECT r.status, r.actual_json,
+             s.id AS session_id, s.scheduled_for,
+             c.id AS cycle_id, b.id AS block_id, p.id AS plan_id
+      FROM activity_results r
+      JOIN activity_prescriptions ap ON ap.id = r.prescription_id
+      JOIN session_blocks sb ON sb.id = ap.session_block_id
+      JOIN plan_training_sessions s ON s.id = sb.session_id
+      JOIN plan_training_cycles c ON c.id = s.cycle_id
+      JOIN training_blocks b ON b.id = c.block_id
+      JOIN training_plans p ON p.id = b.plan_id
+      WHERE r.status != 'pending'
+    ''');
+    final activities = activityRows
+        .where((row) => _inScope(row, scope))
+        .map(
+          (row) => (
+            row: row,
+            actual:
+                jsonDecode(row['actual_json']! as String)
+                    as Map<String, Object?>,
+          ),
+        )
+        .toList();
     final failedSessionIds = <String>{};
     for (final row in sets.where((row) => row['result'] == 'failure')) {
       failedSessionIds.add(row['session_id']! as String);
@@ -135,10 +161,18 @@ class SqliteTrainingStatisticsRepository
       successfulSets: sets.where((row) => row['result'] == 'success').length,
       failedSets: sets.where((row) => row['result'] == 'failure').length,
       skippedSets: sets.where((row) => row['result'] == 'skipped').length,
-      actualRepetitions: sets.fold(
-        0,
-        (sum, row) => sum + ((row['actual_repetitions'] as int?) ?? 0),
-      ),
+      actualRepetitions:
+          sets.fold(
+            0,
+            (sum, row) => sum + ((row['actual_repetitions'] as int?) ?? 0),
+          ) +
+          activities.fold(
+            0,
+            (sum, item) =>
+                sum +
+                ((item.actual['totalRepetitions'] as num?)?.toInt() ?? 0) +
+                ((item.actual['repetitions'] as num?)?.toInt() ?? 0),
+          ),
       actualTonnage: tonnageRows.isEmpty
           ? null
           : tonnageRows.fold<double>(
@@ -156,6 +190,29 @@ class SqliteTrainingStatisticsRepository
                 (row['prescribed_reps']! as int),
       ),
       movements: List.unmodifiable(movementStats),
+      successfulActivities: activities
+          .where((item) => item.row['status'] == 'success')
+          .length,
+      failedActivities: activities
+          .where((item) => item.row['status'] == 'failure')
+          .length,
+      skippedActivities: activities
+          .where((item) => item.row['status'] == 'skipped')
+          .length,
+      actualDistanceMeters: activities.fold(
+        0,
+        (sum, item) =>
+            sum + ((item.actual['distanceMeters'] as num?)?.toDouble() ?? 0),
+      ),
+      actualDurationSeconds: activities.fold(
+        0,
+        (sum, item) =>
+            sum + ((item.actual['durationSeconds'] as num?)?.toInt() ?? 0),
+      ),
+      actualRounds: activities.fold(
+        0,
+        (sum, item) => sum + ((item.actual['rounds'] as num?)?.toInt() ?? 0),
+      ),
     );
   }
 

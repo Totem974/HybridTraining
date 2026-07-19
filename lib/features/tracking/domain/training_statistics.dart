@@ -51,6 +51,12 @@ class TrainingStatistics {
     required this.actualTonnage,
     required this.prescribedTonnageForRecordedSets,
     required this.movements,
+    required this.successfulActivities,
+    required this.failedActivities,
+    required this.skippedActivities,
+    required this.actualDistanceMeters,
+    required this.actualDurationSeconds,
+    required this.actualRounds,
   });
 
   final int completedSessions;
@@ -66,4 +72,15 @@ class TrainingStatistics {
   /// Kept separate from actual tonnage; this is never used as performed work.
   final double prescribedTonnageForRecordedSets;
   final List<MovementStatistics> movements;
+  final int successfulActivities;
+  final int failedActivities;
+  final int skippedActivities;
+  final double actualDistanceMeters;
+  final int actualDurationSeconds;
+  final int actualRounds;
+
+  double? get activitySuccessRate {
+    final total = successfulActivities + failedActivities + skippedActivities;
+    return total == 0 ? null : successfulActivities / total;
+  }
 }

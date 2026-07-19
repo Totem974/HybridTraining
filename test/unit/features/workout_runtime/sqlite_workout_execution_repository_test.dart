@@ -91,6 +91,69 @@ void main() {
       WorkoutExecutionState.activeSet,
     );
   });
+
+  test('executes generic activities and resumes partial progress', () async {
+    final created = await repository.create('activity-session');
+    expect(created.sets, hasLength(4));
+    expect(
+      created.sets.every((item) => item.kind == ExecutionItemKind.activity),
+      isTrue,
+    );
+    final at = DateTime.utc(2026, 7, 20, 12);
+    await repository.mutate(
+      'activity-session',
+      eventType: 'started',
+      action: (current) => current.start(at),
+    );
+    await repository.mutate(
+      'activity-session',
+      eventType: 'activityRecorded',
+      action: (current) => current.recordActiveSet(
+        status: SetOutcomeStatus.success,
+        actualTotalRepetitions: 75,
+        rpe: 6,
+        at: at.add(const Duration(minutes: 1)),
+      ),
+    );
+    await repository.mutate(
+      'activity-session',
+      eventType: 'paused',
+      action: (current) => current.pause(at.add(const Duration(minutes: 2))),
+    );
+    await local.close();
+    final partial = await repository.load('activity-session');
+    expect(partial?.state, WorkoutExecutionState.paused);
+    expect(partial?.sets.first.actualTotalRepetitions, 75);
+
+    await repository.mutate(
+      'activity-session',
+      eventType: 'resumed',
+      action: (current) => current.resume(at.add(const Duration(minutes: 3))),
+    );
+    for (var index = 1; index < 4; index++) {
+      await repository.mutate(
+        'activity-session',
+        eventType: 'activityRecorded',
+        action: (current) => current.recordActiveSet(
+          status: index == 3
+              ? SetOutcomeStatus.skipped
+              : SetOutcomeStatus.success,
+          actualDurationSeconds: index == 1 ? 1200 : null,
+          actualDistanceMeters: index == 2 ? 1609.344 : null,
+          completed: index == 3 ? false : null,
+          at: at.add(Duration(minutes: index + 3)),
+        ),
+      );
+    }
+    final completed = await repository.mutate(
+      'activity-session',
+      eventType: 'completed',
+      action: (current) => current.complete(at.add(const Duration(minutes: 8))),
+    );
+    expect(completed.state, WorkoutExecutionState.completed);
+    final database = await local.open();
+    expect(await database.query('activity_results'), hasLength(4));
+  });
 }
 
 Future<void> _seedSession(LocalDatabase local) async {
@@ -144,6 +207,13 @@ Future<void> _seedSession(LocalDatabase local) async {
     'scheduled_for': '2026-07-20',
     'status': 'planned',
   });
+  await database.insert('plan_training_sessions', {
+    'id': 'activity-session',
+    'cycle_id': 'cycle',
+    'sequence': 1,
+    'scheduled_for': '2026-07-21',
+    'status': 'planned',
+  });
   await database.insert('session_blocks', {
     'id': 'session-block',
     'session_id': 'session',
@@ -164,6 +234,33 @@ Future<void> _seedSession(LocalDatabase local) async {
       'prescribed_reps': 5,
       'prescription_json': '{}',
       'rule_provenance_json': '{}',
+    });
+  }
+  await database.insert('session_blocks', {
+    'id': 'activity-block',
+    'session_id': 'activity-session',
+    'sequence': 0,
+    'kind': 'assistance',
+    'rule_provenance_json': '{}',
+  });
+  for (final entry in const [
+    ('totalRepetitions', 'warm-up'),
+    ('duration', 'conditioning-duration'),
+    ('distance', 'conditioning-distance'),
+    ('completion', 'assistance-completion'),
+  ].indexed) {
+    await database.insert('activity_prescriptions', {
+      'id': entry.$2.$2,
+      'session_block_id': 'activity-block',
+      'sequence': entry.$1,
+      'movement_or_activity_id': entry.$2.$2,
+      'target_type': entry.$2.$1,
+      'target_json': '{}',
+      'prescription_kind': 'assistance',
+      'rule_id': 'TEST-${entry.$1}',
+      'source_edition': 'forever',
+      'ruleset_generation': 'forever',
+      'source_reference_json': '{}',
     });
   }
 }

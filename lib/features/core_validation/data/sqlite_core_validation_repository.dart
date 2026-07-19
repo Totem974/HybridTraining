@@ -416,14 +416,24 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
   ) async {
     final sessionId = session['id']! as String;
     final prescriptions = await database.rawQuery(
-      '''SELECT sp.id, sp.prescribed_reps, sp.prescribed_load
+      '''SELECT sp.id, sp.prescribed_reps, sp.prescribed_load,
+                sb.sequence AS block_sequence, sp.sequence AS item_sequence,
+                'loadedSet' AS item_kind
          FROM set_prescriptions sp
          JOIN session_blocks sb ON sb.id = sp.session_block_id
-         WHERE sb.session_id = ? ORDER BY sb.sequence, sp.sequence''',
-      [sessionId],
+         WHERE sb.session_id = ?
+         UNION ALL
+         SELECT ap.id, 0 AS prescribed_reps, 0.0 AS prescribed_load,
+                sb.sequence AS block_sequence, ap.sequence AS item_sequence,
+                'activity' AS item_kind
+         FROM activity_prescriptions ap
+         JOIN session_blocks sb ON sb.id = ap.session_block_id
+         WHERE sb.session_id = ?
+         ORDER BY block_sequence, item_sequence, item_kind''',
+      [sessionId, sessionId],
     );
     if (prescriptions.isEmpty) {
-      throw StateError('The planned workout has no set prescription.');
+      throw StateError('The planned workout has no executable prescription.');
     }
     final index = execution?.activeSetIndex ?? 0;
     final prescription = prescriptions[index];
@@ -439,6 +449,9 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
       completedSets:
           execution?.sets.where((outcome) => !outcome.isPending).length ?? 0,
       restUntil: execution?.restUntil,
+      itemKind: ExecutionItemKind.values.byName(
+        prescription['item_kind']! as String,
+      ),
     );
   }
 
