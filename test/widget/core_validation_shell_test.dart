@@ -4,6 +4,7 @@ import 'package:hybrid_training/app/bootstrap/app_environment.dart';
 import 'package:hybrid_training/app/hybrid_training_app.dart';
 import 'package:hybrid_training/features/core_validation/application/core_validation_repository.dart';
 import 'package:hybrid_training/features/core_validation/domain/core_validation_snapshot.dart';
+import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 
 void main() {
   testWidgets('starts directly in the four-destination validation shell', (
@@ -80,10 +81,48 @@ void main() {
 
     expect(find.byKey(const Key('actual-tonnage')), findsOneWidget);
   });
+
+  testWidgets('import requires a successful simulation before atomic apply', (
+    tester,
+  ) async {
+    final repository = _FakeCoreRepository();
+    await tester.pumpWidget(
+      HybridTrainingApp(
+        environment: AppEnvironment.dev,
+        repository: repository,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('destination-settings')));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('apply-import')))
+          .onPressed,
+      isNull,
+    );
+    await tester.enterText(
+      find.byKey(const Key('import-source')),
+      '{"backup":1}',
+    );
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('simulate-import')));
+    await tester.pumpAndSettle();
+
+    expect(repository.importDryRuns, [true]);
+    expect(find.byKey(const Key('import-report-status')), findsOneWidget);
+    final apply = find.byKey(const Key('apply-import'));
+    await tester.ensureVisible(apply);
+    await tester.tap(apply);
+    await tester.pumpAndSettle();
+    expect(repository.importDryRuns, [true, false]);
+  });
 }
 
 class _FakeCoreRepository implements CoreValidationRepository {
   bool fixtureCreated = false;
+  final List<bool> importDryRuns = [];
 
   @override
   Future<void> createDevelopmentFixture() async => fixtureCreated = true;
@@ -93,6 +132,20 @@ class _FakeCoreRepository implements CoreValidationRepository {
 
   @override
   Future<String> exportBackup() async => '{}';
+
+  @override
+  Future<ImportReport> importBackup(
+    String source, {
+    required bool dryRun,
+  }) async {
+    importDryRuns.add(dryRun);
+    return ImportReport(
+      dryRun: dryRun,
+      applied: !dryRun,
+      sourceFormat: 'hybrid-training-backup',
+      issues: const [],
+    );
+  }
 
   @override
   Future<CoreValidationSnapshot> load() async => fixtureCreated

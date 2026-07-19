@@ -210,10 +210,26 @@ class _ProfilePanel extends StatelessWidget {
   );
 }
 
-class _SettingsPanel extends StatelessWidget {
+class _SettingsPanel extends StatefulWidget {
   const _SettingsPanel({required this.strings, required this.controller});
   final AppStrings strings;
   final CoreValidationController controller;
+
+  @override
+  State<_SettingsPanel> createState() => _SettingsPanelState();
+}
+
+class _SettingsPanelState extends State<_SettingsPanel> {
+  final importController = TextEditingController();
+
+  AppStrings get strings => widget.strings;
+  CoreValidationController get controller => widget.controller;
+
+  @override
+  void dispose() {
+    importController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) => ListView(
@@ -227,6 +243,53 @@ class _SettingsPanel extends StatelessWidget {
       ),
       if (controller.exportedBackup != null)
         Text(strings.exportReady, key: const Key('export-ready')),
+      const SizedBox(height: 24),
+      Text(strings.importData, style: Theme.of(context).textTheme.titleMedium),
+      TextField(
+        key: const Key('import-source'),
+        controller: importController,
+        minLines: 2,
+        maxLines: 5,
+        decoration: InputDecoration(labelText: strings.backupJson),
+        onChanged: (_) {
+          controller.clearImportSimulation();
+          setState(() {});
+        },
+      ),
+      FilledButton.tonal(
+        key: const Key('simulate-import'),
+        onPressed: importController.text.trim().isEmpty
+            ? null
+            : () => controller.simulateImport(importController.text),
+        child: Text(strings.simulateImport),
+      ),
+      if (controller.importReport != null) ...[
+        Text(
+          '${strings.importIssueCount}: ${controller.importReport!.issues.length}',
+          key: const Key('import-issue-count'),
+        ),
+        Text(
+          controller.importReport!.applied
+              ? strings.importApplied
+              : controller.canApplyImport
+              ? strings.importSimulationReady
+              : strings.importSimulationRejected,
+          key: const Key('import-report-status'),
+        ),
+        for (final issue in controller.importReport!.issues)
+          Text(
+            '${issue.severity.name.toUpperCase()} ${issue.path}: ${issue.message}',
+            key: ValueKey('import-issue-${issue.path}-${issue.message}'),
+          ),
+      ],
+      FilledButton(
+        key: const Key('apply-import'),
+        onPressed: controller.canApplyImport
+            ? controller.applySimulatedImport
+            : null,
+        child: Text(strings.applyImport),
+      ),
+      const SizedBox(height: 24),
       FilledButton.tonal(
         key: const Key('delete-all-data'),
         onPressed: () => _confirmDelete(context),

@@ -4,6 +4,7 @@ import 'package:hybrid_training/features/active_program/data/sqlite_versioned_pl
 import 'package:hybrid_training/features/core_validation/application/core_validation_repository.dart';
 import 'package:hybrid_training/features/core_validation/domain/core_validation_snapshot.dart';
 import 'package:hybrid_training/features/import_export/data/sqlite_backup_manager.dart';
+import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
 import 'package:hybrid_training/features/programs/domain/v2/generation/generated_training_plan.dart';
 import 'package:sqflite/sqflite.dart';
@@ -147,6 +148,13 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
     localDatabase: localDatabase,
     clock: _clock,
   ).exportBackup(appVersion: 'core-validation');
+
+  @override
+  Future<ImportReport> importBackup(String source, {required bool dryRun}) =>
+      SqliteBackupManager(
+        localDatabase: localDatabase,
+        clock: _clock,
+      ).importBackup(source, dryRun: dryRun);
 
   @override
   Future<void> deleteAllData() =>

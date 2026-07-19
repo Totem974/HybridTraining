@@ -39,6 +39,20 @@ class AppStrings {
       : 'No demo data is created in production.';
   String get noLocalProfile => _fr ? 'Aucun profil local' : 'No local profile';
   String get unit => _fr ? 'Unité' : 'Unit';
+  String get importData => _fr ? 'Importer une sauvegarde' : 'Import backup';
+  String get backupJson =>
+      _fr ? 'Contenu JSON de la sauvegarde' : 'Backup JSON';
+  String get simulateImport => _fr ? 'Simuler l’import' : 'Simulate import';
+  String get applyImport => _fr ? 'Appliquer l’import' : 'Apply import';
+  String get importSimulationReady => _fr
+      ? 'Simulation valide. Aucune donnée n’a encore été modifiée.'
+      : 'Simulation valid. No data has been changed yet.';
+  String get importApplied =>
+      _fr ? 'Import appliqué atomiquement.' : 'Import applied atomically.';
+  String get importSimulationRejected => _fr
+      ? 'Simulation refusée. Les données locales sont inchangées.'
+      : 'Simulation rejected. Local data is unchanged.';
+  String get importIssueCount => _fr ? 'Problèmes signalés' : 'Reported issues';
   String get exportData => _fr ? 'Exporter les données' : 'Export data';
   String get exportReady => _fr ? 'Sauvegarde prête' : 'Backup ready';
   String get deleteData => _fr ? 'Effacer les données' : 'Delete data';
