@@ -3,10 +3,14 @@ import 'package:hybrid_training/features/active_program/application/generate_beg
 import 'package:hybrid_training/features/active_program/data/sqlite_versioned_plan_store.dart';
 import 'package:hybrid_training/features/core_validation/application/core_validation_repository.dart';
 import 'package:hybrid_training/features/core_validation/domain/core_validation_snapshot.dart';
+import 'package:hybrid_training/features/core_validation/domain/core_workout_snapshot.dart';
 import 'package:hybrid_training/features/import_export/data/sqlite_backup_manager.dart';
 import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
 import 'package:hybrid_training/features/programs/domain/v2/generation/generated_training_plan.dart';
+import 'package:hybrid_training/features/tracking/data/sqlite_training_statistics_repository.dart';
+import 'package:hybrid_training/features/workout_runtime/data/sqlite_workout_execution_repository.dart';
+import 'package:hybrid_training/features/workout_runtime/domain/workout_execution.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SqliteCoreValidationRepository implements CoreValidationRepository {
@@ -20,6 +24,9 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
 
   static const _athleteId = 'dev-core-athlete';
   static const _planId = 'dev-bps-plan-1';
+
+  SqliteWorkoutExecutionRepository get _workouts =>
+      SqliteWorkoutExecutionRepository(localDatabase: localDatabase);
 
   @override
   Future<CoreValidationSnapshot> load() async {
@@ -44,27 +51,9 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
           ),
         ) ??
         0;
-    final completed =
-        Sqflite.firstIntValue(
-          await database.rawQuery(
-            "SELECT COUNT(*) FROM plan_training_sessions WHERE status = 'completed'",
-          ),
-        ) ??
-        0;
-    Future<int> countResult(String result) async =>
-        Sqflite.firstIntValue(
-          await database.rawQuery(
-            'SELECT COUNT(*) FROM set_performances WHERE result = ?',
-            [result],
-          ),
-        ) ??
-        0;
-    final tonnageRows = await database.rawQuery(
-      '''SELECT SUM(actual_load * completed_reps) AS tonnage
-         FROM set_performances
-         WHERE actual_load IS NOT NULL AND result = 'success' ''',
-    );
-    final tonnage = tonnageRows.single['tonnage'] as num?;
+    final statistics = await SqliteTrainingStatisticsRepository(
+      localDatabase: localDatabase,
+    ).load();
     return CoreValidationSnapshot(
       profileName: profiles.isEmpty
           ? null
@@ -74,11 +63,11 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
           : profiles.single['preferred_unit']! as String,
       activePlans: plans,
       plannedSessions: planned,
-      completedSessions: completed,
-      successfulSets: await countResult('success'),
-      failedSets: await countResult('failure'),
-      skippedSets: await countResult('skipped'),
-      actualTonnage: tonnage?.toDouble(),
+      completedSessions: statistics.completedSessions,
+      successfulSets: statistics.successfulSets,
+      failedSets: statistics.failedSets,
+      skippedSets: statistics.skippedSets,
+      actualTonnage: statistics.actualTonnage,
     );
   }
 
@@ -140,6 +129,173 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
         roundingIncrement: 2.5,
         seed: 531,
       ),
+    );
+  }
+
+  @override
+  Future<CoreWorkoutSnapshot?> loadFirstWorkout() async {
+    final database = await localDatabase.open();
+    final session = await _firstOpenSession(database);
+    if (session == null) return null;
+    final execution = await _workouts.loadInTransaction(
+      database,
+      session['id']! as String,
+    );
+    return _workoutSnapshot(database, session, execution);
+  }
+
+  @override
+  Future<void> startFirstWorkout() => _mutateWorkout(
+    eventType: 'started',
+    action: (current, at) => current.start(at),
+    updateSession: (tx, sessionId, next, at) => tx.update(
+      'plan_training_sessions',
+      {'status': 'started', 'started_at': at.toIso8601String()},
+      where: "id = ? AND status = 'planned'",
+      whereArgs: [sessionId],
+    ),
+  );
+
+  @override
+  Future<void> recordCurrentSet({
+    required SetOutcomeStatus status,
+    int? actualRepetitions,
+    double? actualLoad,
+    double? rpe,
+    String notes = '',
+  }) => _mutateWorkout(
+    eventType: 'setRecorded',
+    payload: {
+      'status': status.name,
+      'actualRepetitions': actualRepetitions,
+      'actualLoad': actualLoad,
+      'rpe': rpe,
+    },
+    action: (current, at) => current.recordActiveSet(
+      status: status,
+      at: at,
+      actualRepetitions: actualRepetitions,
+      actualLoad: actualLoad,
+      rpe: rpe,
+      notes: notes,
+    ),
+  );
+
+  @override
+  Future<void> pauseOrResumeWorkout() => _mutateWorkout(
+    eventType: 'pauseOrResume',
+    action: (current, at) => current.state == WorkoutExecutionState.paused
+        ? current.resume(at)
+        : current.pause(at),
+  );
+
+  @override
+  Future<void> undoLastSet() => _mutateWorkout(
+    eventType: 'lastSetUndone',
+    action: (current, at) => current.undoLastOutcome(at),
+  );
+
+  @override
+  Future<void> beginOrEndRest({required Duration duration}) {
+    if (duration <= Duration.zero) {
+      throw ArgumentError.value(duration, 'duration');
+    }
+    return _mutateWorkout(
+      eventType: 'restToggled',
+      payload: {'durationSeconds': duration.inSeconds},
+      action: (current, at) => current.state == WorkoutExecutionState.resting
+          ? current.endRest(at)
+          : current.beginRest(at.add(duration), at),
+    );
+  }
+
+  @override
+  Future<void> completeWorkout() => _mutateWorkout(
+    eventType: 'completed',
+    action: (current, at) => current.complete(at),
+    updateSession: (tx, sessionId, next, at) => tx.update(
+      'plan_training_sessions',
+      {'status': 'complete', 'completed_at': at.toIso8601String()},
+      where: "id = ? AND status = 'started'",
+      whereArgs: [sessionId],
+    ),
+  );
+
+  Future<void> _mutateWorkout({
+    required String eventType,
+    Map<String, Object?> payload = const {},
+    required WorkoutExecution Function(WorkoutExecution, DateTime) action,
+    Future<int> Function(DatabaseExecutor, String, WorkoutExecution, DateTime)?
+    updateSession,
+  }) async {
+    final database = await localDatabase.open();
+    await database.transaction((tx) async {
+      final session = await _firstOpenSession(tx);
+      if (session == null) throw StateError('No open workout is available.');
+      final sessionId = session['id']! as String;
+      var current = await _workouts.createInTransaction(tx, sessionId);
+      final at = _clock().toUtc();
+      final next = await _workouts.mutateInTransaction(
+        tx,
+        sessionId,
+        eventType: eventType,
+        payload: payload,
+        action: (value) => action(value, at),
+      );
+      current = next;
+      if (updateSession != null) {
+        final updated = await updateSession(tx, sessionId, current, at);
+        if (updated != 1) {
+          throw StateError('The planned session changed concurrently.');
+        }
+      }
+    });
+  }
+
+  Future<Map<String, Object?>?> _firstOpenSession(
+    DatabaseExecutor database,
+  ) async {
+    final rows = await database.rawQuery(
+      '''SELECT s.* FROM plan_training_sessions s
+         JOIN plan_training_cycles c ON c.id = s.cycle_id
+         JOIN training_blocks b ON b.id = c.block_id
+         JOIN training_plans p ON p.id = b.plan_id
+         WHERE p.status = 'active' AND s.status IN ('planned','started')
+         ORDER BY s.scheduled_for, b.sequence, c.sequence, s.sequence LIMIT 1''',
+    );
+    return rows.isEmpty ? null : rows.single;
+  }
+
+  Future<CoreWorkoutSnapshot> _workoutSnapshot(
+    DatabaseExecutor database,
+    Map<String, Object?> session,
+    WorkoutExecution? execution,
+  ) async {
+    final sessionId = session['id']! as String;
+    final prescriptions = await database.rawQuery(
+      '''SELECT sp.id, sp.prescribed_reps, sp.prescribed_load
+         FROM set_prescriptions sp
+         JOIN session_blocks sb ON sb.id = sp.session_block_id
+         WHERE sb.session_id = ? ORDER BY sb.sequence, sp.sequence''',
+      [sessionId],
+    );
+    if (prescriptions.isEmpty) {
+      throw StateError('The planned workout has no set prescription.');
+    }
+    final index = execution?.activeSetIndex ?? 0;
+    final prescription = prescriptions[index];
+    return CoreWorkoutSnapshot(
+      sessionId: sessionId,
+      scheduledFor: session['scheduled_for']! as String,
+      state: execution?.state ?? WorkoutExecutionState.planned,
+      currentSetNumber: index + 1,
+      totalSets: prescriptions.length,
+      prescriptionId: prescription['id']! as String,
+      prescribedRepetitions: prescription['prescribed_reps']! as int,
+      prescribedLoad: (prescription['prescribed_load']! as num).toDouble(),
+      completedSets:
+          execution?.sets.where((outcome) => !outcome.isPending).length ?? 0,
+      restUntil: execution?.restUntil,
     );
   }
 

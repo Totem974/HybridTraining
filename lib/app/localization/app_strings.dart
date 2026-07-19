@@ -22,6 +22,28 @@ class AppStrings {
       : 'Only the fully reviewed preset is executable.';
   String get activePlans => _fr ? 'Plans actifs' : 'Active plans';
   String get plannedSessions => _fr ? 'Séances planifiées' : 'Planned workouts';
+  String get firstWorkout => _fr ? 'Première séance' : 'First workout';
+  String get noWorkout =>
+      _fr ? 'Aucune séance disponible' : 'No workout available';
+  String get startWorkout => _fr ? 'Démarrer la séance' : 'Start workout';
+  String get workoutState => _fr ? 'État' : 'State';
+  String get currentSet => _fr ? 'Série' : 'Set';
+  String get prescribed => _fr ? 'Prescrit' : 'Prescribed';
+  String get actualRepetitions =>
+      _fr ? 'Répétitions réelles' : 'Actual repetitions';
+  String get actualLoad => _fr ? 'Charge réelle' : 'Actual load';
+  String get notes => _fr ? 'Notes' : 'Notes';
+  String get success => _fr ? 'Réussite' : 'Success';
+  String get failure => _fr ? 'Échec' : 'Failure';
+  String get skipSet => _fr ? 'Sauter la série' : 'Skip set';
+  String get pause => _fr ? 'Pause' : 'Pause';
+  String get resume => _fr ? 'Reprendre' : 'Resume';
+  String get undoLast =>
+      _fr ? 'Annuler la dernière validation' : 'Undo last result';
+  String get restSeconds => _fr ? 'Repos (secondes)' : 'Rest (seconds)';
+  String get startRest => _fr ? 'Lancer le repos' : 'Start rest';
+  String get endRest => _fr ? 'Terminer le repos' : 'End rest';
+  String get completeWorkout => _fr ? 'Terminer la séance' : 'Complete workout';
   String get completedSessions =>
       _fr ? 'Séances terminées' : 'Completed workouts';
   String get successfulSetCount => _fr ? 'Séries réussies' : 'Successful sets';

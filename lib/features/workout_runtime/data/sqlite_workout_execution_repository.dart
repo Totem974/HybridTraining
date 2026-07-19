@@ -13,35 +13,42 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
   @override
   Future<WorkoutExecution> create(String sessionId) async {
     final database = await localDatabase.open();
-    return database.transaction((transaction) async {
-      final existing = await _load(transaction, sessionId);
-      if (existing != null) return existing;
-      final prescriptions = await transaction.rawQuery(
-        '''SELECT sp.id FROM set_prescriptions sp
+    return database.transaction(
+      (transaction) => createInTransaction(transaction, sessionId),
+    );
+  }
+
+  Future<WorkoutExecution> createInTransaction(
+    DatabaseExecutor transaction,
+    String sessionId,
+  ) async {
+    final existing = await loadInTransaction(transaction, sessionId);
+    if (existing != null) return existing;
+    final prescriptions = await transaction.rawQuery(
+      '''SELECT sp.id FROM set_prescriptions sp
            JOIN session_blocks sb ON sb.id = sp.session_block_id
            WHERE sb.session_id = ? ORDER BY sb.sequence, sp.sequence''',
-        [sessionId],
-      );
-      if (prescriptions.isEmpty) {
-        throw StateError('No set prescriptions found for session: $sessionId');
-      }
-      final execution = WorkoutExecution(
-        sessionId: sessionId,
-        sets: [
-          for (final row in prescriptions)
-            SetOutcome(setId: row['id']! as String),
-        ],
-      );
-      await _persist(transaction, execution);
-      await _appendEvent(transaction, execution, 'created', const {});
-      return execution;
-    });
+      [sessionId],
+    );
+    if (prescriptions.isEmpty) {
+      throw StateError('No set prescriptions found for session: $sessionId');
+    }
+    final execution = WorkoutExecution(
+      sessionId: sessionId,
+      sets: [
+        for (final row in prescriptions)
+          SetOutcome(setId: row['id']! as String),
+      ],
+    );
+    await _persist(transaction, execution);
+    await _appendEvent(transaction, execution, 'created', const {});
+    return execution;
   }
 
   @override
   Future<WorkoutExecution?> load(String sessionId) async {
     final database = await localDatabase.open();
-    return _load(database, sessionId);
+    return loadInTransaction(database, sessionId);
   }
 
   @override
@@ -53,22 +60,38 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
   }) async {
     if (eventType.trim().isEmpty) throw ArgumentError.value(eventType);
     final database = await localDatabase.open();
-    return database.transaction((transaction) async {
-      final current = await _load(transaction, sessionId);
-      if (current == null) {
-        throw StateError('Workout execution not found: $sessionId');
-      }
-      final next = action(current);
-      if (next.sessionId != current.sessionId) {
-        throw StateError('A mutation cannot replace the session identity.');
-      }
-      await _persist(transaction, next);
-      await _appendEvent(transaction, next, eventType, payload);
-      return next;
-    });
+    return database.transaction(
+      (transaction) => mutateInTransaction(
+        transaction,
+        sessionId,
+        eventType: eventType,
+        payload: payload,
+        action: action,
+      ),
+    );
   }
 
-  Future<WorkoutExecution?> _load(
+  Future<WorkoutExecution> mutateInTransaction(
+    DatabaseExecutor transaction,
+    String sessionId, {
+    required String eventType,
+    Map<String, Object?> payload = const {},
+    required WorkoutExecution Function(WorkoutExecution current) action,
+  }) async {
+    final current = await loadInTransaction(transaction, sessionId);
+    if (current == null) {
+      throw StateError('Workout execution not found: $sessionId');
+    }
+    final next = action(current);
+    if (next.sessionId != current.sessionId) {
+      throw StateError('A mutation cannot replace the session identity.');
+    }
+    await _persist(transaction, next);
+    await _appendEvent(transaction, next, eventType, payload);
+    return next;
+  }
+
+  Future<WorkoutExecution?> loadInTransaction(
     DatabaseExecutor database,
     String sessionId,
   ) async {

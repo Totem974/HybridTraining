@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:hybrid_training/features/core_validation/application/core_validation_repository.dart';
 import 'package:hybrid_training/features/core_validation/domain/core_validation_snapshot.dart';
+import 'package:hybrid_training/features/core_validation/domain/core_workout_snapshot.dart';
 import 'package:hybrid_training/features/import_export/domain/import_models.dart';
+import 'package:hybrid_training/features/workout_runtime/domain/workout_execution.dart';
 
 enum CoreValidationState { loading, ready, error }
 
@@ -11,6 +13,7 @@ class CoreValidationController extends ChangeNotifier {
   final CoreValidationRepository repository;
   CoreValidationState state = CoreValidationState.loading;
   CoreValidationSnapshot snapshot = const CoreValidationSnapshot.empty();
+  CoreWorkoutSnapshot? workout;
   Object? lastError;
   String? exportedBackup;
   ImportReport? importReport;
@@ -22,6 +25,7 @@ class CoreValidationController extends ChangeNotifier {
     notifyListeners();
     try {
       snapshot = await repository.load();
+      workout = await repository.loadFirstWorkout();
       if (_disposed) return;
       state = CoreValidationState.ready;
       lastError = null;
@@ -36,6 +40,43 @@ class CoreValidationController extends ChangeNotifier {
   Future<void> createDevelopmentFixture() async {
     await _run(() async {
       await repository.createDevelopmentFixture();
+      snapshot = await repository.load();
+      workout = await repository.loadFirstWorkout();
+    });
+  }
+
+  Future<void> startWorkout() => _workoutAction(repository.startFirstWorkout);
+
+  Future<void> recordSet({
+    required SetOutcomeStatus status,
+    int? actualRepetitions,
+    double? actualLoad,
+    double? rpe,
+    String notes = '',
+  }) => _workoutAction(
+    () => repository.recordCurrentSet(
+      status: status,
+      actualRepetitions: actualRepetitions,
+      actualLoad: actualLoad,
+      rpe: rpe,
+      notes: notes,
+    ),
+  );
+
+  Future<void> pauseOrResumeWorkout() =>
+      _workoutAction(repository.pauseOrResumeWorkout);
+
+  Future<void> undoLastSet() => _workoutAction(repository.undoLastSet);
+
+  Future<void> toggleRest(Duration duration) =>
+      _workoutAction(() => repository.beginOrEndRest(duration: duration));
+
+  Future<void> completeWorkout() => _workoutAction(repository.completeWorkout);
+
+  Future<void> _workoutAction(Future<void> Function() action) async {
+    await _run(() async {
+      await action();
+      workout = await repository.loadFirstWorkout();
       snapshot = await repository.load();
     });
   }
@@ -77,6 +118,7 @@ class CoreValidationController extends ChangeNotifier {
       importReport = await repository.importBackup(source, dryRun: false);
       _simulatedImportSource = null;
       snapshot = await repository.load();
+      workout = await repository.loadFirstWorkout();
     });
   }
 

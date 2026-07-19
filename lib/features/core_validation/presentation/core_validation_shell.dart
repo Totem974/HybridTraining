@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hybrid_training/app/bootstrap/app_environment.dart';
 import 'package:hybrid_training/app/localization/app_strings.dart';
 import 'package:hybrid_training/features/core_validation/presentation/core_validation_controller.dart';
+import 'package:hybrid_training/features/workout_runtime/domain/workout_execution.dart';
 
 class CoreValidationShell extends StatefulWidget {
   const CoreValidationShell({
@@ -123,7 +124,7 @@ class _CoreValidationShellState extends State<CoreValidationShell> {
   }
 }
 
-class _EnginePanel extends StatelessWidget {
+class _EnginePanel extends StatefulWidget {
   const _EnginePanel({
     required this.strings,
     required this.controller,
@@ -132,6 +133,31 @@ class _EnginePanel extends StatelessWidget {
   final AppStrings strings;
   final CoreValidationController controller;
   final bool allowFixture;
+
+  @override
+  State<_EnginePanel> createState() => _EnginePanelState();
+}
+
+class _EnginePanelState extends State<_EnginePanel> {
+  final repetitions = TextEditingController();
+  final load = TextEditingController();
+  final rpe = TextEditingController();
+  final notes = TextEditingController();
+  final restSeconds = TextEditingController(text: '60');
+
+  AppStrings get strings => widget.strings;
+  CoreValidationController get controller => widget.controller;
+  bool get allowFixture => widget.allowFixture;
+
+  @override
+  void dispose() {
+    repetitions.dispose();
+    load.dispose();
+    rpe.dispose();
+    notes.dispose();
+    restSeconds.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) => ListView(
@@ -161,7 +187,180 @@ class _EnginePanel extends StatelessWidget {
         ),
       if (!allowFixture && !controller.snapshot.hasProfile)
         Text(strings.noProductionDemo, key: const Key('prod-no-demo')),
+      if (controller.workout == null)
+        Text(strings.noWorkout, key: const Key('no-workout'))
+      else
+        ..._workoutControls(context),
     ],
+  );
+
+  List<Widget> _workoutControls(BuildContext context) {
+    final workout = controller.workout!;
+    final actualReps = int.tryParse(repetitions.text);
+    final actualLoad = double.tryParse(load.text.replaceAll(',', '.'));
+    final actualRpe = rpe.text.trim().isEmpty
+        ? null
+        : double.tryParse(rpe.text.replaceAll(',', '.'));
+    final validResult =
+        workout.canRecord &&
+        actualReps != null &&
+        actualReps >= 0 &&
+        actualLoad != null &&
+        actualLoad >= 0 &&
+        (actualRpe == null || (actualRpe >= 1 && actualRpe <= 10));
+    final seconds = int.tryParse(restSeconds.text);
+    return [
+      const SizedBox(height: 24),
+      Text(
+        strings.firstWorkout,
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      Text(
+        '${strings.workoutState}: ${workout.state.name}',
+        key: const Key('workout-state'),
+      ),
+      Text(
+        '${strings.currentSet}: ${workout.currentSetNumber}/${workout.totalSets}',
+        key: const Key('workout-set-progress'),
+      ),
+      Text(
+        '${strings.prescribed}: ${workout.prescribedRepetitions} × ${workout.prescribedLoad}',
+      ),
+      if (workout.canStart)
+        FilledButton(
+          key: const Key('start-workout'),
+          onPressed: controller.startWorkout,
+          child: Text(strings.startWorkout),
+        ),
+      if (workout.canRecord) ...[
+        TextField(
+          key: const Key('actual-repetitions'),
+          controller: repetitions,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: strings.actualRepetitions),
+          onChanged: (_) => setState(() {}),
+        ),
+        TextField(
+          key: const Key('actual-load'),
+          controller: load,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(labelText: strings.actualLoad),
+          onChanged: (_) => setState(() {}),
+        ),
+        TextField(
+          key: const Key('actual-rpe'),
+          controller: rpe,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(labelText: 'RPE (1–10)'),
+          onChanged: (_) => setState(() {}),
+        ),
+        TextField(
+          key: const Key('set-notes'),
+          controller: notes,
+          decoration: InputDecoration(labelText: strings.notes),
+        ),
+        Wrap(
+          spacing: 8,
+          children: [
+            FilledButton(
+              key: const Key('record-success'),
+              onPressed: validResult
+                  ? () => _record(
+                      SetOutcomeStatus.success,
+                      actualReps,
+                      actualLoad,
+                      actualRpe,
+                    )
+                  : null,
+              child: Text(strings.success),
+            ),
+            FilledButton.tonal(
+              key: const Key('record-failure'),
+              onPressed: validResult
+                  ? () => _record(
+                      SetOutcomeStatus.failure,
+                      actualReps,
+                      actualLoad,
+                      actualRpe,
+                    )
+                  : null,
+              child: Text(strings.failure),
+            ),
+            TextButton(
+              key: const Key('record-skip'),
+              onPressed: () => controller.recordSet(
+                status: SetOutcomeStatus.skipped,
+                notes: notes.text,
+              ),
+              child: Text(strings.skipSet),
+            ),
+          ],
+        ),
+      ],
+      if ({
+        WorkoutExecutionState.activeSet,
+        WorkoutExecutionState.resting,
+        WorkoutExecutionState.paused,
+      }.contains(workout.state))
+        FilledButton.tonal(
+          key: const Key('pause-resume-workout'),
+          onPressed: controller.pauseOrResumeWorkout,
+          child: Text(
+            workout.state == WorkoutExecutionState.paused
+                ? strings.resume
+                : strings.pause,
+          ),
+        ),
+      if (workout.completedSets > 0 && !workout.isClosed)
+        TextButton(
+          key: const Key('undo-last-set'),
+          onPressed: controller.undoLastSet,
+          child: Text(strings.undoLast),
+        ),
+      if (workout.state == WorkoutExecutionState.activeSet ||
+          workout.state == WorkoutExecutionState.resting) ...[
+        TextField(
+          key: const Key('rest-seconds'),
+          controller: restSeconds,
+          keyboardType: TextInputType.number,
+          enabled: workout.state != WorkoutExecutionState.resting,
+          decoration: InputDecoration(labelText: strings.restSeconds),
+          onChanged: (_) => setState(() {}),
+        ),
+        TextButton(
+          key: const Key('toggle-rest'),
+          onPressed:
+              workout.state == WorkoutExecutionState.resting ||
+                  (seconds != null && seconds > 0)
+              ? () => controller.toggleRest(Duration(seconds: seconds ?? 1))
+              : null,
+          child: Text(
+            workout.state == WorkoutExecutionState.resting
+                ? strings.endRest
+                : strings.startRest,
+          ),
+        ),
+      ],
+      if (workout.canComplete)
+        FilledButton(
+          key: const Key('complete-workout'),
+          onPressed: controller.completeWorkout,
+          child: Text(strings.completeWorkout),
+        ),
+    ];
+  }
+
+  Future<void> _record(
+    SetOutcomeStatus status,
+    int actualRepetitions,
+    double actualLoad,
+    double? actualRpe,
+  ) => controller.recordSet(
+    status: status,
+    actualRepetitions: actualRepetitions,
+    actualLoad: actualLoad,
+    rpe: actualRpe,
+    notes: notes.text,
   );
 }
 

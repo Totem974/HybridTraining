@@ -4,7 +4,9 @@ import 'package:hybrid_training/app/bootstrap/app_environment.dart';
 import 'package:hybrid_training/app/hybrid_training_app.dart';
 import 'package:hybrid_training/features/core_validation/application/core_validation_repository.dart';
 import 'package:hybrid_training/features/core_validation/domain/core_validation_snapshot.dart';
+import 'package:hybrid_training/features/core_validation/domain/core_workout_snapshot.dart';
 import 'package:hybrid_training/features/import_export/domain/import_models.dart';
+import 'package:hybrid_training/features/workout_runtime/domain/workout_execution.dart';
 
 void main() {
   testWidgets('starts directly in the four-destination validation shell', (
@@ -131,7 +133,34 @@ class _FakeCoreRepository implements CoreValidationRepository {
   Future<void> deleteAllData() async => fixtureCreated = false;
 
   @override
+  Future<void> beginOrEndRest({required Duration duration}) async {}
+
+  @override
+  Future<void> completeWorkout() async {}
+
+  @override
   Future<String> exportBackup() async => '{}';
+
+  @override
+  Future<CoreWorkoutSnapshot?> loadFirstWorkout() async => null;
+
+  @override
+  Future<void> pauseOrResumeWorkout() async {}
+
+  @override
+  Future<void> recordCurrentSet({
+    required SetOutcomeStatus status,
+    int? actualRepetitions,
+    double? actualLoad,
+    double? rpe,
+    String notes = '',
+  }) async {}
+
+  @override
+  Future<void> startFirstWorkout() async {}
+
+  @override
+  Future<void> undoLastSet() async {}
 
   @override
   Future<ImportReport> importBackup(
