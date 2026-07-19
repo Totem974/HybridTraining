@@ -28,6 +28,7 @@ class LocalDatabase {
           if (version >= 2) await DatabaseSchema.createV2(database);
           if (version >= 3) await DatabaseSchema.createV3(database);
           if (version >= 4) await DatabaseSchema.createV4(database);
+          if (version >= 5) await DatabaseSchema.createV5(database);
         },
         onUpgrade: DatabaseSchema.migrate,
       ),

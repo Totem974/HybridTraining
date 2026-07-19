@@ -8,7 +8,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 void main() {
   sqfliteFfiInit();
 
-  test('empty database creates v1 to v4 tables with constraints', () async {
+  test('empty database creates v1 to v5 tables with constraints', () async {
     final database = await databaseFactoryFfi.openDatabase(
       inMemoryDatabasePath,
       options: OpenDatabaseOptions(
@@ -19,6 +19,7 @@ void main() {
           await DatabaseSchema.createV2(db);
           await DatabaseSchema.createV3(db);
           await DatabaseSchema.createV4(db);
+          await DatabaseSchema.createV5(db);
         },
       ),
     );
@@ -46,12 +47,31 @@ void main() {
         'workout_executions',
         'workout_set_outcomes',
         'workout_execution_events',
+        'activity_prescriptions',
+        'activity_results',
+        'training_max_timeline',
+        'plan_amendments',
+        'plan_transitions_v5',
+        'planned_events_v5',
       }),
+    );
+    expect(
+      await _columns(database, 'training_plans'),
+      containsAll(['source_edition', 'ruleset_generation']),
+    );
+    expect(
+      await _columns(database, 'training_blocks'),
+      containsAll([
+        'block_type',
+        'ruleset_role',
+        'seventh_week_purpose',
+        'programming_block_number',
+      ]),
     );
   });
 
-  for (final sourceVersion in [2, 3]) {
-    test('v$sourceVersion to v4 migration preserves existing rows', () async {
+  for (final sourceVersion in [2, 3, 4]) {
+    test('v$sourceVersion to v5 migration preserves existing rows', () async {
       final temporary = await Directory.systemTemp.createTemp(
         'db-v$sourceVersion-v4-',
       );
@@ -65,6 +85,7 @@ void main() {
             await DatabaseSchema.createV1(db);
             await DatabaseSchema.createV2(db);
             if (version >= 3) await DatabaseSchema.createV3(db);
+            if (version >= 4) await DatabaseSchema.createV4(db);
           },
         ),
       );
@@ -82,7 +103,7 @@ void main() {
       database = await local.open();
       addTearDown(local.close);
 
-      expect(await database.getVersion(), 4);
+      expect(await database.getVersion(), 5);
       expect(await database.query('app_metadata'), [
         {'key': 'source-version', 'value': '$sourceVersion'},
       ]);
@@ -92,6 +113,12 @@ void main() {
           'workout_executions',
           'workout_set_outcomes',
           'workout_execution_events',
+          'activity_prescriptions',
+          'activity_results',
+          'training_max_timeline',
+          'plan_amendments',
+          'plan_transitions_v5',
+          'planned_events_v5',
         ]),
       );
       if (sourceVersion == 3) {
@@ -116,7 +143,7 @@ void main() {
     });
   }
 
-  test('v1 to v4 migration preserves legacy rows', () async {
+  test('v1 to v5 migration preserves legacy rows', () async {
     final temporary = await Directory.systemTemp.createTemp('db-v1-v2-');
     addTearDown(() => temporary.delete(recursive: true));
     final path = '${temporary.path}/migration.db';
@@ -141,13 +168,19 @@ void main() {
     ]);
     expect(await database.query('training_plans'), isEmpty);
     expect(await database.query('workout_runtime_sessions'), isEmpty);
-    expect(await database.getVersion(), 4);
+    expect(await database.getVersion(), 5);
     expect(
       await _tables(database),
       containsAll([
         'workout_executions',
         'workout_set_outcomes',
         'workout_execution_events',
+        'activity_prescriptions',
+        'activity_results',
+        'training_max_timeline',
+        'plan_amendments',
+        'plan_transitions_v5',
+        'planned_events_v5',
       ]),
     );
   });
@@ -209,6 +242,11 @@ void main() {
 Future<Set<Object?>> _tables(Database database) async =>
     (await database.rawQuery(
       "SELECT name FROM sqlite_master WHERE type = 'table'",
+    )).map((row) => row['name']).toSet();
+
+Future<Set<Object?>> _columns(Database database, String table) async =>
+    (await database.rawQuery(
+      'PRAGMA table_info($table)',
     )).map((row) => row['name']).toSet();
 
 Future<void> _seedInterruptedV3Workout(Database database) async {
