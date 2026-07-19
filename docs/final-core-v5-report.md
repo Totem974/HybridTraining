@@ -65,22 +65,21 @@ product onboarding were not integrated; PROD exposes no fixture/demo action.
 - `flutter build apk --debug --flavor prod -t lib/main_prod.dart`: passed;
   `app-prod-debug.apk` built.
 - Android target: Redmi Note 7, Android 13/API 33, connected over wireless ADB.
-- `flutter test integration_test/app_flow_test.dart -d
-  adb-fb5709d-2Bp9K8._adb-tls-connect._tcp --flavor dev`: outer command timed out
-  after 304 seconds without a first test event. The DEV package was installed and
-  its activity remained running; ADB showed no disconnect or crash.
-- The same command with `--timeout 4m --reporter expanded`: again timed out after
-  304 seconds before a test event.
+- Initial wireless runs showed that the app launched and exposed a VM service,
+  but Flutter did not discover the random port. The DEV-only Android manifest now
+  assigns port `42424`; PROD is unaffected.
 - `flutter drive --driver=test_driver/integration_test.dart
   --target=integration_test/app_flow_test.dart -d
-  adb-fb5709d-2Bp9K8._adb-tls-connect._tcp --flavor dev`: alternate transport also
-  produced no first test event and was terminated after five minutes.
+  adb-fb5709d-2Bp9K8._adb-tls-connect._tcp --flavor dev
+  --device-vmservice-port 42424 --host-vmservice-port 42425 --no-dds`: passed on
+  the physical Android 13 device. The complete scenario took 58 seconds.
 
-## Remaining limitation and verdict
+## Remaining limitations and verdict
 
-All repository, persistence, golden, runtime, lifecycle, coverage, and APK gates
-pass. The mandatory physical Android scenario cannot be marked passed because
-both Flutter device transports stalled before reporting the first test event.
-This is an explicit release gate even though the package installs and runs.
+All repository, persistence, golden, runtime, lifecycle, coverage, APK, and
+physical Android gates pass. Historical compatibility adapters and tables remain
+deliberately isolated until a later schema can remove them without breaking old
+backup restores. Documentary library entries still require source review before
+they can become executable; none is incorrectly advertised as available.
 
-`CORE NOT READY FOR PRODUCT UI`
+`CORE READY FOR PRODUCT UI`

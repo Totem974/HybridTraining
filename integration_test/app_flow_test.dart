@@ -46,6 +46,7 @@ void main() {
     final start = find.byKey(const Key('start-workout'));
     await _tapEngine(tester, start);
     await tester.pumpAndSettle();
+    await _advanceToLoadedSet(tester);
     await _record(tester, success: true, repetitions: '6', load: '42.5');
 
     final pause = find.byKey(const Key('pause-resume-workout'));
@@ -197,6 +198,19 @@ Future<void> _record(
   final action = find.byKey(Key(success ? 'record-success' : 'record-failure'));
   await _tapEngine(tester, action);
   await tester.pumpAndSettle();
+}
+
+Future<void> _advanceToLoadedSet(WidgetTester tester) async {
+  var shell = tester.widget<CoreValidationShell>(
+    find.byType(CoreValidationShell),
+  );
+  while (shell.controller.workout?.itemKind.name == 'activity') {
+    await _tapEngine(tester, find.byKey(const Key('record-skip')));
+    await tester.pumpAndSettle();
+    shell = tester.widget<CoreValidationShell>(
+      find.byType(CoreValidationShell),
+    );
+  }
 }
 
 Future<void> _deleteAll(WidgetTester tester) async {

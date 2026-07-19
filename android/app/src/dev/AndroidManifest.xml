@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Wireless ADB on the validation device does not reliably stream the
+             VM-service discovery log back to Flutter. A stable DEV-only port
+             makes the physical integration harness deterministic. -->
+        <meta-data
+            android:name="io.flutter.embedding.android.VMServicePort"
+            android:value="42424" />
+    </application>
+</manifest>
