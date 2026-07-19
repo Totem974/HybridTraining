@@ -8,8 +8,8 @@ void main() {
 
   for (final scenario in const {
     'Original': 'original-fsl-v1',
-    'Beyond': 'beyond-six-week-cycle-v1',
-    'Forever': 'forever-original-531-fsl-2l1a-v1',
+    'Beyond': 'BY-026',
+    'Forever': 'FV-236',
   }.entries) {
     testWidgets(
       '${scenario.key}: onboarding → recommendation → generator → export',

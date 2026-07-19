@@ -26,4 +26,21 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('poc-531-generator')), findsOneWidget);
   });
+
+  testWidgets('direct Forever program route derives its generation', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        initialRoute: '/poc/531/program/FV-236',
+        onGenerateRoute: buildPoc531Route,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('poc-531-generator')), findsOneWidget);
+    final generation = tester.widget<DropdownButtonFormField<String>>(
+      find.byKey(const Key('generation')),
+    );
+    expect(generation.initialValue, 'forever');
+  });
 }

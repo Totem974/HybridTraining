@@ -51,3 +51,20 @@
 - E2E scenarios for Original, Beyond, and Forever are checked in. Browser
   execution currently requires an Edge/Chrome WebDriver on port 4444; Android
   fallback execution timed out while installing on the connected device.
+
+## Checkpoint 8 — complete
+
+- Full formatting, static analysis, unit/widget/golden suite, Web release build,
+  and Android DEV/PROD debug builds pass.
+- 190 tests pass; POC Core line coverage is 290/303 (95.71%).
+- Desktop and mobile golden states cover landing, onboarding, and generator.
+- Browser E2E scenarios are implemented for all three generations; execution is
+  blocked externally by the Edge 150.0.4078.65 / driver 150.0.4078.83 mismatch.
+
+## Checkpoint 9 — complete
+
+- Final read-only QA review completed and high-priority findings corrected.
+- Future Training Max projection is now an explicit option.
+- Decorative configuration choices were removed or disabled, catalogue
+  duplicates were eliminated, and URL/JSON restoration was completed.
+- The final regression suite and release/debug builds pass after the fixes.

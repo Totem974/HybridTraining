@@ -176,12 +176,21 @@ class _Poc531OnboardingPageState extends State<Poc531OnboardingPage> {
           Step(
             title: const Text('Conditioning'),
             isActive: _step >= 5,
-            content: _enumChoice<String>(
-              label: 'Conditioning souhaité ou toléré',
-              value: _conditioning,
-              values: const ['Minimal', 'Modéré', 'Prioritaire'],
-              text: (value) => value,
-              onChanged: (value) => setState(() => _conditioning = value),
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _enumChoice<String>(
+                  label: 'Conditioning souhaité ou toléré',
+                  value: _conditioning,
+                  values: const ['Minimal', 'Modéré', 'Prioritaire'],
+                  text: (value) => value,
+                  onChanged: (value) => setState(() => _conditioning = value),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Préférence conservée pour le parcours. Le catalogue actuel ne fournit pas assez de contraintes structurées pour modifier le classement sans inventer de règle.',
+                ),
+              ],
             ),
           ),
           Step(
@@ -437,6 +446,9 @@ class _Poc531OnboardingPageState extends State<Poc531OnboardingPage> {
       trainingMaxRatio: 0.9,
       daysPerWeek: _days,
       trainingWeekdays: List<int>.generate(_days, (index) => index + 1),
+      options: const core.GenerationSpecificOptions(
+        projectFutureTrainingMaxes: true,
+      ),
       startDate: DateTime.utc(2026, 1, 5),
     );
     final issues = core.validateProgramConfiguration(configuration);

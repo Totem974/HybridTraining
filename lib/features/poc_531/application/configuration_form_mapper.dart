@@ -24,6 +24,8 @@ Map<String, Object?> programConfigurationToForm(
     },
     'trainingMaxRatio': configuration.trainingMaxRatio * 100,
     'days': configuration.daysPerWeek,
+    'projectFutureTrainingMaxes':
+        configuration.options.projectFutureTrainingMaxes,
     'lifts': {
       for (final entry in labels.entries)
         entry.value: configuration.lifts[entry.key]?.weight,

@@ -15,10 +15,10 @@ void main() {
         listGenerations().map((value) => value.name),
         isNot(contains('powerlifting')),
       );
-      final extension = getProgramDefinition('powerlifting-standard-531-v1')!;
-      expect(extension.generation, isNull);
+      final extension = getProgramDefinition('PL-001')!;
+      expect(extension.generation, Generation.original);
       expect(extension.sourceKind, SourceKind.supplement);
-      expect(extension.isExecutable, isFalse);
+      expect(extension.isExecutable, isTrue);
     });
 
     test('classifies every entry and links every executable strategy', () {
@@ -48,6 +48,10 @@ void main() {
           ),
         ),
       );
+      final executableIds = listPrograms(
+        const ProgramFilters(includeLegacy: true),
+      ).map((program) => program.id);
+      expect(executableIds.toSet(), hasLength(executableIds.length));
       expect(
         listPrograms(
           const ProgramFilters(
@@ -242,6 +246,19 @@ void main() {
       expect(plan.payload['trainingMaxTimeline'], isNotEmpty);
     });
 
+    test('does not project a future Training Max without explicit consent', () {
+      final plan = generateProgram(
+        _configuration(
+          'beyond-six-week-cycle-v1',
+          Generation.beyond,
+          days: 3,
+          projectFutureTrainingMaxes: false,
+        ),
+      );
+      expect(plan.payload['awaitingTrainingMaxConfirmation'], isTrue);
+      expect(plan.warnings, contains(contains('confirmation explicite')));
+    });
+
     test('generates Forever leader, seventh weeks, anchor and transitions', () {
       final plan = generateProgram(
         _configuration(
@@ -308,6 +325,7 @@ ProgramConfiguration _configuration(
   required int days,
   double ratio = .9,
   bool powerliftingExtension = false,
+  bool projectFutureTrainingMaxes = true,
 }) {
   const weights = {
     MainLift.squat: 160.0,
@@ -333,6 +351,7 @@ ProgramConfiguration _configuration(
     roundingIncrement: 2.5,
     options: GenerationSpecificOptions(
       enablePowerliftingExtension: powerliftingExtension,
+      projectFutureTrainingMaxes: projectFutureTrainingMaxes,
     ),
     startDate: DateTime.utc(2026, 7, 20),
   );

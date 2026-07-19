@@ -6,7 +6,6 @@ import '../../programs/domain/load_rounding.dart';
 import '../../programs/domain/original_fsl_program.dart';
 import '../../programs/domain/training_models.dart';
 import '../../programs/domain/v2/generation/canonical_plan_generator.dart';
-import '../../programs/domain/v2/generation/forever_macrocycle_generator.dart';
 import '../../programs/domain/v2/generation/generated_training_plan.dart';
 import '../../programs/domain/v2/program_domain.dart';
 import '../../training_max/domain/max_calculator.dart';
@@ -36,72 +35,14 @@ const _pocPrograms = <ProgramDefinition>[
       ),
     ],
   ),
-  ProgramDefinition(
-    id: 'beyond-six-week-cycle-v1',
-    name: 'Beyond — Two cycles and deload',
-    family: 'Beyond 5/3/1',
-    variant: 'Six week',
-    generation: Generation.beyond,
-    status: ProgramStatus.current,
-    sourceKind: SourceKind.canonical,
-    entryKind: CatalogEntryKind.executableTemplate,
-    frequencies: {3, 4},
-    levels: {ExperienceLevel.intermediate, ExperienceLevel.advanced},
-    goals: {TrainingGoal.strength},
-    generatorId: 'canonical-beyond',
-    sources: [SourceProvenance(title: 'Beyond 5/3/1', pages: 'PDF 9, 11–12')],
-  ),
-  ProgramDefinition(
-    id: 'forever-original-531-fsl-2l1a-v1',
-    name: 'Forever — Original 5/3/1 FSL',
-    family: 'Forever',
-    variant: '2 Leaders / 1 Anchor',
-    generation: Generation.forever,
-    status: ProgramStatus.current,
-    sourceKind: SourceKind.canonical,
-    entryKind: CatalogEntryKind.executableTemplate,
-    frequencies: {4},
-    levels: {ExperienceLevel.intermediate, ExperienceLevel.advanced},
-    goals: {TrainingGoal.strength, TrainingGoal.hypertrophy},
-    generatorId: 'canonical-forever',
-    requiresLeaderAnchor: true,
-    sources: [
-      SourceProvenance(title: '5/3/1 Forever', pages: 'PDF 29–33, 180–182'),
-    ],
-  ),
-  ProgramDefinition(
-    id: 'forever-beginner-prep-school-v1',
-    name: 'Beginner Prep School',
-    family: 'Forever',
-    variant: 'Three day',
-    generation: Generation.forever,
-    status: ProgramStatus.current,
-    sourceKind: SourceKind.canonical,
-    entryKind: CatalogEntryKind.executableTemplate,
-    frequencies: {3},
-    levels: {ExperienceLevel.beginner},
-    goals: {TrainingGoal.generalPreparation, TrainingGoal.reducedFrequency},
-    generatorId: 'canonical-bps',
-    sources: [SourceProvenance(title: '5/3/1 Forever', pages: 'PDF 50–57')],
-  ),
-  ProgramDefinition(
-    id: 'powerlifting-standard-531-v1',
-    name: 'Powerlifting standard',
-    family: 'Extensions / Powerlifting',
-    variant: 'Supplement',
-    status: ProgramStatus.restricted,
-    sourceKind: SourceKind.supplement,
-    entryKind: CatalogEntryKind.protocol,
-    frequencies: {3, 4},
-    levels: {ExperienceLevel.advanced},
-    goals: {TrainingGoal.powerliftingPreparation},
-    nonExecutableReason:
-        'Accessible uniquement via le parcours Extensions / Powerlifting.',
-    sources: [
-      SourceProvenance(title: '5/3/1 for Powerlifting', pages: 'PDF 10–14'),
-    ],
-  ),
 ];
+
+const _programAliases = <String, String>{
+  'beyond-six-week-cycle-v1': 'BY-026',
+  'forever-beginner-prep-school-v1': 'FV-141',
+  'forever-original-531-fsl-2l1a-v1': 'FV-236',
+  'powerlifting-standard-531-v1': 'PL-001',
+};
 
 CatalogSummary getCatalogSummary() {
   final definitions = catalog.catalogProgramDefinitions;
@@ -147,10 +88,11 @@ List<ProgramDefinition> listPrograms([
 );
 
 ProgramDefinition? getProgramDefinition(String programId) =>
-    <ProgramDefinition>[
-      ..._pocPrograms,
-      ...catalog.catalogProgramDefinitions,
-    ].where((program) => program.id == programId).firstOrNull;
+    <ProgramDefinition>[..._pocPrograms, ...catalog.catalogProgramDefinitions]
+        .where(
+          (program) => program.id == (_programAliases[programId] ?? programId),
+        )
+        .firstOrNull;
 
 double calculateEstimatedOneRepMax(RepMaxInput input) => const MaxCalculator()
     .estimateOneRepMax(load: input.weight, repetitions: input.repetitions);
@@ -279,16 +221,20 @@ List<ValidationIssue> validateProgramConfiguration(
 }
 
 List<Recommendation> recommendPrograms(UserProfile profile) {
-  final candidates = _pocPrograms.where(
-    (program) =>
-        program.generation != null &&
-        program.sourceKind == SourceKind.canonical &&
-        program.isExecutable &&
-        program.frequencies.contains(profile.constraints.daysPerWeek) &&
-        profile.constraints.hasBarbell &&
-        (profile.constraints.allowLegacy ||
-            program.status != ProgramStatus.legacy),
-  );
+  final candidates =
+      listPrograms(
+        ProgramFilters(includeLegacy: profile.constraints.allowLegacy),
+      ).where(
+        (program) =>
+            program.generation != null &&
+            program.sourceKind == SourceKind.canonical &&
+            program.isExecutable &&
+            program.frequencies.contains(profile.constraints.daysPerWeek) &&
+            profile.constraints.hasBarbell &&
+            (profile.constraints.allowLegacy ||
+                (program.status != ProgramStatus.legacy &&
+                    program.status != ProgramStatus.superseded)),
+      );
   final results =
       candidates.map((program) {
         var score = 40;
@@ -341,14 +287,6 @@ GeneratedProgram generateProgram(ProgramConfiguration configuration) {
         ratio: configuration.trainingMaxRatio,
       ).trainingMax,
   };
-  final athlete = AthletePlanConfiguration(
-    trainingMaxes: maxes,
-    unit: configuration.unit,
-    trainingWeekdays: configuration.trainingWeekdays,
-    startDate: LocalDate.fromDateTime(configuration.startDate),
-    rounder: LoadRounder(increment: configuration.roundingIncrement),
-    seed: configuration.seed,
-  );
   Map<String, Object?> payload;
   if (program.generatorId == 'original-fsl') {
     const original = OriginalFslProgram();
@@ -421,10 +359,19 @@ GeneratedProgram generateProgram(ProgramConfiguration configuration) {
       for (final lift in MainLift.values)
         _movement(lift): _progression(lift, configuration.unit),
     };
+    Map<MovementId, double>? confirmedAt(int week) {
+      final values = configuration.options.confirmedTrainingMaxesByWeek[week];
+      if (values == null) return null;
+      return {
+        for (final entry in values.entries) _movement(entry.key): entry.value,
+      };
+    }
+
     Map<MovementId, double> progressed(int count) => {
       for (final movement in movementMaxes.keys)
         movement: movementMaxes[movement]! + increments[movement]! * count,
     };
+
     final canonicalAthlete = CanonicalAthleteConfiguration(
       movementOrder: MainLift.values.map(_movement).toList(),
       trainingMaxes: movementMaxes,
@@ -434,12 +381,25 @@ GeneratedProgram generateProgram(ProgramConfiguration configuration) {
       unit: configuration.unit,
       rounder: LoadRounder(increment: configuration.roundingIncrement),
       confirmedBeyondTrainingMaxes: program.generatorId == 'canonical-beyond'
-          ? progressed(1)
+          ? confirmedAt(3) ??
+                (configuration.options.projectFutureTrainingMaxes
+                    ? progressed(1)
+                    : null)
           : null,
       confirmedTrainingMaxesByWeek:
           program.generatorId == 'canonical-forever' ||
               program.generatorId == 'canonical-forever-original-fsl'
-          ? {3: progressed(1), 6: progressed(2), 10: progressed(3)}
+          ? {
+              for (final week in const [3, 6, 10])
+                if (confirmedAt(week) case final confirmation?)
+                  week: confirmation
+                else if (configuration.options.projectFutureTrainingMaxes)
+                  week: progressed(switch (week) {
+                    3 => 1,
+                    6 => 2,
+                    _ => 3,
+                  }),
+            }
           : const {},
       trainingMaxRatios: program.generatorId == 'canonical-bps'
           ? {
@@ -467,6 +427,18 @@ GeneratedProgram generateProgram(ProgramConfiguration configuration) {
     generation: configuration.generation,
     payload: Map.unmodifiable(payload),
     sources: program.sources,
+    warnings:
+        configuration.options.projectFutureTrainingMaxes &&
+            configuration.options.confirmedTrainingMaxesByWeek.isEmpty &&
+            configuration.generation != Generation.original
+        ? const [
+            'Les Training Max futurs sont des projections explicites de la progression source ; confirmez-les aux checkpoints.',
+          ]
+        : payload['awaitingTrainingMaxConfirmation'] == true
+        ? const [
+            'Une confirmation explicite du Training Max est requise au prochain checkpoint.',
+          ]
+        : const [],
   );
 }
 

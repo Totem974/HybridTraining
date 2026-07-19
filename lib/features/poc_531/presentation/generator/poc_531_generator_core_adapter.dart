@@ -139,6 +139,10 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
               : 1),
       daysPerWeek: days,
       trainingWeekdays: List<int>.generate(days, (index) => index + 1),
+      options: core.GenerationSpecificOptions(
+        projectFutureTrainingMaxes:
+            value['projectFutureTrainingMaxes'] as bool? ?? false,
+      ),
       startDate: DateTime.utc(2026, 1, 5),
     );
   }

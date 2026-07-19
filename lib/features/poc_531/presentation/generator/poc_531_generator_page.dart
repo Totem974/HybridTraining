@@ -136,6 +136,7 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
   String transition = 'Selon le programme';
   int days = 4;
   bool foreverLeaderAnchor = true;
+  bool projectFutureTrainingMaxes = true;
   bool busy = false;
   List<GeneratorWarning> warnings = const [];
   GeneratorResult? result;
@@ -178,10 +179,21 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
     status = value['status'] as String? ?? status;
     programId = value['programId'] as String?;
     days = value['days'] as int? ?? days;
+    projectFutureTrainingMaxes =
+        value['projectFutureTrainingMaxes'] as bool? ??
+        projectFutureTrainingMaxes;
+    final ratio = value['trainingMaxRatio'];
+    if (ratio is num) ratioController.text = '${ratio.toDouble()}';
     final liftValues = value['lifts'];
     if (liftValues is Map) {
       for (final lift in lifts) {
         liftControllers[lift]!.text = '${liftValues[lift] ?? ''}';
+      }
+    }
+    final repetitionValues = value['repetitions'];
+    if (repetitionValues is Map) {
+      for (final lift in lifts) {
+        repsControllers[lift]!.text = '${repetitionValues[lift] ?? 1}';
       }
     }
   }
@@ -195,11 +207,7 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
     'status': status,
     'programId': programId,
     'days': days,
-    'supplemental': supplemental,
-    'assistance': assistance,
-    'conditioning': conditioning,
-    'transition': transition,
-    'leaderAnchor': foreverLeaderAnchor,
+    'projectFutureTrainingMaxes': projectFutureTrainingMaxes,
     'lifts': {
       for (final lift in lifts)
         lift: double.tryParse(liftControllers[lift]!.text),
@@ -317,6 +325,7 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
                     SizedBox(
                       width: 100,
                       child: TextFormField(
+                        key: ValueKey('reps-$lift'),
                         controller: repsControllers[lift],
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
@@ -380,6 +389,7 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
             items: const [
               DropdownMenuItem(value: 'current', child: Text('Current')),
               DropdownMenuItem(value: 'legacy', child: Text('Legacy')),
+              DropdownMenuItem(value: 'superseded', child: Text('Superseded')),
               DropdownMenuItem(value: 'all', child: Text('Tous')),
             ],
             onChanged: (v) {
@@ -464,8 +474,17 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
                 'Appliquée uniquement lorsque la définition CORE l’exige.',
               ),
               value: foreverLeaderAnchor,
-              onChanged: (v) {
-                setState(() => foreverLeaderAnchor = v);
+              onChanged: null,
+            ),
+          if (generation == 'beyond' || generation == 'forever')
+            SwitchListTile(
+              title: const Text('Projeter les futurs Training Max'),
+              subtitle: const Text(
+                'Utilise la progression sourcée comme projection visible ; une confirmation reste requise au checkpoint.',
+              ),
+              value: projectFutureTrainingMaxes,
+              onChanged: (value) {
+                setState(() => projectFutureTrainingMaxes = value);
                 _validate();
               },
             ),
@@ -529,6 +548,7 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
     List<String> values,
     void Function(String) assign,
   ) => DropdownButtonFormField<String>(
+    isExpanded: true,
     initialValue: values.contains(value) ? value : values.first,
     decoration: InputDecoration(
       labelText: label,
@@ -537,10 +557,12 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
     items: values
         .map((v) => DropdownMenuItem(value: v, child: Text(v)))
         .toList(),
-    onChanged: (v) {
-      setState(() => assign(v!));
-      _validate();
-    },
+    onChanged: values.length == 1
+        ? null
+        : (v) {
+            setState(() => assign(v!));
+            _validate();
+          },
   );
 
   Widget _buildOutput(BuildContext context) => SingleChildScrollView(

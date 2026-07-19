@@ -63,6 +63,61 @@ void main() {
     );
     expect(button.onPressed, isNull);
   });
+
+  testWidgets('restores ratio, rep mode, repetitions and lifts faithfully', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Poc531GeneratorPage(
+          core: _FakeCore(),
+          initialConfiguration: const {
+            'programId': 'original-test',
+            'generation': 'original',
+            'status': 'all',
+            'unit': 'lb',
+            'inputMode': 'Rep max',
+            'trainingMaxRatio': 85.0,
+            'days': 4,
+            'lifts': {
+              'Press': 100.0,
+              'Bench Press': 200.0,
+              'Squat': 300.0,
+              'Deadlift': 400.0,
+            },
+            'repetitions': {
+              'Press': 5,
+              'Bench Press': 4,
+              'Squat': 3,
+              'Deadlift': 2,
+            },
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<TextFormField>(find.byKey(const Key('tm-ratio')))
+          .controller!
+          .text,
+      '85.0',
+    );
+    expect(
+      tester
+          .widget<TextFormField>(find.byKey(const ValueKey('lift-Squat')))
+          .controller!
+          .text,
+      '300.0',
+    );
+    expect(
+      tester
+          .widget<TextFormField>(find.byKey(const ValueKey('reps-Deadlift')))
+          .controller!
+          .text,
+      '2',
+    );
+  });
 }
 
 class _FakeCore implements Poc531GeneratorCore {

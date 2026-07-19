@@ -106,9 +106,11 @@ class GenerationSpecificOptions {
   const GenerationSpecificOptions({
     this.confirmedTrainingMaxesByWeek = const {},
     this.enablePowerliftingExtension = false,
+    this.projectFutureTrainingMaxes = false,
   });
   final Map<int, Map<MainLift, double>> confirmedTrainingMaxesByWeek;
   final bool enablePowerliftingExtension;
+  final bool projectFutureTrainingMaxes;
 }
 
 class ProgramConfiguration {
