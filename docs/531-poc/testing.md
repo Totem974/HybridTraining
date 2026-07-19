@@ -1,5 +1,18 @@
 # Testing strategy
 
+## Calculator parity validation (2026-07-19)
+
+- `flutter analyze`: no issues.
+- `flutter test --coverage`: 212 tests passed.
+- POC domain line coverage: 608/648, or 93.83%.
+- Desktop and mobile calculator goldens pass.
+- `flutter build web --release`: passed; Wasm dry run passed.
+- Three integration scenarios cover an Original template, a Beyond template and
+  the reviewed Forever macrocycle. Flutter cannot run integration tests directly
+  on an Edge web device; the default Android runner also failed to locate its
+  produced APK in this environment. Browser E2E is therefore not claimed as
+  passing.
+
 ## Core
 
 Pure Dart tests cover estimated one-repetition max, Training Max ratios, kg/lb

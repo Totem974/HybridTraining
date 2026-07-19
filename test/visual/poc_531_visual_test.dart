@@ -2,28 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/features/poc_531/presentation/generator/poc_531_generator_core_adapter.dart';
 import 'package:hybrid_training/features/poc_531/presentation/generator/poc_531_generator_page.dart';
-import 'package:hybrid_training/features/poc_531/presentation/onboarding/poc_531_onboarding_page.dart';
-import 'package:hybrid_training/features/poc_531/presentation/poc_531_landing_page.dart';
 
 void main() {
-  testWidgets('captures desktop POC states', (tester) async {
+  testWidgets('captures desktop calculator state', (tester) async {
     await _viewport(tester, const Size(1200, 900));
-    await tester.pumpWidget(const MaterialApp(home: Poc531LandingPage()));
-    await tester.pumpAndSettle();
-    await expectLater(
-      find.byKey(const Key('poc-531-landing')),
-      matchesGoldenFile('goldens/poc-531-landing-desktop.png'),
-    );
-
-    await tester.pumpWidget(
-      MaterialApp(home: Poc531OnboardingPage(onProgramSelected: (_) {})),
-    );
-    await tester.pumpAndSettle();
-    await expectLater(
-      find.byKey(const Key('poc-531-onboarding')),
-      matchesGoldenFile('goldens/poc-531-onboarding-desktop.png'),
-    );
-
     await _pumpGeneratedProgram(tester);
     await expectLater(
       find.byKey(const Key('poc-531-generator')),

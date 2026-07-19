@@ -1,22 +1,9 @@
-# Onboarding flow
+# Onboarding retiré
 
-The POC onboarding is a reversible stepper that builds one typed `UserProfile`
-and one set of `LiftInput` values shared with the generator.
+Le POC n’embarque plus de parcours d’onboarding. La route `/poc/531` ouvre
+directement la calculatrice, conformément à la décision produit du 19 juillet
+2026.
 
-1. Welcome and scope.
-2. Primary goal, including Powerlifting only as an optional extension.
-3. Experience level.
-4. Weekly availability and approximate session duration.
-5. Available equipment.
-6. Conditioning preference or tolerance.
-7. Four lift inputs using one-rep max, Training Max, or load/repetitions.
-8. Original, Beyond, Forever, or “recommend for me”.
-9. Legacy-program permission.
-10. Ranked recommendations with reasons, constraints, trade-offs, status,
-    frequency, level, and Leader/Anchor requirements.
-
-Selecting a recommendation creates a versioned `ProgramConfiguration` and passes
-that exact value to the generator route. Recommendation, compatibility, Training
-Max derivation, and generation all call the same Core facade. Back navigation
-retains previous values without hidden recalculation.
-
+Les modes 1RM, Training Max, Rep Max et 1+ Set sont accessibles dans le premier
+panneau. Forever est choisi dans le panneau Template, sans recommandation
+intermédiaire ni logique métier parallèle.

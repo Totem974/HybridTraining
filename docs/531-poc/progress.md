@@ -85,3 +85,17 @@
   coverage explanation.
 - Static analysis, 193 tests, updated desktop/mobile goldens, Web release, and
   Android DEV/PROD debug builds pass.
+
+## Calculator parity iteration — complete
+
+- The onboarding and landing flows were removed; `/poc/531` now opens one
+  calculator page directly.
+- The page follows the reference calculator's functional information
+  architecture with an original Hybrid visual identity.
+- 1RM, Training Max, Rep Max and 1+ Set inputs use shared Core calculations.
+- Thirteen classic template families are catalogued. Reviewed prescriptions are
+  executable; ambiguous families stay visible and disabled with a reason.
+- Original/Beyond warm-ups, deloads 1–5 and high-intensity deload generate
+  numeric prescriptions. Joker policy is a non-blocking runtime warning.
+- Forever exposes reviewed definitions and the fixed Leader → 7th Week → Anchor
+  sequence.

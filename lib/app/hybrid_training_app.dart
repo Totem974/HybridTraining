@@ -8,7 +8,8 @@ import 'package:hybrid_training/features/core_validation/data/sqlite_core_valida
 import 'package:hybrid_training/features/core_validation/presentation/core_validation_controller.dart';
 import 'package:hybrid_training/features/core_validation/presentation/core_validation_shell.dart';
 import 'package:hybrid_training/features/poc_531/presentation/poc_531_routes.dart';
-import 'package:hybrid_training/features/poc_531/presentation/poc_531_landing_page.dart';
+import 'package:hybrid_training/features/poc_531/presentation/generator/poc_531_generator_core_adapter.dart';
+import 'package:hybrid_training/features/poc_531/presentation/generator/poc_531_generator_page.dart';
 
 class HybridTrainingApp extends StatefulWidget {
   const HybridTrainingApp({
@@ -61,7 +62,7 @@ class _HybridTrainingAppState extends State<HybridTrainingApp> {
     ),
     onGenerateRoute: buildPoc531Route,
     home: widget.pocOnlyMode
-        ? const Poc531LandingPage()
+        ? const Poc531GeneratorPage(core: DomainPoc531GeneratorCore())
         : CoreValidationShell(
             environment: widget.environment,
             controller: controller!,

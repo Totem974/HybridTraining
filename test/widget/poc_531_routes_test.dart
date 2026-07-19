@@ -15,10 +15,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('poc-531-landing')), findsOneWidget);
+    expect(find.byKey(const Key('poc-531-generator')), findsOneWidget);
   });
 
-  testWidgets('isolated landing routes to onboarding and generator', (
+  testWidgets('root POC route opens the single calculator page', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1200, 900);
@@ -29,20 +29,12 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(initialRoute: '/poc/531', onGenerateRoute: buildPoc531Route),
     );
-    expect(find.byKey(const Key('poc-531-landing')), findsOneWidget);
-
-    await tester.tap(find.text('Ouvrir l’onboarding'));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('poc-531-onboarding')), findsOneWidget);
-
-    Navigator.of(tester.element(find.byType(Scaffold))).pop();
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Ouvrir le générateur'));
-    await tester.pumpAndSettle();
     expect(find.byKey(const Key('poc-531-generator')), findsOneWidget);
+    expect(find.byKey(const Key('program')), findsOneWidget);
+    expect(find.byKey(const Key('poc-531-onboarding')), findsNothing);
   });
 
-  testWidgets('direct Forever program route derives its generation', (
+  testWidgets('direct Forever program route opens calculator in Forever mode', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -53,7 +45,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('poc-531-generator')), findsOneWidget);
-    expect(find.byKey(const Key('selected-generation')), findsOneWidget);
-    expect(find.text('5/3/1 Forever'), findsOneWidget);
+    expect(find.text('Template Forever exécutable'), findsOneWidget);
+    expect(find.textContaining('Leader'), findsWidgets);
   });
 }

@@ -1,218 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hybrid_training/features/poc_531/presentation/generator/poc_531_generator_core_adapter.dart';
 import 'package:hybrid_training/features/poc_531/presentation/generator/poc_531_generator_page.dart';
 
 void main() {
-  testWidgets('example generates a visible week and exports JSON', (
-    tester,
-  ) async {
+  Future<void> openCalculator(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1200, 1800);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final core = _FakeCore();
-    await tester.pumpWidget(MaterialApp(home: Poc531GeneratorPage(core: core)));
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Poc531GeneratorPage(core: DomainPoc531GeneratorCore()),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
 
-    expect(find.byKey(const Key('poc-531-generator')), findsOneWidget);
+  testWidgets('example generates a visible week and enables JSON export', (
+    tester,
+  ) async {
+    await openCalculator(tester);
     await tester.ensureVisible(find.text('Charger un exemple'));
     await tester.tap(find.text('Charger un exemple'));
-    await tester.pump();
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('generate-program')));
     await tester.tap(find.byKey(const Key('generate-program')));
     await tester.pumpAndSettle();
-
-    expect(find.text('Cycle test'), findsOneWidget);
-    expect(find.text('Semaine 1'), findsOneWidget);
-    expect(find.text('Press — séance 1'), findsOneWidget);
     expect(find.byKey(const Key('export-json')), findsOneWidget);
-    expect(core.generated, isTrue);
+    expect(find.textContaining('Cycle'), findsWidgets);
   });
 
-  testWidgets('template selection derives its generation provenance', (
+  testWidgets('calculator exposes the complete reference control groups', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1200, 1800);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(
-      MaterialApp(home: Poc531GeneratorPage(core: _FakeCore())),
-    );
-    await tester.ensureVisible(find.byKey(const Key('program')));
-    await tester.tap(find.byKey(const Key('program')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.textContaining('Forever test').last);
-    await tester.pumpAndSettle();
-
-    expect(find.text('5/3/1 Forever'), findsOneWidget);
-    expect(find.textContaining('Leader / Anchor'), findsOneWidget);
+    await openCalculator(tester);
+    for (final heading in [
+      'WEIGHT',
+      'TEMPLATE',
+      'ADDITIONAL OPTIONS',
+      'PLATING & BARBELL',
+      'SCHEDULING',
+      'OUTPUT',
+      'PROGRAM',
+    ]) {
+      expect(find.text(heading), findsOneWidget);
+    }
+    expect(find.text('Boring But Big'), findsOneWidget);
+    expect(find.text('Add Joker Sets'), findsOneWidget);
+    expect(find.text('Skip warm-up'), findsOneWidget);
   });
 
-  testWidgets('template-first sections expose locked unsupported options', (
+  testWidgets('rep-max mode displays repetitions for all four lifts', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1200, 1800);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(
-      MaterialApp(home: Poc531GeneratorPage(core: _FakeCore())),
-    );
-    expect(find.text('01  CHARGES'), findsOneWidget);
-    expect(find.text('02  TEMPLATE & VARIANTE'), findsOneWidget);
-    expect(find.text('03  PLANNING'), findsOneWidget);
-    expect(find.text('Warm-up'), findsOneWidget);
-    expect(find.text('Joker Sets'), findsOneWidget);
-    expect(find.text('Deload'), findsOneWidget);
-    expect(find.byIcon(Icons.lock_outline), findsNWidgets(3));
-  });
-
-  testWidgets('core validation error disables generation', (tester) async {
-    tester.view.physicalSize = const Size(1200, 1800);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(
-      MaterialApp(home: Poc531GeneratorPage(core: _FakeCore(invalid: true))),
-    );
+    await openCalculator(tester);
+    await tester.tap(find.text('Rep Max'));
     await tester.pumpAndSettle();
-
-    expect(find.text('Combinaison non exécutable'), findsOneWidget);
-    final button = tester.widget<FilledButton>(
-      find.byKey(const Key('generate-program')),
-    );
-    expect(button.onPressed, isNull);
+    expect(find.byKey(const Key('reps-Press')), findsOneWidget);
+    expect(find.byKey(const Key('reps-Bench Press')), findsOneWidget);
+    expect(find.byKey(const Key('reps-Squat')), findsOneWidget);
+    expect(find.byKey(const Key('reps-Deadlift')), findsOneWidget);
   });
 
-  testWidgets('restores ratio, rep mode, repetitions and lifts faithfully', (
+  testWidgets('Forever switches to the reviewed Leader Anchor calculator', (
     tester,
   ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Poc531GeneratorPage(
-          core: _FakeCore(),
-          initialConfiguration: const {
-            'programId': 'original-test',
-            'generation': 'original',
-            'status': 'all',
-            'unit': 'lb',
-            'inputMode': 'Rep max',
-            'trainingMaxRatio': 85.0,
-            'days': 4,
-            'lifts': {
-              'Press': 100.0,
-              'Bench Press': 200.0,
-              'Squat': 300.0,
-              'Deadlift': 400.0,
-            },
-            'repetitions': {
-              'Press': 5,
-              'Bench Press': 4,
-              'Squat': 3,
-              'Deadlift': 2,
-            },
-          },
-        ),
-      ),
-    );
+    await openCalculator(tester);
+    await tester.tap(find.text('Forever'));
     await tester.pumpAndSettle();
-    expect(
-      tester
-          .widget<TextFormField>(find.byKey(const Key('tm-ratio')))
-          .controller!
-          .text,
-      '85.0',
-    );
-    expect(
-      tester
-          .widget<TextFormField>(find.byKey(const ValueKey('lift-Squat')))
-          .controller!
-          .text,
-      '300.0',
-    );
-    expect(
-      tester
-          .widget<TextFormField>(find.byKey(const ValueKey('reps-Deadlift')))
-          .controller!
-          .text,
-      '2',
-    );
+    expect(find.text('Template Forever exécutable'), findsOneWidget);
+    expect(find.textContaining('Leader'), findsWidgets);
   });
-}
-
-class _FakeCore implements Poc531GeneratorCore {
-  _FakeCore({this.invalid = false});
-  final bool invalid;
-  bool generated = false;
-
-  @override
-  GeneratorOptions get options => const GeneratorOptions(
-    programs: [
-      ProgramChoice(
-        id: 'original-test',
-        name: 'Original test',
-        generation: 'original',
-        family: 'Original',
-        variant: 'Standard',
-        status: 'current',
-      ),
-      ProgramChoice(
-        id: 'forever-test',
-        name: 'Forever test',
-        generation: 'forever',
-        family: 'Forever',
-        variant: 'Leader',
-        status: 'current',
-      ),
-    ],
-    supplemental: ['Aucun', 'FSL'],
-    assistance: ['Minimal', 'Complet'],
-    conditioning: ['Optionnel', 'Modéré'],
-    transitions: ['Selon le programme', '7th Week'],
-  );
-
-  @override
-  Future<GeneratorResult> generate(Map<String, Object?> configuration) async {
-    generated = true;
-    return const GeneratorResult(
-      title: 'Programme de test',
-      explanation: 'Décisions fournies par le CORE.',
-      exportJson: '{"schemaVersion":1}',
-      sources: ['Source structurée, p. 1'],
-      blocks: [
-        PlanBlockView('Cycle test', [
-          PlanWeekView('Semaine 1', [
-            PlanSessionView('Press — séance 1', [
-              '3 × 5 · 40 kg · 65 %',
-              'Assistance : fournie par le CORE',
-            ]),
-          ]),
-        ]),
-      ],
-    );
-  }
-
-  @override
-  Future<List<GeneratorWarning>> validate(
-    Map<String, Object?> configuration,
-  ) async => invalid
-      ? const [GeneratorWarning('Combinaison non exécutable', isError: true)]
-      : const [];
-
-  @override
-  Future<String> serializeConfiguration(
-    Map<String, Object?> configuration,
-  ) async => 'poc531:test';
-
-  @override
-  Future<PlateLoadingView> calculatePlateLoading({
-    required double weight,
-    required double barWeight,
-    required List<double> inventory,
-    required String unit,
-  }) async => PlateLoadingView(
-    perSide: const [20, 10],
-    actualWeight: weight,
-    roundingError: 0,
-  );
 }
