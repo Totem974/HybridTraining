@@ -72,7 +72,7 @@ void main() {
       expect(all.actualTonnage, 405);
       expect(all.prescribedTonnageForRecordedSets, isNot(all.actualTonnage));
       final squat = all.movements.firstWhere(
-        (movement) => movement.movementId == 'squat',
+        (movement) => movement.movementId == 'barbell.back-squat',
       );
       expect(squat.bestEstimatedOneRepMax, closeTo(55, .001));
       expect(squat.currentTrainingMax, 100);

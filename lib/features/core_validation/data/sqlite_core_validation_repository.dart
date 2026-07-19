@@ -13,8 +13,8 @@ import 'package:hybrid_training/features/import_export/domain/import_models.dart
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
 import 'package:hybrid_training/features/programs/domain/load_rounding.dart';
 import 'package:hybrid_training/features/programs/domain/v2/generation/generated_training_plan.dart';
-import 'package:hybrid_training/features/programs/domain/v2/generation/beginner_prep_school_blueprint.dart';
-import 'package:hybrid_training/features/programs/domain/v2/generation/forever_macrocycle_generator.dart';
+import 'package:hybrid_training/features/programs/domain/v2/generation/canonical_plan_generator.dart';
+import 'package:hybrid_training/features/programs/domain/v2/program_domain.dart';
 import 'package:hybrid_training/features/tracking/data/sqlite_training_statistics_repository.dart';
 import 'package:hybrid_training/features/workout_runtime/data/sqlite_workout_execution_repository.dart';
 import 'package:hybrid_training/features/workout_runtime/domain/workout_execution.dart';
@@ -317,7 +317,10 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
     final ratios = <MainLift, double>{};
     final maxes = <MainLift, double>{};
     for (final lift in MainLift.values) {
-      ratios[lift] = (ratioJson[lift.name]! as num).toDouble();
+      final movementId = _movementId(lift);
+      ratios[lift] =
+          ((ratioJson[movementId.value] ?? ratioJson[lift.name])! as num)
+              .toDouble();
       final history = await database.query(
         'training_max_history',
         columns: ['training_max'],
@@ -334,10 +337,18 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
       'lb' => WeightUnit.pounds,
       _ => throw StateError('Unsupported athlete unit.'),
     };
-    final generated = const ForeverMacrocycleGenerator().generate(
-      snapshot: BeginnerPrepSchoolBlueprint.create(trainingMaxRatios: ratios),
-      athlete: AthletePlanConfiguration(
-        trainingMaxes: maxes,
+    final movements = MainLift.values.map(_movementId).toList();
+    final generated = const CanonicalPlanGenerator().generate(
+      blueprint: CanonicalGenerationBlueprint.beginnerPrepSchool,
+      athlete: CanonicalAthleteConfiguration(
+        movementOrder: movements,
+        trainingMaxes: {
+          for (final lift in MainLift.values) _movementId(lift): maxes[lift]!,
+        },
+        progressionIncrements: {for (final movement in movements) movement: 1},
+        trainingMaxRatios: {
+          for (final lift in MainLift.values) _movementId(lift): ratios[lift]!,
+        },
         unit: unit,
         trainingWeekdays: const [1, 3, 5],
         startDate: LocalDate.fromDateTime(startDate),
@@ -347,7 +358,7 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
       ),
     );
     final dateId = startDate.toIso8601String().substring(0, 10);
-    final next = VersionedTrainingPlan.fromGenerated(
+    final next = VersionedTrainingPlan.fromCanonical(
       id: 'preview-bps-$dateId',
       athleteId: row['athlete_id']! as String,
       macrocycle: 1,
@@ -417,15 +428,18 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
     final sessionId = session['id']! as String;
     final prescriptions = await database.rawQuery(
       '''SELECT sp.id, sp.prescribed_reps, sp.prescribed_load,
+                NULL AS target_json, NULL AS calculated_load,
                 sb.sequence AS block_sequence, sp.sequence AS item_sequence,
                 'loadedSet' AS item_kind
          FROM set_prescriptions sp
          JOIN session_blocks sb ON sb.id = sp.session_block_id
          WHERE sb.session_id = ?
          UNION ALL
-         SELECT ap.id, 0 AS prescribed_reps, 0.0 AS prescribed_load,
+         SELECT ap.id, NULL AS prescribed_reps, NULL AS prescribed_load,
+                ap.target_json, ap.calculated_load,
                 sb.sequence AS block_sequence, ap.sequence AS item_sequence,
-                'activity' AS item_kind
+                CASE WHEN ap.target_type = 'setsRepsLoad'
+                     THEN 'loadedSet' ELSE 'activity' END AS item_kind
          FROM activity_prescriptions ap
          JOIN session_blocks sb ON sb.id = ap.session_block_id
          WHERE sb.session_id = ?
@@ -437,6 +451,10 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
     }
     final index = execution?.activeSetIndex ?? 0;
     final prescription = prescriptions[index];
+    final target = prescription['target_json'] == null
+        ? const <String, Object?>{}
+        : jsonDecode(prescription['target_json']! as String)
+              as Map<String, Object?>;
     return CoreWorkoutSnapshot(
       sessionId: sessionId,
       scheduledFor: session['scheduled_for']! as String,
@@ -444,8 +462,15 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
       currentSetNumber: index + 1,
       totalSets: prescriptions.length,
       prescriptionId: prescription['id']! as String,
-      prescribedRepetitions: prescription['prescribed_reps']! as int,
-      prescribedLoad: (prescription['prescribed_load']! as num).toDouble(),
+      prescribedRepetitions:
+          (prescription['prescribed_reps'] as int?) ??
+          (target['repetitionsPerSet'] as num?)?.toInt() ??
+          0,
+      prescribedLoad:
+          ((prescription['prescribed_load'] ?? prescription['calculated_load'])
+                  as num?)
+              ?.toDouble() ??
+          0,
       completedSets:
           execution?.sets.where((outcome) => !outcome.isPending).length ?? 0,
       restUntil: execution?.restUntil,
@@ -472,3 +497,10 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
   Future<void> deleteAllData() =>
       SqliteBackupManager(localDatabase: localDatabase).deleteAllData();
 }
+
+MovementId _movementId(MainLift lift) => switch (lift) {
+  MainLift.squat => MovementId.squat,
+  MainLift.benchPress => MovementId.benchPress,
+  MainLift.deadlift => MovementId.deadlift,
+  MainLift.overheadPress => MovementId.overheadPress,
+};

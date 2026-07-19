@@ -1,9 +1,9 @@
 import '../../programs/domain/load_rounding.dart';
 import '../../programs/domain/program_library.dart';
 import '../../programs/domain/training_models.dart';
-import '../../programs/domain/v2/generation/beginner_prep_school_blueprint.dart';
-import '../../programs/domain/v2/generation/forever_macrocycle_generator.dart';
+import '../../programs/domain/v2/generation/canonical_plan_generator.dart';
 import '../../programs/domain/v2/generation/generated_training_plan.dart';
+import '../../programs/domain/v2/program_domain.dart';
 import '../domain/versioned_training_plan.dart';
 import 'plan_repository.dart';
 
@@ -47,43 +47,66 @@ class GenerateBeginnerPlan {
   const GenerateBeginnerPlan({
     required this.repository,
     this.library = const InMemoryProgramLibraryRepository(),
-    this.generator = const ForeverMacrocycleGenerator(),
+    this.generator = const CanonicalPlanGenerator(),
     required this.clock,
   });
 
   final PlanRepository repository;
   final ProgramLibraryRepository library;
-  final ForeverMacrocycleGenerator generator;
+  final CanonicalPlanGenerator generator;
   final DateTime Function() clock;
 
   Future<VersionedTrainingPlan> call(
     GenerateBeginnerPlanRequest request,
   ) async {
-    final preset = library.findByPresetId(beginnerPrepSchoolPresetId);
+    final preset = library.findByPresetId(
+      CanonicalGenerationBlueprint.beginnerPrepSchool.id.value,
+    );
     if (preset == null || !preset.isExecutable) {
       throw StateError('Beginner Prep School is not executable.');
     }
     if (request.planId.trim().isEmpty || request.athleteId.trim().isEmpty) {
       throw ArgumentError('Stable plan and athlete identifiers are required.');
     }
-    final snapshot = BeginnerPrepSchoolBlueprint.create(
-      trainingMaxRatios: request.trainingMaxRatios,
-      cycleCount: request.cycleCount,
-    );
+    if (request.trainingMaxes.length != MainLift.values.length ||
+        request.trainingMaxRatios.length != MainLift.values.length ||
+        MainLift.values.any((lift) {
+          final ratio = request.trainingMaxRatios[lift];
+          return (request.trainingMaxes[lift] ?? 0) <= 0 ||
+              (ratio != 0.85 && ratio != 0.90);
+        })) {
+      throw ArgumentError(
+        'Every main lift requires a positive TM and an 85% or 90% ratio.',
+      );
+    }
+    if (request.cycleCount != 1) {
+      throw StateError(
+        'Canonical BPS is staged one cycle at a time pending its TM decision.',
+      );
+    }
+    final movementOrder = MainLift.values.map(_movementId).toList();
     final generated = generator.generate(
-      snapshot: snapshot,
-      athlete: AthletePlanConfiguration(
-        trainingMaxes: request.trainingMaxes,
+      blueprint: CanonicalGenerationBlueprint.beginnerPrepSchool,
+      athlete: CanonicalAthleteConfiguration(
+        movementOrder: movementOrder,
+        trainingMaxes: {
+          for (final lift in MainLift.values)
+            _movementId(lift): request.trainingMaxes[lift]!,
+        },
+        progressionIncrements: {
+          for (final movement in movementOrder) movement: 1,
+        },
+        trainingMaxRatios: {
+          for (final lift in MainLift.values)
+            _movementId(lift): request.trainingMaxRatios[lift]!,
+        },
         unit: request.unit,
         trainingWeekdays: request.trainingWeekdays,
         startDate: request.startDate,
         rounder: LoadRounder(increment: request.roundingIncrement),
-        assistanceSelections: request.assistanceSelections,
-        conditioningSelections: request.conditioningSelections,
-        seed: request.seed,
       ),
     );
-    final plan = VersionedTrainingPlan.fromGenerated(
+    final plan = VersionedTrainingPlan.fromCanonical(
       id: request.planId,
       athleteId: request.athleteId,
       macrocycle: request.macrocycle,
@@ -94,3 +117,10 @@ class GenerateBeginnerPlan {
     return plan;
   }
 }
+
+MovementId _movementId(MainLift lift) => switch (lift) {
+  MainLift.squat => MovementId.squat,
+  MainLift.benchPress => MovementId.benchPress,
+  MainLift.deadlift => MovementId.deadlift,
+  MainLift.overheadPress => MovementId.overheadPress,
+};

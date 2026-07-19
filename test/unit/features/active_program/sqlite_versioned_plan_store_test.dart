@@ -87,10 +87,10 @@ void main() {
     expect(await db.query('set_prescriptions'), isEmpty);
   });
 
-  test('snapshot is immutable for a blueprint version', () async {
+  test('snapshot is immutable for a plan instance', () async {
     await store.createPlan(_plan());
     await expectLater(
-      store.createPlan(_plan(id: 'plan-2', snapshot: {'id': 'changed'})),
+      store.createPlan(_plan(snapshot: {'id': 'changed'})),
       throwsStateError,
     );
     final db = await local.open();

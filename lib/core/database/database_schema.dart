@@ -201,8 +201,7 @@ abstract final class DatabaseSchema {
         blueprint_version INTEGER NOT NULL CHECK(blueprint_version > 0),
         snapshot_json TEXT NOT NULL,
         rule_provenance_json TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        UNIQUE(blueprint_id, blueprint_version)
+        created_at TEXT NOT NULL
       )
     ''');
     await database.execute('''

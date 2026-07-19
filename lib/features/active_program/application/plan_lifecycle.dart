@@ -1,4 +1,6 @@
 import 'program_switch.dart';
+import '../domain/versioned_training_plan.dart';
+import 'create_training_plan.dart';
 
 class PlanAmendmentRequest {
   PlanAmendmentRequest({
@@ -185,10 +187,17 @@ class ApplyTrainingMaxDecision {
 }
 
 class CreateNextPlan {
-  const CreateNextPlan();
+  const CreateNextPlan(this.createTrainingPlan);
+  final CreateTrainingPlan createTrainingPlan;
 
-  int nextMacrocycle(int currentMacrocycle) {
-    if (currentMacrocycle < 1) throw ArgumentError.value(currentMacrocycle);
-    return currentMacrocycle + 1;
+  Future<VersionedTrainingPlan> call({
+    required int completedMacrocycle,
+    required CreateTrainingPlanRequest request,
+  }) {
+    if (completedMacrocycle < 1 ||
+        request.macrocycle != completedMacrocycle + 1) {
+      throw ArgumentError('The next plan must increment the macrocycle once.');
+    }
+    return createTrainingPlan(request);
   }
 }

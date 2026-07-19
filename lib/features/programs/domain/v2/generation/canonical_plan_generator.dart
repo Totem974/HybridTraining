@@ -53,6 +53,18 @@ class CanonicalGenerationBlueprint {
     ),
   );
 
+  static const beginnerPrepSchool = CanonicalGenerationBlueprint(
+    id: ProgramBlueprintId('forever-beginner-prep-school-v1'),
+    version: ProgramVersion(1),
+    sourceEdition: SourceEdition.forever,
+    generation: MethodGeneration.forever,
+    cycleModel: CanonicalCycleModel.standard531,
+    source: RuleReference(
+      document: '5/3/1 Forever',
+      location: 'PDF pages 50-57',
+    ),
+  );
+
   final ProgramBlueprintId id;
   final ProgramVersion version;
   final SourceEdition sourceEdition;
@@ -72,6 +84,7 @@ class CanonicalAthleteConfiguration {
     required this.rounder,
     Map<MovementId, double>? confirmedBeyondTrainingMaxes,
     Map<int, Map<MovementId, double>> confirmedTrainingMaxesByWeek = const {},
+    Map<MovementId, double> trainingMaxRatios = const {},
   }) : movementOrder = List.unmodifiable(movementOrder),
        trainingMaxes = Map.unmodifiable(trainingMaxes),
        progressionIncrements = Map.unmodifiable(progressionIncrements),
@@ -82,7 +95,8 @@ class CanonicalAthleteConfiguration {
        confirmedTrainingMaxesByWeek = Map.unmodifiable({
          for (final entry in confirmedTrainingMaxesByWeek.entries)
            entry.key: Map<MovementId, double>.unmodifiable(entry.value),
-       });
+       }),
+       trainingMaxRatios = Map.unmodifiable(trainingMaxRatios);
 
   final List<MovementId> movementOrder;
   final Map<MovementId, double> trainingMaxes;
@@ -93,6 +107,7 @@ class CanonicalAthleteConfiguration {
   final LoadRounder rounder;
   final Map<MovementId, double>? confirmedBeyondTrainingMaxes;
   final Map<int, Map<MovementId, double>> confirmedTrainingMaxesByWeek;
+  final Map<MovementId, double> trainingMaxRatios;
 }
 
 class CanonicalGeneratedSession {
@@ -220,8 +235,10 @@ class CanonicalGeneratedPlan {
     required List<CanonicalGeneratedBlock> blocks,
     required List<TrainingMaxTimelineDecision> trainingMaxTimeline,
     required this.awaitingTrainingMaxConfirmation,
+    Map<String, Object?> blueprintConfiguration = const {},
   }) : blocks = List.unmodifiable(blocks),
-       trainingMaxTimeline = List.unmodifiable(trainingMaxTimeline);
+       trainingMaxTimeline = List.unmodifiable(trainingMaxTimeline),
+       blueprintConfiguration = Map.unmodifiable(blueprintConfiguration);
 
   final int schemaVersion;
   final ProgramBlueprintId blueprintId;
@@ -232,6 +249,7 @@ class CanonicalGeneratedPlan {
   final List<CanonicalGeneratedBlock> blocks;
   final List<TrainingMaxTimelineDecision> trainingMaxTimeline;
   final bool awaitingTrainingMaxConfirmation;
+  final Map<String, Object?> blueprintConfiguration;
 
   List<CanonicalProgrammingWeek> get weeks =>
       blocks.expand((block) => block.weeks).toList(growable: false);
@@ -273,6 +291,7 @@ class CanonicalGeneratedPlan {
     'generation': generation.name,
     'unit': unit.name,
     'awaitingTrainingMaxConfirmation': awaitingTrainingMaxConfirmation,
+    ...blueprintConfiguration,
     'blocks': blocks.map((block) => block.toJson()).toList(),
     'trainingMaxTimeline': trainingMaxTimeline
         .map((decision) => decision.toJson())
@@ -290,6 +309,9 @@ class CanonicalPlanGenerator {
     required CanonicalAthleteConfiguration athlete,
   }) {
     _validate(blueprint, athlete);
+    if (blueprint.id == CanonicalGenerationBlueprint.beginnerPrepSchool.id) {
+      return _beginnerPrepSchool(blueprint, athlete);
+    }
     return switch (blueprint.generation) {
       MethodGeneration.powerlifting => _standard(blueprint, athlete),
       MethodGeneration.beyond => _beyond(blueprint, athlete),
@@ -680,6 +702,293 @@ class CanonicalPlanGenerator {
     return _foreverPlan(blueprint, athlete, blocks, timeline, true);
   }
 
+  CanonicalGeneratedPlan _beginnerPrepSchool(
+    CanonicalGenerationBlueprint blueprint,
+    CanonicalAthleteConfiguration athlete,
+  ) {
+    const patterns = [
+      [
+        [MovementId.squat, MovementId.benchPress],
+        [MovementId.deadlift, MovementId.overheadPress],
+        [MovementId.squat, MovementId.benchPress],
+      ],
+      [
+        [MovementId.deadlift, MovementId.overheadPress],
+        [MovementId.squat, MovementId.benchPress],
+        [MovementId.deadlift, MovementId.overheadPress],
+      ],
+      [
+        [MovementId.squat, MovementId.benchPress],
+        [MovementId.deadlift, MovementId.overheadPress],
+        [MovementId.squat, MovementId.benchPress],
+      ],
+    ];
+    const percentages = [
+      [.70, .80, .90],
+      [.65, .75, .85],
+      [.75, .85, .95],
+    ];
+    var cursor = athlete.startDate;
+    var sessionNumber = 0;
+    final weeks = <CanonicalProgrammingWeek>[];
+    for (final weekEntry in patterns.indexed) {
+      final sessions = <CanonicalGeneratedSession>[];
+      for (final movements in weekEntry.$2) {
+        final date = _nextTrainingDate(cursor, athlete.trainingWeekdays);
+        sessionNumber++;
+        var position = 0;
+        final prescriptions = <ActivityPrescription>[
+          ..._bpsNonBarbellPrescriptions(
+            sessionNumber: sessionNumber,
+            startPosition: position,
+            blueprint: blueprint,
+          ),
+        ];
+        position = prescriptions.length;
+        for (final movement in movements) {
+          final tm = athlete.trainingMaxes[movement]!;
+          for (final percentageEntry in percentages[weekEntry.$1].indexed) {
+            final percentage = percentageEntry.$2;
+            final unrounded = tm * percentage;
+            prescriptions.add(
+              ActivityPrescription(
+                id: PrescriptionId(
+                  'session-$sessionNumber:${movement.value}:main-${percentageEntry.$1 + 1}',
+                ),
+                position: position++,
+                activityId: ActivityId(movement.value),
+                movementId: movement,
+                percentage: percentage,
+                target: const PrescriptionTarget(
+                  type: PrescriptionTargetType.setsRepetitionsLoad,
+                  sets: 1,
+                  repetitionsPerSet: 5,
+                ),
+                kind: PrescriptionKind.mainWork,
+                ruleId: 'BPS-MAIN-00${weekEntry.$1 + 1}',
+                sourceEdition: blueprint.sourceEdition,
+                generation: blueprint.generation,
+                source: _bpsMainSource,
+                calculatedLoad: athlete.rounder.nearest(unrounded),
+                unroundedLoad: unrounded,
+                roundingIncrement: athlete.rounder.increment,
+              ),
+            );
+          }
+          final ratio = athlete.trainingMaxRatios[movement]!;
+          final supplementalPercentage =
+              percentages[weekEntry.$1][ratio == .85 ? 1 : 0];
+          for (var set = 1; set <= 5; set++) {
+            final unrounded = tm * supplementalPercentage;
+            prescriptions.add(
+              ActivityPrescription(
+                id: PrescriptionId(
+                  'session-$sessionNumber:${movement.value}:supplemental-$set',
+                ),
+                position: position++,
+                activityId: ActivityId(movement.value),
+                movementId: movement,
+                percentage: supplementalPercentage,
+                target: const PrescriptionTarget(
+                  type: PrescriptionTargetType.setsRepetitionsLoad,
+                  sets: 1,
+                  repetitionsPerSet: 5,
+                ),
+                kind: PrescriptionKind.supplemental,
+                ruleId: ratio == .85 ? 'BPS-SSL-001' : 'BPS-FSL-001',
+                sourceEdition: blueprint.sourceEdition,
+                generation: blueprint.generation,
+                source: _bpsSupplementalSource,
+                calculatedLoad: athlete.rounder.nearest(unrounded),
+                unroundedLoad: unrounded,
+                roundingIncrement: athlete.rounder.increment,
+              ),
+            );
+          }
+        }
+        sessions.add(
+          CanonicalGeneratedSession(
+            id: 'session-$sessionNumber',
+            position: sessions.length,
+            date: date,
+            movementId: movements.first,
+            prescriptions: prescriptions,
+          ),
+        );
+        cursor = date.addDays(1);
+      }
+      weeks.add(
+        CanonicalProgrammingWeek(
+          number: weekEntry.$1 + 1,
+          cycleNumber: 1,
+          sessions: sessions,
+        ),
+      );
+    }
+    return CanonicalGeneratedPlan(
+      schemaVersion: 5,
+      blueprintId: blueprint.id,
+      blueprintVersion: blueprint.version,
+      sourceEdition: blueprint.sourceEdition,
+      generation: blueprint.generation,
+      unit: athlete.unit,
+      blocks: [
+        CanonicalGeneratedBlock(
+          id: 'bps-leader-1',
+          type: BlockType.cycle,
+          role: BlockRole.leader,
+          sourceEdition: blueprint.sourceEdition,
+          generation: blueprint.generation,
+          source: blueprint.source,
+          weeks: weeks,
+        ),
+      ],
+      trainingMaxTimeline: [
+        for (final movementEntry in athlete.movementOrder.indexed)
+          TrainingMaxTimelineDecision(
+            id: 'bps-cycle-1-${movementEntry.$2.value}',
+            sequence: movementEntry.$1,
+            movementId: movementEntry.$2,
+            afterProgrammingWeek: 3,
+            previousTrainingMax: athlete.trainingMaxes[movementEntry.$2]!,
+            proposedTrainingMax: athlete.trainingMaxes[movementEntry.$2]!,
+            state: TrainingMaxDecisionState.previewed,
+            reason: 'BPS requires an explicit post-cycle progression decision.',
+            source: _bpsProgressionSource,
+          ),
+      ],
+      awaitingTrainingMaxConfirmation: true,
+      blueprintConfiguration: {
+        'trainingMaxRatios': {
+          for (final entry in athlete.trainingMaxRatios.entries)
+            entry.key.value: entry.value,
+        },
+      },
+    );
+  }
+
+  List<ActivityPrescription> _bpsNonBarbellPrescriptions({
+    required int sessionNumber,
+    required int startPosition,
+    required CanonicalGenerationBlueprint blueprint,
+  }) {
+    final templates =
+        <
+          ({
+            String id,
+            PrescriptionTarget target,
+            PrescriptionKind kind,
+            String ruleId,
+            RuleReference source,
+          })
+        >[
+          (
+            id: 'jumping-jack',
+            target: const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 75,
+            ),
+            kind: PrescriptionKind.warmUp,
+            ruleId: 'BPS-WARMUP-001',
+            source: _bpsWarmupSource,
+          ),
+          (
+            id: 'bodyweight-squat',
+            target: const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 30,
+            ),
+            kind: PrescriptionKind.warmUp,
+            ruleId: 'BPS-WARMUP-002',
+            source: _bpsWarmupSource,
+          ),
+          (
+            id: 'mountain-climber',
+            target: const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 60,
+            ),
+            kind: PrescriptionKind.warmUp,
+            ruleId: 'BPS-WARMUP-003',
+            source: _bpsWarmupSource,
+          ),
+          (
+            id: 'box-or-standing-broad-jump',
+            target: const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 10,
+            ),
+            kind: PrescriptionKind.jumpsOrThrows,
+            ruleId: 'BPS-JUMPS-001',
+            source: _bpsJumpsSource,
+          ),
+          (
+            id: 'assistance-lower-choice',
+            target: const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 25,
+            ),
+            kind: PrescriptionKind.assistance,
+            ruleId: 'BPS-ASSISTANCE-LOWER-001',
+            source: _bpsAssistanceSource,
+          ),
+          (
+            id: 'assistance-push-choice',
+            target: const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 25,
+            ),
+            kind: PrescriptionKind.assistance,
+            ruleId: 'BPS-ASSISTANCE-PUSH-001',
+            source: _bpsAssistanceSource,
+          ),
+          (
+            id: 'assistance-pull-choice',
+            target: const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 25,
+            ),
+            kind: PrescriptionKind.assistance,
+            ruleId: 'BPS-ASSISTANCE-PULL-001',
+            source: _bpsAssistanceSource,
+          ),
+          (
+            id: 'assistance-core-choice',
+            target: const PrescriptionTarget(
+              type: PrescriptionTargetType.totalRepetitions,
+              totalRepetitions: 25,
+            ),
+            kind: PrescriptionKind.assistance,
+            ruleId: 'BPS-ASSISTANCE-CORE-001',
+            source: _bpsAssistanceSource,
+          ),
+          (
+            id: 'easy-run',
+            target: const PrescriptionTarget(
+              type: PrescriptionTargetType.distance,
+              meters: 1609.344,
+            ),
+            kind: PrescriptionKind.easyConditioning,
+            ruleId: 'BPS-CONDITIONING-001',
+            source: _bpsConditioningSource,
+          ),
+        ];
+    return [
+      for (final entry in templates.indexed)
+        ActivityPrescription(
+          id: PrescriptionId('session-$sessionNumber:${entry.$2.id}'),
+          position: startPosition + entry.$1,
+          activityId: ActivityId(entry.$2.id),
+          target: entry.$2.target,
+          kind: entry.$2.kind,
+          ruleId: entry.$2.ruleId,
+          sourceEdition: blueprint.sourceEdition,
+          generation: blueprint.generation,
+          source: entry.$2.source,
+        ),
+    ];
+  }
+
   CanonicalGeneratedPlan _foreverPlan(
     CanonicalGenerationBlueprint blueprint,
     CanonicalAthleteConfiguration athlete,
@@ -873,7 +1182,22 @@ class CanonicalPlanGenerator {
         }
       }
     }
+    final isBps =
+        blueprint.id == CanonicalGenerationBlueprint.beginnerPrepSchool.id;
+    if (isBps &&
+        (athlete.trainingWeekdays.length != 3 ||
+            athlete.trainingMaxRatios.length != 4 ||
+            athlete.movementOrder.any(
+              (movement) =>
+                  athlete.trainingMaxRatios[movement] != .85 &&
+                  athlete.trainingMaxRatios[movement] != .90,
+            ))) {
+      throw StateError(
+        'BPS requires three days and an explicit 85% or 90% TM ratio per lift.',
+      );
+    }
     if (blueprint.generation == MethodGeneration.forever &&
+        !isBps &&
         athlete.trainingWeekdays.length != 4) {
       throw StateError('This reviewed Forever preset requires four days.');
     }
@@ -933,6 +1257,34 @@ const _foreverTrainingMaxTestSource = RuleReference(
 const _foreverProgressionSource = RuleReference(
   document: '5/3/1 Forever',
   location: 'PDF pages 15 and 32-33',
+);
+const _bpsMainSource = RuleReference(
+  document: '5/3/1 Forever',
+  location: 'PDF page 52',
+);
+const _bpsSupplementalSource = RuleReference(
+  document: '5/3/1 Forever',
+  location: 'PDF page 52',
+);
+const _bpsWarmupSource = RuleReference(
+  document: '5/3/1 Forever',
+  location: 'PDF page 50',
+);
+const _bpsJumpsSource = RuleReference(
+  document: '5/3/1 Forever',
+  location: 'PDF pages 50-51',
+);
+const _bpsAssistanceSource = RuleReference(
+  document: '5/3/1 Forever',
+  location: 'PDF pages 53-54',
+);
+const _bpsConditioningSource = RuleReference(
+  document: '5/3/1 Forever',
+  location: 'PDF page 55',
+);
+const _bpsProgressionSource = RuleReference(
+  document: '5/3/1 Forever',
+  location: 'PDF page 56',
 );
 
 const _standardWeeks = [

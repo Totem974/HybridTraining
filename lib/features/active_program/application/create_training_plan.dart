@@ -57,6 +57,7 @@ class CreateTrainingPlan {
       'canonical-beyond' => CanonicalGenerationBlueprint.beyondSixWeek,
       'canonical-forever-original-fsl' =>
         CanonicalGenerationBlueprint.foreverOriginalFsl,
+      'canonical-bps' => CanonicalGenerationBlueprint.beginnerPrepSchool,
       _ => throw StateError(
         'Preset uses a different creation contract: ${request.presetId}',
       ),

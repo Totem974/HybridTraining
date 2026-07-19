@@ -313,7 +313,7 @@ class InMemoryProgramLibraryRepository implements ProgramLibraryRepository {
       'canonical-powerlifting',
       'canonical-beyond',
       'canonical-forever-original-fsl',
-      'beginner-prep-school',
+      'canonical-bps',
     },
   }) {
     final errors = <String>[];
@@ -585,7 +585,7 @@ const canonicalProgramEntries = <ProgramLibraryEntry>[
         location: 'PDF pages 50-57',
       ),
     ],
-    generatorId: 'beginner-prep-school',
+    generatorId: 'canonical-bps',
     blueprintVersion: 1,
     aliases: {'beginner-prep-school-v1'},
     capabilities: {

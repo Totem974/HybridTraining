@@ -55,9 +55,9 @@ class SqliteTrainingStatisticsRepository
         WHERE o.prescription_id = f.prescription_id AND o.status != 'pending'
       )
     ''');
-    final sets = setRows.where((row) => _inScope(row, scope)).toList();
     final activityRows = await database.rawQuery('''
-      SELECT r.status, r.actual_json,
+      SELECT r.status, r.actual_json, ap.target_type, ap.target_json,
+             ap.movement_or_activity_id, ap.calculated_load,
              s.id AS session_id, s.scheduled_for,
              c.id AS cycle_id, b.id AS block_id, p.id AS plan_id
       FROM activity_results r
@@ -69,7 +69,7 @@ class SqliteTrainingStatisticsRepository
       JOIN training_plans p ON p.id = b.plan_id
       WHERE r.status != 'pending'
     ''');
-    final activities = activityRows
+    final decodedActivities = activityRows
         .where((row) => _inScope(row, scope))
         .map(
           (row) => (
@@ -79,6 +79,31 @@ class SqliteTrainingStatisticsRepository
                     as Map<String, Object?>,
           ),
         )
+        .toList();
+    final genericSets = decodedActivities
+        .where((item) => item.row['target_type'] == 'setsRepsLoad')
+        .map((item) {
+          final target =
+              jsonDecode(item.row['target_json']! as String)
+                  as Map<String, Object?>;
+          return <String, Object?>{
+            ...item.row,
+            'result': item.row['status'],
+            'actual_repetitions': (item.actual['repetitions'] as num?)?.toInt(),
+            'actual_load': (item.actual['load'] as num?)?.toDouble(),
+            'prescribed_reps':
+                (target['repetitionsPerSet'] as num?)?.toInt() ?? 0,
+            'prescribed_load':
+                (item.row['calculated_load'] as num?)?.toDouble() ?? 0.0,
+            'movement_id': item.row['movement_or_activity_id'],
+          };
+        });
+    final sets = [
+      ...setRows.where((row) => _inScope(row, scope)),
+      ...genericSets,
+    ];
+    final activities = decodedActivities
+        .where((item) => item.row['target_type'] != 'setsRepsLoad')
         .toList();
     final failedSessionIds = <String>{};
     for (final row in sets.where((row) => row['result'] == 'failure')) {
@@ -115,7 +140,11 @@ class SqliteTrainingStatisticsRepository
           )
           .toList();
       final movementTm = tmRows
-          .where((row) => row['exercise_id'] == movement)
+          .where(
+            (row) =>
+                row['exercise_id'] == movement ||
+                row['exercise_id'] == _legacyMovementId(movement),
+          )
           .toList();
       movementStats.add(
         MovementStatistics(
@@ -232,4 +261,12 @@ class SqliteTrainingStatisticsRepository
       final value => value! as String,
     };
   }
+
+  String _legacyMovementId(String movement) => switch (movement) {
+    'barbell.back-squat' => 'squat',
+    'barbell.bench-press' => 'benchPress',
+    'barbell.deadlift' => 'deadlift',
+    'barbell.overhead-press' => 'overheadPress',
+    _ => movement,
+  };
 }

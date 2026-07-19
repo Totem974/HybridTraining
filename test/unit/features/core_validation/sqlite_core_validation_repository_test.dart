@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/core/database/local_database.dart';
@@ -117,10 +118,7 @@ void main() {
         'abandoned',
       );
       expect(
-        (await database.query(
-          'workout_set_outcomes',
-          where: "status = 'success'",
-        )),
+        (await database.query('activity_results', where: "status = 'success'")),
         hasLength(1),
       );
     },
@@ -132,19 +130,20 @@ void main() {
       await repository.createDevelopmentFixture();
       final database = await local.open();
       final prescription = (await database.query(
-        'set_prescriptions',
+        'activity_prescriptions',
+        where: "target_type = 'setsRepsLoad'",
         limit: 1,
       )).single;
       expect((await repository.load()).actualTonnage, isNull);
 
-      await database.insert('set_performances', {
-        'id': 'performance-1',
+      await database.insert('activity_results', {
         'prescription_id': prescription['id'],
-        'result': 'success',
-        'completed_reps': 6,
-        'actual_load': 42.5,
+        'status': 'success',
+        'actual_json': jsonEncode({'repetitions': 6, 'load': 42.5}),
+        'rpe': null,
         'notes': '',
         'recorded_at': DateTime.utc(2026, 7, 20).toIso8601String(),
+        'updated_at': DateTime.utc(2026, 7, 20).toIso8601String(),
       });
 
       expect((await repository.load()).actualTonnage, 255);

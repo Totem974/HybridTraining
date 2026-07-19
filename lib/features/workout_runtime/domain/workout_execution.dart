@@ -13,10 +13,13 @@ enum SetOutcomeStatus { pending, success, failure, skipped }
 
 enum ExecutionItemKind { loadedSet, activity }
 
+enum ExecutionItemStorage { legacySet, genericActivity }
+
 class SetOutcome {
   const SetOutcome({
     required this.setId,
     this.kind = ExecutionItemKind.loadedSet,
+    this.storage = ExecutionItemStorage.legacySet,
     this.status = SetOutcomeStatus.pending,
     this.actualRepetitions,
     this.actualLoad,
@@ -33,6 +36,7 @@ class SetOutcome {
   final String setId;
   final SetOutcomeStatus status;
   final ExecutionItemKind kind;
+  final ExecutionItemStorage storage;
   final int? actualRepetitions;
   final double? actualLoad;
   final double? rpe;
@@ -76,6 +80,7 @@ class SetOutcome {
     return SetOutcome(
       setId: setId,
       kind: kind,
+      storage: storage,
       status: status,
       actualRepetitions: actualRepetitions,
       actualLoad: actualLoad,
@@ -90,7 +95,7 @@ class SetOutcome {
     );
   }
 
-  SetOutcome clear() => SetOutcome(setId: setId, kind: kind);
+  SetOutcome clear() => SetOutcome(setId: setId, kind: kind, storage: storage);
 }
 
 class WorkoutExecution {

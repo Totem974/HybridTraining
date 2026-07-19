@@ -4,9 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/features/programs/domain/load_rounding.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
-import 'package:hybrid_training/features/programs/domain/v2/generation/beginner_prep_school_blueprint.dart';
 import 'package:hybrid_training/features/programs/domain/v2/generation/canonical_plan_generator.dart';
-import 'package:hybrid_training/features/programs/domain/v2/generation/forever_macrocycle_generator.dart';
 import 'package:hybrid_training/features/programs/domain/v2/generation/generated_training_plan.dart';
 import 'package:hybrid_training/features/programs/domain/v2/program_domain.dart';
 
@@ -81,25 +79,21 @@ void main() {
   });
 
   test('Beginner Prep School executable activity golden is stable', () {
-    final plan = const ForeverMacrocycleGenerator().generate(
-      snapshot: BeginnerPrepSchoolBlueprint.create(
-        trainingMaxRatios: const {
-          MainLift.squat: .85,
-          MainLift.benchPress: .90,
-          MainLift.deadlift: .85,
-          MainLift.overheadPress: .90,
+    final plan = const CanonicalPlanGenerator().generate(
+      blueprint: CanonicalGenerationBlueprint.beginnerPrepSchool,
+      athlete: CanonicalAthleteConfiguration(
+        movementOrder: movements,
+        trainingMaxes: initial,
+        progressionIncrements: increments,
+        trainingMaxRatios: {
+          MovementId.squat: .85,
+          MovementId.benchPress: .90,
+          MovementId.deadlift: .85,
+          MovementId.overheadPress: .90,
         },
-      ),
-      athlete: AthletePlanConfiguration(
-        trainingMaxes: const {
-          MainLift.squat: 100,
-          MainLift.benchPress: 80,
-          MainLift.deadlift: 120,
-          MainLift.overheadPress: 60,
-        },
-        unit: WeightUnit.kilograms,
         trainingWeekdays: const [1, 3, 5],
         startDate: const LocalDate(2026, 7, 20),
+        unit: WeightUnit.kilograms,
         rounder: const LoadRounder(increment: 2.5),
       ),
     );

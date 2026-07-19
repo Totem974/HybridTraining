@@ -121,7 +121,7 @@ class SqliteVersionedPlanStore
   ) async {
     final snapshotJson = canonicalJson(plan.blueprintSnapshot);
     final provenanceJson = canonicalJson(plan.ruleProvenance);
-    final snapshotId = '${plan.blueprintId}-v${plan.blueprintVersion}';
+    final snapshotId = '${plan.id}-definition';
     await tx.insert('program_definition_snapshots', {
       'id': snapshotId,
       'blueprint_id': plan.blueprintId,
@@ -324,24 +324,33 @@ class SqliteVersionedPlanStore
       throw StateError('The athlete profile is unavailable.');
     }
     final unit = profiles.single['preferred_unit']! as String;
-    final movements = next.blocks
+    final sessionBlocks = next.blocks
         .expand((block) => block.cycles)
         .expand((cycle) => cycle.sessions)
-        .expand((session) => session.blocks)
-        .map((block) => block.movementId)
-        .whereType<String>()
-        .toSet();
+        .expand((session) => session.blocks);
+    final movements = <String>{
+      ...sessionBlocks.map((block) => block.movementId).whereType<String>(),
+      ...sessionBlocks
+          .expand((block) => block.activities)
+          .where((activity) => activity.targetType == 'setsRepetitionsLoad')
+          .map((activity) => activity.movementOrActivityId),
+    };
     if (movements.isEmpty) {
       throw StateError('The replacement plan has no compatible movement.');
     }
     for (final movement in movements) {
-      final history = await database.query(
-        'training_max_history',
-        columns: ['unit'],
-        where: 'athlete_id = ? AND exercise_id = ?',
-        whereArgs: [next.athleteId, movement],
-        orderBy: 'effective_at DESC',
-        limit: 1,
+      final legacyMovement = switch (movement) {
+        'barbell.back-squat' => 'squat',
+        'barbell.bench-press' => 'benchPress',
+        'barbell.deadlift' => 'deadlift',
+        'barbell.overhead-press' => 'overheadPress',
+        _ => movement,
+      };
+      final history = await database.rawQuery(
+        '''SELECT unit FROM training_max_history
+           WHERE athlete_id = ? AND exercise_id IN (?, ?)
+           ORDER BY effective_at DESC LIMIT 1''',
+        [next.athleteId, movement, legacyMovement],
       );
       if (history.isEmpty || history.single['unit'] != unit) {
         throw StateError(

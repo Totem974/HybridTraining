@@ -37,6 +37,9 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
           SetOutcome(
             setId: row['id']! as String,
             kind: ExecutionItemKind.values.byName(row['item_kind']! as String),
+            storage: ExecutionItemStorage.values.byName(
+              row['storage_kind']! as String,
+            ),
           ),
       ],
     );
@@ -124,11 +127,18 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
             kind: ExecutionItemKind.values.byName(
               outcome['item_kind']! as String,
             ),
+            storage: ExecutionItemStorage.values.byName(
+              outcome['storage_kind']! as String,
+            ),
             status: SetOutcomeStatus.values.byName(
               (outcome['outcome_status'] as String?) ?? 'pending',
             ),
-            actualRepetitions: outcome['actual_repetitions'] as int?,
-            actualLoad: (outcome['actual_load'] as num?)?.toDouble(),
+            actualRepetitions:
+                outcome['actual_repetitions'] as int? ??
+                _actualInt(outcome['actual_json'], 'repetitions'),
+            actualLoad:
+                (outcome['actual_load'] as num?)?.toDouble() ??
+                _actualDouble(outcome['actual_json'], 'load'),
             rpe: (outcome['rpe'] as num?)?.toDouble(),
             notes: outcome['notes']! as String,
             recordedAt: _date(outcome['recorded_at']),
@@ -184,7 +194,7 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
     }
     for (final entry in execution.sets.indexed) {
       final outcome = entry.$2;
-      if (outcome.kind == ExecutionItemKind.activity) {
+      if (outcome.storage == ExecutionItemStorage.genericActivity) {
         final values = <String, Object?>{
           'status': outcome.status.name,
           'actual_json': jsonEncode({
@@ -275,7 +285,7 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
     DatabaseExecutor database,
     String sessionId,
   ) => database.rawQuery(
-    '''SELECT sp.id, 'loadedSet' AS item_kind,
+    '''SELECT sp.id, 'loadedSet' AS item_kind, 'legacySet' AS storage_kind,
               sb.sequence AS block_sequence, sp.sequence AS item_sequence,
               wo.status AS outcome_status, wo.actual_repetitions,
               wo.actual_load, wo.rpe, wo.notes, wo.recorded_at,
@@ -285,7 +295,10 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
          LEFT JOIN workout_set_outcomes wo ON wo.prescription_id = sp.id
         WHERE sb.session_id = ?
        UNION ALL
-       SELECT ap.id, 'activity' AS item_kind,
+       SELECT ap.id,
+              CASE WHEN ap.target_type = 'setsRepsLoad'
+                   THEN 'loadedSet' ELSE 'activity' END AS item_kind,
+              'genericActivity' AS storage_kind,
               sb.sequence AS block_sequence, ap.sequence AS item_sequence,
               ar.status AS outcome_status, NULL AS actual_repetitions,
               NULL AS actual_load, ar.rpe, ar.notes, ar.recorded_at,
