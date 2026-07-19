@@ -1,5 +1,22 @@
 # AGENTS.md
 
+## Phase temporaire : reconstruction du coeur Forever
+
+- Branche de travail : `rebuild/forever-engine-core-20260719`.
+- Remote de travail temporaire et unique : `GitHub`. `GiTea` reste hors circuit.
+- Priorite absolue au domaine Dart pur, a la tracabilite des regles et aux tests.
+- L'UI produit et l'onboarding sont geles et doivent sortir du chemin actif.
+- Seul un Core Validation Shell minimal peut exposer le moteur pendant cette phase.
+- Aucune regle non sourcee ou `NEEDS_REVIEW` ne peut devenir executable.
+- `.SOURCE/` ne peut etre archive ou nettoye qu'apres manifeste, archive externe
+  integrale et verification de cette archive dans le cadre de cette tache.
+- Aucune suppression distante ni aucun push sans liste finale et autorisation
+  explicite du proprietaire.
+- Les commandes de qualite et validations Android de ce fichier restent
+  obligatoires.
+- Ces consignes sont temporaires et ne constituent pas une decision produit
+  permanente.
+
 ## Projet
 
 Hybrid 5/3/1 est une application Flutter locale en priorité Android. Elle doit
