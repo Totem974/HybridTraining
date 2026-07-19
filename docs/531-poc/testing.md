@@ -42,7 +42,7 @@ changes affect the existing application.
 ## Latest results
 
 - `flutter analyze`: pass, no issues.
-- `flutter test --coverage`: pass, 190 tests.
+- `flutter test --coverage`: pass, 193 tests.
 - POC Core: 290/303 instrumented lines, 95.71%.
 - Branch records: unavailable (`BRF=0`) in the generated LCOV file.
 - `flutter build web --release`: pass; Wasm dry run also succeeds.

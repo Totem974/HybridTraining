@@ -30,6 +30,9 @@ validated configuration to the generator.
 - Displays blocks, weeks, sessions, prescriptions, loads, sources, warnings,
   transitions, plate loading, JSON export, configuration copy, reset, example,
   and print guidance.
+- Uses a responsive template-first calculator layout. Selecting a template
+  derives its generation provenance; unsupported documentary options are shown
+  locked rather than behaving as decorative controls.
 
 ## Catalogue truthfulness
 
@@ -44,7 +47,7 @@ validated configuration to the generator.
 ## Validation
 
 - `flutter analyze`: passes.
-- `flutter test --coverage`: 190 tests pass.
+- `flutter test --coverage`: 193 tests pass.
 - POC Core line coverage: 95.71% (290/303 instrumented lines); the LCOV emitter
   provides no branch records in this environment.
 - `flutter build web --release`: passes, including Wasm dry run.

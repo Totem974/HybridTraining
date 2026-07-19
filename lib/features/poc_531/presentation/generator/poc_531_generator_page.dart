@@ -14,6 +14,82 @@ abstract interface class Poc531GeneratorCore {
   });
 }
 
+class _GeneratorHero extends StatelessWidget {
+  const _GeneratorHero();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [Color(0xFF173F33), Color(0xFF286A55)],
+      ),
+      borderRadius: BorderRadius.circular(22),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x24102A22),
+          blurRadius: 24,
+          offset: Offset(0, 10),
+        ),
+      ],
+    ),
+    child: const Wrap(
+      spacing: 24,
+      runSpacing: 12,
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        SizedBox(
+          width: 600,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'CONSTRUISEZ VOTRE CYCLE',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: .8,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Charges, template, variante et planning dans un parcours unique. Chaque prescription affichée vient du CORE.',
+                style: TextStyle(color: Color(0xFFD7E8E1), fontSize: 15),
+              ),
+            ],
+          ),
+        ),
+        Chip(
+          avatar: Icon(Icons.verified_outlined, size: 18),
+          label: Text('CORE DÉTERMINISTE'),
+        ),
+      ],
+    ),
+  );
+}
+
+class _Surface extends StatelessWidget {
+  const _Surface({required this.child, required this.padding});
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: Colors.white,
+    elevation: 2,
+    shadowColor: const Color(0x26102A22),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+      side: const BorderSide(color: Color(0xFFDDE6E1)),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: Padding(padding: padding, child: child),
+  );
+}
+
 class GeneratorOptions {
   const GeneratorOptions({
     required this.programs,
@@ -143,18 +219,19 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
   PlateLoadingView? plateLoading;
 
   List<ProgramChoice> get visiblePrograms => widget.core.options.programs
-      .where(
-        (p) =>
-            p.generation == generation &&
-            (status == 'all' || p.status == status),
-      )
+      .where((p) => status == 'all' || p.status == status)
       .toList(growable: false);
+
+  ProgramChoice? get selectedProgram => widget.core.options.programs
+      .where((program) => program.id == programId)
+      .firstOrNull;
 
   @override
   void initState() {
     super.initState();
     _load(widget.initialConfiguration ?? const {});
     programId ??= visiblePrograms.firstOrNull?.id;
+    generation = selectedProgram?.generation ?? generation;
     WidgetsBinding.instance.addPostFrameCallback((_) => _validate());
   }
 
@@ -236,39 +313,69 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     key: const Key('poc-531-generator'),
-    appBar: AppBar(title: const Text('Générateur 5/3/1 — POC')),
+    backgroundColor: const Color(0xFFF3F6F4),
+    appBar: AppBar(
+      backgroundColor: const Color(0xFF10251F),
+      foregroundColor: Colors.white,
+      title: const Text('HYBRID 5/3/1'),
+      actions: const [
+        Padding(
+          padding: EdgeInsets.only(right: 20),
+          child: Center(child: Text('CALCULATEUR  •  POC')),
+        ),
+      ],
+    ),
     body: LayoutBuilder(
       builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 980;
+        final wide = constraints.maxWidth >= 1080;
         final form = _buildForm(context);
         final output = _buildOutput(context);
-        return wide
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        return SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: wide ? 32 : 12,
+            vertical: 24,
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1480),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(child: form),
-                  const VerticalDivider(width: 1),
-                  Expanded(child: output),
+                  const _GeneratorHero(),
+                  const SizedBox(height: 22),
+                  if (wide)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: form),
+                        const SizedBox(width: 20),
+                        Expanded(child: output),
+                      ],
+                    )
+                  else ...[
+                    form,
+                    const SizedBox(height: 20),
+                    output,
+                  ],
                 ],
-              )
-            : ListView(children: [form, output]);
+              ),
+            ),
+          ),
+        );
       },
     ),
   );
 
   Widget _buildForm(BuildContext context) => Form(
     key: formKey,
-    child: SingleChildScrollView(
+    child: _Surface(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Configurer les charges',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
+          Text('01  CHARGES', style: _sectionStyle(context)),
           const Text(
-            'Toutes les prescriptions et compatibilités sont calculées par le CORE.',
+            '1RM, Training Max direct ou performance multi-répétitions. Les calculs restent dans le CORE.',
           ),
           const SizedBox(height: 16),
           SegmentedButton<String>(
@@ -349,56 +456,9 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
             onChanged: (_) => _validate(),
           ),
           const SizedBox(height: 24),
-          Text(
-            'Choisir le programme',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            key: const Key('generation'),
-            isExpanded: true,
-            initialValue: generation,
-            decoration: const InputDecoration(
-              labelText: 'Génération',
-              border: OutlineInputBorder(),
-            ),
-            items: const [
-              DropdownMenuItem(
-                value: 'original',
-                child: Text('Original — Second Edition'),
-              ),
-              DropdownMenuItem(value: 'beyond', child: Text('Beyond 5/3/1')),
-              DropdownMenuItem(value: 'forever', child: Text('5/3/1 Forever')),
-            ],
-            onChanged: (v) {
-              setState(() {
-                generation = v!;
-                programId = visiblePrograms.firstOrNull?.id;
-              });
-              _validate();
-            },
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            key: const Key('status-filter'),
-            initialValue: status,
-            decoration: const InputDecoration(
-              labelText: 'Statut',
-              border: OutlineInputBorder(),
-            ),
-            items: const [
-              DropdownMenuItem(value: 'current', child: Text('Current')),
-              DropdownMenuItem(value: 'legacy', child: Text('Legacy')),
-              DropdownMenuItem(value: 'superseded', child: Text('Superseded')),
-              DropdownMenuItem(value: 'all', child: Text('Tous')),
-            ],
-            onChanged: (v) {
-              setState(() {
-                status = v!;
-                programId = visiblePrograms.firstOrNull?.id;
-              });
-              _validate();
-            },
+          Text('02  TEMPLATE & VARIANTE', style: _sectionStyle(context)),
+          const Text(
+            'Le template pilote la structure. Seules les définitions exécutables sont proposées.',
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
@@ -420,9 +480,37 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
                 )
                 .toList(),
             onChanged: (v) {
-              setState(() => programId = v);
+              setState(() {
+                programId = v;
+                generation = selectedProgram?.generation ?? generation;
+              });
               _validate();
             },
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              Chip(
+                key: const Key('selected-generation'),
+                avatar: const Icon(Icons.auto_stories_outlined, size: 18),
+                label: Text(_generationLabel(generation)),
+              ),
+              if (selectedProgram case final program?)
+                Chip(label: Text(program.status.toUpperCase())),
+              ActionChip(
+                key: const Key('status-filter'),
+                avatar: const Icon(Icons.filter_alt_outlined, size: 18),
+                label: Text(status == 'all' ? 'Tous les statuts' : status),
+                onPressed: _cycleStatus,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Text('03  PLANNING', style: _sectionStyle(context)),
+          const Text(
+            'La fréquence est contrôlée par les règles de compatibilité du template.',
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<int>(
@@ -437,6 +525,40 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
             onChanged: (v) {
               setState(() => days = v!);
               _validate();
+            },
+          ),
+          const SizedBox(height: 24),
+          Text('04  OPTIONS ADDITIONNELLES', style: _sectionStyle(context)),
+          const Text(
+            'Une option sans contrat structuré reste visible, verrouillée et expliquée.',
+          ),
+          const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final cards = [
+                _lockedOption(
+                  'Warm-up',
+                  Icons.local_fire_department_outlined,
+                  'Selon le template CORE',
+                ),
+                _lockedOption(
+                  'Joker Sets',
+                  Icons.add_chart,
+                  'Non documenté ici',
+                ),
+                _lockedOption(
+                  'Deload',
+                  Icons.low_priority,
+                  'Selon la transition CORE',
+                ),
+              ];
+              if (constraints.maxWidth < 560) {
+                return Column(children: cards);
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [for (final card in cards) Expanded(child: card)],
+              );
             },
           ),
           const SizedBox(height: 12),
@@ -565,15 +687,12 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
           },
   );
 
-  Widget _buildOutput(BuildContext context) => SingleChildScrollView(
+  Widget _buildOutput(BuildContext context) => _Surface(
     padding: const EdgeInsets.all(20),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Programme généré',
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
+        Text('05  PROGRAMME', style: _sectionStyle(context)),
         if (result == null)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 40),
@@ -651,6 +770,8 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
           ),
         ],
         const Divider(height: 40),
+        Text('06  MATÉRIEL', style: _sectionStyle(context)),
+        const SizedBox(height: 6),
         ExpansionTile(
           key: const Key('plate-panel'),
           title: const Text('Chargement de la barre'),
@@ -689,6 +810,63 @@ class _Poc531GeneratorPageState extends State<Poc531GeneratorPage> {
       ],
     ),
   );
+
+  TextStyle? _sectionStyle(BuildContext context) =>
+      Theme.of(context).textTheme.titleLarge?.copyWith(
+        color: const Color(0xFF173F33),
+        fontWeight: FontWeight.w900,
+        letterSpacing: .5,
+      );
+
+  Widget _lockedOption(String title, IconData icon, String value) => Padding(
+    padding: const EdgeInsets.all(4),
+    child: Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE9EFEC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFD2DED8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 20, color: const Color(0xFF2B725B)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+              const Icon(Icons.lock_outline, size: 16),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(value, style: const TextStyle(color: Color(0xFF60746C))),
+        ],
+      ),
+    ),
+  );
+
+  String _generationLabel(String value) => switch (value) {
+    'beyond' => 'Beyond 5/3/1',
+    'forever' => '5/3/1 Forever',
+    _ => 'Original — Second Edition',
+  };
+
+  void _cycleStatus() {
+    const values = ['all', 'current', 'legacy', 'superseded'];
+    setState(() {
+      status = values[(values.indexOf(status) + 1) % values.length];
+      if (!visiblePrograms.any((program) => program.id == programId)) {
+        programId = visiblePrograms.firstOrNull?.id;
+      }
+      generation = selectedProgram?.generation ?? generation;
+    });
+    _validate();
+  }
 
   void _loadExample() {
     setState(() {

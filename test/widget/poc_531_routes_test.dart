@@ -53,9 +53,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('poc-531-generator')), findsOneWidget);
-    final generation = tester.widget<DropdownButtonFormField<String>>(
-      find.byKey(const Key('generation')),
-    );
-    expect(generation.initialValue, 'forever');
+    expect(find.byKey(const Key('selected-generation')), findsOneWidget);
+    expect(find.text('5/3/1 Forever'), findsOneWidget);
   });
 }

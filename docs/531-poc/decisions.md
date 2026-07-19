@@ -26,3 +26,27 @@ template is executable in Core v5.
 Add POC-only routes and preserve the existing validation shell as the default
 route. This lifts the temporary UI freeze only for the isolated POC surface.
 
+## D-006 — Template-first calculator
+
+The generator follows the user's decision order: lift inputs, template,
+variant, compatible options, scheduling, then output. Generation and status are
+shown as provenance/filter metadata rather than forcing an artificial first
+choice. The visual treatment is original and uses the HybridTraining palette;
+only functional interaction patterns were studied from the public reference
+calculator.
+
+## D-007 — Visible capability gaps are not executable options
+
+Warm-ups, Joker Sets, deload variants, advanced scheduling, and most classic
+and Forever templates exist in the imported documentary catalogue but do not
+yet have reviewed generator strategies. The UI may explain these capabilities,
+but must not allow them to alter prescriptions until the CORE exposes sourced,
+typed compatibility rules. A disabled control includes a reason instead of
+silently behaving as a decorative option.
+
+## D-008 — Forever is a planning layer
+
+Forever templates remain selectable through the same template-first library.
+When a reviewed definition requires it, the UI presents its Leader/Anchor and
+7th Week structure. Free Leader-to-Anchor composition remains unavailable until
+the catalogue defines compatible pairs and transition protocols.

@@ -68,3 +68,20 @@
 - Decorative configuration choices were removed or disabled, catalogue
   duplicates were eliminated, and URL/JSON restoration was completed.
 - The final regression suite and release/debug builds pass after the fixes.
+
+## Template-first UX iteration — complete
+
+- The public reference calculator was exercised in a clean browser session.
+- Thirteen visible template families and their conditional variant controls
+  were inventoried without copying source assets or presentation code.
+- CORE gap analysis confirmed that five strategies are currently executable;
+  advanced warm-up, Joker, deload, scheduling, and free Forever composition
+  remain documentary and must stay explicitly unavailable.
+- Generator presentation is being reorganized around lift inputs, template and
+  variant, compatible options, scheduling, equipment, and program output.
+- The template is now the primary program choice; generation is derived and
+  displayed as provenance.
+- Unsupported advanced options are visible but locked with an explicit CORE
+  coverage explanation.
+- Static analysis, 193 tests, updated desktop/mobile goldens, Web release, and
+  Android DEV/PROD debug builds pass.

@@ -28,7 +28,7 @@ void main() {
     expect(core.generated, isTrue);
   });
 
-  testWidgets('generation change refreshes compatible programs', (
+  testWidgets('template selection derives its generation provenance', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1200, 1800);
@@ -38,13 +38,33 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(home: Poc531GeneratorPage(core: _FakeCore())),
     );
-    await tester.ensureVisible(find.byKey(const Key('generation')));
-    await tester.tap(find.byKey(const Key('generation')));
+    await tester.ensureVisible(find.byKey(const Key('program')));
+    await tester.tap(find.byKey(const Key('program')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('5/3/1 Forever').last);
+    await tester.tap(find.textContaining('Forever test').last);
     await tester.pumpAndSettle();
 
+    expect(find.text('5/3/1 Forever'), findsOneWidget);
     expect(find.textContaining('Leader / Anchor'), findsOneWidget);
+  });
+
+  testWidgets('template-first sections expose locked unsupported options', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 1800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(home: Poc531GeneratorPage(core: _FakeCore())),
+    );
+    expect(find.text('01  CHARGES'), findsOneWidget);
+    expect(find.text('02  TEMPLATE & VARIANTE'), findsOneWidget);
+    expect(find.text('03  PLANNING'), findsOneWidget);
+    expect(find.text('Warm-up'), findsOneWidget);
+    expect(find.text('Joker Sets'), findsOneWidget);
+    expect(find.text('Deload'), findsOneWidget);
+    expect(find.byIcon(Icons.lock_outline), findsNWidgets(3));
   });
 
   testWidgets('core validation error disables generation', (tester) async {
