@@ -341,14 +341,16 @@ const canonicalProgramEntries = <ProgramLibraryEntry>[
     mainMovementsPerSession: 1,
     equipment: _basicEquipment,
     tmRange: ProgramTmRange(.85, .90),
-    documentationStatus: ProgramValidationStatus.rulesReviewed,
-    implementationStatus: ProgramImplementationStatus.productionReady,
+    documentationStatus: ProgramValidationStatus.needsReview,
+    implementationStatus: ProgramImplementationStatus.experimental,
     complexity: 1,
     presetId: 'forever-original-fsl-v1',
     revisionId: 'forever-original-531-v1',
-    recommended: true,
-    summaryFr: 'Programme complet exécutable, simple et polyvalent.',
-    summaryEn: 'Executable complete program, simple and versatile.',
+    recommended: false,
+    summaryFr:
+        'Compatibilité historique non activable tant que les règles manquantes ne sont pas revues.',
+    summaryEn:
+        'Historical compatibility entry, unavailable until missing rules are reviewed.',
   ),
   ProgramLibraryEntry(
     id: 'revision-original-531',
@@ -386,11 +388,11 @@ const canonicalProgramEntries = <ProgramLibraryEntry>[
     mainMovementsPerSession: 2,
     equipment: {..._basicEquipment, ProgramEquipment.bodyweight},
     tmRange: ProgramTmRange(.85, .90),
-    implementationStatus: ProgramImplementationStatus.experimental,
+    implementationStatus: ProgramImplementationStatus.productionReady,
     complexity: 2,
     presetId: 'forever-beginner-prep-school-v1',
     revisionId: 'forever-beginner-prep-school-v1',
-    recommended: false,
+    recommended: true,
     summaryFr:
         'Programme débutant Forever sur 3 jours, alternance A/B, deux mouvements principaux par séance. Exige une course régulière, des sauts maîtrisés et un circuit d’assistance chronométré.',
     summaryEn:
@@ -578,7 +580,7 @@ const canonicalProgramEntries = <ProgramLibraryEntry>[
     titleFr: 'Original 5/3/1',
     titleEn: 'Original 5/3/1',
     origin: MethodGeneration.original,
-    documentationStatus: ProgramValidationStatus.rulesReviewed,
+    documentationStatus: ProgramValidationStatus.needsReview,
   ),
   ProgramLibraryEntry.foreverDocumentary(
     id: 'program-original-531-fsl',
@@ -586,7 +588,7 @@ const canonicalProgramEntries = <ProgramLibraryEntry>[
     titleFr: 'Original 5/3/1 and FSL',
     titleEn: 'Original 5/3/1 and FSL',
     origin: MethodGeneration.original,
-    documentationStatus: ProgramValidationStatus.rulesReviewed,
+    documentationStatus: ProgramValidationStatus.needsReview,
   ),
   ProgramLibraryEntry.foreverDocumentary(
     id: 'program-prowler-challenge',

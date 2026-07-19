@@ -158,7 +158,10 @@ class BeginnerPrepSchoolBlueprint {
   static ReviewedRule _rule(String id, String location) => ReviewedRule(
     id: id,
     status: RuleStatus.verified,
-    source: RuleReference(document: id, location: location),
+    source: RuleReference(
+      document: '5/3/1 Forever',
+      location: '$id; $location',
+    ),
   );
 
   static Map<String, Object?> _canonical(

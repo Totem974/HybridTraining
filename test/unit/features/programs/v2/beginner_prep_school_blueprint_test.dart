@@ -120,6 +120,43 @@ void main() {
       [.70, .70, .70, .70, .70],
     );
     expect(plan.events.single.kind, PlannedEventKind.trainingMaxProgression);
+    final firstRule = weeks.first.sessions.first.blocks
+        .expand((block) => block.prescriptions)
+        .first
+        .rule;
+    expect(firstRule.document, '5/3/1 Forever');
+    expect(firstRule.location, contains('BPS-MAIN-001'));
+  });
+
+  test('every executable prescription carries a RuleId and source pages', () {
+    final plan = const ForeverMacrocycleGenerator().generate(
+      snapshot: BeginnerPrepSchoolBlueprint.create(trainingMaxRatios: ratios),
+      athlete: AthletePlanConfiguration(
+        trainingMaxes: const {
+          MainLift.squat: 100,
+          MainLift.benchPress: 100,
+          MainLift.deadlift: 100,
+          MainLift.overheadPress: 100,
+        },
+        unit: WeightUnit.kilograms,
+        trainingWeekdays: const [1, 3, 5],
+        startDate: const LocalDate(2026, 7, 20),
+        rounder: const LoadRounder(increment: 2.5),
+      ),
+    );
+    final rules = plan.blocks
+        .expand((block) => block.cycles)
+        .expand((cycle) => cycle.weeks)
+        .expand((week) => week.sessions)
+        .expand((session) => session.blocks)
+        .expand((block) => block.prescriptions)
+        .map((set) => set.rule);
+    expect(rules, isNotEmpty);
+    for (final rule in rules) {
+      expect(rule.document, '5/3/1 Forever');
+      expect(rule.location, contains(RegExp(r'BPS-[A-Z]+-\d{3}')));
+      expect(rule.location, contains('PDF'));
+    }
   });
 
   test('uses the injected rounding policy for kg and lb', () {

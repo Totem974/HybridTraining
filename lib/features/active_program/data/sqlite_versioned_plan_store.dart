@@ -1,16 +1,18 @@
 import 'dart:convert';
 
 import 'package:hybrid_training/core/database/local_database.dart';
+import 'package:hybrid_training/features/active_program/application/plan_repository.dart';
 import 'package:hybrid_training/features/active_program/domain/versioned_training_plan.dart';
 import 'package:sqflite/sqflite.dart';
 
-class SqliteVersionedPlanStore {
+class SqliteVersionedPlanStore implements PlanRepository {
   const SqliteVersionedPlanStore({required this.localDatabase});
 
   final LocalDatabase localDatabase;
 
   /// The complete aggregate must be generated and validated by the domain
   /// before this method starts its single write transaction.
+  @override
   Future<void> createPlan(VersionedTrainingPlan plan) async {
     _validate(plan);
     final snapshotJson = canonicalJson(plan.blueprintSnapshot);
@@ -188,6 +190,7 @@ class SqliteVersionedPlanStore {
     });
   }
 
+  @override
   Future<Map<String, Object?>?> loadPlan(String planId) async {
     final database = await localDatabase.open();
     final plans = await database.rawQuery(

@@ -98,14 +98,14 @@ class ProgramCatalog {
       titleKey: 'program.original_531',
       type: ProgramConceptType.mainMethod,
       originGeneration: MethodGeneration.original,
-      documentationStatus: ProgramValidationStatus.rulesReviewed,
+      documentationStatus: ProgramValidationStatus.needsReview,
     ),
     ProgramConcept(
       id: 'first-set-last',
       titleKey: 'program.first_set_last',
       type: ProgramConceptType.supplementalWork,
       originGeneration: MethodGeneration.beyond,
-      documentationStatus: ProgramValidationStatus.rulesReviewed,
+      documentationStatus: ProgramValidationStatus.needsReview,
     ),
     ProgramConcept(
       id: 'boring-but-big',
@@ -196,7 +196,7 @@ class ProgramCatalog {
       generation: MethodGeneration.forever,
       version: 1,
       foreverStatus: ForeverStatus.current,
-      documentationStatus: ProgramValidationStatus.rulesReviewed,
+      documentationStatus: ProgramValidationStatus.needsReview,
       references: [
         ProgramDocumentReference(
           title: '5/3/1 Forever',
@@ -212,7 +212,7 @@ class ProgramCatalog {
       generation: MethodGeneration.forever,
       version: 1,
       foreverStatus: ForeverStatus.current,
-      documentationStatus: ProgramValidationStatus.rulesReviewed,
+      documentationStatus: ProgramValidationStatus.needsReview,
       references: [
         ProgramDocumentReference(
           title: '5/3/1 Forever',
@@ -232,8 +232,8 @@ class ProgramCatalog {
       supplementalRevisionId: null,
       supportedFrequencies: {3},
       recommendedFrequency: 3,
-      availability: ProductAvailability.comingSoon,
-      recommended: false,
+      availability: ProductAvailability.available,
+      recommended: true,
       legacyCompatible: false,
       implementationStatus: ProgramImplementationStatus.productionReady,
       generatorId: 'beginner-prep-school',
@@ -246,11 +246,11 @@ class ProgramCatalog {
       supplementalRevisionId: 'forever-first-set-last-5x5-v1',
       supportedFrequencies: {3, 4},
       recommendedFrequency: 4,
-      availability: ProductAvailability.available,
+      availability: ProductAvailability.documentationOnly,
       recommended: false,
       legacyCompatible: true,
       implementationStatus: ProgramImplementationStatus.experimental,
-      generatorId: 'original-fsl',
+      generatorId: null,
     ),
   ];
 
@@ -296,7 +296,6 @@ class ProgramCatalog {
 
   ProgramCatalogValidation validate({
     Map<String, String> generators = const {
-      'forever-original-fsl-v1': 'original-fsl',
       'forever-beginner-prep-school-v1': 'beginner-prep-school',
     },
   }) {
@@ -333,6 +332,33 @@ class ProgramCatalog {
           (preset.generatorId == null ||
               generators[preset.persistentPresetId] != preset.generatorId)) {
         errors.add('Missing generator: ${preset.persistentPresetId}');
+      }
+      if (preset.availability == ProductAvailability.available) {
+        final referencedRevisions = <ProgramRevision?>[
+          revisions
+              .where((item) => item.id == preset.mainRevisionId)
+              .firstOrNull,
+          if (preset.supplementalRevisionId != null)
+            revisions
+                .where((item) => item.id == preset.supplementalRevisionId)
+                .firstOrNull,
+        ];
+        if (referencedRevisions.any(
+          (revision) =>
+              revision == null ||
+              revision.documentationStatus !=
+                  ProgramValidationStatus.rulesReviewed,
+        )) {
+          errors.add(
+            'Unreviewed available preset: ${preset.persistentPresetId}',
+          );
+        }
+        if (preset.implementationStatus !=
+            ProgramImplementationStatus.productionReady) {
+          errors.add(
+            'Non-production available preset: ${preset.persistentPresetId}',
+          );
+        }
       }
       if (preset.availability == ProductAvailability.documentationOnly &&
           generators.containsKey(preset.persistentPresetId)) {

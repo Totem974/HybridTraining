@@ -26,11 +26,11 @@ void main() {
 
   test('search ignores accents and case in French and English', () {
     expect(
-      repository.query(const ProgramQuery(search: 'executable')).entries,
+      repository.query(const ProgramQuery(search: 'historical')).entries,
       isNotEmpty,
     );
     expect(
-      repository.query(const ProgramQuery(search: 'polyvalent')).entries,
+      repository.query(const ProgramQuery(search: 'compatibilite')).entries,
       hasLength(1),
     );
   });
@@ -150,14 +150,14 @@ void main() {
     expect(fixture.presetsForConcept('concept-a'), hasLength(2));
   });
 
-  test('only a preset wired to the active UI can be selected', () {
-    final executable = repository.findById('preset-forever-original-fsl')!;
+  test('only fully reviewed production presets can be executable', () {
+    final unsafeLegacy = repository.findById('preset-forever-original-fsl')!;
     final component = repository.findById('component-fsl')!;
     final documentary = repository.findById('program-coffinworm')!;
-    expect(executable.isExecutable, isTrue);
+    expect(unsafeLegacy.isExecutable, isFalse);
     expect(
       repository.findById('preset-forever-beginner-prep-school')!.isExecutable,
-      isFalse,
+      isTrue,
     );
     expect(component.isExecutable, isFalse);
     expect(documentary.isExecutable, isFalse);

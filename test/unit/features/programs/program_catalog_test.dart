@@ -34,7 +34,7 @@ void main() {
     );
   });
 
-  test('preset uses both reviewed Forever revisions', () {
+  test('legacy Original FSL stays non-selectable while rules need review', () {
     final preset = catalog.preset('forever-original-fsl-v1');
     expect(preset.mainRevisionId, 'forever-original-531-v1');
     expect(preset.supplementalRevisionId, 'forever-first-set-last-5x5-v1');
@@ -45,10 +45,14 @@ void main() {
       preset.implementationStatus,
       ProgramImplementationStatus.experimental,
     );
-    expect(catalog.recommendedPreset, isNull);
     expect(
-      const ProgramGeneratorFactory().resolve(preset.persistentPresetId),
-      isNotNull,
+      catalog.recommendedPreset?.persistentPresetId,
+      'forever-beginner-prep-school-v1',
+    );
+    expect(preset.availability, ProductAvailability.documentationOnly);
+    expect(
+      () => const ProgramGeneratorFactory().resolve(preset.persistentPresetId),
+      throwsStateError,
     );
   });
 
@@ -57,20 +61,56 @@ void main() {
     expect(catalog.concepts, hasLength(11));
     expect(catalog.selectablePresets, hasLength(1));
     expect(
+      catalog.selectablePresets.single.persistentPresetId,
+      'forever-beginner-prep-school-v1',
+    );
+    expect(
       catalog.presetsForConcept('original-531').single.persistentPresetId,
       'forever-original-fsl-v1',
     );
   });
 
-  test('Beginner Prep School stays unavailable until UI v2 is wired', () {
-    final preset = catalog.preset('forever-beginner-prep-school-v1');
-    expect(preset.supportedFrequencies, {3});
-    expect(preset.recommended, isFalse);
-    expect(preset.availability, ProductAvailability.comingSoon);
-    expect(
-      preset.implementationStatus,
-      ProgramImplementationStatus.productionReady,
+  test(
+    'Beginner Prep School is the only reviewed implementation candidate',
+    () {
+      final preset = catalog.preset('forever-beginner-prep-school-v1');
+      expect(preset.supportedFrequencies, {3});
+      expect(preset.recommended, isTrue);
+      expect(preset.availability, ProductAvailability.available);
+      expect(
+        preset.implementationStatus,
+        ProgramImplementationStatus.productionReady,
+      );
+    },
+  );
+
+  test('available presets require reviewed revisions and production code', () {
+    final invalid = ProgramCatalog(
+      concepts: catalog.concepts,
+      revisions: catalog.revisions,
+      presets: [
+        ProgramPresetDefinition(
+          persistentPresetId: 'unsafe-original',
+          version: 1,
+          rulesetGeneration: MethodGeneration.forever,
+          mainRevisionId: 'forever-original-531-v1',
+          supplementalRevisionId: null,
+          supportedFrequencies: const {4},
+          recommendedFrequency: 4,
+          availability: ProductAvailability.available,
+          recommended: false,
+          legacyCompatible: false,
+          implementationStatus: ProgramImplementationStatus.experimental,
+          generatorId: 'unsafe',
+        ),
+      ],
     );
+    final errors = invalid
+        .validate(generators: const {'unsafe-original': 'unsafe'})
+        .errors
+        .join('\n');
+    expect(errors, contains('Unreviewed available preset'));
+    expect(errors, contains('Non-production available preset'));
   });
 
   test('validator detects duplicate and broken references', () {
