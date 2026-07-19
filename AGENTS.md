@@ -80,12 +80,11 @@ documenter la commande, le blocage et la validation encore nécessaire.
 ## Git
 
 - Branche de référence : `kevin` en minuscules.
-- Remote actuel : `GiTea`.
-- Branche Base0 : `rebuild/base0-foundation`.
-- Ne jamais modifier directement `kevin`.
-- Ne jamais rebaser `kevin`.
+- Remote de travail temporaire et unique : `GitHub` / `origin` ; `GiTea` est hors circuit.
+- Branche de travail actuelle : `rebuild/forever-engine-core-20260719`, qui remplace les anciennes références Base0 pour la reconstruction Core v5.
+- `master` et `kevin` sont protégées : ne jamais les modifier, les rebaser, les fusionner ou les pousser directement.
 - Ne jamais utiliser de push forcé ou supprimer l'historique.
-- Ne jamais pousser sans demande explicite du propriétaire.
+- Pousser uniquement `rebuild/forever-engine-core-20260719`, sur GitHub, après les validations finales autorisées.
 - Préférer de petits commits cohérents aux changements monolithiques.
 - Vérifier `git status --short` avant et après une tâche.
 - Préserver les changements utilisateur sans reset ni stash non autorisé.
