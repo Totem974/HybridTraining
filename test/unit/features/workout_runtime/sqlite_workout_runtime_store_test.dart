@@ -111,7 +111,13 @@ void main() {
     expect(await store.load('session'), isNull);
 
     final report = await backup.importBackup(source, dryRun: false);
-    expect(report.applied, isTrue);
+    expect(
+      report.applied,
+      isTrue,
+      reason: report.issues
+          .map((issue) => '${issue.path}: ${issue.message}')
+          .join('\n'),
+    );
     expect(report.issues, isEmpty);
     final restored = await store.load('session');
     expect(restored?['status'], 'started');

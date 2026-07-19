@@ -41,3 +41,7 @@ vérifient la conservation d'une ligne historique, la création des tables v5, l
 conversion du runtime v3 vers v4 avant ajout v5 et le rollback transactionnel en
 cas d'interruption.
 
+Le format de sauvegarde natif est versionné v5 et inclut toutes les tables et
+colonnes additives. Les formats v1, v2, v3 et v4 restent importables : les tables
+apparues après leur version sont normalisées comme listes vides avant application
+atomique, sans modifier les lignes historiques fournies.

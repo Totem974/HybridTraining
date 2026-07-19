@@ -8,6 +8,7 @@ class HybridBackupHandler implements ImportFormatHandler {
   static const _legacyTableCount = 12;
   static const _version2TableCount = 21;
   static const _version3TableCount = 24;
+  static const _version4TableCount = 28;
 
   static const tables = [
     'athlete_profiles',
@@ -38,6 +39,12 @@ class HybridBackupHandler implements ImportFormatHandler {
     'workout_executions',
     'workout_set_outcomes',
     'workout_execution_events',
+    'activity_prescriptions',
+    'activity_results',
+    'training_max_timeline',
+    'plan_amendments',
+    'plan_transitions_v5',
+    'planned_events_v5',
   ];
 
   static const columns = <String, Set<String>>{
@@ -157,6 +164,8 @@ class HybridBackupHandler implements ImportFormatHandler {
       'status',
       'created_at',
       'completed_at',
+      'source_edition',
+      'ruleset_generation',
     },
     'training_blocks': {
       'id',
@@ -167,6 +176,10 @@ class HybridBackupHandler implements ImportFormatHandler {
       'status',
       'started_at',
       'completed_at',
+      'block_type',
+      'ruleset_role',
+      'seventh_week_purpose',
+      'programming_block_number',
     },
     'plan_training_cycles': {
       'id',
@@ -174,6 +187,7 @@ class HybridBackupHandler implements ImportFormatHandler {
       'sequence',
       'starts_on',
       'status',
+      'programming_cycle_number',
     },
     'plan_training_sessions': {
       'id',
@@ -185,6 +199,8 @@ class HybridBackupHandler implements ImportFormatHandler {
       'completed_at',
       'notes',
       'rest_until',
+      'programming_week_number',
+      'session_position',
     },
     'session_blocks': {
       'id',
@@ -295,6 +311,85 @@ class HybridBackupHandler implements ImportFormatHandler {
       'payload_json',
       'occurred_at',
     },
+    'activity_prescriptions': {
+      'id',
+      'session_block_id',
+      'sequence',
+      'movement_or_activity_id',
+      'target_type',
+      'target_json',
+      'prescription_kind',
+      'rule_id',
+      'source_edition',
+      'ruleset_generation',
+      'source_reference_json',
+      'calculated_load',
+      'unrounded_load',
+      'rounding_increment',
+    },
+    'activity_results': {
+      'prescription_id',
+      'status',
+      'actual_json',
+      'rpe',
+      'notes',
+      'recorded_at',
+      'updated_at',
+    },
+    'training_max_timeline': {
+      'id',
+      'plan_id',
+      'sequence',
+      'movement_id',
+      'checkpoint_type',
+      'state',
+      'previous_training_max',
+      'proposed_training_max',
+      'confirmed_training_max',
+      'effective_after_session_id',
+      'reason',
+      'rule_id',
+      'source_reference_json',
+      'created_at',
+      'confirmed_at',
+    },
+    'plan_amendments': {
+      'id',
+      'plan_id',
+      'version',
+      'state',
+      'reason',
+      'rule_id',
+      'before_snapshot_json',
+      'after_snapshot_json',
+      'diff_json',
+      'created_at',
+      'applied_at',
+    },
+    'plan_transitions_v5': {
+      'id',
+      'plan_id',
+      'sequence',
+      'from_block_id',
+      'to_block_id',
+      'transition_type',
+      'rule_id',
+      'source_reference_json',
+      'occurred_at',
+    },
+    'planned_events_v5': {
+      'id',
+      'plan_id',
+      'sequence',
+      'event_type',
+      'programming_week_number',
+      'session_id',
+      'payload_json',
+      'rule_id',
+      'source_reference_json',
+      'scheduled_for',
+      'occurred_at',
+    },
   };
 
   static const requiredColumns = <String, Set<String>>{
@@ -367,6 +462,68 @@ class HybridBackupHandler implements ImportFormatHandler {
       'payload_json',
       'occurred_at',
     },
+    'activity_prescriptions': {
+      'id',
+      'session_block_id',
+      'sequence',
+      'movement_or_activity_id',
+      'target_type',
+      'target_json',
+      'prescription_kind',
+      'rule_id',
+      'source_edition',
+      'ruleset_generation',
+      'source_reference_json',
+    },
+    'activity_results': {
+      'prescription_id',
+      'status',
+      'actual_json',
+      'updated_at',
+    },
+    'training_max_timeline': {
+      'id',
+      'plan_id',
+      'sequence',
+      'movement_id',
+      'checkpoint_type',
+      'state',
+      'previous_training_max',
+      'proposed_training_max',
+      'reason',
+      'rule_id',
+      'source_reference_json',
+      'created_at',
+    },
+    'plan_amendments': {
+      'id',
+      'plan_id',
+      'version',
+      'state',
+      'reason',
+      'rule_id',
+      'before_snapshot_json',
+      'after_snapshot_json',
+      'diff_json',
+      'created_at',
+    },
+    'plan_transitions_v5': {
+      'id',
+      'plan_id',
+      'sequence',
+      'transition_type',
+      'rule_id',
+      'source_reference_json',
+    },
+    'planned_events_v5': {
+      'id',
+      'plan_id',
+      'sequence',
+      'event_type',
+      'payload_json',
+      'rule_id',
+      'source_reference_json',
+    },
   };
 
   @override
@@ -416,6 +573,7 @@ class HybridBackupHandler implements ImportFormatHandler {
       1 => _legacyTableCount,
       2 => _version2TableCount,
       3 => _version3TableCount,
+      4 => _version4TableCount,
       _ => tables.length,
     };
     final expectedTables = tables.take(expectedTableCount);
@@ -467,7 +625,10 @@ class HybridBackupHandler implements ImportFormatHandler {
         }
       }
     }
-    if (sourceVersion == 1 || sourceVersion == 2 || sourceVersion == 3) {
+    if (sourceVersion == 1 ||
+        sourceVersion == 2 ||
+        sourceVersion == 3 ||
+        sourceVersion == 4) {
       for (final table in tables.skip(expectedTableCount)) {
         normalizedPayload[table] = <Object?>[];
       }
