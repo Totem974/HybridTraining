@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/app/bootstrap/app_environment.dart';
 import 'package:hybrid_training/app/hybrid_training_app.dart';
+import 'package:hybrid_training/features/active_program/application/program_switch.dart';
 import 'package:hybrid_training/features/core_validation/application/core_validation_repository.dart';
 import 'package:hybrid_training/features/core_validation/domain/core_validation_snapshot.dart';
 import 'package:hybrid_training/features/core_validation/domain/core_workout_snapshot.dart';
@@ -146,6 +147,19 @@ class _FakeCoreRepository implements CoreValidationRepository {
 
   @override
   Future<void> pauseOrResumeWorkout() async {}
+
+  @override
+  Future<ProgramSwitchPreview> previewProgramSwitch(DateTime startDate) async =>
+      ProgramSwitchPreview(
+        currentPlanId: 'current',
+        nextPlanId: 'next',
+        currentBlueprintId: 'bps',
+        nextBlueprintId: 'bps',
+        completedSessionsPreserved: 0,
+        plannedSessionsCancelled: 9,
+        activeSessionIds: const [],
+        nextStartDate: startDate,
+      );
 
   @override
   Future<void> recordCurrentSet({

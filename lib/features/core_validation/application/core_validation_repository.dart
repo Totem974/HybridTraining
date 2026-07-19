@@ -2,6 +2,7 @@ import '../domain/core_validation_snapshot.dart';
 import '../domain/core_workout_snapshot.dart';
 import '../../import_export/domain/import_models.dart';
 import '../../workout_runtime/domain/workout_execution.dart';
+import '../../active_program/application/program_switch.dart';
 
 abstract interface class CoreValidationRepository {
   Future<CoreValidationSnapshot> load();
@@ -27,6 +28,8 @@ abstract interface class CoreValidationRepository {
   Future<void> beginOrEndRest({required Duration duration});
 
   Future<void> completeWorkout();
+
+  Future<ProgramSwitchPreview> previewProgramSwitch(DateTime startDate);
 
   Future<String> exportBackup();
 

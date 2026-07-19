@@ -4,6 +4,7 @@ import 'package:hybrid_training/features/core_validation/domain/core_validation_
 import 'package:hybrid_training/features/core_validation/domain/core_workout_snapshot.dart';
 import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 import 'package:hybrid_training/features/workout_runtime/domain/workout_execution.dart';
+import 'package:hybrid_training/features/active_program/application/program_switch.dart';
 
 enum CoreValidationState { loading, ready, error }
 
@@ -17,6 +18,7 @@ class CoreValidationController extends ChangeNotifier {
   Object? lastError;
   String? exportedBackup;
   ImportReport? importReport;
+  ProgramSwitchPreview? programSwitchPreview;
   String? _simulatedImportSource;
   bool _disposed = false;
 
@@ -72,6 +74,12 @@ class CoreValidationController extends ChangeNotifier {
       _workoutAction(() => repository.beginOrEndRest(duration: duration));
 
   Future<void> completeWorkout() => _workoutAction(repository.completeWorkout);
+
+  Future<void> previewProgramSwitch(DateTime startDate) async {
+    await _run(() async {
+      programSwitchPreview = await repository.previewProgramSwitch(startDate);
+    });
+  }
 
   Future<void> _workoutAction(Future<void> Function() action) async {
     await _run(() async {

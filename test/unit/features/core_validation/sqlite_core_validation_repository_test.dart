@@ -45,6 +45,19 @@ void main() {
     );
   });
 
+  test('program switch preview generates a diff without writing', () async {
+    await repository.createDevelopmentFixture();
+    final preview = await repository.previewProgramSwitch(
+      DateTime.utc(2026, 8, 3),
+    );
+    expect(preview.currentPlanId, 'dev-bps-plan-1');
+    expect(preview.nextPlanId, 'preview-bps-2026-08-03');
+    expect(preview.nextStartDate, DateTime(2026, 8, 3));
+    final database = await local.open();
+    expect(await database.query('training_plans'), hasLength(1));
+    expect(await database.query('plan_events'), isEmpty);
+  });
+
   test(
     'tonnage uses actual successful load and never prescribed load',
     () async {

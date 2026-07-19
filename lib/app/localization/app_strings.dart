@@ -44,6 +44,13 @@ class AppStrings {
   String get startRest => _fr ? 'Lancer le repos' : 'Start rest';
   String get endRest => _fr ? 'Terminer le repos' : 'End rest';
   String get completeWorkout => _fr ? 'Terminer la séance' : 'Complete workout';
+  String get switchPreview =>
+      _fr ? 'Simuler un nouveau plan' : 'Preview a new plan';
+  String get nextPlanStart =>
+      _fr ? 'Date de départ (AAAA-MM-JJ)' : 'Start date (YYYY-MM-DD)';
+  String get switchPreviewReady => _fr
+      ? 'Aperçu prêt, aucune écriture effectuée'
+      : 'Preview ready, no data written';
   String get completedSessions =>
       _fr ? 'Séances terminées' : 'Completed workouts';
   String get successfulSetCount => _fr ? 'Séries réussies' : 'Successful sets';

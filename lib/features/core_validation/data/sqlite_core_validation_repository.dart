@@ -1,13 +1,20 @@
+import 'dart:convert';
+
 import 'package:hybrid_training/core/database/local_database.dart';
 import 'package:hybrid_training/features/active_program/application/generate_beginner_plan.dart';
+import 'package:hybrid_training/features/active_program/application/program_switch.dart';
 import 'package:hybrid_training/features/active_program/data/sqlite_versioned_plan_store.dart';
+import 'package:hybrid_training/features/active_program/domain/versioned_training_plan.dart';
 import 'package:hybrid_training/features/core_validation/application/core_validation_repository.dart';
 import 'package:hybrid_training/features/core_validation/domain/core_validation_snapshot.dart';
 import 'package:hybrid_training/features/core_validation/domain/core_workout_snapshot.dart';
 import 'package:hybrid_training/features/import_export/data/sqlite_backup_manager.dart';
 import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 import 'package:hybrid_training/features/programs/domain/training_models.dart';
+import 'package:hybrid_training/features/programs/domain/load_rounding.dart';
 import 'package:hybrid_training/features/programs/domain/v2/generation/generated_training_plan.dart';
+import 'package:hybrid_training/features/programs/domain/v2/generation/beginner_prep_school_blueprint.dart';
+import 'package:hybrid_training/features/programs/domain/v2/generation/forever_macrocycle_generator.dart';
 import 'package:hybrid_training/features/tracking/data/sqlite_training_statistics_repository.dart';
 import 'package:hybrid_training/features/workout_runtime/data/sqlite_workout_execution_repository.dart';
 import 'package:hybrid_training/features/workout_runtime/domain/workout_execution.dart';
@@ -220,6 +227,76 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
       whereArgs: [sessionId],
     ),
   );
+
+  @override
+  Future<ProgramSwitchPreview> previewProgramSwitch(DateTime startDate) async {
+    final database = await localDatabase.open();
+    final rows = await database.rawQuery('''
+      SELECT p.id, p.athlete_id, s.snapshot_json, a.preferred_unit,
+             a.rounding_increment
+      FROM training_plans p
+      JOIN program_definition_snapshots s ON s.id = p.definition_snapshot_id
+      JOIN athlete_profiles a ON a.id = p.athlete_id
+      WHERE p.status = 'active' AND a.deleted_at IS NULL LIMIT 1
+    ''');
+    if (rows.isEmpty) throw StateError('No active plan is available.');
+    final row = rows.single;
+    final snapshot = jsonDecode(row['snapshot_json']! as String);
+    if (snapshot is! Map<String, Object?> ||
+        snapshot['trainingMaxRatios'] is! Map<String, Object?>) {
+      throw StateError('The active plan snapshot has no TM ratios.');
+    }
+    final ratioJson = snapshot['trainingMaxRatios']! as Map<String, Object?>;
+    final ratios = <MainLift, double>{};
+    final maxes = <MainLift, double>{};
+    for (final lift in MainLift.values) {
+      ratios[lift] = (ratioJson[lift.name]! as num).toDouble();
+      final history = await database.query(
+        'training_max_history',
+        columns: ['training_max'],
+        where: 'athlete_id = ? AND exercise_id = ?',
+        whereArgs: [row['athlete_id'], lift.name],
+        orderBy: 'effective_at DESC',
+        limit: 1,
+      );
+      if (history.isEmpty) throw StateError('Missing TM for ${lift.name}.');
+      maxes[lift] = (history.single['training_max']! as num).toDouble();
+    }
+    final unit = switch (row['preferred_unit']) {
+      'kg' => WeightUnit.kilograms,
+      'lb' => WeightUnit.pounds,
+      _ => throw StateError('Unsupported athlete unit.'),
+    };
+    final generated = const ForeverMacrocycleGenerator().generate(
+      snapshot: BeginnerPrepSchoolBlueprint.create(trainingMaxRatios: ratios),
+      athlete: AthletePlanConfiguration(
+        trainingMaxes: maxes,
+        unit: unit,
+        trainingWeekdays: const [1, 3, 5],
+        startDate: LocalDate.fromDateTime(startDate),
+        rounder: LoadRounder(
+          increment: (row['rounding_increment']! as num).toDouble(),
+        ),
+      ),
+    );
+    final dateId = startDate.toIso8601String().substring(0, 10);
+    final next = VersionedTrainingPlan.fromGenerated(
+      id: 'preview-bps-$dateId',
+      athleteId: row['athlete_id']! as String,
+      macrocycle: 1,
+      createdAt: _clock().toUtc(),
+      generated: generated,
+    );
+    return SqliteVersionedPlanStore(
+      localDatabase: localDatabase,
+    ).previewProgramSwitch(
+      ProgramSwitchRequest(
+        currentPlanId: row['id']! as String,
+        nextPlan: next,
+        reason: 'Core Validation Shell preview',
+      ),
+    );
+  }
 
   Future<void> _mutateWorkout({
     required String eventType,

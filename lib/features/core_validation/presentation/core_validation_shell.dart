@@ -144,6 +144,7 @@ class _EnginePanelState extends State<_EnginePanel> {
   final rpe = TextEditingController();
   final notes = TextEditingController();
   final restSeconds = TextEditingController(text: '60');
+  final nextPlanStart = TextEditingController();
 
   AppStrings get strings => widget.strings;
   CoreValidationController get controller => widget.controller;
@@ -156,6 +157,7 @@ class _EnginePanelState extends State<_EnginePanel> {
     rpe.dispose();
     notes.dispose();
     restSeconds.dispose();
+    nextPlanStart.dispose();
     super.dispose();
   }
 
@@ -179,6 +181,30 @@ class _EnginePanelState extends State<_EnginePanel> {
         '${strings.plannedSessions}: ${controller.snapshot.plannedSessions}',
         key: const Key('planned-session-count'),
       ),
+      if (controller.snapshot.hasProfile) ...[
+        TextField(
+          key: const Key('switch-start-date'),
+          controller: nextPlanStart,
+          decoration: InputDecoration(labelText: strings.nextPlanStart),
+          onChanged: (_) => setState(() {}),
+        ),
+        FilledButton.tonal(
+          key: const Key('preview-program-switch'),
+          onPressed: DateTime.tryParse(nextPlanStart.text) == null
+              ? null
+              : () => controller.previewProgramSwitch(
+                  DateTime.parse(nextPlanStart.text),
+                ),
+          child: Text(strings.switchPreview),
+        ),
+        if (controller.programSwitchPreview != null)
+          Text(
+            '${strings.switchPreviewReady}: '
+            '${controller.programSwitchPreview!.currentPlanId} → '
+            '${controller.programSwitchPreview!.nextPlanId}',
+            key: const Key('program-switch-preview-ready'),
+          ),
+      ],
       if (allowFixture && !controller.snapshot.hasProfile)
         FilledButton(
           key: const Key('create-dev-fixture'),
