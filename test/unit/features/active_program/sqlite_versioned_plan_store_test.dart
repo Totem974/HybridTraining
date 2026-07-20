@@ -522,6 +522,27 @@ void main() {
         )).single['state'],
         'applied',
       );
+
+      await local.close();
+      final reloaded = await store.loadPlan('plan-1');
+      expect(reloaded?['macrocycle'], 2);
+      expect(reloaded?['blueprint_id'], 'reviewed-replacement-v1');
+      expect(reloaded?['snapshot'], {
+        'schemaVersion': 4,
+        'series': {
+          'id': 'forever-series-v1',
+          'macrocycles': ['M1', 'M2'],
+        },
+      });
+      final reloadedBlocks = reloaded?['blocks']! as List<Map<String, Object?>>;
+      expect(
+        reloadedBlocks.map((block) => block['id']),
+        containsAll(['leader', 'replacement-leader']),
+      );
+      final reloadedReplacement = reloadedBlocks.singleWhere(
+        (block) => block['id'] == 'replacement-leader',
+      );
+      expect(reloadedReplacement['cycles'], hasLength(1));
     },
   );
 
@@ -710,11 +731,17 @@ VersionedTrainingPlan _replacementPlan({
   athleteId: 'athlete',
   blueprintId: 'reviewed-replacement-v1',
   blueprintVersion: 1,
-  blueprintSnapshot: const {'id': 'reviewed-replacement-v1', 'version': 1},
+  blueprintSnapshot: const {
+    'schemaVersion': 4,
+    'series': {
+      'id': 'forever-series-v1',
+      'macrocycles': ['M1', 'M2'],
+    },
+  },
   ruleProvenance: const [
     {'document': 'verified-fixture', 'status': 'verified'},
   ],
-  macrocycle: 1,
+  macrocycle: 2,
   createdAt: DateTime.utc(2026, 8, 1),
   blocks: [
     PlannedTrainingBlock(

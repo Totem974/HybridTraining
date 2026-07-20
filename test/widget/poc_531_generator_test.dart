@@ -350,6 +350,191 @@ void main() {
     expect(states.keys, containsAll(['press', 'bench', 'squat', 'deadlift']));
   });
 
+  testWidgets('active M2 progresses from the completed M1 training maxes', (
+    tester,
+  ) async {
+    final core = _RecordingGeneratorCore();
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        home: Poc531GeneratorPage(
+          core: core,
+          initialConfiguration: const {
+            'mode': 'forever',
+            'foreverTemplateId': 'FV-236',
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('forever-step-7')));
+    await tester.pumpAndSettle();
+
+    Future<void> tapVisible(Key key) async {
+      final finder = find.byKey(key);
+      await tester.ensureVisible(finder);
+      await tester.tap(finder);
+      await tester.pumpAndSettle();
+    }
+
+    await tapVisible(const Key('complete-active-macrocycle'));
+    await tapVisible(const Key('continue-next-macrocycle'));
+    await tapVisible(const Key('activate-next-macrocycle'));
+    await tapVisible(const Key('complete-active-macrocycle'));
+
+    final series = (core.lastConfiguration!['forever'] as Map)['series'] as Map;
+    final macrocycles = series['macrocycles'] as List;
+    final m1Press =
+        ((macrocycles[0] as Map)['trainingMaxStates'] as Map)['press'] as Map;
+    final m2Press =
+        ((macrocycles[1] as Map)['trainingMaxStates'] as Map)['press'] as Map;
+    const enteredOneRepMax = 50.0;
+    const trainingMaxRatio = .9;
+    const pressIncrement = 2.5;
+    final baseTrainingMax = enteredOneRepMax * trainingMaxRatio;
+    expect(m1Press['trainingMax'], baseTrainingMax + pressIncrement);
+    expect(m2Press['trainingMax'], baseTrainingMax + (2 * pressIncrement));
+  });
+
+  testWidgets('custom TM requires an explicit bounded value', (tester) async {
+    final core = _RecordingGeneratorCore();
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        home: Poc531GeneratorPage(
+          core: core,
+          initialConfiguration: const {
+            'mode': 'forever',
+            'foreverTemplateId': 'FV-236',
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('forever-step-7')));
+    await tester.pumpAndSettle();
+    final decision = find.byKey(const Key('tm-decision-press'));
+    await tester.ensureVisible(decision);
+    await tester.tap(decision);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Choose a value').last);
+    await tester.pumpAndSettle();
+
+    final custom = find.byKey(const Key('tm-custom-press'));
+    expect(custom, findsOneWidget);
+    await tester.enterText(custom, '48');
+    await tester.pump();
+    final complete = find.byKey(const Key('complete-active-macrocycle'));
+    expect(tester.widget<FilledButton>(complete).onPressed, isNull);
+
+    await tester.enterText(custom, '46,25');
+    await tester.pump();
+    expect(tester.widget<FilledButton>(complete).onPressed, isNotNull);
+    await tester.ensureVisible(complete);
+    await tester.tap(complete);
+    await tester.pumpAndSettle();
+    final series = (core.lastConfiguration!['forever'] as Map)['series'] as Map;
+    final m1 = (series['macrocycles'] as List).single as Map;
+    expect(
+      ((m1['trainingMaxStates'] as Map)['press'] as Map)['trainingMax'],
+      46.25,
+    );
+  });
+
+  testWidgets('Forever role and protocol labels are localized in French', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        locale: Locale('fr'),
+        supportedLocales: [Locale('fr'), Locale('en')],
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: Poc531GeneratorPage(
+          core: DomainPoc531GeneratorCore(),
+          initialConfiguration: {'mode': 'forever'},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('forever-step-2')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Développement'), findsWidgets);
+    expect(find.text('Semaine 7 de récupération'), findsOneWidget);
+    expect(
+      find.text('Test du maximum d’entraînement de la 7e semaine'),
+      findsOneWidget,
+    );
+    expect(find.text('7th Week Deload'), findsNothing);
+    expect(find.textContaining('Anchor'), findsNothing);
+    expect(find.bySemanticsLabel('Chronologie Forever'), findsOneWidget);
+    expect(
+      tester
+          .widgetList<Tooltip>(find.byType(Tooltip))
+          .map((tooltip) => tooltip.message),
+      contains('Protocole obligatoire inséré par le moteur'),
+    );
+  });
+
+  testWidgets('M2 resets decisions and reset uses the initially entered TM', (
+    tester,
+  ) async {
+    final core = _RecordingGeneratorCore();
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        home: Poc531GeneratorPage(
+          core: core,
+          initialConfiguration: const {
+            'mode': 'forever',
+            'foreverTemplateId': 'FV-236',
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('forever-step-7')));
+    await tester.pumpAndSettle();
+
+    Future<void> choosePressDecision(String label) async {
+      final decision = find.byKey(const Key('tm-decision-press'));
+      await tester.ensureVisible(decision);
+      await tester.tap(decision);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(label).last);
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> tapVisible(Key key) async {
+      final finder = find.byKey(key);
+      await tester.ensureVisible(finder);
+      await tester.tap(finder);
+      await tester.pumpAndSettle();
+    }
+
+    await choosePressDecision('Hold');
+    await tapVisible(const Key('complete-active-macrocycle'));
+    await tapVisible(const Key('continue-next-macrocycle'));
+    await tapVisible(const Key('activate-next-macrocycle'));
+
+    final m2Decision = tester.widget<DropdownButtonFormField<String>>(
+      find.byKey(const Key('tm-decision-press')),
+    );
+    expect(m2Decision.initialValue, 'applyProposal');
+    expect(find.byKey(const Key('tm-custom-press')), findsNothing);
+
+    await choosePressDecision('Reset to entered TM');
+    await tapVisible(const Key('complete-active-macrocycle'));
+    final series = (core.lastConfiguration!['forever'] as Map)['series'] as Map;
+    final m2 = (series['macrocycles'] as List)[1] as Map;
+    final press = (m2['trainingMaxStates'] as Map)['press'] as Map;
+    expect(press['state'], 'reset');
+    expect(press['trainingMax'], 45);
+  });
+
   testWidgets('mode selector preserves common inputs and both mode drafts', (
     tester,
   ) async {
@@ -365,7 +550,7 @@ void main() {
 
     await tester.tap(find.text('Forever'));
     await tester.pumpAndSettle();
-    expect(find.text('Leaders, Anchors et macrocycles'), findsOneWidget);
+    expect(find.text('Leaders, Anchors and macrocycles'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('forever-step-2')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('forever-timeline')), findsOneWidget);

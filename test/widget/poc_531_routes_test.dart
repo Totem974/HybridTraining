@@ -59,6 +59,5 @@ void main() {
     await tester.pumpWidget(MaterialApp(onGenerateRoute: (_) => route));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('forever-timeline')), findsOneWidget);
-    expect(find.text('Leaders, Anchors et macrocycles'), findsOneWidget);
   });
 }

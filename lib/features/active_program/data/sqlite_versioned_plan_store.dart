@@ -246,6 +246,12 @@ class SqliteVersionedPlanStore
         [request.currentPlanId],
       );
       await _insertFuture(tx, request.currentPlanId, request.futurePlan);
+      await _replacePlanDefinition(
+        tx,
+        request.currentPlanId,
+        request.futurePlan,
+        previewId: previewId,
+      );
       final updated = await tx.update(
         'plan_amendments',
         {
@@ -257,6 +263,37 @@ class SqliteVersionedPlanStore
       );
       if (updated != 1) throw StateError('The amendment preview changed.');
     });
+  }
+
+  Future<void> _replacePlanDefinition(
+    DatabaseExecutor tx,
+    String planId,
+    VersionedTrainingPlan future, {
+    required String previewId,
+  }) async {
+    final snapshotId = '$planId-definition-$previewId';
+    await tx.insert('program_definition_snapshots', {
+      'id': snapshotId,
+      'blueprint_id': future.blueprintId,
+      'blueprint_version': future.blueprintVersion,
+      'snapshot_json': canonicalJson(future.blueprintSnapshot),
+      'rule_provenance_json': canonicalJson(future.ruleProvenance),
+      'created_at': future.createdAt.toUtc().toIso8601String(),
+    });
+    final updated = await tx.update(
+      'training_plans',
+      {
+        'blueprint_id': future.blueprintId,
+        'blueprint_version': future.blueprintVersion,
+        'definition_snapshot_id': snapshotId,
+        'macrocycle': future.macrocycle,
+        'source_edition': future.sourceEdition?.name,
+        'ruleset_generation': future.generation?.name,
+      },
+      where: "id = ? AND status = 'active'",
+      whereArgs: [planId],
+    );
+    if (updated != 1) throw StateError('The current plan changed.');
   }
 
   Future<void> _insertFuture(
@@ -955,6 +992,13 @@ class SqliteVersionedPlanStore
         tx.rawQuery(sql, [planId]);
 
     return {
+      'planDefinition': await rows('''SELECT p.blueprint_id,
+             p.blueprint_version, p.definition_snapshot_id, p.macrocycle,
+             d.snapshot_json, d.rule_provenance_json
+           FROM training_plans p
+           JOIN program_definition_snapshots d
+             ON d.id = p.definition_snapshot_id
+           WHERE p.id = ?'''),
       'blocks': await rows('''SELECT b.* FROM training_blocks b
            WHERE b.plan_id = ? AND b.status = 'planned'
            ORDER BY b.sequence, b.id'''),

@@ -28,13 +28,13 @@ est rapporté sans déclarer le scénario passant.
 
 ## Résultats du 2026-07-20
 
-- `dart format --set-exit-if-changed .` : à confirmer après le dernier commit ;
+- `dart format --set-exit-if-changed .` : réussi ;
 - `flutter analyze` : réussi, aucun diagnostic ;
-- `flutter test --coverage` : 247 tests réussis ;
-- couverture globale : 6 270 / 7 182 lignes, soit 87,30 % ;
-- goldens : quatre réussis (Cycle/Forever, desktop/mobile) ;
-- `flutter build web --release` : réussi, dry run Wasm réussi ;
-- APK DEV debug et PROD debug : réussis ;
-- `flutter test integration_test` : bloqué après assemblage Android, l'outil n'a
-  pas retrouvé l'APK produit et `adb uninstall` a renvoyé
-  `DELETE_FAILED_INTERNAL_ERROR`. Aucun E2E n'est déclaré passant.
+- `flutter test --reporter compact` : réussi, 305 tests ;
+- Google Chrome : cinq scénarios E2E sur cinq réussis en 28,3 secondes ;
+- Mozilla Firefox : cinq scénarios E2E sur cinq réussis en 28,0 secondes ;
+- Microsoft Edge : non exécuté ; malgré un WebDriver local prêt, `flutter
+  drive` reste silencieux avant toute création de session. Ce blocage relève de
+  l'outillage et aucun résultat Edge n'est déclaré ;
+- validations et builds Android : explicitement reportés à un chantier
+  ultérieur et non bloquants pour ce lot.

@@ -38,17 +38,19 @@ autres familles ne sont pas activés.
 
 - format : pass ;
 - analyse statique : pass ;
-- 247 tests unitaires/widget/routes/persistance/goldens : pass ;
-- couverture globale : 87,30 % ;
-- quatre captures desktop/mobile : pass ;
-- Web release + dry run Wasm : pass ;
-- Android DEV/PROD debug : pass ;
-- E2E Android : tentative bloquée par le runner qui ne retrouve pas l'APK après
-  assemblage, puis `DELETE_FAILED_INTERNAL_ERROR` au nettoyage du device.
+- 305 tests unitaires/widget/routes/persistance/goldens : pass ;
+- E2E Google Chrome : 5/5 en 28,3 secondes ;
+- E2E Mozilla Firefox : 5/5 en 28,0 secondes ;
+- E2E Microsoft Edge : non exécuté ; malgré un WebDriver local prêt, `flutter
+  drive` reste silencieux avant toute création de session ;
+- validations et builds Android : explicitement reportés à un chantier
+  ultérieur et non bloquants pour ce lot.
 
 ## Risques et suivi
 
-- exécuter les scénarios E2E sur un runner Android/WebDriver sain ;
+- reprendre la validation Edge après diagnostic du blocage de `flutter drive`
+  avant la création de session WebDriver ;
+- reprendre les validations et builds Android dans le chantier dédié ;
 - retirer définitivement l'adaptateur de checkpoints v2 par semaine après la
   fenêtre de migration ;
 - localiser l'ensemble des chaînes historiques du calculateur ;

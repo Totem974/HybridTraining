@@ -255,6 +255,9 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   final Map<String, String> _trainingMaxActions = {
     for (final lift in _liftIds) lift: 'applyProposal',
   };
+  final Map<String, TextEditingController> _customTrainingMaxes = {
+    for (final lift in _liftIds) lift: TextEditingController(),
+  };
 
   List<CalculatorTemplateChoice> get _classic {
     if (widget.core.options.classicTemplates.isNotEmpty) {
@@ -331,6 +334,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
       ..._reps.values,
       ..._simplestStrengthWeights.values,
       ..._simplestStrengthReps.values,
+      ..._customTrainingMaxes.values,
       _ratio,
       _simplestStrengthRatio,
       _warmupBaseUpper,
@@ -619,8 +623,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
           'Type',
           'Horizon',
           'Architecture',
-          'Leaders',
-          'Anchors',
+          'Développement',
+          'Ancrage',
           'Protocoles',
           'Options',
           'Résumé',
@@ -777,7 +781,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
             ? 'Vérifiez la séquence complète avant génération.'
             : 'Review the complete sequence before generation.',
       3 => fr ? 'C2 reprend C1 par défaut.' : 'C2 uses C1 by default.',
-      4 => fr ? 'Vérifiez le bloc Anchor.' : 'Review the Anchor block.',
+      4 => fr ? 'Vérifiez le bloc d’ancrage.' : 'Review the Anchor block.',
       5 =>
         fr
             ? 'Les protocoles obligatoires sont verrouillés.'
@@ -871,12 +875,15 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
             style: const TextStyle(color: Colors.white70),
           ),
           Text(
-            '${_isFrench ? 'Rôles' : 'Roles'}: Leader ×2 · Anchor ×1',
+            _isFrench
+                ? 'Rôles : développement ×2 · ancrage ×1'
+                : 'Roles: Leader ×2 · Anchor ×1',
             style: const TextStyle(color: Colors.white70),
           ),
           Text(
-            '${_isFrench ? 'Protocoles' : 'Protocols'}: '
-            '7th Week Deload · Training Max Test',
+            _isFrench
+                ? 'Protocoles : semaine 7 de récupération · test du maximum d’entraînement'
+                : 'Protocols: 7th Week Deload · Training Max Test',
             style: const TextStyle(color: Colors.white70),
           ),
           Text(
@@ -914,7 +921,9 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
               for (final lift in _liftIds) _trainingMaxControl(lift),
               FilledButton.icon(
                 key: const Key('complete-active-macrocycle'),
-                onPressed: _completeActiveMacrocycle,
+                onPressed: _trainingMaxDecisionsAreValid
+                    ? _completeActiveMacrocycle
+                    : null,
                 icon: const Icon(Icons.check_circle_outline),
                 label: Text(
                   _isFrench
@@ -1014,44 +1023,94 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
 
   Widget _trainingMaxControl(String lift) => Padding(
     padding: const EdgeInsets.only(bottom: 8),
-    child: DropdownButtonFormField<String>(
-      key: ValueKey('tm-decision-$lift'),
-      initialValue: _trainingMaxActions[lift],
-      isExpanded: true,
-      style: _inputTextStyle,
-      dropdownColor: Colors.white,
-      decoration: InputDecoration(labelText: _liftDisplayName(lift)),
-      items: [
-        for (final action in const [
-          'applyProposal',
-          'lowerProposal',
-          'hold',
-          'reset',
-        ])
-          DropdownMenuItem(
-            value: action,
-            child: Text(_trainingMaxActionLabel(action)),
+    child: Column(
+      children: [
+        DropdownButtonFormField<String>(
+          key: ValueKey('tm-decision-$lift'),
+          initialValue: _trainingMaxActions[lift],
+          isExpanded: true,
+          style: _inputTextStyle,
+          dropdownColor: Colors.white,
+          decoration: InputDecoration(labelText: _liftDisplayName(lift)),
+          items: [
+            for (final action in const [
+              'applyProposal',
+              'customProposal',
+              'hold',
+              'reset',
+            ])
+              DropdownMenuItem(
+                value: action,
+                child: Text(_trainingMaxActionLabel(action)),
+              ),
+          ],
+          onChanged: (value) {
+            if (value == null) return;
+            setState(() {
+              _trainingMaxActions[lift] = value;
+              if (value == 'customProposal' &&
+                  _customTrainingMaxes[lift]!.text.isEmpty) {
+                _customTrainingMaxes[lift]!.text = _formatTrainingMax(
+                  _currentTrainingMax(lift),
+                );
+              }
+            });
+          },
+        ),
+        if (_trainingMaxActions[lift] == 'customProposal') ...[
+          const SizedBox(height: 8),
+          TextFormField(
+            key: ValueKey('tm-custom-$lift'),
+            controller: _customTrainingMaxes[lift],
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: _inputTextStyle,
+            decoration: InputDecoration(
+              labelText: _isFrench ? 'TM choisi' : 'Chosen TM',
+              helperText: _isFrench
+                  ? 'Entre ${_formatTrainingMax(_currentTrainingMax(lift))} et ${_formatTrainingMax(_proposedTrainingMax(lift))}'
+                  : 'Between ${_formatTrainingMax(_currentTrainingMax(lift))} and ${_formatTrainingMax(_proposedTrainingMax(lift))}',
+              errorText: _customTrainingMaxIsValid(lift)
+                  ? null
+                  : (_isFrench
+                        ? 'Saisissez une valeur dans cet intervalle.'
+                        : 'Enter a value within this range.'),
+            ),
+            onChanged: (_) => setState(() {}),
           ),
+        ],
       ],
-      onChanged: (value) {
-        if (value != null) setState(() => _trainingMaxActions[lift] = value);
-      },
     ),
   );
 
   String _trainingMaxActionLabel(String action) =>
       switch ((action, _isFrench)) {
         ('applyProposal', true) => 'Appliquer la proposition',
-        ('lowerProposal', true) => 'Proposition inférieure',
+        ('customProposal', true) => 'Choisir une valeur',
         ('hold', true) => 'Maintenir',
         ('reset', true) => 'Réinitialiser au TM saisi',
         ('applyProposal', false) => 'Apply proposal',
-        ('lowerProposal', false) => 'Lower proposal',
+        ('customProposal', false) => 'Choose a value',
         ('hold', false) => 'Hold',
         _ => 'Reset to entered TM',
       };
 
   double _currentTrainingMax(String lift) {
+    final active = _activeMacrocycle;
+    if (active != null) {
+      final activeIndex = _effectiveMacrocycles.indexWhere(
+        (macrocycle) => macrocycle['instanceId'] == active['instanceId'],
+      );
+      for (var index = activeIndex - 1; index >= 0; index--) {
+        final states = _effectiveMacrocycles[index]['trainingMaxStates'];
+        final state = states is Map ? states[lift] : null;
+        final inherited = state is Map ? state['trainingMax'] : null;
+        if (inherited is num) return inherited.toDouble();
+      }
+    }
+    return _enteredTrainingMax(lift);
+  }
+
+  double _enteredTrainingMax(String lift) {
     final name = switch (lift) {
       'press' => 'Press',
       'bench' => 'Bench Press',
@@ -1066,6 +1125,28 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
 
   double _progressionIncrement(String lift) =>
       lift == 'press' || lift == 'bench' ? 2.5 : 5;
+
+  double _proposedTrainingMax(String lift) =>
+      _currentTrainingMax(lift) + _progressionIncrement(lift);
+
+  String _formatTrainingMax(double value) =>
+      value == value.roundToDouble() ? '${value.toInt()}' : '$value';
+
+  bool _customTrainingMaxIsValid(String lift) {
+    final value = _parseLocalizedNumber(_customTrainingMaxes[lift]!.text);
+    return value != null &&
+        value >= _currentTrainingMax(lift) &&
+        value <= _proposedTrainingMax(lift);
+  }
+
+  double? _parseLocalizedNumber(String value) =>
+      double.tryParse(value.trim().replaceAll(',', '.'));
+
+  bool get _trainingMaxDecisionsAreValid => _liftIds.every(
+    (lift) =>
+        _trainingMaxActions[lift] != 'customProposal' ||
+        _customTrainingMaxIsValid(lift),
+  );
 
   void _completeActiveMacrocycle() {
     final active = _activeMacrocycle;
@@ -1090,15 +1171,14 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
 
   Map<String, Object?> _trainingMaxState(String lift) {
     final current = _currentTrainingMax(lift);
-    final increment = _progressionIncrement(lift);
     return switch (_trainingMaxActions[lift]) {
-      'lowerProposal' => {
+      'customProposal' => {
         'state': 'confirmed',
-        'trainingMax': current + (increment / 2),
+        'trainingMax': _parseLocalizedNumber(_customTrainingMaxes[lift]!.text)!,
       },
       'hold' => {'state': 'held', 'trainingMax': current},
-      'reset' => {'state': 'reset', 'trainingMax': current},
-      _ => {'state': 'confirmed', 'trainingMax': current + increment},
+      'reset' => {'state': 'reset', 'trainingMax': _enteredTrainingMax(lift)},
+      _ => {'state': 'confirmed', 'trainingMax': _proposedTrainingMax(lift)},
     };
   }
 
@@ -1143,6 +1223,12 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     if (planned == null) return;
     final plannedId = planned['instanceId'];
     setState(() {
+      _trainingMaxActions
+        ..clear()
+        ..addAll({for (final lift in _liftIds) lift: 'applyProposal'});
+      for (final controller in _customTrainingMaxes.values) {
+        controller.clear();
+      }
       _seriesMacrocycles = [
         for (final macrocycle in _effectiveMacrocycles)
           if (macrocycle['instanceId'] == plannedId)
@@ -1215,16 +1301,18 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
         children: [
           SegmentedButton<String>(
             key: const Key('planning-mode-selector'),
-            segments: const [
-              ButtonSegment(
+            segments: [
+              const ButtonSegment(
                 value: 'classic',
                 label: Text('Cycle 5/3/1'),
                 tooltip: 'Original, Beyond et extensions',
               ),
               ButtonSegment(
                 value: 'forever',
-                label: Text('Forever'),
-                tooltip: 'Leaders, Anchors et macrocycles',
+                label: const Text('Forever'),
+                tooltip: _isFrench
+                    ? 'Développement, ancrage et macrocycles'
+                    : 'Leaders, Anchors and macrocycles',
               ),
             ],
             selected: {_mode},
@@ -1234,7 +1322,9 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
           Text(
             _mode == 'classic'
                 ? 'Original, Beyond et extensions'
-                : 'Leaders, Anchors et macrocycles',
+                : (_isFrench
+                      ? 'Développement, ancrage et macrocycles'
+                      : 'Leaders, Anchors and macrocycles'),
             textAlign: TextAlign.center,
             style: const TextStyle(color: Color(0xffd8d8d8)),
           ),
@@ -1262,7 +1352,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   }
 
   Widget _foreverTimeline(List<ForeverTimelineNodeChoice> nodes) => Semantics(
-    label: 'Timeline Forever',
+    label: _isFrench ? 'Chronologie Forever' : 'Forever timeline',
     child: Column(
       key: const Key('forever-timeline'),
       children: [
@@ -1279,12 +1369,16 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                   foregroundColor: const Color(0xff181818),
                   child: Text(node.id),
                 ),
-                title: Text(node.title),
-                subtitle: Text(node.details.join(' · ')),
+                title: Text(_localizedForeverText(node.title)),
+                subtitle: Text(
+                  node.details.map(_localizedForeverText).join(' · '),
+                ),
                 trailing: node.autoInserted
-                    ? const Tooltip(
-                        message: 'Protocole obligatoire inséré par le CORE',
-                        child: Icon(Icons.lock_outline),
+                    ? Tooltip(
+                        message: _isFrench
+                            ? 'Protocole obligatoire inséré par le moteur'
+                            : 'Required protocol inserted by the engine',
+                        child: const Icon(Icons.lock_outline),
                       )
                     : const Icon(Icons.check_circle_outline),
               ),
@@ -1293,6 +1387,20 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
       ],
     ),
   );
+
+  String _localizedForeverText(String value) {
+    if (!_isFrench) return value;
+    return value
+        .replaceAll(
+          '7th Week Training Max Test',
+          'Test du maximum d’entraînement de la 7e semaine',
+        )
+        .replaceAll('7th Week Deload', 'Semaine 7 de récupération')
+        .replaceAll('Training Max Test', 'Test du maximum d’entraînement')
+        .replaceAll('Leader', 'Développement')
+        .replaceAll('Anchor', 'Ancrage');
+  }
+
   Widget _heading(String value) => Padding(
     padding: const EdgeInsets.only(bottom: 9),
     child: Text(

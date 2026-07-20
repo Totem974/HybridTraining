@@ -59,23 +59,23 @@ Validations exécutées le 20 juillet 2026 :
 
 - `dart format --set-exit-if-changed .` : réussi ;
 - `flutter analyze` : réussi, aucune anomalie ;
-- `flutter test --reporter compact` : réussi, 299 tests ;
+- `flutter test --reporter compact` : réussi, 305 tests ;
 - tests visuels desktop et mobile : réussis, 4/4 ;
 - tests ciblés génération canonique, adaptateur et widgets : réussis, 36/36 ;
 - tests ciblés du domaine planning : réussis, 21/21 ;
 - tests ciblés de persistance : réussis, 10/10.
 
 Google Chrome et le ChromeDriver officiel sont alignés en version
-150.0.7871.129. Le parcours `flutter drive` a réussi en 28,7 secondes : cinq
+150.0.7871.129. Le parcours `flutter drive` a réussi en 28,3 secondes : cinq
 tests sur cinq, dont les scénarios Original, Beyond et Forever M1 → M2.
 Firefox 152.0.6 avec GeckoDriver officiel 0.36.0 exécute les mêmes cinq tests
-avec succès en 28,9 secondes.
+avec succès en 28,0 secondes.
 
-Microsoft Edge et le pilote local protégé de `.SOURCE/` sont tous deux en
-version 150.0.4078.83. Flutter 3.44.6 envoie toutefois une capability `edge`
-que le pilote Microsoft attend sous le nom `MicrosoftEdge`. Chrome est donc la
-cible Web de référence de ce chantier ; cette limitation Edge relève de
-l’outillage et non du produit.
+Microsoft Edge et le pilote local protégé de `.SOURCE/` sont disponibles, mais
+le parcours Edge n’a pas été exécuté : malgré un WebDriver prêt, `flutter drive`
+reste silencieux avant toute création de session. Chrome reste donc la cible
+Web de référence de ce chantier ; ce blocage Edge relève de l’outillage et
+aucun résultat Edge n’est déclaré.
 
 Le pilote de test limite désormais une exécution navigateur à deux minutes afin
 qu’un défaut de connexion ne bloque plus le chantier. À la demande du

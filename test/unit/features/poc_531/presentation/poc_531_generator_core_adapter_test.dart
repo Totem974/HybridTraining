@@ -92,6 +92,32 @@ void main() {
     },
   );
 
+  test('an empty terminated v4 series exports without generation', () async {
+    final configuration = _seriesConfiguration([]);
+    final forever = configuration['forever'] as Map<String, Object?>;
+    final series = forever['series'] as Map<String, Object?>;
+    series['terminated'] = true;
+
+    final result = await core.generate(configuration);
+    final export = jsonDecode(result.exportJson) as Map<String, Object?>;
+
+    expect(result.title, 'Série Forever');
+    expect(result.blocks, isEmpty);
+    expect(export, {
+      'schemaVersion': 4,
+      'seriesId': 'series-test',
+      'terminated': true,
+      'macrocycles': <Object?>[],
+    });
+  });
+
+  test('an empty non-terminated v4 series remains invalid', () async {
+    await expectLater(
+      core.generate(_seriesConfiguration([])),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
   test(
     'completed macrocycle is exported without losing any nested field',
     () async {

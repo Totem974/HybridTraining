@@ -389,7 +389,19 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
     final seriesValue = foreverValue['series'];
     if (seriesValue is! Map) return null;
     final rawMacrocycles = seriesValue['macrocycles'];
-    if (rawMacrocycles is! List || rawMacrocycles.isEmpty) return null;
+    if (rawMacrocycles is! List) return null;
+    if (rawMacrocycles.isEmpty) {
+      if (seriesValue['terminated'] != true) return null;
+      return _ForeverGenerationRequest.series(
+        seriesId: '${seriesValue['id'] ?? 'forever-series-v1'}',
+        terminated: true,
+        preservedMacrocycles: const [],
+        sourceOrder: const [],
+        macrocycles: const [],
+        configurations: const [],
+        compiledSequences: const [],
+      );
+    }
     final macrocycles = <_GeneratedMacrocycle>[];
     final preservedMacrocycles = <Map<String, Object?>>[];
     final configurations = <core.ProgramConfiguration>[];
