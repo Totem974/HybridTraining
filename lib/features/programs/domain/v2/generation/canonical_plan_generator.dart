@@ -1,3 +1,4 @@
+import '../../../../poc_531/domain/planning/planning.dart' as planning;
 import '../../load_rounding.dart';
 import '../../training_models.dart';
 import '../program_domain.dart';
@@ -72,6 +73,67 @@ class CanonicalGenerationBlueprint {
   final CanonicalCycleModel cycleModel;
   final RuleReference source;
 }
+
+RuleReference _ruleReference(planning.RuleSource source) =>
+    RuleReference(document: source.document, location: source.location);
+
+final _legacyForeverNodes = <planning.ForeverPlanNode>[
+  planning.ForeverCycleNode(
+    nodeId: 'C1',
+    source: const planning.RuleSource(
+      document: '5/3/1 Forever',
+      location: 'PDF pages 29-33 and 180-182',
+    ),
+    templateRevisionId: planning.foreverOriginalFslCycleRevision.id,
+    cycleInstanceId: 'leader-1',
+    role: planning.CycleRole.leader,
+    revision: planning.foreverOriginalFslCycleRevision,
+  ),
+  planning.ForeverCycleNode(
+    nodeId: 'C2',
+    source: const planning.RuleSource(
+      document: '5/3/1 Forever',
+      location: 'PDF pages 29-33 and 180-182',
+    ),
+    templateRevisionId: planning.foreverOriginalFslCycleRevision.id,
+    cycleInstanceId: 'leader-2',
+    role: planning.CycleRole.leader,
+    revision: planning.foreverOriginalFslCycleRevision,
+  ),
+  const planning.ForeverProtocolNode(
+    nodeId: 'P1',
+    source: planning.RuleSource(
+      document: '5/3/1 Forever',
+      location: 'PDF pages 31 and 33',
+    ),
+    templateRevisionId: 'forever-seventh-week-deload-v1',
+    autoInserted: true,
+    purpose: planning.ProtocolPurpose.seventhWeekDeload,
+    afterCycleInstanceId: 'leader-2',
+  ),
+  planning.ForeverCycleNode(
+    nodeId: 'C3',
+    source: const planning.RuleSource(
+      document: '5/3/1 Forever',
+      location: 'PDF pages 29-33 and 180-182',
+    ),
+    templateRevisionId: planning.foreverOriginalFslCycleRevision.id,
+    cycleInstanceId: 'anchor-1',
+    role: planning.CycleRole.anchor,
+    revision: planning.foreverOriginalFslCycleRevision,
+  ),
+  const planning.ForeverProtocolNode(
+    nodeId: 'P2',
+    source: planning.RuleSource(
+      document: '5/3/1 Forever',
+      location: 'PDF pages 31-33',
+    ),
+    templateRevisionId: 'forever-seventh-week-tm-test-v1',
+    autoInserted: true,
+    purpose: planning.ProtocolPurpose.seventhWeekTrainingMaxTest,
+    afterCycleInstanceId: 'anchor-1',
+  ),
+];
 
 class CanonicalAthleteConfiguration {
   CanonicalAthleteConfiguration({
@@ -323,15 +385,28 @@ class CanonicalPlanGenerator {
   CanonicalGeneratedPlan generate({
     required CanonicalGenerationBlueprint blueprint,
     required CanonicalAthleteConfiguration athlete,
+    planning.CompiledForeverSequence? foreverSequence,
   }) {
-    _validate(blueprint, athlete);
+    if (foreverSequence != null &&
+        blueprint.generation != MethodGeneration.forever) {
+      throw ArgumentError.value(
+        foreverSequence,
+        'foreverSequence',
+        'A compiled Forever sequence can only generate a Forever blueprint.',
+      );
+    }
+    _validate(blueprint, athlete, foreverSequence: foreverSequence);
     if (blueprint.id == CanonicalGenerationBlueprint.beginnerPrepSchool.id) {
       return _beginnerPrepSchool(blueprint, athlete);
     }
     return switch (blueprint.generation) {
       MethodGeneration.powerlifting => _standard(blueprint, athlete),
       MethodGeneration.beyond => _beyond(blueprint, athlete),
-      MethodGeneration.forever => _forever(blueprint, athlete),
+      MethodGeneration.forever => _forever(
+        blueprint,
+        athlete,
+        sequence: foreverSequence,
+      ),
       _ => throw StateError(
         'No canonical generator registered for ${blueprint.generation.name}.',
       ),
@@ -547,8 +622,9 @@ class CanonicalPlanGenerator {
 
   CanonicalGeneratedPlan _forever(
     CanonicalGenerationBlueprint blueprint,
-    CanonicalAthleteConfiguration athlete,
-  ) {
+    CanonicalAthleteConfiguration athlete, {
+    planning.CompiledForeverSequence? sequence,
+  }) {
     var cursor = athlete.startDate;
     var sessionNumber = 0;
     var programmingWeek = 1;
@@ -626,101 +702,108 @@ class CanonicalPlanGenerator {
       return true;
     }
 
-    blocks.add(
-      workCycle(
-        id: 'forever-leader-1',
-        role: BlockRole.leader,
-        schemes: _foreverLeaderWeeks,
-        cycleNumber: 1,
-        source: _foreverOriginalFslSource,
-      ),
-    );
-    if (!confirmCheckpoint('C1', _foreverProgressionSource)) {
-      return _foreverPlan(blueprint, athlete, blocks, timeline, true);
-    }
+    final nodes = sequence?.nodes ?? _legacyForeverNodes;
+    var cycleNumber = 0;
+    for (final node in nodes) {
+      if (node is planning.ForeverCycleNode) {
+        if (node.revision.id != planning.foreverOriginalFslCycleRevision.id) {
+          throw StateError(
+            'No canonical prescriptions are registered for Forever cycle revision ${node.revision.id}.',
+          );
+        }
+        cycleNumber++;
+        final role = switch (node.role) {
+          planning.CycleRole.leader => BlockRole.leader,
+          planning.CycleRole.anchor => BlockRole.anchor,
+        };
+        blocks.add(
+          workCycle(
+            id: sequence == null
+                ? 'forever-${node.cycleInstanceId}'
+                : node.nodeId,
+            role: role,
+            schemes: role == BlockRole.leader
+                ? _foreverLeaderWeeks
+                : _foreverAnchorWeeks,
+            cycleNumber: cycleNumber,
+            source: sequence == null
+                ? _foreverOriginalFslSource
+                : _ruleReference(node.source),
+          ),
+        );
+        if (!confirmCheckpoint(node.nodeId, _foreverProgressionSource)) {
+          return _foreverPlan(blueprint, athlete, blocks, timeline, true);
+        }
+        continue;
+      }
 
-    blocks.add(
-      workCycle(
-        id: 'forever-leader-2',
-        role: BlockRole.leader,
-        schemes: _foreverLeaderWeeks,
-        cycleNumber: 2,
-        source: _foreverOriginalFslSource,
-      ),
-    );
-    if (!confirmCheckpoint('C2', _foreverProgressionSource)) {
-      return _foreverPlan(blueprint, athlete, blocks, timeline, true);
-    }
-
-    final deload = _week(
-      blueprint: blueprint,
-      athlete: athlete,
-      trainingMaxes: currentTrainingMaxes,
-      scheme: _foreverDeload,
-      programmingWeek: programmingWeek,
-      cycleNumber: 2,
-      cursor: cursor,
-      firstSessionNumber: sessionNumber,
-    );
-    blocks.add(
-      CanonicalGeneratedBlock(
-        id: 'forever-seventh-week-deload',
-        type: BlockType.deload,
-        role: BlockRole.seventhWeek,
-        seventhWeekPurpose: SeventhWeekPurpose.deload,
-        sourceEdition: blueprint.sourceEdition,
-        generation: blueprint.generation,
-        source: _foreverDeloadSource,
-        weeks: [deload.week],
-      ),
-    );
-    cursor = deload.nextDate;
-    sessionNumber += athlete.movementOrder.length;
-    programmingWeek++;
-
-    blocks.add(
-      workCycle(
-        id: 'forever-anchor-1',
-        role: BlockRole.anchor,
-        schemes: _foreverAnchorWeeks,
-        cycleNumber: 3,
-        source: _foreverOriginalFslSource,
-      ),
-    );
-    if (!confirmCheckpoint('C3', _foreverProgressionSource)) {
-      return _foreverPlan(blueprint, athlete, blocks, timeline, true);
-    }
-
-    final test = _week(
-      blueprint: blueprint,
-      athlete: athlete,
-      trainingMaxes: currentTrainingMaxes,
-      scheme: _foreverTrainingMaxTest,
-      programmingWeek: programmingWeek,
-      cycleNumber: 3,
-      cursor: cursor,
-      firstSessionNumber: sessionNumber,
-    );
-    blocks.add(
-      CanonicalGeneratedBlock(
-        id: 'forever-seventh-week-tm-test',
-        type: BlockType.test,
-        role: BlockRole.trainingMaxTest,
-        seventhWeekPurpose: SeventhWeekPurpose.trainingMaxTest,
-        sourceEdition: blueprint.sourceEdition,
-        generation: blueprint.generation,
-        source: _foreverTrainingMaxTestSource,
-        weeks: [test.week],
-      ),
-    );
-    timeline.addAll(
-      _testDecisions(
+      final protocol = node as planning.ForeverProtocolNode;
+      final (
+        _WeekScheme scheme,
+        BlockType type,
+        BlockRole role,
+        SeventhWeekPurpose purpose,
+        RuleReference source,
+      ) = switch (protocol.purpose) {
+        planning.ProtocolPurpose.seventhWeekDeload => (
+          _foreverDeload,
+          BlockType.deload,
+          BlockRole.seventhWeek,
+          SeventhWeekPurpose.deload,
+          _ruleReference(protocol.source),
+        ),
+        planning.ProtocolPurpose.seventhWeekTrainingMaxTest => (
+          _foreverTrainingMaxTest,
+          BlockType.test,
+          BlockRole.trainingMaxTest,
+          SeventhWeekPurpose.trainingMaxTest,
+          _ruleReference(protocol.source),
+        ),
+        planning.ProtocolPurpose.seventhWeekPersonalRecordTest =>
+          throw StateError(
+            'No canonical prescriptions are registered for the seventh-week personal-record test.',
+          ),
+      };
+      final generated = _week(
+        blueprint: blueprint,
         athlete: athlete,
         trainingMaxes: currentTrainingMaxes,
-        afterProgrammingWeek: programmingWeek,
-        sequenceOffset: timeline.length,
-      ),
-    );
+        scheme: scheme,
+        programmingWeek: programmingWeek,
+        cycleNumber: cycleNumber,
+        cursor: cursor,
+        firstSessionNumber: sessionNumber,
+      );
+      blocks.add(
+        CanonicalGeneratedBlock(
+          id: sequence == null
+              ? purpose == SeventhWeekPurpose.deload
+                    ? 'forever-seventh-week-deload'
+                    : 'forever-seventh-week-tm-test'
+              : protocol.nodeId,
+          type: type,
+          role: role,
+          seventhWeekPurpose: purpose,
+          sourceEdition: blueprint.sourceEdition,
+          generation: blueprint.generation,
+          source: source,
+          weeks: [generated.week],
+        ),
+      );
+      cursor = generated.nextDate;
+      sessionNumber += athlete.movementOrder.length;
+      if (purpose == SeventhWeekPurpose.trainingMaxTest) {
+        timeline.addAll(
+          _testDecisions(
+            athlete: athlete,
+            trainingMaxes: currentTrainingMaxes,
+            afterProgrammingWeek: programmingWeek,
+            sequenceOffset: timeline.length,
+          ),
+        );
+      }
+      programmingWeek++;
+    }
     return _foreverPlan(blueprint, athlete, blocks, timeline, true);
   }
 
@@ -1148,8 +1231,9 @@ class CanonicalPlanGenerator {
 
   void _validate(
     CanonicalGenerationBlueprint blueprint,
-    CanonicalAthleteConfiguration athlete,
-  ) {
+    CanonicalAthleteConfiguration athlete, {
+    planning.CompiledForeverSequence? foreverSequence,
+  }) {
     if (blueprint.version.value < 1 ||
         blueprint.source.location == null ||
         blueprint.source.location!.isEmpty) {
@@ -1201,8 +1285,14 @@ class CanonicalPlanGenerator {
         }
       }
     }
+    final foreverNodeIds = foreverSequence == null
+        ? const {'C1', 'C2', 'C3'}
+        : foreverSequence.nodes
+              .whereType<planning.ForeverCycleNode>()
+              .map((node) => node.nodeId)
+              .toSet();
     for (final checkpoint in athlete.confirmedTrainingMaxesByNode.entries) {
-      if (!{'C1', 'C2', 'C3'}.contains(checkpoint.key)) {
+      if (!foreverNodeIds.contains(checkpoint.key)) {
         throw StateError('Unsupported Forever TM node: ${checkpoint.key}.');
       }
       for (final movement in athlete.movementOrder) {
@@ -1213,7 +1303,7 @@ class CanonicalPlanGenerator {
       }
     }
     for (final checkpoint in athlete.projectedTrainingMaxesByNode.entries) {
-      if (!{'C1', 'C2', 'C3'}.contains(checkpoint.key)) {
+      if (!foreverNodeIds.contains(checkpoint.key)) {
         throw StateError(
           'Unsupported Forever TM projection: ${checkpoint.key}.',
         );

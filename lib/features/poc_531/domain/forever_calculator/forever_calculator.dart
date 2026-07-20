@@ -183,9 +183,7 @@ List<ForeverSequenceBlock> _compiledForeverOriginalFslSequence() {
   final configuration = planning.ForeverPlanningConfiguration(
     profile: profile,
     kind: planning.ForeverPlanKind.macrocycle,
-    firstLeader: planning.foreverOriginalFslCycleRevision,
-    secondLeader: planning.foreverOriginalFslCycleRevision,
-    anchor: planning.foreverOriginalFslCycleRevision,
+    series: planning.createForeverOriginalFslSeries(profile: profile),
   );
   var startWeek = 1;
   return [

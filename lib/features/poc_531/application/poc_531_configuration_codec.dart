@@ -26,7 +26,7 @@ class Poc531Configuration {
   }) =>
       Poc531Configuration._(mode: 'forever', common: common, forever: forever);
 
-  static const schemaVersion = 3;
+  static const schemaVersion = 4;
 
   final String mode;
   final Map<String, Object?> common;
@@ -56,8 +56,12 @@ class Poc531ConfigurationCodec {
   };
   static const _foreverOriginalAliases = {foreverOriginalFslId, 'FV-236'};
 
-  String encode(Poc531Configuration configuration) =>
-      jsonEncode(_canonicalize(configuration.toJson()));
+  String encode(Poc531Configuration configuration) {
+    if (configuration.forever case final forever?) {
+      _validateForeverV4(forever);
+    }
+    return jsonEncode(_canonicalize(configuration.toJson()));
+  }
 
   Poc531Configuration decode(String payload) {
     final decoded = jsonDecode(payload);
@@ -70,8 +74,9 @@ class Poc531ConfigurationCodec {
   Poc531Configuration decodeMap(Map<String, Object?> payload) {
     final version = payload['schemaVersion'];
     return switch (version) {
-      2 => _decodeV3(migrateV2(payload)),
-      3 => _decodeV3(payload),
+      2 => _decodeV4(migrateV3ToV4(migrateV2ToV3(payload))),
+      3 => _decodeV4(migrateV3ToV4(payload)),
+      4 => _decodeV4(payload),
       _ => throw FormatException(
         'Unsupported configuration schema version: $version.',
       ),
@@ -79,7 +84,11 @@ class Poc531ConfigurationCodec {
   }
 
   /// Converts the former flat calculator payload into the explicit v3 shape.
-  Map<String, Object?> migrateV2(Map<String, Object?> source) {
+  Map<String, Object?> migrateV2(Map<String, Object?> source) =>
+      migrateV3ToV4(migrateV2ToV3(source));
+
+  /// Converts the former flat calculator payload into the explicit v3 shape.
+  Map<String, Object?> migrateV2ToV3(Map<String, Object?> source) {
     if (source['schemaVersion'] != 2) {
       throw const FormatException('Only schema version 2 can be migrated.');
     }
@@ -100,9 +109,11 @@ class Poc531ConfigurationCodec {
       final id = isBeginner
           ? beginnerPrepSchoolId
           : _canonicalForeverId(requestedId);
-      return Poc531Configuration.forever(
-        common: common,
-        forever: {
+      return <String, Object?>{
+        'schemaVersion': 3,
+        'mode': 'forever',
+        'common': common,
+        'forever': {
           'programId': id,
           'planKind': isBeginner ? 'standaloneProgram' : 'macrocycle',
           if (!isBeginner) 'recipeId': 'forever-2l1a',
@@ -110,7 +121,7 @@ class Poc531ConfigurationCodec {
           if (requestedId != null && requestedId != id)
             'sourceAlias': requestedId,
         },
-      ).toJson();
+      };
     }
 
     final cycle = <String, Object?>{};
@@ -121,10 +132,62 @@ class Poc531ConfigurationCodec {
         cycle[entry.key] = _copyValue(entry.value);
       }
     }
-    return Poc531Configuration.cycle(common: common, cycle: cycle).toJson();
+    return <String, Object?>{
+      'schemaVersion': 3,
+      'mode': 'cycle',
+      'common': common,
+      'cycle': cycle,
+    };
   }
 
-  Poc531Configuration _decodeV3(Map<String, Object?> payload) {
+  /// Migrates v3's fixed Forever plan into v4's finite macrocycle series.
+  Map<String, Object?> migrateV3ToV4(Map<String, Object?> source) {
+    if (source['schemaVersion'] != 3) {
+      throw const FormatException('Only schema version 3 can be migrated.');
+    }
+    final result = _stringMap(source)..['schemaVersion'] = 4;
+    if (result['mode'] != 'forever') return result;
+
+    final oldForever = _requiredMap(result, 'forever');
+    final planKind = oldForever['planKind'];
+    final requestedId = _stringValue(oldForever['programId']);
+    if (planKind == 'standaloneProgram' ||
+        (requestedId != null && _beginnerAliases.contains(requestedId))) {
+      result['forever'] = <String, Object?>{
+        'standaloneProgramId': beginnerPrepSchoolId,
+        if (oldForever['sourceAlias'] != null)
+          'sourceAlias': _copyValue(oldForever['sourceAlias']),
+      };
+      return result;
+    }
+
+    final sourceAlias =
+        oldForever['sourceAlias'] ??
+        (requestedId != null && requestedId != foreverOriginalFslId
+            ? requestedId
+            : null);
+    result['forever'] = <String, Object?>{
+      'series': <String, Object?>{
+        'id': 'forever-series-v1',
+        'terminated': false,
+        'macrocycles': <Object?>[
+          <String, Object?>{
+            'instanceId': 'M1',
+            'intent': 'active',
+            'status': 'active',
+            'recipeId': 'forever-2l1a-v2',
+            'slots': _v4SlotsFromNodes(oldForever['nodes']),
+            'protocols': _v4ProtocolsFromNodes(oldForever['nodes']),
+            'trainingMaxStates': <String, Object?>{},
+          },
+        ],
+      },
+      'sourceAlias': ?sourceAlias,
+    };
+    return result;
+  }
+
+  Poc531Configuration _decodeV4(Map<String, Object?> payload) {
     final mode = payload['mode'];
     final common = _requiredMap(payload, 'common');
     if (mode == 'cycle') {
@@ -144,12 +207,114 @@ class Poc531ConfigurationCodec {
           'Forever configuration cannot contain cycle.',
         );
       }
-      return Poc531Configuration.forever(
-        common: common,
-        forever: _requiredMap(payload, 'forever'),
-      );
+      final forever = _requiredMap(payload, 'forever');
+      final standaloneId = _stringValue(forever['standaloneProgramId']);
+      if (standaloneId != null && _beginnerAliases.contains(standaloneId)) {
+        forever['standaloneProgramId'] = beginnerPrepSchoolId;
+        if (standaloneId != beginnerPrepSchoolId) {
+          forever.putIfAbsent('sourceAlias', () => standaloneId);
+        }
+      }
+      _validateForeverV4(forever);
+      return Poc531Configuration.forever(common: common, forever: forever);
     }
     throw FormatException('Unsupported configuration mode: $mode.');
+  }
+
+  static void _validateForeverV4(Map<String, Object?> forever) {
+    final hasStandalone = forever['standaloneProgramId'] is String;
+    final hasSeries = forever['series'] is Map;
+    if (hasStandalone == hasSeries) {
+      throw const FormatException(
+        'Forever must contain exactly one of standaloneProgramId or series.',
+      );
+    }
+    if (hasStandalone) return;
+    final series = _stringMap(forever['series']! as Map);
+    final macrocycles = series['macrocycles'];
+    if (macrocycles is! List) {
+      throw const FormatException('series.macrocycles must be a list.');
+    }
+    for (final value in macrocycles) {
+      if (value is! Map) {
+        throw const FormatException('Every macrocycle must be an object.');
+      }
+      final macrocycle = _stringMap(value);
+      if (macrocycle['recipeId'] == 'forever-2l2a-v1' ||
+          macrocycle['recipeId'] == 'forever-3l2a-v1' ||
+          macrocycle['status'] == 'needsReview' ||
+          _containsNeedsReview(macrocycle)) {
+        throw const FormatException(
+          'A needsReview definition cannot be executable.',
+        );
+      }
+      for (final key in const ['slots', 'protocols']) {
+        if (macrocycle[key] is! List) {
+          throw FormatException('macrocycle.$key must be a list.');
+        }
+      }
+      if (macrocycle['trainingMaxStates'] is! Map) {
+        throw const FormatException(
+          'macrocycle.trainingMaxStates must be an object.',
+        );
+      }
+    }
+  }
+
+  static bool _containsNeedsReview(Object? value) => switch (value) {
+    String text => text == 'needsReview' || text == 'NEEDS_REVIEW',
+    Map map => map.values.any(_containsNeedsReview),
+    List list => list.any(_containsNeedsReview),
+    _ => false,
+  };
+
+  static List<Map<String, Object?>> _v4SlotsFromNodes(Object? nodes) {
+    final cycleNodes = nodes is List
+        ? nodes
+              .whereType<Map>()
+              .where((node) => node['kind'] == 'cycle')
+              .toList()
+        : const <Map>[];
+    const defaults = [
+      ('leader-1', 'leader', 'forever-original-fsl-leader-v1'),
+      ('leader-2', 'leader', 'forever-original-fsl-leader-v1'),
+      ('anchor-1', 'anchor', 'forever-original-pr-set-anchor-v1'),
+    ];
+    return [
+      for (var index = 0; index < defaults.length; index++)
+        <String, Object?>{
+          'slotId': defaults[index].$1,
+          'role': defaults[index].$2,
+          'cycleTemplateRevisionId': defaults[index].$3,
+          if (index < cycleNodes.length)
+            'sourceNodeId': cycleNodes[index]['nodeId'],
+        },
+    ];
+  }
+
+  static List<Map<String, Object?>> _v4ProtocolsFromNodes(Object? nodes) {
+    final protocolNodes = nodes is List
+        ? nodes
+              .whereType<Map>()
+              .where((node) => node['kind'] == 'protocol')
+              .toList()
+        : const <Map>[];
+    return [
+      <String, Object?>{
+        'boundaryId': 'leaders-to-anchor',
+        'protocolTemplateRevisionId': 'forever-seventh-week-deload-v1',
+        'required': true,
+        if (protocolNodes.isNotEmpty)
+          'sourceNodeId': protocolNodes.first['nodeId'],
+      },
+      <String, Object?>{
+        'boundaryId': 'macrocycle-end',
+        'protocolTemplateRevisionId': 'forever-seventh-week-tm-test-v1',
+        'required': true,
+        if (protocolNodes.length > 1)
+          'sourceNodeId': protocolNodes[1]['nodeId'],
+      },
+    ];
   }
 
   static String _canonicalForeverId(String? id) =>

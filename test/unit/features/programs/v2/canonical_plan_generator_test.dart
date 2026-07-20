@@ -5,6 +5,8 @@ import 'package:hybrid_training/features/programs/domain/v2/generation/canonical
 import 'package:hybrid_training/features/programs/domain/v2/generation/generated_training_plan.dart';
 import 'package:hybrid_training/features/programs/domain/v2/program_domain.dart';
 import 'package:hybrid_training/features/programs/domain/v2/program_domain_validator.dart';
+import 'package:hybrid_training/features/poc_531/domain/planning/planning.dart'
+    as planning;
 
 void main() {
   const movements = [
@@ -30,6 +32,7 @@ void main() {
     List<int> weekdays = const [1, 2, 4, 5],
     Map<MovementId, double>? confirmed,
     Map<int, Map<MovementId, double>> foreverConfirmations = const {},
+    Map<String, Map<MovementId, double>> nodeConfirmations = const {},
   }) => CanonicalAthleteConfiguration(
     movementOrder: movements,
     trainingMaxes: trainingMaxes,
@@ -40,6 +43,7 @@ void main() {
     rounder: const LoadRounder(increment: 2.5),
     confirmedBeyondTrainingMaxes: confirmed,
     confirmedTrainingMaxesByWeek: foreverConfirmations,
+    confirmedTrainingMaxesByNode: nodeConfirmations,
   );
 
   test('Powerlifting standard creates three work weeks and typed deload', () {
@@ -294,6 +298,68 @@ void main() {
     expect(
       plan.weeks.last.sessions.first.prescriptions.last.calculatedLoad,
       115,
+    );
+  });
+
+  test('Forever follows the nodes and identifiers of a compiled sequence', () {
+    const source = planning.RuleSource(
+      document: '5/3/1 Forever',
+      location: 'PDF pages 29-33 and 180-182',
+    );
+    final sequence = planning.CompiledForeverSequence(
+      nodes: const [
+        planning.ForeverCycleNode(
+          nodeId: 'macro-7-C1',
+          source: source,
+          templateRevisionId: 'forever-original-531-fsl-v1',
+          cycleInstanceId: 'custom-anchor',
+          role: planning.CycleRole.anchor,
+          revision: planning.foreverOriginalFslCycleRevision,
+        ),
+        planning.ForeverProtocolNode(
+          nodeId: 'macro-7-P1',
+          source: source,
+          templateRevisionId: 'forever-seventh-week-tm-test-v1',
+          purpose: planning.ProtocolPurpose.seventhWeekTrainingMaxTest,
+          afterCycleInstanceId: 'custom-anchor',
+        ),
+      ],
+      trainingMaxDecisions: const [],
+    );
+    final confirmed = {
+      for (final movement in movements)
+        movement: trainingMaxes[movement]! + increments[movement]!,
+    };
+
+    final plan = const CanonicalPlanGenerator().generate(
+      blueprint: CanonicalGenerationBlueprint.foreverOriginalFsl,
+      athlete: athlete(nodeConfirmations: {'macro-7-C1': confirmed}),
+      foreverSequence: sequence,
+    );
+
+    expect(plan.blocks.map((block) => block.id), ['macro-7-C1', 'macro-7-P1']);
+    expect(plan.blocks.map((block) => block.role), [
+      BlockRole.anchor,
+      BlockRole.trainingMaxTest,
+    ]);
+    expect(plan.weeks, hasLength(4));
+    expect(plan.weeks.map((week) => week.cycleNumber).toSet(), {1});
+    expect(plan.trainingMaxTimeline, hasLength(8));
+  });
+
+  test('compiled Forever sequence is rejected for another generation', () {
+    final sequence = planning.CompiledForeverSequence(
+      nodes: const [],
+      trainingMaxDecisions: const [],
+    );
+
+    expect(
+      () => const CanonicalPlanGenerator().generate(
+        blueprint: CanonicalGenerationBlueprint.standardPowerlifting,
+        athlete: athlete(),
+        foreverSequence: sequence,
+      ),
+      throwsArgumentError,
     );
   });
 }

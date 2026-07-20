@@ -87,9 +87,7 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
     final configuration = planning.ForeverPlanningConfiguration(
       profile: profile,
       kind: planning.ForeverPlanKind.macrocycle,
-      firstLeader: planning.foreverOriginalFslCycleRevision,
-      secondLeader: planning.foreverOriginalFslCycleRevision,
-      anchor: planning.foreverOriginalFslCycleRevision,
+      series: planning.createForeverOriginalFslSeries(profile: profile),
     );
     return [
       for (final node
@@ -135,13 +133,14 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
   @override
   Future<List<GeneratorWarning>> validate(Map<String, Object?> value) async {
     if (value['mode'] == 'forever') {
-      final configuration = _foreverConfiguration(value);
-      if (configuration == null) return const [];
+      final request = _foreverRequest(value);
+      if (request == null) return const [];
       return [
-        for (final issue in forever.validateForeverCalculatorConfiguration(
-          configuration,
-        ))
-          GeneratorWarning(issue.message, isError: issue.blocking),
+        for (final configuration in request.configurations)
+          for (final issue in forever.validateForeverCalculatorConfiguration(
+            configuration,
+          ))
+            GeneratorWarning(issue.message, isError: issue.blocking),
       ];
     }
     final configuration = _classicConfiguration(value);
@@ -157,24 +156,52 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
   @override
   Future<GeneratorResult> generate(Map<String, Object?> value) async {
     if (value['mode'] == 'forever') {
-      final configuration = _foreverConfiguration(value);
-      if (configuration == null) {
+      final request = _foreverRequest(value);
+      if (request == null) {
         throw const FormatException('Configuration incomplète.');
       }
-      final plan = forever.generateForeverCalculatorProgram(configuration);
-      final definition = core.getProgramDefinition(plan.programId)!;
+      final plans = [
+        for (final configuration in request.configurations)
+          forever.generateForeverCalculatorProgram(configuration),
+      ];
+      final definition = core.getProgramDefinition(plans.first.programId)!;
       return GeneratorResult(
         title: definition.name,
-        blocks: _payloadToBlocks(plan.payload),
-        explanation: core.explainGeneratedProgram(plan),
+        blocks: [
+          for (var index = 0; index < plans.length; index++)
+            for (final block in _payloadToBlocks(plans[index].payload))
+              PlanBlockView(
+                request.isSeries
+                    ? '${request.macrocycles[index].instanceId} · ${block.name}'
+                    : block.name,
+                block.weeks,
+              ),
+        ],
+        explanation: core.explainGeneratedProgram(plans.first),
         sources: [
-          for (final source in plan.sources)
+          for (final source in plans.first.sources)
             '${source.title} · ${source.pages}',
         ],
         warnings: [
-          for (final warning in plan.warnings) GeneratorWarning(warning),
+          for (final warning in plans.expand((plan) => plan.warnings).toSet())
+            GeneratorWarning(warning),
         ],
-        exportJson: forever.serializeForeverCalculatorProgram(plan),
+        exportJson: request.isSeries
+            ? jsonEncode({
+                'schemaVersion': 4,
+                'seriesId': request.seriesId,
+                'terminated': request.terminated,
+                'macrocycles': [
+                  for (final metadata in request.preservedMacrocycles)
+                    {...metadata, 'preserved': true},
+                  for (var index = 0; index < plans.length; index++)
+                    {
+                      ...request.macrocycles[index].metadata,
+                      'generatedProgram': plans[index].toJson(),
+                    },
+                ],
+              })
+            : forever.serializeForeverCalculatorProgram(plans.single),
       );
     }
     final configuration = _classicConfiguration(value);
@@ -326,6 +353,130 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
     return result;
   }
 
+  _ForeverGenerationRequest? _foreverRequest(Map<String, Object?> value) {
+    if (value['schemaVersion'] != 4) {
+      final configuration = _foreverConfiguration(value);
+      return configuration == null
+          ? null
+          : _ForeverGenerationRequest.single(configuration);
+    }
+    final decoded = const Poc531ConfigurationCodec().decodeMap(value);
+    final foreverValue = decoded.forever!;
+    final standalone = foreverValue['standaloneProgramId'];
+    if (standalone is String) {
+      final configuration = _foreverConfiguration({
+        ...decoded.common,
+        'foreverTemplateId':
+            standalone == Poc531ConfigurationCodec.beginnerPrepSchoolId
+            ? 'FV-141'
+            : standalone,
+      });
+      return configuration == null
+          ? null
+          : _ForeverGenerationRequest.single(configuration);
+    }
+    final seriesValue = foreverValue['series'];
+    if (seriesValue is! Map) return null;
+    final rawMacrocycles = seriesValue['macrocycles'];
+    if (rawMacrocycles is! List || rawMacrocycles.isEmpty) return null;
+    final macrocycles = <_GeneratedMacrocycle>[];
+    final preservedMacrocycles = <Map<String, Object?>>[];
+    final configurations = <core.ProgramConfiguration>[];
+    final allIds = <String>{};
+    for (final raw in rawMacrocycles) {
+      if (raw is! Map) throw const FormatException('Macrocycle invalide.');
+      final macrocycle = {
+        for (final entry in raw.entries) '${entry.key}': entry.value,
+      };
+      final instanceId = macrocycle['instanceId'];
+      if (instanceId is! String ||
+          instanceId.trim().isEmpty ||
+          !allIds.add(instanceId)) {
+        throw const FormatException('Identifiant de macrocycle invalide.');
+      }
+      final status = '${macrocycle['status']}';
+      if (status == 'completed' || status == 'cancelled') {
+        // Historical macrocycles are intentionally absent from generation:
+        // their immutable snapshots remain owned by persistence.
+        preservedMacrocycles.add({
+          'instanceId': instanceId,
+          'intent': macrocycle['intent'],
+          'status': macrocycle['status'],
+          'recipeId': macrocycle['recipeId'],
+        });
+        continue;
+      }
+      if (macrocycle['recipeId'] != 'forever-2l1a-v2') {
+        throw FormatException(
+          'Recette Forever non exécutable: ${macrocycle['recipeId']}.',
+        );
+      }
+      _validateExecutableMacrocycle(macrocycle);
+      final configuration = _foreverConfiguration({
+        ...decoded.common,
+        'foreverTemplateId': 'FV-236',
+        'startDate': DateTime.utc(
+          2026,
+          1,
+          5,
+        ).add(Duration(days: configurations.length * 11 * 7)),
+      });
+      if (configuration == null) return null;
+      macrocycles.add(
+        _GeneratedMacrocycle(
+          instanceId: instanceId,
+          metadata: {
+            'instanceId': instanceId,
+            'intent': macrocycle['intent'],
+            'status': macrocycle['status'],
+            'recipeId': macrocycle['recipeId'],
+          },
+        ),
+      );
+      configurations.add(configuration);
+    }
+    if (configurations.isEmpty) {
+      throw const FormatException(
+        'Une série doit contenir un macrocycle futur à générer.',
+      );
+    }
+    return _ForeverGenerationRequest.series(
+      seriesId: '${seriesValue['id'] ?? 'forever-series-v1'}',
+      terminated: seriesValue['terminated'] == true,
+      preservedMacrocycles: preservedMacrocycles,
+      macrocycles: macrocycles,
+      configurations: configurations,
+    );
+  }
+
+  static void _validateExecutableMacrocycle(Map<String, Object?> macrocycle) {
+    final slots = macrocycle['slots'];
+    final protocols = macrocycle['protocols'];
+    if (slots is! List || protocols is! List) {
+      throw const FormatException('Slots ou protocoles manquants.');
+    }
+    final slotIds = slots
+        .whereType<Map>()
+        .map((slot) => slot['slotId'])
+        .toList();
+    if (slotIds.length != 3 ||
+        slotIds[0] != 'leader-1' ||
+        slotIds[1] != 'leader-2' ||
+        slotIds[2] != 'anchor-1') {
+      throw const FormatException('La recette 2L/1A exige ses trois slots.');
+    }
+    final protocolIds = protocols
+        .whereType<Map>()
+        .map((protocol) => protocol['protocolTemplateRevisionId'])
+        .toSet();
+    if (!protocolIds.contains('forever-seventh-week-deload-v1') ||
+        !protocolIds.contains('forever-seventh-week-tm-test-v1')) {
+      throw const FormatException(
+        'Les protocoles obligatoires de la recette sont absents.',
+      );
+    }
+  }
+
   core.ProgramConfiguration? _foreverConfiguration(Map<String, Object?> value) {
     final id = value['foreverTemplateId'] as String?;
     final lifts = _liftInputs(value);
@@ -345,7 +496,12 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
       options: const core.GenerationSpecificOptions(
         projectFutureTrainingMaxes: true,
       ),
-      startDate: DateTime.utc(2026, 1, 5),
+      startDate: switch (value['startDate']) {
+        final DateTime date => date,
+        final String encoded =>
+          DateTime.tryParse(encoded)?.toUtc() ?? DateTime.utc(2026, 1, 5),
+        _ => DateTime.utc(2026, 1, 5),
+      },
     );
   }
 
@@ -563,4 +719,58 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
             : '${word[0].toUpperCase()}${word.substring(1)}',
       )
       .join(' ');
+}
+
+class _ForeverGenerationRequest {
+  const _ForeverGenerationRequest._({
+    required this.seriesId,
+    required this.terminated,
+    required this.preservedMacrocycles,
+    required this.macrocycles,
+    required this.configurations,
+    required this.isSeries,
+  });
+
+  factory _ForeverGenerationRequest.single(
+    core.ProgramConfiguration configuration,
+  ) => _ForeverGenerationRequest._(
+    seriesId: '',
+    terminated: false,
+    preservedMacrocycles: const [],
+    macrocycles: const [_GeneratedMacrocycle(instanceId: 'M1', metadata: {})],
+    configurations: [configuration],
+    isSeries: false,
+  );
+
+  factory _ForeverGenerationRequest.series({
+    required String seriesId,
+    required bool terminated,
+    required List<Map<String, Object?>> preservedMacrocycles,
+    required List<_GeneratedMacrocycle> macrocycles,
+    required List<core.ProgramConfiguration> configurations,
+  }) => _ForeverGenerationRequest._(
+    seriesId: seriesId,
+    terminated: terminated,
+    preservedMacrocycles: List.unmodifiable(preservedMacrocycles),
+    macrocycles: List.unmodifiable(macrocycles),
+    configurations: List.unmodifiable(configurations),
+    isSeries: true,
+  );
+
+  final String seriesId;
+  final bool terminated;
+  final List<Map<String, Object?>> preservedMacrocycles;
+  final List<_GeneratedMacrocycle> macrocycles;
+  final List<core.ProgramConfiguration> configurations;
+  final bool isSeries;
+}
+
+class _GeneratedMacrocycle {
+  const _GeneratedMacrocycle({
+    required this.instanceId,
+    required this.metadata,
+  });
+
+  final String instanceId;
+  final Map<String, Object?> metadata;
 }

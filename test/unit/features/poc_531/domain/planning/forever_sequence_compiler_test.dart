@@ -14,9 +14,10 @@ void main() {
   }) => ForeverPlanningConfiguration(
     profile: trainingProfile ?? profile(),
     kind: ForeverPlanKind.macrocycle,
-    firstLeader: foreverOriginalFslCycleRevision,
-    secondLeader: secondLeader,
-    anchor: foreverOriginalFslCycleRevision,
+    series: createForeverOriginalFslSeries(
+      profile: trainingProfile ?? profile(),
+      secondLeader: secondLeader,
+    ),
   );
 
   group('ForeverSequenceCompiler', () {
@@ -24,11 +25,11 @@ void main() {
       final result = const ForeverSequenceCompiler().compile(configuration());
 
       expect(result.nodes.map((node) => node.nodeId), [
-        'C1',
-        'C2',
-        'P1',
-        'C3',
-        'P2',
+        'M1-C1',
+        'M1-C2',
+        'M1-P1',
+        'M1-C3',
+        'M1-P2',
       ]);
       expect(
         result.nodes.whereType<ForeverCycleNode>().map((node) => node.role),
@@ -49,8 +50,8 @@ void main() {
       final result = const ForeverSequenceCompiler().compile(configuration());
       final protocols = result.nodes.whereType<ForeverProtocolNode>().toList();
 
-      expect(protocols[0].afterCycleInstanceId, 'leader-2');
-      expect(protocols[1].afterCycleInstanceId, 'anchor-1');
+      expect(protocols[0].afterCycleInstanceId, 'M1-leader-2');
+      expect(protocols[1].afterCycleInstanceId, 'M1-anchor-1');
       expect(protocols.every((node) => node.autoInserted), isTrue);
     });
 
@@ -58,14 +59,14 @@ void main() {
       final result = const ForeverSequenceCompiler().compile(configuration());
 
       expect(result.trainingMaxDecisions.map((item) => item.nodeId), [
-        'C1',
-        'C2',
-        'C3',
+        'M1-C1',
+        'M1-C2',
+        'M1-C3',
       ]);
       expect(result.trainingMaxDecisions.map((item) => item.cycleInstanceId), [
-        'leader-1',
-        'leader-2',
-        'anchor-1',
+        'M1-leader-1',
+        'M1-leader-2',
+        'M1-anchor-1',
       ]);
       expect(result.trainingMaxDecisions[0].proposedTrainingMaxes, {
         'press': 52.5,

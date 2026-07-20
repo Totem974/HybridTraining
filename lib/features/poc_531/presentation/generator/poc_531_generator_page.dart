@@ -246,6 +246,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   PlateLoadingView? _loading;
   int _requestRevision = 0;
   int? _busyRevision;
+  int _foreverStep = 2;
 
   List<CalculatorTemplateChoice> get _classic {
     if (widget.core.options.classicTemplates.isNotEmpty) {
@@ -448,77 +449,81 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                     const SizedBox(height: 16),
                     _modeSelector(),
                     const SizedBox(height: 24),
-                    LayoutBuilder(
-                      builder: (context, box) => box.maxWidth > 850
-                          ? Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(child: _weight()),
-                                const SizedBox(width: 18),
-                                Expanded(child: _templatePanel()),
-                              ],
-                            )
-                          : Column(
-                              children: [
-                                _weight(),
-                                const SizedBox(height: 18),
-                                _templatePanel(),
-                              ],
-                            ),
-                    ),
-                    const SizedBox(height: 24),
-                    _heading('ADDITIONAL OPTIONS'),
-                    _additional(),
-                    const SizedBox(height: 24),
-                    _heading('PLATING & BARBELL'),
-                    _plating(),
-                    const SizedBox(height: 24),
-                    LayoutBuilder(
-                      builder: (context, box) => box.maxWidth > 700
-                          ? Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      _heading('SCHEDULING'),
-                                      _scheduling(),
-                                    ],
+                    if (_mode == 'forever')
+                      _foreverComposer()
+                    else ...[
+                      LayoutBuilder(
+                        builder: (context, box) => box.maxWidth > 850
+                            ? Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(child: _weight()),
+                                  const SizedBox(width: 18),
+                                  Expanded(child: _templatePanel()),
+                                ],
+                              )
+                            : Column(
+                                children: [
+                                  _weight(),
+                                  const SizedBox(height: 18),
+                                  _templatePanel(),
+                                ],
+                              ),
+                      ),
+                      const SizedBox(height: 24),
+                      _heading('ADDITIONAL OPTIONS'),
+                      _additional(),
+                      const SizedBox(height: 24),
+                      _heading('PLATING & BARBELL'),
+                      _plating(),
+                      const SizedBox(height: 24),
+                      LayoutBuilder(
+                        builder: (context, box) => box.maxWidth > 700
+                            ? Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        _heading('SCHEDULING'),
+                                        _scheduling(),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 18),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      _heading('OUTPUT'),
-                                      _outputActions(),
-                                    ],
+                                  const SizedBox(width: 18),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        _heading('OUTPUT'),
+                                        _outputActions(),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            )
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                _heading('SCHEDULING'),
-                                _scheduling(),
-                                const SizedBox(height: 18),
-                                _heading('OUTPUT'),
-                                _outputActions(),
-                              ],
-                            ),
-                    ),
-                    if (_warnings.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      for (final w in _warnings) _notice(w),
+                                ],
+                              )
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _heading('SCHEDULING'),
+                                  _scheduling(),
+                                  const SizedBox(height: 18),
+                                  _heading('OUTPUT'),
+                                  _outputActions(),
+                                ],
+                              ),
+                      ),
+                      if (_warnings.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        for (final w in _warnings) _notice(w),
+                      ],
+                      const SizedBox(height: 26),
+                      _heading('PROGRAM'),
+                      _program(),
                     ],
-                    const SizedBox(height: 26),
-                    _heading('PROGRAM'),
-                    _program(),
                   ],
                 ),
               ),
@@ -527,6 +532,244 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
         ),
       ),
     ),
+  );
+
+  bool get _isFrench => Localizations.localeOf(context).languageCode == 'fr';
+
+  List<String> get _foreverStepLabels => _isFrench
+      ? const [
+          'Type',
+          'Horizon',
+          'Architecture',
+          'Leaders',
+          'Anchors',
+          'Protocoles',
+          'Options',
+          'Résumé',
+        ]
+      : const [
+          'Type',
+          'Horizon',
+          'Architecture',
+          'Leaders',
+          'Anchors',
+          'Protocols',
+          'Options',
+          'Summary',
+        ];
+
+  Widget _foreverComposer() => CallbackShortcuts(
+    bindings: {
+      const SingleActivator(LogicalKeyboardKey.arrowRight): _nextForeverStep,
+      const SingleActivator(LogicalKeyboardKey.arrowLeft): _previousForeverStep,
+    },
+    child: Focus(
+      autofocus: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            container: true,
+            label: _isFrench
+                ? 'Composeur Forever, 8 étapes'
+                : 'Forever composer, 8 steps',
+            child: Wrap(
+              key: const Key('forever-eight-stepper'),
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (var index = 0; index < _foreverStepLabels.length; index++)
+                  ChoiceChip(
+                    key: ValueKey('forever-step-$index'),
+                    selected: index == _foreverStep,
+                    label: Text('${index + 1}. ${_foreverStepLabels[index]}'),
+                    onSelected: (_) => setState(() => _foreverStep = index),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _foreverStepHelp(),
+          const SizedBox(height: 16),
+          _templatePanel(),
+          const SizedBox(height: 16),
+          _foreverMacrocyclePreview(),
+          const SizedBox(height: 16),
+          LayoutBuilder(
+            builder: (context, box) => box.maxWidth >= 700
+                ? Row(
+                    children: [
+                      Expanded(child: _weight()),
+                      const SizedBox(width: 18),
+                      Expanded(child: _foreverActions()),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _weight(),
+                      const SizedBox(height: 18),
+                      _foreverActions(),
+                    ],
+                  ),
+          ),
+          if (_warnings.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            for (final warning in _warnings) _notice(warning),
+          ],
+          const SizedBox(height: 24),
+          _heading(_isFrench ? 'PROGRAMME' : 'PROGRAM'),
+          _program(),
+        ],
+      ),
+    ),
+  );
+
+  Widget _foreverStepHelp() => _card(
+    Row(
+      children: [
+        IconButton(
+          key: const Key('forever-step-previous'),
+          tooltip: _isFrench ? 'Étape précédente' : 'Previous step',
+          onPressed: _foreverStep == 0 ? null : _previousForeverStep,
+          icon: const Icon(Icons.arrow_back),
+        ),
+        Expanded(
+          child: Text(
+            _foreverStepDescription(_foreverStep),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        IconButton(
+          key: const Key('forever-step-next'),
+          tooltip: _isFrench ? 'Étape suivante' : 'Next step',
+          onPressed: _foreverStep == 7 ? null : _nextForeverStep,
+          icon: const Icon(Icons.arrow_forward),
+        ),
+      ],
+    ),
+  );
+
+  String _foreverStepDescription(int step) {
+    final fr = _isFrench;
+    return switch (step) {
+      0 => fr ? 'Choisissez le type de plan.' : 'Choose the plan type.',
+      1 =>
+        fr
+            ? 'Un macrocycle est généré à la fois.'
+            : 'One macrocycle is generated at a time.',
+      2 =>
+        fr
+            ? 'Vérifiez la séquence complète avant génération.'
+            : 'Review the complete sequence before generation.',
+      3 => fr ? 'C2 reprend C1 par défaut.' : 'C2 uses C1 by default.',
+      4 => fr ? 'Vérifiez le bloc Anchor.' : 'Review the Anchor block.',
+      5 =>
+        fr
+            ? 'Les protocoles obligatoires sont verrouillés.'
+            : 'Required protocols are locked.',
+      6 =>
+        fr
+            ? 'Réglez uniquement les options disponibles.'
+            : 'Set only the available options.',
+      _ =>
+        fr
+            ? 'Contrôlez le résumé puis générez le programme.'
+            : 'Review the summary, then generate the program.',
+    };
+  }
+
+  void _nextForeverStep() =>
+      setState(() => _foreverStep = (_foreverStep + 1).clamp(0, 7));
+
+  void _previousForeverStep() =>
+      setState(() => _foreverStep = (_foreverStep - 1).clamp(0, 7));
+
+  Widget _foreverMacrocyclePreview() => Semantics(
+    label: _isFrench ? 'Horizon des macrocycles' : 'Macrocycle horizon',
+    child: LayoutBuilder(
+      builder: (context, box) {
+        final cards = [
+          _macrocycleCard('M1', _isFrench ? 'Actif' : 'Active', true),
+          _macrocycleCard('M2', _isFrench ? 'Projeté' : 'Projected', false),
+          _macrocycleCard('M3', _isFrench ? 'Projeté' : 'Projected', false),
+        ];
+        return box.maxWidth >= 620
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var index = 0; index < cards.length; index++) ...[
+                    if (index > 0) const SizedBox(width: 10),
+                    Expanded(child: cards[index]),
+                  ],
+                ],
+              )
+            : Column(
+                children: [
+                  for (final card in cards) ...[
+                    card,
+                    const SizedBox(height: 8),
+                  ],
+                ],
+              );
+      },
+    ),
+  );
+
+  Widget _macrocycleCard(String id, String status, bool active) => _card(
+    Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('$id · $status', style: _label),
+        const SizedBox(height: 6),
+        Text(
+          active
+              ? (_foreverTemplate?.sequence.join(' → ') ?? '—')
+              : (_isFrench
+                    ? 'Aperçu uniquement · non matérialisé'
+                    : 'Preview only · not materialized'),
+          style: const TextStyle(color: Colors.white70),
+        ),
+      ],
+    ),
+  );
+
+  Widget _foreverActions() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      _heading(_isFrench ? 'CONTINUATION' : 'CONTINUATION'),
+      _card(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              _isFrench
+                  ? 'Après M1, choisissez une action pour le futur. Le macrocycle terminé reste inchangé.'
+                  : 'After M1, choose an action for the future. The completed macrocycle stays unchanged.',
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              key: const Key('continue-next-macrocycle'),
+              onPressed: null,
+              icon: const Icon(Icons.add),
+              label: Text(
+                _isFrench
+                    ? 'Ajouter le macrocycle suivant'
+                    : 'Add next macrocycle',
+              ),
+            ),
+            Text(
+              _isFrench
+                  ? 'Disponible une fois M1 terminé.'
+                  : 'Available once M1 is complete.',
+              style: const TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 12),
+            _outputActions(),
+          ],
+        ),
+      ),
+    ],
   );
 
   Widget _header() => Row(

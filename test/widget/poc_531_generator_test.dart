@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/features/poc_531/presentation/generator/poc_531_generator_core_adapter.dart';
 import 'package:hybrid_training/features/poc_531/presentation/generator/poc_531_generator_page.dart';
@@ -107,6 +109,91 @@ void main() {
     expect(find.byKey(const Key('forever-timeline')), findsOneWidget);
     expect(find.text('7th Week Deload'), findsOneWidget);
     expect(find.text('7th Week Training Max Test'), findsOneWidget);
+  });
+
+  testWidgets('Forever exposes eight localized composer steps and horizon', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 1800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      const MaterialApp(
+        locale: Locale('fr'),
+        supportedLocales: [Locale('fr'), Locale('en')],
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: Poc531GeneratorPage(
+          core: DomainPoc531GeneratorCore(),
+          initialConfiguration: {'mode': 'forever'},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('forever-eight-stepper')), findsOneWidget);
+    for (var index = 0; index < 8; index++) {
+      expect(find.byKey(ValueKey('forever-step-$index')), findsOneWidget);
+    }
+    expect(find.text('3. Architecture'), findsOneWidget);
+    expect(find.text('8. Résumé'), findsOneWidget);
+    expect(find.text('M1 · Actif'), findsOneWidget);
+    expect(find.text('M2 · Projeté'), findsOneWidget);
+    expect(find.text('M3 · Projeté'), findsOneWidget);
+    expect(find.byKey(const Key('continue-next-macrocycle')), findsOneWidget);
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.byKey(const Key('continue-next-macrocycle')),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Forever stepper follows keyboard arrows in English', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 1800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      const MaterialApp(
+        locale: Locale('en'),
+        supportedLocales: [Locale('fr'), Locale('en')],
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: Poc531GeneratorPage(
+          core: DomainPoc531GeneratorCore(),
+          initialConfiguration: {'mode': 'forever'},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('8. Summary'), findsOneWidget);
+    expect(
+      find.text('Review the complete sequence before generation.'),
+      findsOneWidget,
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+    await tester.pump();
+    expect(find.text('C2 uses C1 by default.'), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+    await tester.pump();
+    expect(
+      find.text('Review the complete sequence before generation.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('mode selector preserves common inputs and both mode drafts', (
