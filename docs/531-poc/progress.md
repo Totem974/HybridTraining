@@ -117,3 +117,21 @@
 - Joker targets are generated every +5% through the selected cap.
 - Empty executable-variant lists cannot create an empty `SegmentedButton`.
 - Forever sessions render readable prescriptions instead of raw JSON cards.
+
+## Calculator interaction and Forever repair — complete
+
+- The complete plate inventory from 50 to 0.125 is available.
+- Lift scheduling uses accessible numbered drag targets; Bastard work order is
+  carried into the classic engine and changes the generated main-work order.
+- BBB exposes its variants plus shared or per-lift supplemental ratios.
+- Bodyweight displays the exact set distribution, and single-definition
+  templates no longer display a meaningless Variant control.
+- Simplest Strength accepts its four secondary max inputs with rep-max or direct
+  Training Max modes; For Beginners exposes its Intermediate switch.
+- Forever rendering now preserves blocks, cycles, weeks, sessions and nested
+  prescriptions. Stale asynchronous Classic results can no longer overwrite a
+  newly selected Forever program.
+- Three-session weeks distribute their cards across the complete available
+  width. Text and reorder-chip contrast were strengthened.
+- Final validation: static analysis clean, 228 tests passed, Web release build
+  passed, and POC Core/catalog/application line coverage is 93.25%.

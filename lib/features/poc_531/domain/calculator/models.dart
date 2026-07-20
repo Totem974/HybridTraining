@@ -93,6 +93,7 @@ class CalculatorOptions {
     this.jokerCapPercent = 10,
     this.deload = DeloadOption.deload1,
     this.skipWarmupDuringDeload = false,
+    this.bastardWorkOrder = false,
   });
   final MainWorkOrder order;
   final WarmupOption warmup;
@@ -101,6 +102,7 @@ class CalculatorOptions {
   final int jokerCapPercent;
   final DeloadOption deload;
   final bool skipWarmupDuringDeload;
+  final bool bastardWorkOrder;
   Map<String, Object?> toJson() => {
     'order': order.name,
     'warmup': warmup.name,
@@ -109,6 +111,7 @@ class CalculatorOptions {
     'jokerCapPercent': jokerCapPercent,
     'deload': deload.name,
     'skipWarmupDuringDeload': skipWarmupDuringDeload,
+    'bastardWorkOrder': bastardWorkOrder,
   };
 }
 
@@ -121,6 +124,7 @@ class CalculatorConfiguration {
     this.unit = 'kg',
     this.options = const CalculatorOptions(),
     this.supplementalPercent = 50,
+    Map<String, int> bbbPercents = const {},
     this.warmupBaseUpper = 20,
     this.warmupBaseLower = 20,
     this.bodyweightTotalReps = 75,
@@ -129,10 +133,16 @@ class CalculatorConfiguration {
     this.fslRepCount = 5,
     this.gvtPercent = 30,
     this.gvtLessBoring = false,
+    this.beginnerIntermediate = false,
+    Map<String, double> simplestStrengthTrainingMaxes = const {},
     Map<String, int> gvtPercents = const {},
     List<String> liftOrder = const ['press', 'deadlift', 'bench', 'squat'],
   }) : trainingMaxes = Map.unmodifiable(trainingMaxes),
        gvtPercents = Map.unmodifiable(gvtPercents),
+       bbbPercents = Map.unmodifiable(bbbPercents),
+       simplestStrengthTrainingMaxes = Map.unmodifiable(
+         simplestStrengthTrainingMaxes,
+       ),
        liftOrder = List.unmodifiable(liftOrder);
   final CalculatorTemplateId template;
   final String variantId;
@@ -141,6 +151,7 @@ class CalculatorConfiguration {
   final String unit;
   final CalculatorOptions options;
   final int supplementalPercent;
+  final Map<String, int> bbbPercents;
   final double warmupBaseUpper;
   final double warmupBaseLower;
   final int bodyweightTotalReps;
@@ -149,6 +160,8 @@ class CalculatorConfiguration {
   final int fslRepCount;
   final int gvtPercent;
   final bool gvtLessBoring;
+  final bool beginnerIntermediate;
+  final Map<String, double> simplestStrengthTrainingMaxes;
   final Map<String, int> gvtPercents;
   final List<String> liftOrder;
   Map<String, Object?> toJson() => {
@@ -159,6 +172,7 @@ class CalculatorConfiguration {
     'daysPerWeek': daysPerWeek,
     'unit': unit,
     'supplementalPercent': supplementalPercent,
+    'bbbPercents': bbbPercents,
     'warmupBaseUpper': warmupBaseUpper,
     'warmupBaseLower': warmupBaseLower,
     'bodyweightTotalReps': bodyweightTotalReps,
@@ -167,6 +181,8 @@ class CalculatorConfiguration {
     'fslRepCount': fslRepCount,
     'gvtPercent': gvtPercent,
     'gvtLessBoring': gvtLessBoring,
+    'beginnerIntermediate': beginnerIntermediate,
+    'simplestStrengthTrainingMaxes': simplestStrengthTrainingMaxes,
     'gvtPercents': gvtPercents,
     'options': options.toJson(),
     'liftOrder': liftOrder,

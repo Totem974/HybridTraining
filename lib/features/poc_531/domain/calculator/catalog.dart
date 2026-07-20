@@ -156,11 +156,9 @@ const calculatorTemplates = <TemplateDefinition>[
       VariantDefinition(
         id: 'original',
         label: 'Original',
-        status: EvidenceStatus.needsReview,
+        status: EvidenceStatus.executable,
         allowedDays: {3},
         sources: [_originalSchedules],
-        blockedReason:
-            'La rotation exacte des deux lifts par séance doit être encodée sans l’aplatir dans le modèle quatre-lifts.',
       ),
     ],
   ),
@@ -299,6 +297,14 @@ const calculatorTemplates = <TemplateDefinition>[
         sources: [_bbb],
         blockedReason:
             'Le challenge de trois mois requiert un modèle multi-cycle avec progression de Training Max.',
+      ),
+      VariantDefinition(
+        id: 'thirteen-week',
+        label: '13 Week Challenge',
+        status: EvidenceStatus.needsReview,
+        sources: [_bbb],
+        blockedReason:
+            'Le challenge de treize semaines requiert un modèle multi-cycle avec progression de Training Max.',
       ),
     ],
   ),

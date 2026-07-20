@@ -80,6 +80,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Triumvirate').last);
       await tester.pumpAndSettle();
+      expect(find.byKey(const Key('variant')), findsNothing);
       await tester.tap(find.text('Charger un exemple'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Dips'), findsWidgets);
@@ -98,6 +99,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Reps / exercise'), findsOneWidget);
     expect(find.text('Sets'), findsOneWidget);
+    expect(find.textContaining('Your sets will be divided'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -132,7 +134,53 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('export-json')), findsOneWidget);
     expect(find.textContaining('"prescriptions"'), findsNothing);
+    expect(
+      find.text('Prescription disponible dans l’export JSON.'),
+      findsNothing,
+    );
     expect(find.textContaining('MAIN'), findsWidgets);
+  });
+
+  testWidgets('BBB exposes variants and same or per-lift ratios', (
+    tester,
+  ) async {
+    await openCalculator(tester);
+    expect(find.byKey(const Key('variant')), findsOneWidget);
+    expect(find.text('Use same ratio for all lifts'), findsOneWidget);
+    await tester.tap(find.text('Use same ratio for all lifts'));
+    await tester.pumpAndSettle();
+    expect(find.text('Press ratio'), findsOneWidget);
+    expect(find.text('Deadlift ratio'), findsOneWidget);
+  });
+
+  testWidgets('Simplest Strength exposes four secondary max inputs', (
+    tester,
+  ) async {
+    await openCalculator(tester);
+    await tester.tap(find.byKey(const Key('program')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Simplest Strength').last);
+    await tester.pumpAndSettle();
+    for (final lift in [
+      'Close Grip Bench',
+      'Incline Press',
+      'Front Squat',
+      'Straight Leg Deadlift',
+    ]) {
+      expect(find.text(lift), findsOneWidget);
+      expect(
+        find.byKey(ValueKey('simplest-strength-weight-$lift')),
+        findsOneWidget,
+      );
+    }
+  });
+
+  testWidgets('Scheduling exposes drag handles and Bastard work order', (
+    tester,
+  ) async {
+    await openCalculator(tester);
+    expect(find.byType(LongPressDraggable<String>), findsNWidgets(4));
+    expect(find.text('Bastard work order'), findsOneWidget);
   });
 
   testWidgets('GVT is selectable and exposes its sourced ratio options', (

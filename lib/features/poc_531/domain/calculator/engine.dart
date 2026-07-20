@@ -98,6 +98,38 @@ class ClassicCalculatorEngine {
         ),
       );
     }
+    if (configuration.bbbPercents.values.any(
+      (value) => value < 0 || value > 100,
+    )) {
+      issues.add(
+        const CalculatorIssue(
+          'invalid_bbb_percent',
+          'BBB percentages must be between 0 and 100.',
+          field: 'bbbPercents',
+        ),
+      );
+    }
+    if (configuration.template == CalculatorTemplateId.simplestStrength &&
+        (configuration.simplestStrengthTrainingMaxes.length !=
+                canonicalLifts.length ||
+            !configuration.simplestStrengthTrainingMaxes.keys.every(
+              canonicalLifts.contains,
+            ) ||
+            configuration.simplestStrengthTrainingMaxes.keys
+                .toSet()
+                .difference(canonicalLifts)
+                .isNotEmpty ||
+            configuration.simplestStrengthTrainingMaxes.values.any(
+              (value) => value <= 0 || !value.isFinite,
+            ))) {
+      issues.add(
+        const CalculatorIssue(
+          'invalid_simplest_strength_maxes',
+          'Simplest Strength secondary Training Maxes must use canonical lifts and positive values.',
+          field: 'simplestStrengthTrainingMaxes',
+        ),
+      );
+    }
     if (configuration.warmupBaseUpper < 0 ||
         configuration.warmupBaseLower < 0) {
       issues.add(
@@ -297,15 +329,17 @@ class ClassicCalculatorEngine {
           sets.addAll(_highIntensity(configuration, lift, tm));
         } else {
           sets.addAll(
-            List.generate(
-              3,
-              (index) => CalculatorSet(
+            List.generate(3, (position) {
+              final index = configuration.options.bastardWorkOrder
+                  ? 2 - position
+                  : position;
+              return CalculatorSet(
                 repetitions: repetitions[index],
                 percent: percentages[index],
                 weight: _round(tm * percentages[index] / 100),
                 amrap: index == 2 && !suppressAmrap,
-              ),
-            ),
+              );
+            }),
           );
         }
         if (sourceWeek != null) {
@@ -363,7 +397,7 @@ class ClassicCalculatorEngine {
       switch (option) {
         DeloadOption.deload1 => (const [40, 50, 60], const [5, 5, 5]),
         DeloadOption.deload2 => (const [50, 60, 70], const [5, 5, 5]),
-        DeloadOption.deload3 => (const [65, 75, 85], const [3, 3, 3]),
+        DeloadOption.deload3 => (const [65, 76, 85], const [3, 3, 3]),
         DeloadOption.deload4 => (const [40, 50, 60], const [10, 8, 6]),
         DeloadOption.deload5 => (const [50, 60, 70], const [10, 8, 6]),
         DeloadOption.highIntensity => (const <int>[], const <int>[]),
@@ -401,15 +435,16 @@ class ClassicCalculatorEngine {
         ? configuration.warmupBaseUpper
         : configuration.warmupBaseLower;
     final result = <CalculatorSet>[];
+    final step = tm * .1;
     for (
       var percent = firstWorkPercent - 10;
-      percent > 0 && _round(tm * percent / 100) > base;
+      percent > 0 && tm * percent / 100 > base + .25 * step;
       percent -= 10
     ) {
       result.insert(
         0,
         CalculatorSet(
-          repetitions: 5,
+          repetitions: percent > 50 ? 3 : 5,
           percent: percent,
           weight: _round(tm * percent / 100),
           kind: 'warmup',
@@ -418,7 +453,21 @@ class ClassicCalculatorEngine {
     }
     result.insert(
       0,
-      CalculatorSet(repetitions: 10, percent: 0, weight: base, kind: 'warmup'),
+      CalculatorSet(
+        repetitions: 5,
+        percent: 0,
+        weight: _round(base),
+        kind: 'warmup',
+      ),
+    );
+    result.insert(
+      0,
+      const CalculatorSet(
+        repetitions: 10,
+        percent: 0,
+        weight: 0,
+        kind: 'warmup',
+      ),
     );
     return result;
   }
@@ -428,30 +477,22 @@ class ClassicCalculatorEngine {
     String lift,
     double tm,
   ) {
-    final base = _isUpper(lift)
-        ? configuration.warmupBaseUpper
-        : configuration.warmupBaseLower;
+    final base = configuration.unit == 'lb'
+        ? (_isUpper(lift) ? 95.0 : 135.0)
+        : (_isUpper(lift) ? 45.0 : 60.0);
     final sets = <CalculatorSet>[
-      CalculatorSet(
-        repetitions: 10,
-        percent: 0,
-        weight: roundingIncrement,
-        kind: 'deload',
-      ),
+      CalculatorSet(repetitions: 10, percent: 0, weight: 0, kind: 'deload'),
       CalculatorSet(repetitions: 5, percent: 0, weight: base, kind: 'deload'),
     ];
-    for (var percent = 10; percent < 95; percent += 10) {
-      final weight = _round(tm * percent / 100);
-      if (weight > base) {
-        sets.add(
-          CalculatorSet(
-            repetitions: 5,
-            percent: percent,
-            weight: weight,
-            kind: 'deload',
-          ),
-        );
-      }
+    for (var weight = 1.1 * base; weight < .95 * tm; weight += .1 * tm) {
+      sets.add(
+        CalculatorSet(
+          repetitions: weight > .8 * tm ? 1 : 3,
+          percent: (weight / tm * 100).round(),
+          weight: _round(weight),
+          kind: 'deload',
+        ),
+      );
     }
     sets.add(
       CalculatorSet(
@@ -494,7 +535,8 @@ class ClassicCalculatorEngine {
         '5x5' => 80,
         '5x3' => 90,
         '5x1' => 100,
-        _ => configuration.supplementalPercent,
+        _ =>
+          configuration.bbbPercents[lift] ?? configuration.supplementalPercent,
       };
       final reps = switch (configuration.variantId) {
         '5x5' => 5,
@@ -512,6 +554,28 @@ class ClassicCalculatorEngine {
             weight: _round(supplementalTm * weeklyPercent / 100),
             kind: 'supplemental',
           ),
+        ),
+      );
+      final assistanceExercise = configuration.variantId == 'two-days'
+          ? const {
+              'press': 'Pull-up',
+              'bench': 'Dumbbell Row',
+              'squat': 'Good Morning',
+              'deadlift': 'Good Morning',
+            }[lift]!
+          : const {
+              'press': 'Pull-up',
+              'bench': 'Dumbbell Row',
+              'squat': 'Hamstring Curl',
+              'deadlift': 'Hanging Leg Raise',
+            }[lift]!;
+      sets.addAll(
+        _assistance(
+          assistanceExercise,
+          5,
+          configuration.variantId == 'two-days'
+              ? 10
+              : (lift == 'deadlift' ? 15 : 10),
         ),
       );
     } else if (configuration.template == CalculatorTemplateId.pyramid) {
@@ -560,13 +624,15 @@ class ClassicCalculatorEngine {
         [8, 8, 8],
         [5, 5, 5],
       ];
+      final secondaryTm =
+          configuration.simplestStrengthTrainingMaxes[lift] ?? tm;
       for (var setIndex = 0; setIndex < 3; setIndex++) {
         final percent = simplestPercentages[index][setIndex];
         sets.add(
           CalculatorSet(
             repetitions: simplestReps[index][setIndex],
             percent: percent,
-            weight: _round(tm * percent / 100),
+            weight: _round(secondaryTm * percent / 100),
             kind: 'supplemental',
             exercise: _simplestSupplemental[lift],
           ),
@@ -575,6 +641,49 @@ class ClassicCalculatorEngine {
       for (final exercise in _simplestAssistance[lift]!) {
         sets.addAll(_assistance(exercise, 3, 12));
       }
+    } else if (configuration.template == CalculatorTemplateId.forBeginners) {
+      final secondaryPercentages = configuration.beginnerIntermediate
+          ? const [45, 55, 65]
+          : const [55, 65, 75];
+      final secondaryLift = lift == 'squat'
+          ? 'bench'
+          : lift == 'bench'
+          ? 'squat'
+          : null;
+      if (secondaryLift != null) {
+        final secondaryTm = configuration.trainingMaxes[secondaryLift]!;
+        for (final percent in secondaryPercentages) {
+          sets.add(
+            CalculatorSet(
+              repetitions: 5,
+              percent: percent,
+              weight: _round(secondaryTm * percent / 100),
+              kind: 'supplemental',
+              exercise: secondaryLift,
+            ),
+          );
+        }
+      } else if (lift == 'deadlift') {
+        final pressTm = configuration.trainingMaxes['press']!;
+        for (var index = 0; index < 3; index++) {
+          sets.add(
+            CalculatorSet(
+              repetitions: repetitions[index],
+              percent: percentages[index],
+              weight: _round(pressTm * percentages[index] / 100),
+              amrap: index == 2,
+              kind: 'supplemental',
+              exercise: 'press',
+            ),
+          );
+        }
+      }
+      final assistance = const {
+        'press': 'Dips',
+        'bench': 'Biceps Curl',
+        'deadlift': 'Pull-up',
+      }[lift];
+      if (assistance != null) sets.addAll(_assistance(assistance, 3, 10));
     } else if (configuration.template == CalculatorTemplateId.triumvirate) {
       final prescriptions = _triumvirate[lift]!;
       for (final prescription in prescriptions) {
@@ -730,6 +839,8 @@ class ClassicCalculatorEngine {
       daysPerWeek: json['daysPerWeek'] as int,
       unit: json['unit'] as String? ?? 'kg',
       supplementalPercent: json['supplementalPercent'] as int? ?? 50,
+      bbbPercents: (json['bbbPercents'] as Map<String, dynamic>? ?? const {})
+          .map((key, value) => MapEntry(key, value as int)),
       warmupBaseUpper: (json['warmupBaseUpper'] as num?)?.toDouble() ?? 20,
       warmupBaseLower: (json['warmupBaseLower'] as num?)?.toDouble() ?? 20,
       bodyweightTotalReps: json['bodyweightTotalReps'] as int? ?? 75,
@@ -738,6 +849,11 @@ class ClassicCalculatorEngine {
       fslRepCount: json['fslRepCount'] as int? ?? 5,
       gvtPercent: json['gvtPercent'] as int? ?? 30,
       gvtLessBoring: json['gvtLessBoring'] as bool? ?? false,
+      beginnerIntermediate: json['beginnerIntermediate'] as bool? ?? false,
+      simplestStrengthTrainingMaxes:
+          (json['simplestStrengthTrainingMaxes'] as Map<String, dynamic>? ??
+                  const {})
+              .map((key, value) => MapEntry(key, (value as num).toDouble())),
       gvtPercents: (json['gvtPercents'] as Map<String, dynamic>? ?? const {})
           .map((key, value) => MapEntry(key, value as int)),
       liftOrder: (json['liftOrder'] as List).cast<String>(),
@@ -749,6 +865,7 @@ class ClassicCalculatorEngine {
         jokerCapPercent: options['jokerCapPercent'] as int,
         deload: DeloadOption.values.byName(options['deload'] as String),
         skipWarmupDuringDeload: options['skipWarmupDuringDeload'] as bool,
+        bastardWorkOrder: options['bastardWorkOrder'] as bool? ?? false,
       ),
     );
   }

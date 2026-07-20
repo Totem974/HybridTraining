@@ -166,6 +166,12 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
       daysPerWeek: value['days'] as int? ?? 4,
       unit: value['unit'] as String? ?? 'kg',
       supplementalPercent: value['supplementalPercent'] as int? ?? 50,
+      bbbPercents:
+          value['bbbUseSameRatio'] == false && value['bbbRatiosByLift'] is Map
+          ? (value['bbbRatiosByLift'] as Map).map(
+              (key, ratio) => MapEntry('$key', ratio as int),
+            )
+          : const {},
       bodyweightTotalReps: value['bodyweightTotalReps'] as int? ?? 75,
       bodyweightSetCount: value['bodyweightSetCount'] as int? ?? 5,
       fslSetCount: value['fslSetCount'] as int? ?? 3,
@@ -178,6 +184,8 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
               (key, ratio) => MapEntry('$key', ratio as int),
             )
           : const {},
+      beginnerIntermediate: value['beginnerIntermediate'] as bool? ?? false,
+      simplestStrengthTrainingMaxes: _simplestStrengthTrainingMaxes(value),
       liftOrder:
           (value['liftOrder'] as List?)?.cast<String>() ??
           const ['press', 'deadlift', 'bench', 'squat'],
@@ -195,8 +203,50 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
           value['deload'] as String? ?? 'deload1',
         ),
         skipWarmupDuringDeload: value['skipDeloadWarmup'] as bool? ?? false,
+        bastardWorkOrder: value['bastardWorkOrder'] as bool? ?? false,
       ),
     );
+  }
+
+  Map<String, double> _simplestStrengthTrainingMaxes(
+    Map<String, Object?> value,
+  ) {
+    final rawWeights = value['simplestStrengthLifts'];
+    if (rawWeights is! Map) return const {};
+    final rawRepetitions = value['simplestStrengthRepetitions'];
+    final directTm = const {
+      'tm',
+      'trainingMax',
+    }.contains(value['simplestStrengthInputMode']);
+    final ratio =
+        ((value['simplestStrengthTrainingMaxRatio'] as num?)?.toDouble() ??
+            90) /
+        100;
+    const liftKeys = {
+      'Close Grip Bench': 'press',
+      'Incline Press': 'bench',
+      'Front Squat': 'squat',
+      'Straight Leg Deadlift': 'deadlift',
+    };
+    final result = <String, double>{};
+    for (final entry in liftKeys.entries) {
+      final weight = rawWeights[entry.key];
+      if (weight is! num || weight <= 0) continue;
+      if (directTm) {
+        result[entry.value] = weight.toDouble();
+        continue;
+      }
+      final reps = rawRepetitions is Map
+          ? rawRepetitions[entry.key] as int? ?? 1
+          : 1;
+      final oneRepMax = reps <= 1
+          ? weight.toDouble()
+          : core.calculateEstimatedOneRepMax(
+              core.RepMaxInput(weight: weight.toDouble(), repetitions: reps),
+            );
+      result[entry.value] = oneRepMax * ratio;
+    }
+    return result;
   }
 
   core.ProgramConfiguration? _foreverConfiguration(Map<String, Object?> value) {
@@ -318,11 +368,16 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
 
   static PlanBlockView _block(Object? raw, int index) {
     final map = raw is Map ? raw : const {};
+    final cycles = map['cycles'];
     final weeks = map['weeks'];
+    final role = '${map['role'] ?? ''}';
     return PlanBlockView(
-      '${map['name'] ?? map['kind'] ?? 'Bloc ${index + 1}'}',
+      '${map['name'] ?? (role.isEmpty ? map['kind'] : _titleCase(role)) ?? 'Bloc ${index + 1}'}',
       [
-        if (weeks is List)
+        if (cycles is List)
+          for (var cycleIndex = 0; cycleIndex < cycles.length; cycleIndex++)
+            ..._cycleWeeks(cycles[cycleIndex], cycleIndex)
+        else if (weeks is List)
           for (var i = 0; i < weeks.length; i++) _week(weeks[i], i)
         else
           PlanWeekView('Contenu', [
@@ -332,10 +387,26 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
     );
   }
 
-  static PlanWeekView _week(Object? raw, int index) {
+  static List<PlanWeekView> _cycleWeeks(Object? raw, int cycleIndex) {
+    final cycle = raw is Map ? raw : const {};
+    final weeks = cycle['weeks'];
+    if (weeks is! List) return const [];
+    return [
+      for (var weekIndex = 0; weekIndex < weeks.length; weekIndex++)
+        _week(
+          weeks[weekIndex],
+          weekIndex,
+          cycleNumber: cycle['number'] as int? ?? cycleIndex + 1,
+        ),
+    ];
+  }
+
+  static PlanWeekView _week(Object? raw, int index, {int? cycleNumber}) {
     final map = raw is Map ? raw : const {};
     final sessions = map['sessions'] ?? map['workouts'];
-    return PlanWeekView('${map['name'] ?? 'Semaine ${index + 1}'}', [
+    final weekNumber = map['number'] ?? index + 1;
+    final cycleLabel = cycleNumber == null ? '' : ' · Cycle $cycleNumber';
+    return PlanWeekView('${map['name'] ?? 'Semaine $weekNumber'}$cycleLabel', [
       if (sessions is List)
         for (var i = 0; i < sessions.length; i++)
           _payloadSession(sessions[i], i)
@@ -346,19 +417,32 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
 
   static PlanSessionView _payloadSession(Object? raw, int index) {
     final session = raw is Map ? raw : const {};
-    final prescriptions = session['prescriptions'];
+    final blocks = session['blocks'];
+    final directPrescriptions = session['prescriptions'];
+    final prescriptions = <Map>[];
+    if (blocks is List) {
+      for (final rawBlock in blocks) {
+        if (rawBlock is! Map) continue;
+        final blockPrescriptions = rawBlock['prescriptions'];
+        if (blockPrescriptions is List) {
+          prescriptions.addAll(blockPrescriptions.whereType<Map>());
+        }
+      }
+    } else if (directPrescriptions is List) {
+      prescriptions.addAll(directPrescriptions.whereType<Map>());
+    }
+    final firstMovement = prescriptions.firstOrNull?['movement'];
     final movement =
-        '${session['movementId'] ?? session['exercise'] ?? 'Séance ${index + 1}'}'
+        '${firstMovement ?? session['movementId'] ?? session['exercise'] ?? 'Séance ${index + 1}'}'
             .replaceAll('barbell.', '')
             .replaceAll('-', ' ');
-    if (prescriptions is! List) {
+    if (prescriptions.isEmpty) {
       return PlanSessionView(_liftLabel(movement), const [
         'Prescription disponible dans l’export JSON.',
       ]);
     }
     return PlanSessionView(_liftLabel(movement), [
-      for (final rawPrescription in prescriptions)
-        if (rawPrescription is Map) _prescriptionLine(rawPrescription),
+      for (final prescription in prescriptions) _prescriptionLine(prescription),
     ]);
   }
 
@@ -366,9 +450,12 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
     final sets = prescription['sets'] ?? 1;
     final reps =
         prescription['repetitionsPerSet'] ?? prescription['repetitions'] ?? '?';
-    final load = prescription['calculatedLoad'] ?? prescription['weight'];
+    final load =
+        prescription['load'] ??
+        prescription['calculatedLoad'] ??
+        prescription['weight'];
     final percent = prescription['percentage'];
-    final kind = '${prescription['kind'] ?? ''}'
+    final kind = '${prescription['kind'] ?? prescription['setKind'] ?? ''}'
         .replaceAll('mainWork', 'MAIN')
         .replaceAll('supplemental', 'SUP');
     final displayedPercent = percent is num
@@ -376,4 +463,17 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
         : null;
     return '${kind.isEmpty ? '' : '$kind · '}$sets × $reps${load == null ? '' : ' · $load'}${displayedPercent == null ? '' : ' · ${displayedPercent.toStringAsFixed(0)}%'}';
   }
+
+  static String _titleCase(String value) => value
+      .replaceAllMapped(
+        RegExp(r'([a-z])([A-Z])'),
+        (match) => '${match[1]} ${match[2]}',
+      )
+      .split(' ')
+      .map(
+        (word) => word.isEmpty
+            ? word
+            : '${word[0].toUpperCase()}${word.substring(1)}',
+      )
+      .join(' ');
 }

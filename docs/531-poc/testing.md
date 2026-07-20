@@ -3,8 +3,8 @@
 ## Calculator parity validation (2026-07-20)
 
 - `flutter analyze`: no issues.
-- `flutter test --coverage`: 220 tests passed.
-- POC Core/catalog/application line coverage: 729/783, or 93.10%.
+- `flutter test --coverage`: 228 tests passed.
+- POC Core/catalog/application line coverage: 787/844, or 93.25%.
 - Desktop and mobile calculator goldens pass.
 - `flutter build web --release`: passed; Wasm dry run passed.
 - Three integration scenarios cover an Original template, a Beyond template and
@@ -55,8 +55,8 @@ changes affect the existing application.
 ## Latest results
 
 - `flutter analyze`: pass, no issues.
-- `flutter test --coverage`: pass, 220 tests.
-- POC Core/catalog/application: 729/783 instrumented lines, 93.10%.
+- `flutter test --coverage`: pass, 228 tests.
+- POC Core/catalog/application: 787/844 instrumented lines, 93.25%.
 - Branch records: unavailable (`BRF=0`) in the generated LCOV file.
 - `flutter build web --release`: pass; Wasm dry run also succeeds.
 - Android DEV and PROD debug APK builds: pass.

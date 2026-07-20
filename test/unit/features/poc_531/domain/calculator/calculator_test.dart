@@ -8,6 +8,7 @@ CalculatorConfiguration configuration({
   String variant = 'standard',
   int days = 4,
   CalculatorOptions? options,
+  Map<String, double> simplestStrengthTrainingMaxes = const {},
 }) => CalculatorConfiguration(
   template: template,
   variantId: variant,
@@ -18,6 +19,7 @@ CalculatorConfiguration configuration({
     'squat': 125,
   },
   daysPerWeek: days,
+  simplestStrengthTrainingMaxes: simplestStrengthTrainingMaxes,
   options: options ?? CalculatorOptions(order: order, deload: deload),
 );
 
@@ -229,6 +231,12 @@ void main() {
       configuration(
         template: CalculatorTemplateId.simplestStrength,
         variant: 'original',
+        simplestStrengthTrainingMaxes: const {
+          'press': 50,
+          'deadlift': 150,
+          'bench': 100,
+          'squat': 125,
+        },
       ),
     );
     final supplemental = program.weeks.first.sessions.first.sets.where(
@@ -345,7 +353,10 @@ void main() {
         .sessions
         .first
         .sets;
-    expect(sets.last.weight, 50); // Press day uses 50% of the 100 kg bench TM.
+    expect(
+      sets.where((set) => set.kind == 'supplemental').last.weight,
+      50,
+    ); // Press day uses 50% of the 100 kg bench TM.
   });
 
   test('rejects arbitrary lift identifiers', () {
@@ -434,5 +445,147 @@ void main() {
     final sets = engine.generate(input).weeks.first.sessions.first.sets;
     expect(sets.where((set) => set.kind == 'supplemental'), hasLength(10));
     expect(sets.where((set) => set.exercise == 'Lat Pulldown'), hasLength(10));
+  });
+
+  test('BBB accepts a distinct supplemental ratio for each lift', () {
+    final input = CalculatorConfiguration(
+      template: CalculatorTemplateId.boringButBig,
+      variantId: 'original-5x10',
+      trainingMaxes: const {
+        'press': 50,
+        'deadlift': 150,
+        'bench': 100,
+        'squat': 125,
+      },
+      daysPerWeek: 4,
+      bbbPercents: const {
+        'press': 40,
+        'deadlift': 55,
+        'bench': 60,
+        'squat': 50,
+      },
+    );
+    final sessions = engine.generate(input).weeks.first.sessions;
+    expect(
+      sessions.first.sets
+          .where((set) => set.kind == 'supplemental')
+          .first
+          .percent,
+      40,
+    );
+    expect(
+      sessions[1].sets.where((set) => set.kind == 'supplemental').first.percent,
+      55,
+    );
+  });
+
+  test('Bastard work order reverses the three main work sets', () {
+    final input = configuration(
+      options: const CalculatorOptions(
+        bastardWorkOrder: true,
+        deload: DeloadOption.none,
+      ),
+    );
+    final main = engine
+        .generate(input)
+        .weeks
+        .first
+        .sessions
+        .first
+        .sets
+        .where((set) => set.kind == 'main');
+    expect(main.map((set) => set.percent), [85, 75, 65]);
+    expect(main.first.amrap, isTrue);
+  });
+
+  test(
+    'For Beginners adds the paired lift and intermediate changes ratios',
+    () {
+      CalculatorConfiguration beginner(bool intermediate) =>
+          CalculatorConfiguration(
+            template: CalculatorTemplateId.forBeginners,
+            variantId: 'original',
+            trainingMaxes: const {
+              'press': 50,
+              'deadlift': 150,
+              'bench': 100,
+              'squat': 125,
+            },
+            daysPerWeek: 3,
+            liftOrder: const ['squat', 'bench', 'deadlift', 'press'],
+            beginnerIntermediate: intermediate,
+            options: const CalculatorOptions(deload: DeloadOption.none),
+          );
+      final original = engine
+          .generate(beginner(false))
+          .weeks
+          .first
+          .sessions
+          .first
+          .sets
+          .where((set) => set.kind == 'supplemental');
+      final intermediate = engine
+          .generate(beginner(true))
+          .weeks
+          .first
+          .sessions
+          .first
+          .sets
+          .where((set) => set.kind == 'supplemental');
+      expect(original.map((set) => set.percent), [55, 65, 75]);
+      expect(intermediate.map((set) => set.percent), [45, 55, 65]);
+      expect(original.every((set) => set.exercise == 'bench'), isTrue);
+    },
+  );
+
+  test('Simplest Strength uses explicit secondary Training Maxes', () {
+    final input = CalculatorConfiguration(
+      template: CalculatorTemplateId.simplestStrength,
+      variantId: 'original',
+      trainingMaxes: const {
+        'press': 50,
+        'deadlift': 150,
+        'bench': 100,
+        'squat': 125,
+      },
+      simplestStrengthTrainingMaxes: const {
+        'press': 80,
+        'deadlift': 150,
+        'bench': 100,
+        'squat': 125,
+      },
+      daysPerWeek: 4,
+      options: const CalculatorOptions(deload: DeloadOption.none),
+    );
+    final supplemental = engine
+        .generate(input)
+        .weeks
+        .first
+        .sessions
+        .first
+        .sets
+        .where((set) => set.kind == 'supplemental');
+    expect(supplemental.map((set) => set.weight), [40, 47.5, 55]);
+  });
+
+  test('Simplest Strength rejects incomplete secondary Training Maxes', () {
+    final issues = engine.validate(
+      CalculatorConfiguration(
+        template: CalculatorTemplateId.simplestStrength,
+        variantId: 'original',
+        trainingMaxes: const {
+          'press': 50,
+          'deadlift': 150,
+          'bench': 100,
+          'squat': 125,
+        },
+        simplestStrengthTrainingMaxes: const {'press': 80},
+        daysPerWeek: 4,
+      ),
+    );
+    expect(
+      issues.map((issue) => issue.code),
+      contains('invalid_simplest_strength_maxes'),
+    );
   });
 }
