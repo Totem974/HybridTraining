@@ -49,15 +49,26 @@ le seul chemin qui transforme des lignes, le runtime v3.
 | Source v3 | Destination v4 conservée en v5 | Règle de conversion prouvée |
 |---|---|---|
 | `workout_runtime_sessions.status` | `workout_executions.state` | `started→activeSet`, `completed→completed`, `abandoned→abandoned`, `skipped→skipped`, sinon `planned` |
-| première prescription sans résultat | `active_set_index` | premier index en attente ; si aucune attente, dernier index |
+| première prescription sans résultat | `active_set_index` | premier index en attente ; si toutes les prescriptions ont un résultat, dernier index |
 | prescriptions déjà renseignées | `reversible_stack_json` | liste ordonnée de leurs index |
 | `set_performances` ou résultat de `workout_activities` | `workout_set_outcomes` | résultat, répétitions, charge, notes et horodatages sont repris avec priorité au résultat de série |
 | session convertie | `workout_execution_events` | événement ordonné `migratedFromV3`, daté avec `updated_at` de la session |
 
-Le test **v3 to v5 migration preserves existing rows** prouve le cas d'une
-séance `started`, une série réussie de 5 répétitions à 80 kg et l'événement de
-migration. Les autres branches du mapping sont définies dans
-`migrateV3RuntimeToV4`, mais ne disposent pas chacune d'un cas de test isolé.
+Les tests de migration v3→v5 couvrent chaque statut d'une séance sans
+prescription, laquelle reste exactement conservée dans la table v3 append-only
+mais ne peut pas devenir une exécution canonique faute de série exécutable. Ils
+couvrent aussi les curseurs d'une séance entièrement
+terminée et d'une séance dont la première prescription reste en attente. Ils
+prouvent aussi la priorité d'un `set_performances` sur le résultat concurrent
+de `workout_activities`, le nombre attendu de résultats et d'événements, ainsi
+que la conservation exacte de la ligne `workout_runtime_sessions` sans
+prescription. Le scénario avec résultat concurrent vérifie en outre que ses
+lignes `workout_runtime_sessions` et `workout_activities` restent présentes.
+Chaque session v3 migrable produit une exécution et un événement
+`migratedFromV3`; seules ses prescriptions existantes produisent des
+`workout_set_outcomes`. Le chargement de l'exécution migrée par le dépôt runtime
+SQLite prouve que son état, son curseur et ses résultats restent lisibles par le
+domaine.
 
 ## Atomicité, échec et retour arrière
 
