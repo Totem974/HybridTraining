@@ -22,14 +22,15 @@ marked `NEEDS_REVIEW` is unavailable and cannot be generated.
 flutter pub get
 dart format --set-exit-if-changed .
 flutter analyze
-flutter test --coverage
-flutter build apk --debug --flavor dev -t lib/main_dev.dart
-flutter build apk --debug --flavor prod -t lib/main_prod.dart
+flutter test
+.\tool\build_web_release.ps1 -BaseHref "/"
 ```
 
-DEV and PROD use separate Android application IDs and private SQLite databases.
-Backups are versioned JSON; import is simulated before atomic application.
-`.SOURCE/`, PDFs, protected assets, and personal data must never be committed.
+For a subdirectory deployment, pass a leading and trailing slash such as
+`-BaseHref "/hybrid/"`. See the [Web release contract](docs/531-poc/web-release.md)
+for preview, deep-link fallback, Chrome E2E and browser-storage constraints.
+`.SOURCE/`, browser drivers, protected assets, personal data and local paths must
+never be committed.
 
 ## Active documentation
 

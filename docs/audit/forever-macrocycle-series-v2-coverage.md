@@ -62,7 +62,7 @@ Validations exécutées le 20 juillet 2026 :
 
 - `dart format --set-exit-if-changed .` : réussi ;
 - `flutter analyze` : réussi, aucune anomalie ;
-- `flutter test --reporter compact` : réussi, 363 tests ;
+- `flutter test --reporter compact` : réussi, 372 tests ;
 - tests visuels desktop et mobile : réussis, 4/4 ;
 - tests ciblés génération canonique, adaptateur et widgets : réussis, 36/36 ;
 - tests ciblés du domaine planning : réussis, 21/21 ;
