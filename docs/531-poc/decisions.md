@@ -1,5 +1,12 @@
 # Decision log
 
+## 2026-07-20 — supplied calculator archive
+
+The supplied archive contains a production CRA/Webpack build, not the original
+repository, source maps, package manifest or an application licence. Its
+algorithms and interaction contract were used as a functional reference. Its
+font, branding, images and bundled JavaScript/CSS were not copied into the POC.
+
 ## D-001 — Base the POC on Core v5
 
 Use commit `610b60a` rather than the dirty Android skeleton. This preserves user

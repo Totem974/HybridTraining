@@ -99,3 +99,21 @@
   numeric prescriptions. Joker policy is a non-blocking runtime warning.
 - Forever exposes reviewed definitions and the fixed Leader → 7th Week → Anchor
   sequence.
+
+## Source-calculator parity correction — complete
+
+- Audited the supplied `sitecalculator.tar` compiled React application and
+  ported its structured behavior into the pure Dart calculator engine.
+- Weight follows the source's three modes: editable rep-max input under
+  `1 Rep Max`, direct Training Max, and 1+ Set derived at 95% of TM.
+- Palette and page width use the source values (#181818, #323232, #727272,
+  #f0f0f0 and #2c9eff) while retaining Hybrid branding and Flutter components.
+- Triumvirate, Periodization Bible and Bodyweight are executable with sourced
+  assistance mappings; Bodyweight exposes total reps and set count.
+- Simplest Strength renders supplemental exercise names and assistance blocks.
+- FSL Multiple Sets exposes and applies its set and repetition ranges.
+- German Volume Training exposes same/per-lift ratios and the alternate-lift
+  switch, and generates its sourced 10x10 prescription.
+- Joker targets are generated every +5% through the selected cap.
+- Empty executable-variant lists cannot create an empty `SegmentedButton`.
+- Forever sessions render readable prescriptions instead of raw JSON cards.

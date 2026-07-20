@@ -238,21 +238,62 @@ void main() {
     expect(supplemental.map((set) => set.repetitions), [10, 10, 10]);
   });
 
-  test('ambiguous documentary templates are visible but not generable', () {
-    final definition = calculatorTemplate(
-      CalculatorTemplateId.periodizationBible,
-    );
-    expect(definition.variants.single.executable, isFalse);
-    expect(definition.variants.single.blockedReason, isNotEmpty);
-    expect(
-      () => engine.generate(
-        configuration(
-          template: CalculatorTemplateId.periodizationBible,
-          variant: 'original',
-        ),
+  test('Triumvirate and Periodization Bible generate sourced assistance', () {
+    final triumvirate = engine.generate(
+      configuration(
+        template: CalculatorTemplateId.triumvirate,
+        variant: 'original',
       ),
-      throwsA(isA<CalculatorValidationException>()),
     );
+    final triAssistance = triumvirate.weeks.first.sessions.first.sets.where(
+      (set) => set.kind == 'assistance',
+    );
+    expect(triAssistance.where((set) => set.exercise == 'Dips'), hasLength(5));
+    expect(
+      triAssistance.where((set) => set.exercise == 'Pull-up'),
+      hasLength(5),
+    );
+    final periodization = engine.generate(
+      configuration(
+        template: CalculatorTemplateId.periodizationBible,
+        variant: 'original',
+      ),
+    );
+    expect(
+      periodization.weeks.first.sessions.first.sets.where(
+        (set) => set.kind == 'assistance',
+      ),
+      hasLength(15),
+    );
+  });
+
+  test('Bodyweight distributes the target across the selected set count', () {
+    final input = CalculatorConfiguration(
+      template: CalculatorTemplateId.bodyweight,
+      variantId: 'original',
+      trainingMaxes: const {
+        'press': 50,
+        'deadlift': 150,
+        'bench': 100,
+        'squat': 125,
+      },
+      daysPerWeek: 4,
+      bodyweightTotalReps: 77,
+      bodyweightSetCount: 5,
+    );
+    final assistance = engine
+        .generate(input)
+        .weeks
+        .first
+        .sessions
+        .first
+        .sets
+        .where((set) => set.exercise == 'Pull-up');
+    expect(
+      assistance.map((set) => set.repetitions).reduce((a, b) => a + b),
+      77,
+    );
+    expect(assistance, hasLength(5));
   });
 
   test(
@@ -273,29 +314,23 @@ void main() {
     },
   );
 
-  test(
-    'joker policy changes generated warnings without inventing completed sets',
-    () {
-      final program = engine.generate(
-        configuration(
-          options: const CalculatorOptions(
-            jokersEnabled: true,
-            jokerIncrementPercent: 5,
-            jokerCapPercent: 20,
-            deload: DeloadOption.none,
-          ),
+  test('joker policy generates optional 5 percent targets up to the cap', () {
+    final program = engine.generate(
+      configuration(
+        options: const CalculatorOptions(
+          jokersEnabled: true,
+          jokerIncrementPercent: 5,
+          jokerCapPercent: 20,
+          deload: DeloadOption.none,
         ),
-      );
-      expect(program.warnings.single, contains('capped at +20%'));
-      expect(
-        program.weeks
-            .expand((week) => week.sessions)
-            .expand((session) => session.sets)
-            .where((set) => set.kind == 'joker'),
-        isEmpty,
-      );
-    },
-  );
+      ),
+    );
+    expect(program.warnings.single, contains('capped at +20%'));
+    final jokers = program.weeks.first.sessions.first.sets.where(
+      (set) => set.kind == 'joker',
+    );
+    expect(jokers.map((set) => set.percent), [90, 95, 100, 105]);
+  });
 
   test('Less Boring uses the opposite lift Training Max', () {
     final sets = engine
@@ -325,5 +360,79 @@ void main() {
       engine.validate(invalid).map((issue) => issue.code),
       contains('invalid_lifts'),
     );
+  });
+
+  test('kg and lb use distinct load increments', () {
+    final input = CalculatorConfiguration(
+      template: CalculatorTemplateId.standard,
+      variantId: 'standard',
+      trainingMaxes: const {
+        'press': 51,
+        'deadlift': 153,
+        'bench': 103,
+        'squat': 128,
+      },
+      daysPerWeek: 4,
+    );
+    final kg = const ClassicCalculatorEngine(
+      roundingIncrement: 2.5,
+    ).generate(input).weeks.first.sessions.first.sets.first.weight;
+    final lb = const ClassicCalculatorEngine(
+      roundingIncrement: 5,
+    ).generate(input).weeks.first.sessions.first.sets.first.weight;
+    expect(kg, 32.5);
+    expect(lb, 35);
+    final kgSecond = const ClassicCalculatorEngine(
+      roundingIncrement: 2.5,
+    ).generate(input).weeks.first.sessions.first.sets[1].weight;
+    final lbSecond = const ClassicCalculatorEngine(
+      roundingIncrement: 5,
+    ).generate(input).weeks.first.sessions.first.sets[1].weight;
+    expect(kgSecond, 37.5);
+    expect(lbSecond, 40);
+  });
+
+  test('FSL Multiple Sets honors selected sets and repetitions', () {
+    final input = CalculatorConfiguration(
+      template: CalculatorTemplateId.firstSetLast,
+      variantId: 'multiple-sets',
+      trainingMaxes: const {
+        'press': 50,
+        'deadlift': 150,
+        'bench': 100,
+        'squat': 125,
+      },
+      daysPerWeek: 4,
+      fslSetCount: 4,
+      fslRepCount: 7,
+    );
+    final supplemental = engine
+        .generate(input)
+        .weeks
+        .first
+        .sessions
+        .first
+        .sets
+        .where((set) => set.kind == 'supplemental');
+    expect(supplemental, hasLength(4));
+    expect(supplemental.every((set) => set.repetitions == 7), isTrue);
+  });
+
+  test('GVT generates sourced 10x10 work and lift-specific assistance', () {
+    final input = CalculatorConfiguration(
+      template: CalculatorTemplateId.germanVolumeTraining,
+      variantId: '10x10',
+      trainingMaxes: const {
+        'press': 50,
+        'deadlift': 150,
+        'bench': 100,
+        'squat': 125,
+      },
+      daysPerWeek: 4,
+      gvtPercent: 40,
+    );
+    final sets = engine.generate(input).weeks.first.sessions.first.sets;
+    expect(sets.where((set) => set.kind == 'supplemental'), hasLength(10));
+    expect(sets.where((set) => set.exercise == 'Lat Pulldown'), hasLength(10));
   });
 }

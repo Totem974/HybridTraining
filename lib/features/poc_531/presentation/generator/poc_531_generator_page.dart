@@ -169,10 +169,19 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   };
   String _mode = 'classic', _input = 'oneRm', _unit = 'kg';
   String? _templateId, _variantId, _foreverId;
-  int _days = 4, _supplemental = 50, _jokerIncrement = 5, _jokerCap = 10;
+  int _days = 4, _supplemental = 50, _jokerCap = 10;
+  int _bodyweightTotalReps = 75, _bodyweightSetCount = 5;
+  int _fslSetCount = 3, _fslRepetitions = 5, _gvtRatio = 30;
   String _warmup = 'none', _deload = 'deload1', _weekOrder = '531';
-  bool _jokers = false, _skipDeloadWarmup = false, _busy = false;
+  bool _jokers = false,
+      _skipDeloadWarmup = false,
+      _gvtAlternateExercise = false,
+      _gvtUseSameRatio = true,
+      _busy = false;
   final List<String> _liftOrder = List.of(_liftIds);
+  final Map<String, int> _gvtRatiosByLift = {
+    for (final lift in _liftIds) lift: 30,
+  };
   List<GeneratorWarning> _warnings = const [];
   GeneratorResult? _result;
   PlateLoadingView? _loading;
@@ -258,11 +267,19 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     'foreverTemplateId': _foreverId,
     'days': _days,
     'supplementalPercent': _supplemental,
+    'bodyweightTotalReps': _bodyweightTotalReps,
+    'bodyweightSetCount': _bodyweightSetCount,
+    'fslSetCount': _fslSetCount,
+    'fslRepetitions': _fslRepetitions,
+    'gvtAlternateExercise': _gvtAlternateExercise,
+    'gvtUseSameRatio': _gvtUseSameRatio,
+    'gvtRatio': _gvtRatio,
+    'gvtRatiosByLift': _gvtRatiosByLift,
     'liftOrder': _liftOrder,
     'weekOrder': _weekOrder,
     'warmup': _warmup,
     'jokersEnabled': _jokers,
-    'jokerIncrement': _jokerIncrement,
+    'jokerIncrement': 5,
     'jokerCap': _jokerCap,
     'deload': _deload,
     'skipDeloadWarmup': _skipDeloadWarmup,
@@ -277,20 +294,39 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     key: const Key('poc-531-generator'),
-    backgroundColor: const Color(0xff0e1513),
+    backgroundColor: const Color(0xff181818),
     body: SafeArea(
       child: SingleChildScrollView(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1380),
+            constraints: const BoxConstraints(maxWidth: 900),
             child: Padding(
               padding: const EdgeInsets.all(24),
               child: Theme(
                 data: Theme.of(context).copyWith(
+                  colorScheme: ColorScheme.fromSeed(
+                    seedColor: const Color(0xff2c9eff),
+                    brightness: Brightness.dark,
+                    surface: const Color(0xff323232),
+                  ),
                   inputDecorationTheme: const InputDecorationTheme(
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(),
+                  ),
+                  segmentedButtonTheme: SegmentedButtonThemeData(
+                    style: ButtonStyle(
+                      backgroundColor: WidgetStateProperty.resolveWith(
+                        (states) => states.contains(WidgetState.selected)
+                            ? Colors.white
+                            : const Color(0xff727272),
+                      ),
+                      foregroundColor: WidgetStateProperty.resolveWith(
+                        (states) => states.contains(WidgetState.selected)
+                            ? const Color(0xff323232)
+                            : const Color(0xfff0f0f0),
+                      ),
+                    ),
                   ),
                 ),
                 child: Column(
@@ -385,10 +421,10 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
         width: 58,
         height: 58,
         decoration: BoxDecoration(
-          color: const Color(0xffb8f34a),
+          color: const Color(0xff2c9eff),
           borderRadius: BorderRadius.circular(18),
         ),
-        child: const Icon(Icons.fitness_center, color: Color(0xff17331f)),
+        child: const Icon(Icons.fitness_center, color: Color(0xff181818)),
       ),
       const SizedBox(width: 16),
       const Expanded(
@@ -407,7 +443,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
             Text(
               'CALCULATOR',
               style: TextStyle(
-                color: Color(0xffb8f34a),
+                color: Color(0xff2c9eff),
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 3,
@@ -431,16 +467,16 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     ),
   );
   Widget _card(Widget child) => Material(
-    color: const Color(0xff25302c),
+    color: const Color(0xff323232),
     shape: RoundedRectangleBorder(
-      side: const BorderSide(color: Color(0xff394841)),
+      side: const BorderSide(color: Color(0xff727272)),
       borderRadius: BorderRadius.circular(16),
     ),
     clipBehavior: Clip.antiAlias,
     child: Padding(padding: const EdgeInsets.all(16), child: child),
   );
   TextStyle get _label =>
-      const TextStyle(color: Color(0xffdce7e1), fontWeight: FontWeight.w700);
+      const TextStyle(color: Color(0xfff0f0f0), fontWeight: FontWeight.w700);
 
   Widget _weight() => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -456,7 +492,6 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                 segments: const [
                   ButtonSegment(value: 'oneRm', label: Text('1 Rep Max')),
                   ButtonSegment(value: 'tm', label: Text('Training Max')),
-                  ButtonSegment(value: 'repMax', label: Text('Rep Max')),
                   ButtonSegment(value: 'plusSet', label: Text('1+ Set')),
                 ],
                 selected: {_input},
@@ -472,7 +507,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                   child: Row(
                     children: [
                       SizedBox(width: 118, child: Text(lift, style: _label)),
-                      if (_input == 'repMax' || _input == 'plusSet')
+                      if (_input == 'oneRm')
                         SizedBox(
                           width: 58,
                           child: TextFormField(
@@ -486,8 +521,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                             onChanged: (_) => _changed(),
                           ),
                         ),
-                      if (_input == 'repMax' || _input == 'plusSet')
-                        const SizedBox(width: 6),
+                      if (_input == 'oneRm') const SizedBox(width: 6),
                       Expanded(
                         child: TextFormField(
                           key: ValueKey('lift-$lift'),
@@ -542,8 +576,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                 const Padding(
                   padding: EdgeInsets.only(top: 10),
                   child: Text(
-                    'Le CORE traite 1+ Set comme une performance poids × répétitions. Aucune sémantique distincte n’est inventée.',
-                    style: TextStyle(color: Color(0xffffd17a)),
+                    'Le poids 1+ correspond à 95% du Training Max, comme dans la calculatrice de référence.',
+                    style: TextStyle(color: Color(0xfff0f0f0)),
                   ),
                 ),
             ],
@@ -583,15 +617,25 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                 decoration: const InputDecoration(labelText: 'Template'),
                 items: [
                   for (final t in _classic)
-                    DropdownMenuItem(value: t.id, child: Text(t.name)),
+                    DropdownMenuItem(
+                      value: t.id,
+                      enabled:
+                          t.variants.any((variant) => variant.executable) ||
+                          t.id == 'germanVolumeTraining',
+                      child: Text(t.name),
+                    ),
                 ],
                 onChanged: (v) {
                   setState(() {
                     _templateId = v;
-                    _variantId = _template?.variants
-                        .where((e) => e.executable)
-                        .firstOrNull
-                        ?.id;
+                    _variantId =
+                        _template?.variants
+                            .where((e) => e.executable)
+                            .firstOrNull
+                            ?.id ??
+                        (_templateId == 'germanVolumeTraining'
+                            ? _template?.variants.firstOrNull?.id
+                            : null);
                     _syncDays();
                   });
                   _changed();
@@ -605,9 +649,18 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                 decoration: const InputDecoration(labelText: 'Variant'),
                 items: [
                   for (final v
-                      in _template?.variants.where((e) => e.executable) ??
+                      in _template?.variants.where(
+                            (e) =>
+                                e.executable ||
+                                _templateId == 'germanVolumeTraining',
+                          ) ??
                           const <CalculatorVariantChoice>[])
-                    DropdownMenuItem(value: v.id, child: Text(v.name)),
+                    DropdownMenuItem(
+                      value: v.id,
+                      child: Text(
+                        v.executable ? v.name : '${v.name} · NEEDS_REVIEW',
+                      ),
+                    ),
                 ],
                 onChanged: (v) {
                   setState(() {
@@ -617,6 +670,15 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                   _changed();
                 },
               ),
+              if (_variantId == null && _template != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    _template!.variants.firstOrNull?.blockedReason ??
+                        'Prescription non exécutable.',
+                    style: const TextStyle(color: Color(0xfff0f0f0)),
+                  ),
+                ),
               if (_templateId == 'boringButBig') ...[
                 const SizedBox(height: 10),
                 _percentPicker(
@@ -624,6 +686,123 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                   _supplemental,
                   (v) => _supplemental = v,
                 ),
+              ],
+              if (_templateId == 'bodyweight') ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        initialValue: _bodyweightTotalReps,
+                        decoration: const InputDecoration(
+                          labelText: 'Reps / exercise',
+                        ),
+                        items: [
+                          for (final value in const [50, 75, 100])
+                            DropdownMenuItem(
+                              value: value,
+                              child: Text('$value'),
+                            ),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() => _bodyweightTotalReps = value);
+                          _changed();
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        initialValue: _bodyweightSetCount,
+                        decoration: const InputDecoration(labelText: 'Sets'),
+                        items: [
+                          for (final value in const [3, 4, 5, 6, 8, 10])
+                            DropdownMenuItem(
+                              value: value,
+                              child: Text('$value'),
+                            ),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() => _bodyweightSetCount = value);
+                          _changed();
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              if (_templateId == 'firstSetLast' &&
+                  _variantId == 'multiple-sets') ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _numberPicker('Set count', _fslSetCount, const [
+                        3,
+                        4,
+                        5,
+                      ], (value) => _fslSetCount = value),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _numberPicker(
+                        'Repetitions',
+                        _fslRepetitions,
+                        const [3, 4, 5, 6, 7, 8],
+                        (value) => _fslRepetitions = value,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              if (_templateId == 'germanVolumeTraining') ...[
+                const SizedBox(height: 10),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Alternate exercise / Less Boring'),
+                  value: _gvtAlternateExercise,
+                  onChanged: (value) {
+                    setState(() => _gvtAlternateExercise = value);
+                    _changed();
+                  },
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Use same ratio for all lifts'),
+                  value: _gvtUseSameRatio,
+                  onChanged: (value) {
+                    setState(() => _gvtUseSameRatio = value);
+                    _changed();
+                  },
+                ),
+                if (_gvtUseSameRatio)
+                  _numberPicker(
+                    '10 × 10 ratio',
+                    _gvtRatio,
+                    const [30, 35, 40, 45, 50, 55, 60, 65, 70, 75],
+                    (value) => _gvtRatio = value,
+                    suffix: '%',
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final lift in _liftIds)
+                        SizedBox(
+                          width: 150,
+                          child: _numberPicker(
+                            '${_liftDisplayName(lift)} ratio',
+                            _gvtRatiosByLift[lift]!,
+                            const [30, 35, 40, 45, 50, 55, 60, 65, 70, 75],
+                            (value) => _gvtRatiosByLift[lift] = value,
+                            suffix: '%',
+                          ),
+                        ),
+                    ],
+                  ),
               ],
             ] else ...[
               DropdownButtonFormField<String>(
@@ -665,7 +844,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                 ExpansionTile(
                   tilePadding: EdgeInsets.zero,
                   collapsedIconColor: Colors.white,
-                  iconColor: const Color(0xffb8f34a),
+                  iconColor: const Color(0xff2c9eff),
                   title: const Text(
                     'Catalogue documentaire',
                     style: TextStyle(color: Colors.white),
@@ -693,6 +872,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
           _optionColumn('WARMUP', [
             DropdownButtonFormField<String>(
               initialValue: _warmup,
+              isExpanded: true,
               decoration: const InputDecoration(labelText: 'Option'),
               items: const [
                 DropdownMenuItem(value: 'none', child: Text('None')),
@@ -722,17 +902,11 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                 (v) => _jokerCap = v,
                 values: const [5, 10, 15, 20, 25, 30],
               ),
-            if (_jokers)
-              _percentPicker(
-                'Increment',
-                _jokerIncrement,
-                (v) => _jokerIncrement = v,
-                values: const [5, 10],
-              ),
           ]),
           _optionColumn('DELOAD', [
             DropdownButtonFormField<String>(
               initialValue: _deload,
+              isExpanded: true,
               decoration: const InputDecoration(labelText: 'Option'),
               items: const [
                 DropdownMenuItem(value: 'none', child: Text('No deload')),
@@ -783,7 +957,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
         Text(
           title,
           style: const TextStyle(
-            color: Color(0xffb8f34a),
+            color: Color(0xff2c9eff),
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -808,6 +982,34 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
       _changed();
     },
   );
+
+  Widget _numberPicker(
+    String label,
+    int value,
+    List<int> values,
+    void Function(int) assign, {
+    String suffix = '',
+  }) => DropdownButtonFormField<int>(
+    initialValue: values.contains(value) ? value : values.first,
+    decoration: InputDecoration(labelText: label),
+    items: [
+      for (final candidate in values)
+        DropdownMenuItem(value: candidate, child: Text('$candidate$suffix')),
+    ],
+    onChanged: (next) {
+      if (next == null) return;
+      setState(() => assign(next));
+      _changed();
+    },
+  );
+
+  String _liftDisplayName(String lift) => switch (lift) {
+    'press' => 'Press',
+    'bench' => 'Bench',
+    'squat' => 'Squat',
+    'deadlift' => 'Deadlift',
+    _ => lift,
+  };
 
   Widget _plating() => _card(
     Column(
@@ -884,17 +1086,25 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   Widget _scheduling() => _card(
     Column(
       children: [
-        SegmentedButton<int>(
-          segments: [
-            for (final d in _allowedDays)
-              ButtonSegment(value: d, label: Text('$d')),
-          ],
-          selected: {_days},
-          onSelectionChanged: (v) {
-            setState(() => _days = v.first);
-            _changed();
-          },
-        ),
+        if (_allowedDays.isEmpty)
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Ce template ne possède pas encore de variante exécutable.',
+            ),
+          )
+        else
+          SegmentedButton<int>(
+            segments: [
+              for (final d in _allowedDays)
+                ButtonSegment(value: d, label: Text('$d')),
+            ],
+            selected: {_days},
+            onSelectionChanged: (v) {
+              setState(() => _days = v.first);
+              _changed();
+            },
+          ),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -1006,7 +1216,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
           child: Center(
             child: Text(
               'Renseignez vos charges : le programme apparaît ici.',
-              style: TextStyle(color: Color(0xffb5c4bd)),
+              style: TextStyle(color: Color(0xfff0f0f0)),
             ),
           ),
         ),
@@ -1018,7 +1228,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
         Text(
           _result!.title,
           style: const TextStyle(
-            color: Color(0xffb8f34a),
+            color: Color(0xff2c9eff),
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -1059,7 +1269,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
         Text(
           week.name.toUpperCase(),
           style: const TextStyle(
-            color: Color(0xffb8f34a),
+            color: Color(0xff2c9eff),
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -1071,7 +1281,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
             children: [
               for (final session in week.sessions)
                 SizedBox(
-                  width: box.maxWidth > 900
+                  width: box.maxWidth > 760
                       ? (box.maxWidth - 27) / 4
                       : box.maxWidth > 520
                       ? (box.maxWidth - 9) / 2
@@ -1079,7 +1289,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xff36423e),
+                      color: const Color(0xff727272),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Column(
@@ -1101,7 +1311,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xff1a2421),
+                              color: const Color(0xff181818),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -1173,7 +1383,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     final old = v['inputMode'];
     _input = switch (old) {
       'Training Max' => 'tm',
-      'Rep max' => 'repMax',
+      'Rep max' || 'repMax' => 'oneRm',
       '1RM' => 'oneRm',
       String x => x,
       _ => _input,

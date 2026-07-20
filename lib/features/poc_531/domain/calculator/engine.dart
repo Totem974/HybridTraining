@@ -79,6 +79,15 @@ class ClassicCalculatorEngine {
         ),
       );
     }
+    if (configuration.unit != 'kg' && configuration.unit != 'lb') {
+      issues.add(
+        const CalculatorIssue(
+          'invalid_unit',
+          'Unit must be kg or lb.',
+          field: 'unit',
+        ),
+      );
+    }
     if (configuration.supplementalPercent < 0 ||
         configuration.supplementalPercent > 100) {
       issues.add(
@@ -99,6 +108,46 @@ class ClassicCalculatorEngine {
         ),
       );
     }
+    if (configuration.template == CalculatorTemplateId.bodyweight &&
+        (configuration.bodyweightTotalReps <= 0 ||
+            configuration.bodyweightSetCount <= 0 ||
+            configuration.bodyweightSetCount >
+                configuration.bodyweightTotalReps)) {
+      issues.add(
+        const CalculatorIssue(
+          'invalid_bodyweight_distribution',
+          'Bodyweight requires a positive repetition target split across a valid number of sets.',
+          field: 'bodyweight',
+        ),
+      );
+    }
+    if (configuration.template == CalculatorTemplateId.firstSetLast &&
+        configuration.variantId == 'multiple-sets' &&
+        (configuration.fslSetCount < 3 ||
+            configuration.fslSetCount > 5 ||
+            configuration.fslRepCount < 3 ||
+            configuration.fslRepCount > 8)) {
+      issues.add(
+        const CalculatorIssue(
+          'invalid_fsl_volume',
+          'FSL Multiple Sets requires 3–5 sets of 3–8 repetitions.',
+          field: 'fsl',
+        ),
+      );
+    }
+    if (configuration.template == CalculatorTemplateId.germanVolumeTraining &&
+        [
+          configuration.gvtPercent,
+          ...configuration.gvtPercents.values,
+        ].any((percent) => percent < 30 || percent > 75 || percent % 5 != 0)) {
+      issues.add(
+        const CalculatorIssue(
+          'invalid_gvt_percent',
+          'GVT requires an explicit 30–75% ratio in 5% steps.',
+          field: 'gvtPercent',
+        ),
+      );
+    }
     if (configuration.liftOrder.length != 4 ||
         configuration.liftOrder.toSet().length != 4 ||
         !configuration.trainingMaxes.keys.toSet().containsAll(
@@ -113,11 +162,11 @@ class ClassicCalculatorEngine {
       );
     }
     if (configuration.options.jokersEnabled) {
-      if (![5, 10].contains(configuration.options.jokerIncrementPercent)) {
+      if (configuration.options.jokerIncrementPercent != 5) {
         issues.add(
           const CalculatorIssue(
             'unsupported_joker_increment',
-            'Only verified UI increments of 5% or 10% are accepted.',
+            'Joker targets use the source-defined 5% increments.',
             field: 'jokerIncrementPercent',
           ),
         );
@@ -260,6 +309,24 @@ class ClassicCalculatorEngine {
           );
         }
         if (sourceWeek != null) {
+          if (configuration.options.jokersEnabled) {
+            for (
+              var addition = 5;
+              addition <= configuration.options.jokerCapPercent;
+              addition += 5
+            ) {
+              final percent = percentages.last + addition;
+              sets.add(
+                CalculatorSet(
+                  repetitions: 0,
+                  percent: percent,
+                  weight: _round(tm * percent / 100),
+                  kind: 'joker',
+                  exercise: lift,
+                ),
+              );
+            }
+          }
           _appendTemplateWork(
             sets,
             configuration,
@@ -412,12 +479,21 @@ class ClassicCalculatorEngine {
           ? configuration.trainingMaxes[_oppositeLift(lift)]!
           : tm;
       final weeklyPercent = switch (configuration.variantId) {
-        'beyond-variation-1' || 'beyond-variation-2' || 'two-days' =>
+        'beyond-variation-1' || 'beyond-variation-2' =>
           const [65, 70, 75][percentages.first == 65
               ? 0
               : percentages.first == 70
               ? 1
               : 2],
+        'two-days' =>
+          const [50, 60, 70][percentages.first == 65
+              ? 0
+              : percentages.first == 70
+              ? 1
+              : 2],
+        '5x5' => 80,
+        '5x3' => 90,
+        '5x1' => 100,
         _ => configuration.supplementalPercent,
       };
       final reps = switch (configuration.variantId) {
@@ -450,13 +526,15 @@ class ClassicCalculatorEngine {
         );
       }
     } else if (configuration.template == CalculatorTemplateId.firstSetLast) {
-      final count = configuration.variantId == 'multiple-sets' ? 5 : 1;
+      final count = configuration.variantId == 'multiple-sets'
+          ? configuration.fslSetCount
+          : 1;
       sets.addAll(
         List.generate(
           count,
           (_) => CalculatorSet(
             repetitions: configuration.variantId == 'multiple-sets'
-                ? 5
+                ? configuration.fslRepCount
                 : repetitions.first,
             percent: percentages.first,
             weight: _round(tm * percentages.first / 100),
@@ -479,7 +557,7 @@ class ClassicCalculatorEngine {
       ];
       const simplestReps = [
         [10, 10, 10],
-        [8, 8, 6],
+        [8, 8, 8],
         [5, 5, 5],
       ];
       for (var setIndex = 0; setIndex < 3; setIndex++) {
@@ -490,11 +568,138 @@ class ClassicCalculatorEngine {
             percent: percent,
             weight: _round(tm * percent / 100),
             kind: 'supplemental',
+            exercise: _simplestSupplemental[lift],
           ),
         );
       }
+      for (final exercise in _simplestAssistance[lift]!) {
+        sets.addAll(_assistance(exercise, 3, 12));
+      }
+    } else if (configuration.template == CalculatorTemplateId.triumvirate) {
+      final prescriptions = _triumvirate[lift]!;
+      for (final prescription in prescriptions) {
+        sets.addAll(_assistance(prescription.$1, 5, prescription.$2));
+      }
+    } else if (configuration.template ==
+        CalculatorTemplateId.periodizationBible) {
+      final prescriptions = _periodizationBible[lift]!;
+      for (final prescription in prescriptions) {
+        sets.addAll(_assistance(prescription.$1, 5, prescription.$2));
+      }
+    } else if (configuration.template == CalculatorTemplateId.bodyweight) {
+      final distribution = _distributeRepetitions(
+        configuration.bodyweightTotalReps,
+        configuration.bodyweightSetCount,
+      );
+      for (final exercise in _bodyweight[lift]!) {
+        for (final reps in distribution) {
+          sets.add(
+            CalculatorSet(
+              repetitions: reps,
+              percent: 0,
+              weight: 0,
+              kind: 'assistance',
+              exercise: exercise,
+            ),
+          );
+        }
+      }
+    } else if (configuration.template ==
+        CalculatorTemplateId.germanVolumeTraining) {
+      final supplementalLift = configuration.gvtLessBoring
+          ? _oppositeLift(lift)
+          : lift;
+      final supplementalTm = configuration.trainingMaxes[supplementalLift]!;
+      final gvtPercent =
+          configuration.gvtPercents[lift] ?? configuration.gvtPercent;
+      sets.addAll(
+        List.generate(
+          10,
+          (_) => CalculatorSet(
+            repetitions: 10,
+            percent: gvtPercent,
+            weight: _round(supplementalTm * gvtPercent / 100),
+            kind: 'supplemental',
+            exercise: supplementalLift,
+          ),
+        ),
+      );
+      final assistance = _gvtAssistance[supplementalLift]!;
+      sets.addAll(_assistance(assistance.$1, assistance.$2, assistance.$3));
     }
   }
+
+  List<CalculatorSet> _assistance(String exercise, int count, int reps) =>
+      List.generate(
+        count,
+        (_) => CalculatorSet(
+          repetitions: reps,
+          percent: 0,
+          weight: 0,
+          kind: 'assistance',
+          exercise: exercise,
+        ),
+      );
+
+  List<int> _distributeRepetitions(int total, int sets) {
+    final base = total ~/ sets;
+    final remainder = total % sets;
+    return List.generate(sets, (index) => base + (index < remainder ? 1 : 0));
+  }
+
+  static const _triumvirate = <String, List<(String, int)>>{
+    'press': [('Dips', 15), ('Pull-up', 10)],
+    'bench': [('Dumbbell Bench Press', 15), ('Dumbbell Row', 10)],
+    'squat': [('Leg Press', 15), ('Hamstring Curl', 10)],
+    'deadlift': [('Good Morning', 12), ('Hanging Leg Raise', 15)],
+  };
+
+  static const _periodizationBible = <String, List<(String, int)>>{
+    'press': [('Dips', 15), ('Pull-up', 10), ('Pushdown', 15)],
+    'bench': [
+      ('Dumbbell Bench Press', 15),
+      ('Dumbbell Row', 10),
+      ('Triceps Extension', 15),
+    ],
+    'squat': [
+      ('Good Morning', 12),
+      ('Leg Press', 15),
+      ('Hanging Leg Raise', 15),
+    ],
+    'deadlift': [
+      ('Hamstring Curl', 10),
+      ('Leg Press', 15),
+      ('Hanging Leg Raise', 15),
+    ],
+  };
+
+  static const _bodyweight = <String, List<String>>{
+    'press': ['Pull-up', 'Dips'],
+    'bench': ['Pull-up', 'Push-up'],
+    'squat': ['One-leg Squat', 'Sit-up'],
+    'deadlift': ['Glute-ham Raise', 'Hanging Leg Raise'],
+  };
+
+  static const _simplestSupplemental = <String, String>{
+    'press': 'Close-grip Bench Press',
+    'bench': 'Incline Press',
+    'squat': 'Front Squat',
+    'deadlift': 'Straight-leg Deadlift',
+  };
+
+  static const _simplestAssistance = <String, List<String>>{
+    'press': ['Dumbbell Row', 'Pull-up', 'Pushdown', 'Biceps Curl'],
+    'bench': ['Dumbbell Row', 'Pull-up', 'Dips', 'Biceps Curl'],
+    'squat': ['Glute-ham Raise', 'Good Morning', 'Hanging Leg Raise'],
+    'deadlift': ['Hamstring Curl', 'Good Morning', 'Sit-up'],
+  };
+
+  static const _gvtAssistance = <String, (String, int, int)>{
+    'press': ('Lat Pulldown', 10, 10),
+    'bench': ('Dumbbell Row', 10, 10),
+    'squat': ('Ab Wheel', 5, 10),
+    'deadlift': ('Hanging Leg Raise', 5, 15),
+  };
 
   String _oppositeLift(String lift) => switch (lift) {
     'press' => 'bench',
@@ -523,9 +728,18 @@ class ClassicCalculatorEngine {
         (key, value) => MapEntry(key, (value as num).toDouble()),
       ),
       daysPerWeek: json['daysPerWeek'] as int,
+      unit: json['unit'] as String? ?? 'kg',
       supplementalPercent: json['supplementalPercent'] as int? ?? 50,
       warmupBaseUpper: (json['warmupBaseUpper'] as num?)?.toDouble() ?? 20,
       warmupBaseLower: (json['warmupBaseLower'] as num?)?.toDouble() ?? 20,
+      bodyweightTotalReps: json['bodyweightTotalReps'] as int? ?? 75,
+      bodyweightSetCount: json['bodyweightSetCount'] as int? ?? 5,
+      fslSetCount: json['fslSetCount'] as int? ?? 3,
+      fslRepCount: json['fslRepCount'] as int? ?? 5,
+      gvtPercent: json['gvtPercent'] as int? ?? 30,
+      gvtLessBoring: json['gvtLessBoring'] as bool? ?? false,
+      gvtPercents: (json['gvtPercents'] as Map<String, dynamic>? ?? const {})
+          .map((key, value) => MapEntry(key, value as int)),
       liftOrder: (json['liftOrder'] as List).cast<String>(),
       options: CalculatorOptions(
         order: MainWorkOrder.values.byName(options['order'] as String),

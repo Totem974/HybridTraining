@@ -118,21 +118,38 @@ class CalculatorConfiguration {
     required this.variantId,
     required Map<String, double> trainingMaxes,
     required this.daysPerWeek,
+    this.unit = 'kg',
     this.options = const CalculatorOptions(),
     this.supplementalPercent = 50,
     this.warmupBaseUpper = 20,
     this.warmupBaseLower = 20,
+    this.bodyweightTotalReps = 75,
+    this.bodyweightSetCount = 5,
+    this.fslSetCount = 3,
+    this.fslRepCount = 5,
+    this.gvtPercent = 30,
+    this.gvtLessBoring = false,
+    Map<String, int> gvtPercents = const {},
     List<String> liftOrder = const ['press', 'deadlift', 'bench', 'squat'],
   }) : trainingMaxes = Map.unmodifiable(trainingMaxes),
+       gvtPercents = Map.unmodifiable(gvtPercents),
        liftOrder = List.unmodifiable(liftOrder);
   final CalculatorTemplateId template;
   final String variantId;
   final Map<String, double> trainingMaxes;
   final int daysPerWeek;
+  final String unit;
   final CalculatorOptions options;
   final int supplementalPercent;
   final double warmupBaseUpper;
   final double warmupBaseLower;
+  final int bodyweightTotalReps;
+  final int bodyweightSetCount;
+  final int fslSetCount;
+  final int fslRepCount;
+  final int gvtPercent;
+  final bool gvtLessBoring;
+  final Map<String, int> gvtPercents;
   final List<String> liftOrder;
   Map<String, Object?> toJson() => {
     'schemaVersion': 1,
@@ -140,9 +157,17 @@ class CalculatorConfiguration {
     'variantId': variantId,
     'trainingMaxes': trainingMaxes,
     'daysPerWeek': daysPerWeek,
+    'unit': unit,
     'supplementalPercent': supplementalPercent,
     'warmupBaseUpper': warmupBaseUpper,
     'warmupBaseLower': warmupBaseLower,
+    'bodyweightTotalReps': bodyweightTotalReps,
+    'bodyweightSetCount': bodyweightSetCount,
+    'fslSetCount': fslSetCount,
+    'fslRepCount': fslRepCount,
+    'gvtPercent': gvtPercent,
+    'gvtLessBoring': gvtLessBoring,
+    'gvtPercents': gvtPercents,
     'options': options.toJson(),
     'liftOrder': liftOrder,
   };
@@ -168,18 +193,21 @@ class CalculatorSet {
     required this.weight,
     this.amrap = false,
     this.kind = 'main',
+    this.exercise,
   });
   final int repetitions;
   final int percent;
   final double weight;
   final bool amrap;
   final String kind;
+  final String? exercise;
   Map<String, Object?> toJson() => {
     'repetitions': repetitions,
     'percent': percent,
     'weight': weight,
     'amrap': amrap,
     'kind': kind,
+    if (exercise != null) 'exercise': exercise,
   };
 }
 

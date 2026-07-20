@@ -106,9 +106,9 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
     if (configuration == null) {
       throw const FormatException('Configuration incomplète.');
     }
-    final program = const calc.ClassicCalculatorEngine().generate(
-      configuration,
-    );
+    final program = calc.ClassicCalculatorEngine(
+      roundingIncrement: value['unit'] == 'lb' ? 5 : 2.5,
+    ).generate(configuration);
     return GeneratorResult(
       title: calc.calculatorTemplate(configuration.template).label,
       blocks: [
@@ -133,7 +133,13 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
       for (final session in week.sessions)
         PlanSessionView(_liftLabel(session.lift), [
           for (final set in session.sets)
-            '${set.kind == 'supplemental' ? 'SUP · ' : ''}${set.repetitions}${set.amrap ? '+' : ''} × ${set.weight.toStringAsFixed(set.weight % 1 == 0 ? 0 : 1)} · ${set.percent}%',
+            '${set.kind == 'supplemental'
+                ? 'SUP · '
+                : set.kind == 'assistance'
+                ? 'ASSIST · '
+                : set.kind == 'joker'
+                ? 'JOKER · optional · '
+                : ''}${set.exercise == null || set.kind == 'joker' ? '' : '${set.exercise} · '}${set.kind == 'joker' ? '' : '${set.repetitions}${set.amrap ? '+' : ''} reps'}${set.percent > 0 ? ' · ${set.weight.toStringAsFixed(set.weight % 1 == 0 ? 0 : 1)} · ${set.percent}%' : ''}',
         ]),
     ],
   );
@@ -158,7 +164,20 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
       variantId: variant,
       trainingMaxes: maxes,
       daysPerWeek: value['days'] as int? ?? 4,
+      unit: value['unit'] as String? ?? 'kg',
       supplementalPercent: value['supplementalPercent'] as int? ?? 50,
+      bodyweightTotalReps: value['bodyweightTotalReps'] as int? ?? 75,
+      bodyweightSetCount: value['bodyweightSetCount'] as int? ?? 5,
+      fslSetCount: value['fslSetCount'] as int? ?? 3,
+      fslRepCount: value['fslRepetitions'] as int? ?? 5,
+      gvtPercent: value['gvtRatio'] as int? ?? 30,
+      gvtLessBoring: value['gvtAlternateExercise'] as bool? ?? false,
+      gvtPercents:
+          value['gvtUseSameRatio'] == false && value['gvtRatiosByLift'] is Map
+          ? (value['gvtRatiosByLift'] as Map).map(
+              (key, ratio) => MapEntry('$key', ratio as int),
+            )
+          : const {},
       liftOrder:
           (value['liftOrder'] as List?)?.cast<String>() ??
           const ['press', 'deadlift', 'bench', 'squat'],
@@ -219,11 +238,7 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
     final raw = value['lifts'];
     if (raw is! Map) return null;
     final reps = value['repetitions'];
-    final kind = switch (value['inputMode']) {
-      'tm' => core.LiftInputKind.trainingMax,
-      'repMax' || 'plusSet' => core.LiftInputKind.repetitionMax,
-      _ => core.LiftInputKind.oneRepMax,
-    };
+    final inputMode = value['inputMode'] as String? ?? 'oneRm';
     const names = {
       core.MainLift.overheadPress: 'Press',
       core.MainLift.benchPress: 'Bench Press',
@@ -234,11 +249,21 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
     for (final entry in names.entries) {
       final weight = raw[entry.value];
       if (weight is! num || weight <= 0) return null;
+      final repetitionCount = reps is Map ? reps[entry.value] as int? ?? 1 : 1;
+      final kind = switch (inputMode) {
+        'tm' || 'plusSet' => core.LiftInputKind.trainingMax,
+        _ when repetitionCount > 1 => core.LiftInputKind.repetitionMax,
+        _ => core.LiftInputKind.oneRepMax,
+      };
       result[entry.key] = core.LiftInput(
         lift: entry.key,
         kind: kind,
-        weight: weight.toDouble(),
-        repetitions: reps is Map ? reps[entry.value] as int? : null,
+        weight: inputMode == 'plusSet'
+            ? weight.toDouble() / .95
+            : weight.toDouble(),
+        repetitions: kind == core.LiftInputKind.repetitionMax
+            ? repetitionCount
+            : null,
       );
     }
     return result;
@@ -313,9 +338,42 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
     return PlanWeekView('${map['name'] ?? 'Semaine ${index + 1}'}', [
       if (sessions is List)
         for (var i = 0; i < sessions.length; i++)
-          PlanSessionView('Séance ${i + 1}', [jsonEncode(sessions[i])])
+          _payloadSession(sessions[i], i)
       else
         PlanSessionView('Prescription', [jsonEncode(raw)]),
     ]);
+  }
+
+  static PlanSessionView _payloadSession(Object? raw, int index) {
+    final session = raw is Map ? raw : const {};
+    final prescriptions = session['prescriptions'];
+    final movement =
+        '${session['movementId'] ?? session['exercise'] ?? 'Séance ${index + 1}'}'
+            .replaceAll('barbell.', '')
+            .replaceAll('-', ' ');
+    if (prescriptions is! List) {
+      return PlanSessionView(_liftLabel(movement), const [
+        'Prescription disponible dans l’export JSON.',
+      ]);
+    }
+    return PlanSessionView(_liftLabel(movement), [
+      for (final rawPrescription in prescriptions)
+        if (rawPrescription is Map) _prescriptionLine(rawPrescription),
+    ]);
+  }
+
+  static String _prescriptionLine(Map prescription) {
+    final sets = prescription['sets'] ?? 1;
+    final reps =
+        prescription['repetitionsPerSet'] ?? prescription['repetitions'] ?? '?';
+    final load = prescription['calculatedLoad'] ?? prescription['weight'];
+    final percent = prescription['percentage'];
+    final kind = '${prescription['kind'] ?? ''}'
+        .replaceAll('mainWork', 'MAIN')
+        .replaceAll('supplemental', 'SUP');
+    final displayedPercent = percent is num
+        ? (percent <= 1 ? percent * 100 : percent)
+        : null;
+    return '${kind.isEmpty ? '' : '$kind · '}$sets × $reps${load == null ? '' : ' · $load'}${displayedPercent == null ? '' : ' · ${displayedPercent.toStringAsFixed(0)}%'}';
   }
 }

@@ -94,55 +94,49 @@ const calculatorTemplates = <TemplateDefinition>[
   TemplateDefinition(
     id: CalculatorTemplateId.triumvirate,
     label: 'Triumvirate',
-    allowedDays: {4},
+    allowedDays: {3, 4},
     sources: [_originalAssistance],
     variants: [
       VariantDefinition(
         id: 'original',
         label: 'Original',
-        status: EvidenceStatus.needsReview,
+        status: EvidenceStatus.executable,
         sources: [_originalAssistance],
-        blockedReason:
-            'Les exercices sont sourcés, mais le modèle de séance doit encore représenter deux mouvements d’assistance distincts.',
       ),
     ],
   ),
   TemplateDefinition(
     id: CalculatorTemplateId.periodizationBible,
     label: 'Periodization Bible',
-    allowedDays: {4},
+    allowedDays: {3, 4},
     sources: [_originalAssistance],
     variants: [
       VariantDefinition(
         id: 'original',
         label: 'Original',
-        status: EvidenceStatus.needsReview,
+        status: EvidenceStatus.executable,
         sources: [_originalAssistance],
-        blockedReason:
-            'Les catégories 5×10–20 sont documentées mais le choix des exercices doit être explicite avant génération.',
       ),
     ],
   ),
   TemplateDefinition(
     id: CalculatorTemplateId.bodyweight,
     label: 'Bodyweight',
-    allowedDays: {4},
+    allowedDays: {3, 4},
     sources: [_originalAssistance],
     variants: [
       VariantDefinition(
         id: 'original',
         label: 'Original',
-        status: EvidenceStatus.needsReview,
+        status: EvidenceStatus.executable,
         sources: [_originalAssistance],
-        blockedReason:
-            'Le minimum de 75 répétitions est documenté, mais la répartition en séries dépend des exercices choisis.',
       ),
     ],
   ),
   TemplateDefinition(
     id: CalculatorTemplateId.simplestStrength,
     label: 'Simplest Strength',
-    allowedDays: {4},
+    allowedDays: {3, 4},
     sources: [_originalAssistance],
     variants: [
       VariantDefinition(
@@ -265,10 +259,8 @@ const calculatorTemplates = <TemplateDefinition>[
       VariantDefinition(
         id: '10x10',
         label: '10×10',
-        status: EvidenceStatus.needsReview,
+        status: EvidenceStatus.executable,
         sources: [_gvt],
-        blockedReason:
-            'La source ne fixe pas de pourcentage canonique : un ratio utilisateur explicite et borné doit être ajouté au contrat.',
       ),
     ],
   ),
