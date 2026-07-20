@@ -7,11 +7,10 @@
 - POC Core/catalog/application line coverage: 787/844, or 93.25%.
 - Desktop and mobile calculator goldens pass.
 - `flutter build web --release`: passed; Wasm dry run passed.
-- Three integration scenarios cover an Original template, a Beyond template and
-  the reviewed Forever macrocycle. Flutter cannot run integration tests directly
-  on an Edge web device; the default Android runner also failed to locate its
-  produced APK in this environment. Browser E2E is therefore not claimed as
-  passing.
+- The integration suite covers Original, Beyond and the reviewed Forever
+  macrocycle. Chrome and Firefox pass the five current scenarios. Edge remains
+  blocked by the Flutter SDK capability described below; Android validation is
+  intentionally deferred.
 
 ## Core
 
@@ -62,6 +61,7 @@ changes affect the existing application.
 - Android DEV and PROD debug APK builds: pass.
 - Visual goldens: pass at 1200×900 desktop and 390×844 mobile.
 - Route and exact configuration-mapping tests: pass.
-- Browser E2E: test source contains one full scenario per generation. Execution
-  reached WebDriver session creation but was rejected because Edge
-  `150.0.4078.65` does not match msedgedriver `150.0.4078.83`.
+- Browser E2E: Chrome and Firefox execute the checked-in scenarios. Edge and
+  EdgeDriver are aligned on `150.0.4078.83`, but Flutter 3.44.6 submits
+  `browserName: edge`; EdgeDriver rejects it because it requires
+  `MicrosoftEdge`.

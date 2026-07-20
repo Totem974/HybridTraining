@@ -116,8 +116,9 @@
   and Android DEV/PROD debug builds pass.
 - 190 tests pass; POC Core line coverage is 290/303 (95.71%).
 - Desktop and mobile golden states cover landing, onboarding, and generator.
-- Browser E2E scenarios are implemented for all three generations; execution is
-  blocked externally by the Edge 150.0.4078.65 / driver 150.0.4078.83 mismatch.
+- Browser E2E scenarios are implemented for all three generations. Edge and its
+  driver are now aligned on 150.0.4078.83, but Flutter 3.44.6 sends
+  `browserName: edge` while the driver requires `MicrosoftEdge`.
 
 ## Checkpoint 9 — complete
 

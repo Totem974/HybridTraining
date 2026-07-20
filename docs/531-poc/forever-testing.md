@@ -4,7 +4,7 @@
 
 Les tests couvrent recette 2L/1A, insertion des protocoles, rôles, pairing,
 blocage `needsReview`, programme autonome, projections TM liées aux nœuds,
-sérialisation déterministe et migration v2. Le golden historique protège les
+sérialisation déterministe et migrations v2 → v3 → v4 et v3 → v4. Le golden historique protège les
 prescriptions du preset existant.
 
 Un test source interdit toute décision Forever dépendant des semaines 3, 6, 10
@@ -30,13 +30,13 @@ est rapporté sans déclarer le scénario passant.
 
 - `dart format --set-exit-if-changed .` : réussi ;
 - `flutter analyze` : réussi, aucun diagnostic ;
-- `flutter test --reporter compact` : réussi, 321 tests ;
+- `flutter test --reporter compact` : réussi, 329 tests ;
 - Google Chrome : cinq scénarios E2E sur cinq réussis en 34,7 secondes ;
 - Mozilla Firefox : cinq scénarios E2E sur cinq réussis en 34,7 secondes ;
 - le scénario Forever termine M1 et M2, clôture la série, recharge une nouvelle
   page depuis le stockage navigateur réel et vérifie les TM 62,5 puis 65 ;
-- Microsoft Edge : non exécuté ; malgré un WebDriver local prêt, `flutter
-  drive` reste silencieux avant toute création de session. Ce blocage relève de
-  l'outillage et aucun résultat Edge n'est déclaré ;
+- Microsoft Edge : non exécuté ; Flutter 3.44.6 envoie la capability
+  `browserName: edge`, refusée par EdgeDriver 150 qui attend `MicrosoftEdge`.
+  Ce blocage relève du SDK Flutter et aucun résultat Edge n'est déclaré ;
 - validations et builds Android : explicitement reportés à un chantier
   ultérieur et non bloquants pour ce lot.

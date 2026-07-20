@@ -36,8 +36,11 @@ compilateur. L’UI ne les propose pas comme choix productifs.
 - Le schéma v4 stocke soit un `standaloneProgramId`, soit une série finie.
 - Les migrations v2 → v3 → v4, v3 → v4 et FV-236 → M1 2L/1A sont prises en
   charge sans modifier les anciens snapshots.
-- La séquence compilée pilote l’ordre, les révisions et les dates transmis au
-  générateur canonique ; l’Anchor utilise sa révision distincte.
+- La séquence compilée pilote l'ordre, les révisions et les dates transmis au
+  générateur canonique ; l'Anchor utilise sa révision distincte.
+- `CycleStrategyRegistry` et `ProtocolStrategyRegistry` sont les autorités
+  immuables des prescriptions. Le générateur interprète ces stratégies et ne
+  conserve aucune table métier concurrente.
 - La continuation ajoute un seul M2 `projected/planned` et préserve M1.
 - Les décisions TM conservent un état par lift : `confirmed`, `projected`,
   `proposed`, `held` ou `reset`. Une hausse supérieure à la règle est refusée.
@@ -59,7 +62,7 @@ Validations exécutées le 20 juillet 2026 :
 
 - `dart format --set-exit-if-changed .` : réussi ;
 - `flutter analyze` : réussi, aucune anomalie ;
-- `flutter test --reporter compact` : réussi, 321 tests ;
+- `flutter test --reporter compact` : réussi, 329 tests ;
 - tests visuels desktop et mobile : réussis, 4/4 ;
 - tests ciblés génération canonique, adaptateur et widgets : réussis, 36/36 ;
 - tests ciblés du domaine planning : réussis, 21/21 ;
@@ -73,11 +76,11 @@ avec succès en 34,7 secondes. Le scénario Forever termine M1 et M2, clôture l
 série puis recrée la page et restaure le snapshot v4 depuis le stockage local du
 navigateur, avec les TM Press 62,5 puis 65.
 
-Microsoft Edge et le pilote local protégé de `.SOURCE/` sont disponibles, mais
-le parcours Edge n’a pas été exécuté : malgré un WebDriver prêt, `flutter drive`
-reste silencieux avant toute création de session. Chrome reste donc la cible
-Web de référence de ce chantier ; ce blocage Edge relève de l’outillage et
-aucun résultat Edge n’est déclaré.
+Microsoft Edge et le pilote local protégé de `.SOURCE/` sont alignés en version
+150.0.4078.83. Le parcours Edge n'a pas été exécuté : Flutter 3.44.6 envoie
+`browserName: edge`, capability refusée par EdgeDriver qui attend
+`MicrosoftEdge`. Chrome reste donc la cible Web de référence ; ce blocage relève
+du SDK Flutter et aucun résultat Edge n'est déclaré.
 
 Le pilote de test limite désormais une exécution navigateur à deux minutes afin
 qu’un défaut de connexion ne bloque plus le chantier. À la demande du

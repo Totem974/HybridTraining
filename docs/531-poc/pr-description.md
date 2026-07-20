@@ -18,8 +18,8 @@ une timeline.
 - C2 identique à C1 et changement désactivé faute d'autre règle sourcée ;
 - Deload et TM Test auto-insérés, typés et non supprimables ;
 - Beginner Prep School maintenu comme programme autonome ;
-- schéma de configuration v3 déterministe et migration v2/aliases ;
-- restauration par URL `?mode=` et lien partagé contenant le payload v3 ;
+- schéma de configuration v4 déterministe et migrations v2/v3/aliases ;
+- restauration par URL `?mode=` et lien partagé contenant le payload v4 ;
 - TM futurs projetés, confirmations adressées par C1/C2/C3, plus aucune décision
   Forever liée aux semaines 3, 6, 10 ou 11 ;
 - timeline responsive, contrôles clavier de réordonnancement et annonces de copie ;
@@ -38,20 +38,20 @@ autres familles ne sont pas activés.
 
 - format : pass ;
 - analyse statique : pass ;
-- 321 tests unitaires/widget/routes/persistance/goldens : pass ;
+- 329 tests unitaires/widget/routes/persistance/goldens : pass ;
 - E2E Google Chrome : 5/5 en 34,7 secondes ;
 - E2E Mozilla Firefox : 5/5 en 34,7 secondes ;
 - persistance Web réelle : série M1/M2 terminée restaurée après recréation de
   la page, avec décisions TM et état de terminaison conservés ;
-- E2E Microsoft Edge : non exécuté ; malgré un WebDriver local prêt, `flutter
-  drive` reste silencieux avant toute création de session ;
+- E2E Microsoft Edge : non exécuté ; Flutter 3.44.6 utilise
+  `browserName: edge`, alors qu'EdgeDriver 150 exige `MicrosoftEdge` ;
 - validations et builds Android : explicitement reportés à un chantier
   ultérieur et non bloquants pour ce lot.
 
 ## Risques et suivi
 
-- reprendre la validation Edge après diagnostic du blocage de `flutter drive`
-  avant la création de session WebDriver ;
+- reprendre la validation Edge après correction de la capability Edge dans le
+  SDK Flutter ;
 - reprendre les validations et builds Android dans le chantier dédié ;
 - retirer définitivement l'adaptateur de checkpoints v2 par semaine après la
   fenêtre de migration ;
