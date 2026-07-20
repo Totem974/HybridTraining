@@ -22,8 +22,13 @@
   intégrale et vérification de cette archive dans le cadre de cette tâche.
 - Aucune suppression distante ni aucun push sans liste finale et autorisation
   explicite du propriétaire.
-- Les commandes de qualité et validations Android de ce fichier restent
-  obligatoires.
+- Les commandes de qualité de ce fichier restent obligatoires. Pendant ce
+  chantier, les parcours utilisateur sont validés sur le Web en priorité.
+  Google Chrome 150 avec son ChromeDriver officiel compatible est la cible de
+  référence ; Edge reste disponible avec le `msedgedriver.exe` local protégé de
+  `.SOURCE/` lorsque l’outillage Flutter accepte ses capabilities WebDriver.
+- Les validations et builds Android sont explicitement reportés à un chantier
+  ultérieur et ne bloquent pas la clôture de ce lot.
 - Ces consignes sont temporaires et ne constituent pas une décision produit
   permanente.
 
@@ -81,8 +86,9 @@ flutter test
 ```
 
 Pour une modification de persistance, de navigation ou de parcours utilisateur,
-exécuter également les tests d'intégration pertinents. Pour une modification
-Android, compiler au minimum les deux flavors en mode debug.
+exécuter également les tests d'intégration pertinents sous Google Chrome.
+Pendant la phase temporaire Forever v2, les validations Android seront reprises
+dans un chantier dédié ultérieur.
 
 Si une commande ne peut pas être exécutée, ne pas déclarer la tâche terminée :
 documenter la commande, le blocage et la validation encore nécessaire.

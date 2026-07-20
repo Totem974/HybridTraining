@@ -94,6 +94,25 @@ void main() {
       );
     });
 
+    test('productive Original transitions describe both cycle boundaries', () {
+      expect(
+        foreverOriginalFslLeaderTransition.evaluate(frequency: 4).isCompatible,
+        isTrue,
+      );
+      expect(
+        foreverOriginalFslAnchorTransition.evaluate(frequency: 4).isCompatible,
+        isTrue,
+      );
+      expect(
+        foreverOriginalFslAnchorTransition.toTemplateRevisionId,
+        foreverOriginalPrSetAnchorRevision.id,
+      );
+      expect(
+        foreverOriginalFslPairing,
+        same(foreverOriginalFslLeaderTransition),
+      );
+    });
+
     test('a series is finite and preserves macrocycle order', () {
       final first = ForeverMacrocycle(
         instanceId: 'M1',
@@ -141,6 +160,109 @@ void main() {
         result.issues.map((issue) => issue.code),
         containsAll({'macrocycle.slot_missing', 'recipe.needs_review'}),
       );
+    });
+
+    test('validator accepts history followed by active and planned states', () {
+      final series = ForeverProgramSeries(
+        id: 'valid-lifecycle',
+        macrocycles: [
+          macrocycle(id: 'M1'),
+          macrocycle(id: 'M2', status: MacrocycleStatus.cancelled),
+          macrocycle(id: 'M3', status: MacrocycleStatus.active),
+          macrocycle(
+            id: 'M4',
+            intent: MacrocycleIntent.projected,
+            status: MacrocycleStatus.planned,
+          ),
+        ],
+      );
+
+      expect(
+        const MacrocycleSeriesValidator().validate(series).isValid,
+        isTrue,
+      );
+    });
+
+    test('validator rejects incoherent intent and status pairs', () {
+      final invalid = ForeverProgramSeries(
+        id: 'invalid-pairs',
+        macrocycles: [
+          macrocycle(
+            id: 'M1',
+            intent: MacrocycleIntent.projected,
+            status: MacrocycleStatus.completed,
+          ),
+          macrocycle(
+            id: 'M2',
+            intent: MacrocycleIntent.projected,
+            status: MacrocycleStatus.active,
+          ),
+          macrocycle(id: 'M3', status: MacrocycleStatus.planned),
+        ],
+      );
+
+      final codes = const MacrocycleSeriesValidator()
+          .validate(invalid)
+          .issues
+          .map((issue) => issue.code);
+      expect(
+        codes,
+        containsAll({
+          'series.history_must_be_active_intent',
+          'series.active_status_must_be_active_intent',
+          'series.planned_status_must_be_projected_intent',
+          'series.projected_intent_must_be_planned',
+        }),
+      );
+    });
+
+    test('validator rejects multiple current or future macrocycles', () {
+      final invalid = ForeverProgramSeries(
+        id: 'too-many-current',
+        macrocycles: [
+          macrocycle(id: 'M1', status: MacrocycleStatus.active),
+          macrocycle(id: 'M2', status: MacrocycleStatus.active),
+          macrocycle(
+            id: 'M3',
+            intent: MacrocycleIntent.projected,
+            status: MacrocycleStatus.planned,
+          ),
+          macrocycle(
+            id: 'M4',
+            intent: MacrocycleIntent.projected,
+            status: MacrocycleStatus.planned,
+          ),
+        ],
+      );
+
+      final codes = const MacrocycleSeriesValidator()
+          .validate(invalid)
+          .issues
+          .map((issue) => issue.code);
+      expect(codes, contains('series.multiple_active'));
+      expect(codes, contains('series.multiple_planned'));
+    });
+
+    test('validator rejects history or active after future', () {
+      final invalid = ForeverProgramSeries(
+        id: 'invalid-order',
+        macrocycles: [
+          macrocycle(
+            id: 'M1',
+            intent: MacrocycleIntent.projected,
+            status: MacrocycleStatus.planned,
+          ),
+          macrocycle(id: 'M2', status: MacrocycleStatus.active),
+          macrocycle(id: 'M3'),
+        ],
+      );
+
+      final codes = const MacrocycleSeriesValidator()
+          .validate(invalid)
+          .issues
+          .map((issue) => issue.code);
+      expect(codes, contains('series.active_after_planned'));
+      expect(codes, contains('series.history_after_current_or_future'));
     });
 
     test(
@@ -193,6 +315,37 @@ void main() {
         });
       },
     );
+
+    test('compiler preserves a distinct Training Max state for every lift', () {
+      final series = ForeverProgramSeries(
+        id: 'mixed-tm-states',
+        profile: profile(),
+        macrocycles: [
+          macrocycle(
+            id: 'M1',
+            outcome: MacrocycleOutcome(
+              macrocycleInstanceId: 'M1',
+              trainingMaxStates: const {
+                'press': TrainingMaxDecisionState.held,
+                'squat': TrainingMaxDecisionState.reset,
+              },
+            ),
+            trainingMaxChoices: const {'press': 50, 'squat': 90},
+          ),
+        ],
+      );
+
+      final decision = const ForeverSequenceCompiler()
+          .compileSeries(series)
+          .trainingMaxDecisions
+          .single;
+
+      expect(decision.states, const {
+        'press': TrainingMaxDecisionState.held,
+        'squat': TrainingMaxDecisionState.reset,
+      });
+      expect(() => decision.state, throwsStateError);
+    });
 
     test('only sourced cycle and protocol revisions resolve', () {
       const cycles = CycleStrategyRegistry();

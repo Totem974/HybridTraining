@@ -239,10 +239,116 @@ void main() {
       expect(macrocycles, hasLength(2));
       expect(macrocycles.first, m1);
       expect((macrocycles.last as Map)['instanceId'], 'M2');
-      expect((macrocycles.last as Map)['intent'], 'cloneAndEdit');
-      expect((macrocycles.last as Map)['status'], 'active');
+      expect((macrocycles.last as Map)['intent'], 'projected');
+      expect((macrocycles.last as Map)['status'], 'planned');
+
+      final terminate = find.byKey(const Key('terminate-forever-series'));
+      await tester.ensureVisible(terminate);
+      await tester.tap(terminate);
+      await tester.pumpAndSettle();
+      final terminatedForever = core.lastConfiguration!['forever']! as Map;
+      final terminatedSeries = terminatedForever['series']! as Map;
+      expect(terminatedSeries['terminated'], isTrue);
+      expect(terminatedSeries['macrocycles'], [m1]);
     },
   );
+
+  testWidgets('v4 restore preserves exact series and standalone identities', (
+    tester,
+  ) async {
+    final seriesCore = _RecordingGeneratorCore();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Poc531GeneratorPage(
+          core: seriesCore,
+          initialConfiguration: const {
+            'schemaVersion': 4,
+            'mode': 'forever',
+            'common': {'unit': 'kg'},
+            'forever': {
+              'series': {
+                'id': 'series-preserved',
+                'terminated': true,
+                'macrocycles': <Object?>[],
+              },
+            },
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      ((seriesCore.lastConfiguration!['forever'] as Map)['series']
+          as Map)['id'],
+      'series-preserved',
+    );
+    expect(
+      ((seriesCore.lastConfiguration!['forever'] as Map)['series']
+          as Map)['terminated'],
+      isTrue,
+    );
+
+    final standaloneCore = _RecordingGeneratorCore();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Poc531GeneratorPage(
+          key: const ValueKey('standalone-restore'),
+          core: standaloneCore,
+          initialConfiguration: const {
+            'schemaVersion': 4,
+            'mode': 'forever',
+            'common': {'unit': 'kg'},
+            'forever': {'standaloneProgramId': 'FV-141'},
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      (standaloneCore.lastConfiguration!['forever']
+          as Map)['standaloneProgramId'],
+      'FV-141',
+    );
+  });
+
+  testWidgets('active M1 records lift TM decisions before completion', (
+    tester,
+  ) async {
+    final core = _RecordingGeneratorCore();
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        home: Poc531GeneratorPage(
+          core: core,
+          initialConfiguration: const {
+            'mode': 'forever',
+            'foreverTemplateId': 'FV-236',
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('forever-step-7')));
+    await tester.pumpAndSettle();
+    final pressDecision = find.byKey(const Key('tm-decision-press'));
+    await tester.ensureVisible(pressDecision);
+    await tester.tap(pressDecision);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Hold').last);
+    await tester.pumpAndSettle();
+    final complete = find.byKey(const Key('complete-active-macrocycle'));
+    await tester.ensureVisible(complete);
+    await tester.tap(complete);
+    await tester.pumpAndSettle();
+
+    final forever = core.lastConfiguration!['forever'] as Map;
+    final series = forever['series'] as Map;
+    final m1 = (series['macrocycles'] as List).single as Map;
+    expect(m1['status'], 'completed');
+    final states = m1['trainingMaxStates'] as Map;
+    expect((states['press'] as Map)['state'], 'held');
+    expect(states.keys, containsAll(['press', 'bench', 'squat', 'deadlift']));
+  });
 
   testWidgets('mode selector preserves common inputs and both mode drafts', (
     tester,

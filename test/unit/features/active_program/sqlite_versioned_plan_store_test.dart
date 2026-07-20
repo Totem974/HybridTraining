@@ -524,6 +524,118 @@ void main() {
       );
     },
   );
+
+  test(
+    'Forever future amendment rejects a stale persisted-future preview',
+    () async {
+      await store.createPlan(_plan());
+      final db = await local.open();
+      await _insertSquatCompatibility(db);
+      final request = ForeverFutureAmendmentRequest(
+        currentPlanId: 'plan-1',
+        futurePlan: _replacementPlan(),
+        reason: 'Extend the verified Forever series',
+        ruleId: 'FOREVER-SERIES-V2',
+      );
+      final preview = await store.previewForeverFutureAmendment(request);
+
+      await db.update(
+        'set_prescriptions',
+        {'prescribed_load': 999.0},
+        where: 'id = ?',
+        whereArgs: ['deadlift-block-set'],
+      );
+
+      await expectLater(
+        store.applyForeverFutureAmendment(
+          request,
+          previewId: preview.previewId,
+          confirmed: true,
+        ),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains('changed after'),
+          ),
+        ),
+      );
+      expect(
+        await db.query(
+          'plan_training_sessions',
+          where: 'id = ?',
+          whereArgs: ['session-2'],
+        ),
+        hasLength(1),
+      );
+      expect(
+        await db.query(
+          'plan_training_sessions',
+          where: 'id = ?',
+          whereArgs: ['replacement-session'],
+        ),
+        isEmpty,
+      );
+    },
+  );
+
+  test(
+    'Forever future preview signs rounding and prescription details',
+    () async {
+      await store.createPlan(_plan());
+      await _insertSquatCompatibility(await local.open());
+      final original = ForeverFutureAmendmentRequest(
+        currentPlanId: 'plan-1',
+        futurePlan: _replacementPlan(),
+        reason: 'Extend the verified Forever series',
+        ruleId: 'FOREVER-SERIES-V2',
+      );
+      final preview = await store.previewForeverFutureAmendment(original);
+      final changed = ForeverFutureAmendmentRequest(
+        currentPlanId: 'plan-1',
+        futurePlan: _replacementPlan(
+          roundingIncrement: 1.25,
+          details: const {'kind': 'changed-work'},
+        ),
+        reason: original.reason,
+        ruleId: original.ruleId,
+      );
+
+      await expectLater(
+        store.applyForeverFutureAmendment(
+          changed,
+          previewId: preview.previewId,
+          confirmed: true,
+        ),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains('matching unapplied preview'),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Future<void> _insertSquatCompatibility(Database db) async {
+  await db.insert('exercises', {
+    'id': 'squat',
+    'name_key': 'exercise.squat',
+    'category': 'mainLift',
+    'is_main_lift': 1,
+    'created_at': '2026-07-18T00:00:00Z',
+  });
+  await db.insert('training_max_history', {
+    'id': 'test-squat-tm',
+    'athlete_id': 'athlete',
+    'exercise_id': 'squat',
+    'one_rep_max': 175.0,
+    'training_max': 150.0,
+    'unit': 'kg',
+    'effective_at': '2026-07-18T00:00:00Z',
+  });
 }
 
 VersionedTrainingPlan _plan({
@@ -590,7 +702,10 @@ VersionedTrainingPlan _plan({
   ],
 );
 
-VersionedTrainingPlan _replacementPlan() => VersionedTrainingPlan(
+VersionedTrainingPlan _replacementPlan({
+  double roundingIncrement = 2.5,
+  Map<String, Object?> details = const {'kind': 'work'},
+}) => VersionedTrainingPlan(
   id: 'replacement-plan',
   athleteId: 'athlete',
   blueprintId: 'reviewed-replacement-v1',
@@ -618,7 +733,14 @@ VersionedTrainingPlan _replacementPlan() => VersionedTrainingPlan(
               sequence: 0,
               scheduledFor: DateTime(2026, 8, 3),
               blocks: [
-                _sessionBlock('replacement-squat-block', 0, 'squat', 150),
+                _sessionBlock(
+                  'replacement-squat-block',
+                  0,
+                  'squat',
+                  150,
+                  roundingIncrement: roundingIncrement,
+                  details: details,
+                ),
               ],
             ),
           ],
@@ -632,8 +754,10 @@ PlannedSessionBlock _sessionBlock(
   String id,
   int sequence,
   String movement,
-  double trainingMax,
-) => PlannedSessionBlock(
+  double trainingMax, {
+  double roundingIncrement = 2.5,
+  Map<String, Object?> details = const {'kind': 'work'},
+}) => PlannedSessionBlock(
   id: id,
   sequence: sequence,
   kind: 'mainWork',
@@ -646,10 +770,10 @@ PlannedSessionBlock _sessionBlock(
       trainingMax: trainingMax,
       percentage: 0.65,
       unroundedLoad: trainingMax * 0.65,
-      roundingIncrement: 2.5,
+      roundingIncrement: roundingIncrement,
       prescribedLoad: trainingMax * 0.65,
       prescribedReps: 5,
-      details: const {'kind': 'work'},
+      details: details,
       ruleProvenance: const {'policy': 'main-v1'},
     ),
   ],

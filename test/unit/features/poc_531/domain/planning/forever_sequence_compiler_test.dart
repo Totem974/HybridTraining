@@ -91,23 +91,12 @@ void main() {
       );
     });
 
-    test('pairing rejects any unsourced supplemental revision', () {
-      const unsupported = CycleRevision(
-        id: 'original-plus-unknown',
-        version: 1,
-        mainWork: foreverOriginalMainWorkRevision,
-        supplementalWork: ProgramRevision(
-          id: 'unknown',
-          version: 1,
-          source: RuleSource(document: 'unknown', location: 'unknown'),
-        ),
-      );
-
-      final compatibility = foreverOriginalFslPairing.evaluate(unsupported);
+    test('productive transition rejects an unsupported frequency', () {
+      final compatibility = foreverOriginalFslPairing.evaluate(frequency: 3);
       expect(compatibility.isCompatible, isFalse);
       expect(
         compatibility.issues.single.code,
-        'pairing.supplemental_not_supported',
+        'transition.frequency_not_allowed',
       );
     });
 

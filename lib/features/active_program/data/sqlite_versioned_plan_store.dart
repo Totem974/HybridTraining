@@ -154,6 +154,7 @@ class SqliteVersionedPlanStore
           1;
       final previewId = '${request.currentPlanId}:future-amendment:$version';
       final after = _futureAmendmentSignature(request);
+      final before = await _persistedFutureSignature(tx, request.currentPlanId);
       final diff = {
         'preservedSessionIds': preserved,
         'replacedPlannedSessionIds': replaced,
@@ -169,7 +170,7 @@ class SqliteVersionedPlanStore
         'state': 'previewed',
         'reason': request.reason.trim(),
         'rule_id': request.ruleId.trim(),
-        'before_snapshot_json': canonicalJson({'sessions': sessions}),
+        'before_snapshot_json': canonicalJson(before),
         'after_snapshot_json': canonicalJson(after),
         'diff_json': canonicalJson(diff),
         'created_at': request.futurePlan.createdAt.toUtc().toIso8601String(),
@@ -211,6 +212,16 @@ class SqliteVersionedPlanStore
           previews.single['after_snapshot_json'] !=
               canonicalJson(_futureAmendmentSignature(request))) {
         throw StateError('A matching unapplied preview is required.');
+      }
+      final persistedFuture = await _persistedFutureSignature(
+        tx,
+        request.currentPlanId,
+      );
+      if (previews.single['before_snapshot_json'] !=
+          canonicalJson(persistedFuture)) {
+        throw StateError(
+          'The planned future changed after the amendment preview.',
+        );
       }
 
       // Cascades remove prescriptions only below planned sessions. Closed and
@@ -936,6 +947,53 @@ class SqliteVersionedPlanStore
     _firstSessionDate(request.futurePlan);
   }
 
+  Future<Map<String, Object?>> _persistedFutureSignature(
+    DatabaseExecutor tx,
+    String planId,
+  ) async {
+    Future<List<Map<String, Object?>>> rows(String sql) async =>
+        tx.rawQuery(sql, [planId]);
+
+    return {
+      'blocks': await rows('''SELECT b.* FROM training_blocks b
+           WHERE b.plan_id = ? AND b.status = 'planned'
+           ORDER BY b.sequence, b.id'''),
+      'cycles': await rows('''SELECT c.* FROM plan_training_cycles c
+           JOIN training_blocks b ON b.id = c.block_id
+           WHERE b.plan_id = ? AND c.status = 'planned'
+           ORDER BY b.sequence, c.sequence, c.id'''),
+      'sessions': await rows('''SELECT s.* FROM plan_training_sessions s
+           JOIN plan_training_cycles c ON c.id = s.cycle_id
+           JOIN training_blocks b ON b.id = c.block_id
+           WHERE b.plan_id = ? AND s.status = 'planned'
+           ORDER BY b.sequence, c.sequence, s.sequence, s.id'''),
+      'sessionBlocks': await rows('''SELECT sb.* FROM session_blocks sb
+           JOIN plan_training_sessions s ON s.id = sb.session_id
+           JOIN plan_training_cycles c ON c.id = s.cycle_id
+           JOIN training_blocks b ON b.id = c.block_id
+           WHERE b.plan_id = ? AND s.status = 'planned'
+           ORDER BY b.sequence, c.sequence, s.sequence, sb.sequence, sb.id'''),
+      'setPrescriptions': await rows('''SELECT p.* FROM set_prescriptions p
+           JOIN session_blocks sb ON sb.id = p.session_block_id
+           JOIN plan_training_sessions s ON s.id = sb.session_id
+           JOIN plan_training_cycles c ON c.id = s.cycle_id
+           JOIN training_blocks b ON b.id = c.block_id
+           WHERE b.plan_id = ? AND s.status = 'planned'
+           ORDER BY b.sequence, c.sequence, s.sequence, sb.sequence,
+                    p.sequence, p.id'''),
+      'activityPrescriptions': await rows(
+        '''SELECT p.* FROM activity_prescriptions p
+           JOIN session_blocks sb ON sb.id = p.session_block_id
+           JOIN plan_training_sessions s ON s.id = sb.session_id
+           JOIN plan_training_cycles c ON c.id = s.cycle_id
+           JOIN training_blocks b ON b.id = c.block_id
+           WHERE b.plan_id = ? AND s.status = 'planned'
+           ORDER BY b.sequence, c.sequence, s.sequence, sb.sequence,
+                    p.sequence, p.id''',
+      ),
+    };
+  }
+
   Map<String, Object?> _futureAmendmentSignature(
     ForeverFutureAmendmentRequest request,
   ) => {
@@ -954,18 +1012,22 @@ class SqliteVersionedPlanStore
           'role': block.role,
           'type': block.type,
           'templateId': block.templateId,
+          'seventhWeekPurpose': block.seventhWeekPurpose,
           'cycles': [
             for (final cycle in block.cycles)
               {
                 'id': cycle.id,
                 'sequence': cycle.sequence,
                 'startsOn': _date(cycle.startsOn),
+                'programmingCycleNumber': cycle.programmingCycleNumber,
                 'sessions': [
                   for (final session in cycle.sessions)
                     {
                       'id': session.id,
                       'sequence': session.sequence,
                       'scheduledFor': _date(session.scheduledFor),
+                      'programmingWeekNumber': session.programmingWeekNumber,
+                      'position': session.position,
                       'blocks': [
                         for (final sessionBlock in session.blocks)
                           {
@@ -973,6 +1035,7 @@ class SqliteVersionedPlanStore
                             'sequence': sessionBlock.sequence,
                             'kind': sessionBlock.kind,
                             'movementId': sessionBlock.movementId,
+                            'ruleProvenance': sessionBlock.ruleProvenance,
                             'prescriptions': [
                               for (final set in sessionBlock.prescriptions)
                                 {
@@ -980,8 +1043,12 @@ class SqliteVersionedPlanStore
                                   'sequence': set.sequence,
                                   'trainingMax': set.trainingMax,
                                   'percentage': set.percentage,
+                                  'unroundedLoad': set.unroundedLoad,
+                                  'roundingIncrement': set.roundingIncrement,
                                   'prescribedLoad': set.prescribedLoad,
                                   'prescribedReps': set.prescribedReps,
+                                  'details': set.details,
+                                  'ruleProvenance': set.ruleProvenance,
                                 },
                             ],
                             'activities': [
@@ -991,8 +1058,18 @@ class SqliteVersionedPlanStore
                                   'sequence': activity.sequence,
                                   'movementOrActivityId':
                                       activity.movementOrActivityId,
+                                  'targetType': activity.targetType,
                                   'target': activity.target,
                                   'kind': activity.kind,
+                                  'ruleId': activity.ruleId,
+                                  'sourceEdition': activity.sourceEdition,
+                                  'generation': activity.generation,
+                                  'source': activity.source,
+                                  'calculatedLoad': activity.calculatedLoad,
+                                  'unroundedLoad': activity.unroundedLoad,
+                                  'roundingIncrement':
+                                      activity.roundingIncrement,
+                                  'percentage': activity.percentage,
                                 },
                             ],
                           },

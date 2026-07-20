@@ -674,6 +674,13 @@ class CanonicalPlanGenerator {
           athlete.confirmedTrainingMaxesByWeek[afterWeek];
       final effective =
           confirmed ?? athlete.projectedTrainingMaxesByNode[nodeId];
+      if (sequence != null &&
+          effective == null &&
+          !sequence.trainingMaxDecisions.any(
+            (decision) => decision.nodeId == nodeId,
+          )) {
+        return true;
+      }
       if (effective != null) {
         for (final movement in athlete.movementOrder) {
           final maximum =
@@ -706,7 +713,16 @@ class CanonicalPlanGenerator {
     var cycleNumber = 0;
     for (final node in nodes) {
       if (node is planning.ForeverCycleNode) {
-        if (node.revision.id != planning.foreverOriginalFslCycleRevision.id) {
+        final supportedRevision = switch (node.role) {
+          planning.CycleRole.leader =>
+            node.revision.id == planning.foreverOriginalFslLeaderRevision.id ||
+                node.revision.id == planning.foreverOriginalFslCycleRevision.id,
+          planning.CycleRole.anchor =>
+            node.revision.id ==
+                    planning.foreverOriginalPrSetAnchorRevision.id ||
+                node.revision.id == planning.foreverOriginalFslCycleRevision.id,
+        };
+        if (!supportedRevision) {
           throw StateError(
             'No canonical prescriptions are registered for Forever cycle revision ${node.revision.id}.',
           );

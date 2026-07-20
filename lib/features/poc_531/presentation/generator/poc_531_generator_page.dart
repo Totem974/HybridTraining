@@ -249,7 +249,12 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   int? _busyRevision;
   int _foreverStep = 0;
   String _continuationMode = 'repeatSame';
+  String _seriesId = 'forever-series-v1';
+  bool _seriesTerminated = false;
   List<Map<String, Object?>> _seriesMacrocycles = const [];
+  final Map<String, String> _trainingMaxActions = {
+    for (final lift in _liftIds) lift: 'applyProposal',
+  };
 
   List<CalculatorTemplateChoice> get _classic {
     if (widget.core.options.classicTemplates.isNotEmpty) {
@@ -412,8 +417,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
           ? {'standaloneProgramId': _foreverId}
           : {
               'series': {
-                'id': 'forever-series-v1',
-                'terminated': false,
+                'id': _seriesId,
+                'terminated': _seriesTerminated,
                 'macrocycles': _effectiveMacrocycles,
               },
             },
@@ -422,12 +427,14 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
 
   List<Map<String, Object?>> get _effectiveMacrocycles =>
       _seriesMacrocycles.isEmpty
-      ? [_newMacrocycle('M1', 'active')]
+      ? _seriesTerminated
+            ? const []
+            : [_newMacrocycle('M1', 'active')]
       : _seriesMacrocycles;
 
   Map<String, Object?> _newMacrocycle(String id, String status) => {
     'instanceId': id,
-    'intent': id == 'M1' ? 'active' : _continuationMode,
+    'intent': status == 'planned' ? 'projected' : 'active',
     'status': status,
     'recipeId': 'forever-2l1a-v2',
     'slots': const [
@@ -799,17 +806,12 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
         final actual = _effectiveMacrocycles;
         final cards = <Widget>[
           for (final macrocycle in actual)
-            _macrocycleCard(
-              '${macrocycle['instanceId']}',
-              _macrocycleStatus('${macrocycle['status']}'),
-              true,
-            ),
+            _macrocycleCard(macrocycle, materialized: true),
           for (var index = actual.length; index < 3; index++)
-            _macrocycleCard(
-              'M${index + 1}',
-              _isFrench ? 'Projeté' : 'Projected',
-              false,
-            ),
+            _macrocycleCard({
+              'instanceId': 'M${index + 1}',
+              'status': 'preview',
+            }, materialized: false),
         ];
         return box.maxWidth >= 620
             ? Row(
@@ -836,23 +838,53 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   String _macrocycleStatus(String status) => switch (status) {
     'completed' => _isFrench ? 'Terminé' : 'Completed',
     'cancelled' => _isFrench ? 'Annulé' : 'Cancelled',
+    'planned' || 'preview' => _isFrench ? 'Projeté' : 'Projected',
     _ => _isFrench ? 'Actif' : 'Active',
   };
 
-  Widget _macrocycleCard(String id, String status, bool active) => _card(
+  Widget _macrocycleCard(
+    Map<String, Object?> macrocycle, {
+    required bool materialized,
+  }) => _card(
     Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('$id · $status', style: _label),
+        Text(
+          '${macrocycle['instanceId']} · '
+          '${_macrocycleStatus('${macrocycle['status']}')}',
+          style: _label,
+        ),
         const SizedBox(height: 6),
         Text(
-          active
+          materialized
               ? (_foreverTemplate?.sequence.join(' → ') ?? '—')
               : (_isFrench
                     ? 'Aperçu uniquement · non matérialisé'
                     : 'Preview only · not materialized'),
           style: const TextStyle(color: Colors.white70),
         ),
+        if (materialized) ...[
+          const SizedBox(height: 6),
+          Text(
+            '${_isFrench ? 'Recette' : 'Recipe'}: '
+            '${macrocycle['recipeId'] ?? '—'}',
+            style: const TextStyle(color: Colors.white70),
+          ),
+          Text(
+            '${_isFrench ? 'Rôles' : 'Roles'}: Leader ×2 · Anchor ×1',
+            style: const TextStyle(color: Colors.white70),
+          ),
+          Text(
+            '${_isFrench ? 'Protocoles' : 'Protocols'}: '
+            '7th Week Deload · Training Max Test',
+            style: const TextStyle(color: Colors.white70),
+          ),
+          Text(
+            '${_isFrench ? 'Décisions TM' : 'TM decisions'}: '
+            '${(macrocycle['trainingMaxStates'] as Map?)?.length ?? 0}/4',
+            style: const TextStyle(color: Colors.white70),
+          ),
+        ],
       ],
     ),
   );
@@ -870,6 +902,38 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                   ? 'Après M1, choisissez une action pour le futur. Le macrocycle terminé reste inchangé.'
                   : 'After M1, choose an action for the future. The completed macrocycle stays unchanged.',
             ),
+            if (_activeMacrocycle != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _isFrench
+                    ? 'Décision Training Max par mouvement'
+                    : 'Training Max decision by lift',
+                style: _label,
+              ),
+              const SizedBox(height: 8),
+              for (final lift in _liftIds) _trainingMaxControl(lift),
+              FilledButton.icon(
+                key: const Key('complete-active-macrocycle'),
+                onPressed: _completeActiveMacrocycle,
+                icon: const Icon(Icons.check_circle_outline),
+                label: Text(
+                  _isFrench
+                      ? 'Terminer le macrocycle actif'
+                      : 'Complete active macrocycle',
+                ),
+              ),
+            ],
+            if (_activeMacrocycle == null && _nextPlannedMacrocycle != null)
+              FilledButton.icon(
+                key: const Key('activate-next-macrocycle'),
+                onPressed: _activateNextMacrocycle,
+                icon: const Icon(Icons.play_circle_outline),
+                label: Text(
+                  _isFrench
+                      ? 'Démarrer le prochain macrocycle'
+                      : 'Start next macrocycle',
+                ),
+              ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               key: const Key('continuation-mode'),
@@ -918,6 +982,15 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                         : 'Available once the active macrocycle is complete.'),
               style: const TextStyle(color: Colors.white70),
             ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              key: const Key('terminate-forever-series'),
+              onPressed: _seriesTerminated || _activeMacrocycle != null
+                  ? null
+                  : _terminateSeries,
+              icon: const Icon(Icons.stop_circle_outlined),
+              label: Text(_isFrench ? 'Terminer la série' : 'End series'),
+            ),
             const SizedBox(height: 12),
             _outputActions(),
           ],
@@ -927,8 +1000,107 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   );
 
   bool get _canAppendMacrocycle =>
+      !_seriesTerminated &&
       _effectiveMacrocycles.isNotEmpty &&
       _effectiveMacrocycles.last['status'] == 'completed';
+
+  Map<String, Object?>? get _activeMacrocycle => _effectiveMacrocycles
+      .where((macrocycle) => macrocycle['status'] == 'active')
+      .firstOrNull;
+
+  Map<String, Object?>? get _nextPlannedMacrocycle => _effectiveMacrocycles
+      .where((macrocycle) => macrocycle['status'] == 'planned')
+      .firstOrNull;
+
+  Widget _trainingMaxControl(String lift) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: DropdownButtonFormField<String>(
+      key: ValueKey('tm-decision-$lift'),
+      initialValue: _trainingMaxActions[lift],
+      isExpanded: true,
+      style: _inputTextStyle,
+      dropdownColor: Colors.white,
+      decoration: InputDecoration(labelText: _liftDisplayName(lift)),
+      items: [
+        for (final action in const [
+          'applyProposal',
+          'lowerProposal',
+          'hold',
+          'reset',
+        ])
+          DropdownMenuItem(
+            value: action,
+            child: Text(_trainingMaxActionLabel(action)),
+          ),
+      ],
+      onChanged: (value) {
+        if (value != null) setState(() => _trainingMaxActions[lift] = value);
+      },
+    ),
+  );
+
+  String _trainingMaxActionLabel(String action) =>
+      switch ((action, _isFrench)) {
+        ('applyProposal', true) => 'Appliquer la proposition',
+        ('lowerProposal', true) => 'Proposition inférieure',
+        ('hold', true) => 'Maintenir',
+        ('reset', true) => 'Réinitialiser au TM saisi',
+        ('applyProposal', false) => 'Apply proposal',
+        ('lowerProposal', false) => 'Lower proposal',
+        ('hold', false) => 'Hold',
+        _ => 'Reset to entered TM',
+      };
+
+  double _currentTrainingMax(String lift) {
+    final name = switch (lift) {
+      'press' => 'Press',
+      'bench' => 'Bench Press',
+      'squat' => 'Squat',
+      _ => 'Deadlift',
+    };
+    final entered = double.tryParse(_weights[name]!.text) ?? 0;
+    return _input == 'tm'
+        ? entered
+        : entered * ((double.tryParse(_ratio.text) ?? 90) / 100);
+  }
+
+  double _progressionIncrement(String lift) =>
+      lift == 'press' || lift == 'bench' ? 2.5 : 5;
+
+  void _completeActiveMacrocycle() {
+    final active = _activeMacrocycle;
+    if (active == null) return;
+    final activeId = active['instanceId'];
+    final completed = <Map<String, Object?>>[
+      for (final macrocycle in _effectiveMacrocycles)
+        if (macrocycle['instanceId'] != activeId)
+          Map<String, Object?>.from(macrocycle)
+        else
+          {
+            ...macrocycle,
+            'status': 'completed',
+            'trainingMaxStates': {
+              for (final lift in _liftIds) lift: _trainingMaxState(lift),
+            },
+          },
+    ];
+    setState(() => _seriesMacrocycles = completed);
+    _changed();
+  }
+
+  Map<String, Object?> _trainingMaxState(String lift) {
+    final current = _currentTrainingMax(lift);
+    final increment = _progressionIncrement(lift);
+    return switch (_trainingMaxActions[lift]) {
+      'lowerProposal' => {
+        'state': 'confirmed',
+        'trainingMax': current + (increment / 2),
+      },
+      'hold' => {'state': 'held', 'trainingMax': current},
+      'reset' => {'state': 'reset', 'trainingMax': current},
+      _ => {'state': 'confirmed', 'trainingMax': current + increment},
+    };
+  }
 
   String _continuationLabel(String mode) => switch ((mode, _isFrench)) {
     ('manual', true) => 'Manuel',
@@ -947,8 +1119,50 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
       for (final macrocycle in _effectiveMacrocycles)
         Map<String, Object?>.from(macrocycle),
     ];
-    final next = _newMacrocycle('M${preserved.length + 1}', 'active');
+    final completed = preserved.last;
+    final nextId = 'M${preserved.length + 1}';
+    final next = switch (_continuationMode) {
+      'repeatSame' || 'cloneAndEdit' => <String, Object?>{
+        ..._newMacrocycle(nextId, 'planned'),
+        'recipeId': completed['recipeId'],
+        'slots': completed['slots'],
+        'protocols': completed['protocols'],
+        'continuationMode': _continuationMode,
+      },
+      _ => {
+        ..._newMacrocycle(nextId, 'planned'),
+        'continuationMode': _continuationMode,
+      },
+    };
     setState(() => _seriesMacrocycles = [...preserved, next]);
+    _changed();
+  }
+
+  void _activateNextMacrocycle() {
+    final planned = _nextPlannedMacrocycle;
+    if (planned == null) return;
+    final plannedId = planned['instanceId'];
+    setState(() {
+      _seriesMacrocycles = [
+        for (final macrocycle in _effectiveMacrocycles)
+          if (macrocycle['instanceId'] == plannedId)
+            {...macrocycle, 'intent': 'active', 'status': 'active'}
+          else
+            Map<String, Object?>.from(macrocycle),
+      ];
+    });
+    _changed();
+  }
+
+  void _terminateSeries() {
+    setState(() {
+      _seriesTerminated = true;
+      _seriesMacrocycles = [
+        for (final macrocycle in _effectiveMacrocycles)
+          if (macrocycle['intent'] != 'projected')
+            Map<String, Object?>.from(macrocycle),
+      ];
+    });
     _changed();
   }
 
@@ -2361,12 +2575,14 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
         final standalone = forever['standaloneProgramId'];
         if (standalone is String) {
           _foreverPlanKind = 'standaloneProgram';
-          _foreverId = _forever
-              .where((template) => template.planKind == 'standaloneProgram')
-              .firstOrNull
-              ?.id;
+          _foreverId = standalone;
         } else if (forever['series'] is Map) {
           final series = forever['series']! as Map;
+          final restoredSeriesId = series['id'];
+          if (restoredSeriesId is String && restoredSeriesId.isNotEmpty) {
+            _seriesId = restoredSeriesId;
+          }
+          _seriesTerminated = series['terminated'] == true;
           final rawMacrocycles = series['macrocycles'];
           if (rawMacrocycles is List) {
             _seriesMacrocycles = [

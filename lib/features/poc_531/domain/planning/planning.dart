@@ -136,42 +136,61 @@ class ForeverPlanningConfiguration extends PlanningConfiguration {
   final ForeverProgramSeries? series;
 }
 
-class PairingRule {
-  const PairingRule({
-    required this.id,
-    required this.mainWorkRevision,
-    required this.supplementalWorkRevision,
+class CycleTransitionRule {
+  const CycleTransitionRule({
+    required this.fromTemplateRevisionId,
+    required this.fromRole,
+    required this.toTemplateRevisionId,
+    required this.toRole,
+    required this.status,
+    required this.allowedFrequencies,
+    required this.trainingMaxCompatibility,
+    required this.requiredEquipment,
     required this.source,
   });
 
-  final String id;
-  final ProgramRevision mainWorkRevision;
-  final ProgramRevision supplementalWorkRevision;
+  final String fromTemplateRevisionId;
+  final CycleRole fromRole;
+  final String toTemplateRevisionId;
+  final CycleRole toRole;
+  final CompatibilityStatus status;
+  final List<int> allowedFrequencies;
+  final String trainingMaxCompatibility;
+  final List<String> requiredEquipment;
   final RuleSource source;
 
-  CompatibilityResult evaluate(CycleRevision revision) {
+  CompatibilityResult evaluate({required int frequency}) {
     final issues = <PlanningIssue>[];
-    if (revision.mainWork != mainWorkRevision) {
+    if (!allowedFrequencies.contains(frequency)) {
       issues.add(
         const PlanningIssue(
-          code: 'pairing.main_work_not_supported',
-          path: 'mainWork',
-          message: 'Only the sourced Original main-work revision is supported.',
+          code: 'transition.frequency_not_allowed',
+          path: 'trainingDaysPerWeek',
+          message: 'The selected transition does not allow this frequency.',
         ),
       );
     }
-    if (revision.supplementalWork != supplementalWorkRevision) {
+    if (status == CompatibilityStatus.forbidden ||
+        status == CompatibilityStatus.needsReview) {
       issues.add(
-        const PlanningIssue(
-          code: 'pairing.supplemental_not_supported',
-          path: 'supplementalWork',
-          message: 'Only the sourced First Set Last revision is supported.',
+        PlanningIssue(
+          code: status == CompatibilityStatus.needsReview
+              ? 'transition.needs_review'
+              : 'transition.forbidden',
+          path: 'transition',
+          message: status == CompatibilityStatus.needsReview
+              ? 'A transition awaiting source review cannot be generated.'
+              : 'The selected transition is forbidden.',
         ),
       );
     }
-    return CompatibilityResult(issues);
+    return CompatibilityResult(issues, status: status);
   }
 }
+
+/// Historical type alias. New code must model an explicit cycle-to-cycle
+/// transition instead of a main-work/supplemental pairing.
+typedef PairingRule = CycleTransitionRule;
 
 class CompatibilityResult {
   CompatibilityResult(
@@ -259,15 +278,27 @@ class TrainingMaxDecision {
   TrainingMaxDecision({
     required this.nodeId,
     required this.cycleInstanceId,
-    required this.state,
+    required Map<String, TrainingMaxDecisionState> states,
     required Map<String, double> previousTrainingMaxes,
     required Map<String, double> proposedTrainingMaxes,
-  }) : previousTrainingMaxes = Map.unmodifiable(previousTrainingMaxes),
+  }) : states = Map.unmodifiable(states),
+       previousTrainingMaxes = Map.unmodifiable(previousTrainingMaxes),
        proposedTrainingMaxes = Map.unmodifiable(proposedTrainingMaxes);
 
   final String nodeId;
   final String cycleInstanceId;
-  final TrainingMaxDecisionState state;
+  final Map<String, TrainingMaxDecisionState> states;
+
+  /// Compatibility accessor for historical consumers that only handled a
+  /// uniform decision. Mixed per-lift decisions must use [states].
+  TrainingMaxDecisionState get state {
+    final distinctStates = states.values.toSet();
+    if (distinctStates.length != 1) {
+      throw StateError('Training Max states differ by lift; inspect states.');
+    }
+    return distinctStates.single;
+  }
+
   final Map<String, double> previousTrainingMaxes;
   final Map<String, double> proposedTrainingMaxes;
 }
@@ -331,12 +362,33 @@ const foreverOriginalPrSetAnchorRevision = CycleRevision(
 /// Historical alias retained for persisted configurations only.
 const foreverOriginalFslCycleRevision = foreverOriginalFslLeaderRevision;
 
-const foreverOriginalFslPairing = PairingRule(
-  id: 'forever-original-plus-fsl-v1',
-  mainWorkRevision: foreverOriginalMainWorkRevision,
-  supplementalWorkRevision: foreverFirstSetLastRevision,
+const foreverOriginalFslLeaderTransition = CycleTransitionRule(
+  fromTemplateRevisionId: 'forever-original-fsl-leader-v1',
+  fromRole: CycleRole.leader,
+  toTemplateRevisionId: 'forever-original-fsl-leader-v1',
+  toRole: CycleRole.leader,
+  status: CompatibilityStatus.recommended,
+  allowedFrequencies: [4],
+  trainingMaxCompatibility: 'preserve-per-lift',
+  requiredEquipment: [],
   source: RuleSource(document: '5/3/1 Forever', location: 'PDF pages 180-182'),
 );
+
+const foreverOriginalFslAnchorTransition = CycleTransitionRule(
+  fromTemplateRevisionId: 'forever-original-fsl-leader-v1',
+  fromRole: CycleRole.leader,
+  toTemplateRevisionId: 'forever-original-pr-set-anchor-v1',
+  toRole: CycleRole.anchor,
+  status: CompatibilityStatus.recommended,
+  allowedFrequencies: [4],
+  trainingMaxCompatibility: 'preserve-per-lift',
+  requiredEquipment: [],
+  source: RuleSource(document: '5/3/1 Forever', location: 'PDF pages 180-182'),
+);
+
+/// Historical constant alias retained for clients that referenced the old
+/// pairing name. Its value now has explicit transition semantics.
+const foreverOriginalFslPairing = foreverOriginalFslLeaderTransition;
 
 typedef CycleTemplateRevision = CycleRevision;
 
@@ -514,58 +566,6 @@ const foreverThreeLeadersTwoAnchorsRecipe = MacrocycleRecipeRevision(
   boundaryProtocols: [],
 );
 
-class CycleTransitionRule {
-  const CycleTransitionRule({
-    required this.fromTemplateRevisionId,
-    required this.fromRole,
-    required this.toTemplateRevisionId,
-    required this.toRole,
-    required this.status,
-    required this.allowedFrequencies,
-    required this.trainingMaxCompatibility,
-    required this.requiredEquipment,
-    required this.source,
-  });
-
-  final String fromTemplateRevisionId;
-  final CycleRole fromRole;
-  final String toTemplateRevisionId;
-  final CycleRole toRole;
-  final CompatibilityStatus status;
-  final List<int> allowedFrequencies;
-  final String trainingMaxCompatibility;
-  final List<String> requiredEquipment;
-  final RuleSource source;
-
-  CompatibilityResult evaluate({required int frequency}) {
-    final issues = <PlanningIssue>[];
-    if (!allowedFrequencies.contains(frequency)) {
-      issues.add(
-        const PlanningIssue(
-          code: 'transition.frequency_not_allowed',
-          path: 'trainingDaysPerWeek',
-          message: 'The selected transition does not allow this frequency.',
-        ),
-      );
-    }
-    if (status == CompatibilityStatus.forbidden ||
-        status == CompatibilityStatus.needsReview) {
-      issues.add(
-        PlanningIssue(
-          code: status == CompatibilityStatus.needsReview
-              ? 'transition.needs_review'
-              : 'transition.forbidden',
-          path: 'transition',
-          message: status == CompatibilityStatus.needsReview
-              ? 'A transition awaiting source review cannot be generated.'
-              : 'The selected transition is forbidden.',
-        ),
-      );
-    }
-    return CompatibilityResult(issues, status: status);
-  }
-}
-
 class ForeverMacrocycle {
   ForeverMacrocycle({
     required this.instanceId,
@@ -681,7 +681,10 @@ class MacrocycleSeriesValidator {
       );
     }
     final ids = <String>{};
-    var sawProjected = false;
+    var activeCount = 0;
+    var plannedCount = 0;
+    var sawActive = false;
+    var sawPlanned = false;
     for (var index = 0; index < series.macrocycles.length; index++) {
       final macrocycle = series.macrocycles[index];
       final path = 'macrocycles[$index]';
@@ -705,28 +708,98 @@ class MacrocycleSeriesValidator {
           ),
         );
       }
-      if (sawProjected && macrocycle.intent == MacrocycleIntent.active) {
+      final isHistory =
+          macrocycle.status == MacrocycleStatus.completed ||
+          macrocycle.status == MacrocycleStatus.cancelled;
+      final isActive = macrocycle.status == MacrocycleStatus.active;
+      final isPlanned = macrocycle.status == MacrocycleStatus.planned;
+      final hasHistoricalIntent = macrocycle.intent == MacrocycleIntent.active;
+      final hasProjectedIntent =
+          macrocycle.intent == MacrocycleIntent.projected;
+
+      if (isHistory && !hasHistoricalIntent) {
         issues.add(
           PlanningIssue(
-            code: 'series.active_after_projected',
+            code: 'series.history_must_be_active_intent',
             path: '$path.intent',
             message:
-                'An active macrocycle cannot follow a projected macrocycle.',
+                'Completed and cancelled macrocycles belong to immutable active history.',
           ),
         );
       }
-      sawProjected =
-          sawProjected || macrocycle.intent == MacrocycleIntent.projected;
-      if (macrocycle.status == MacrocycleStatus.completed &&
-          macrocycle.intent != MacrocycleIntent.active) {
+      if (isActive && !hasHistoricalIntent) {
         issues.add(
           PlanningIssue(
-            code: 'series.completed_must_be_active',
+            code: 'series.active_status_must_be_active_intent',
             path: '$path.intent',
-            message:
-                'A completed macrocycle belongs to immutable active history.',
+            message: 'An active macrocycle must have active intent.',
           ),
         );
+      }
+      if (isPlanned && !hasProjectedIntent) {
+        issues.add(
+          PlanningIssue(
+            code: 'series.planned_status_must_be_projected_intent',
+            path: '$path.intent',
+            message: 'A planned macrocycle must have projected intent.',
+          ),
+        );
+      }
+      if (hasProjectedIntent && !isPlanned) {
+        issues.add(
+          PlanningIssue(
+            code: 'series.projected_intent_must_be_planned',
+            path: '$path.status',
+            message: 'Projected intent is only valid for a planned macrocycle.',
+          ),
+        );
+      }
+
+      if (isHistory && (sawActive || sawPlanned)) {
+        issues.add(
+          PlanningIssue(
+            code: 'series.history_after_current_or_future',
+            path: '$path.status',
+            message:
+                'Historical macrocycles must precede the active and planned macrocycles.',
+          ),
+        );
+      }
+      if (isActive) {
+        activeCount++;
+        if (activeCount > 1) {
+          issues.add(
+            PlanningIssue(
+              code: 'series.multiple_active',
+              path: '$path.status',
+              message: 'A series may contain at most one active macrocycle.',
+            ),
+          );
+        }
+        if (sawPlanned) {
+          issues.add(
+            PlanningIssue(
+              code: 'series.active_after_planned',
+              path: '$path.status',
+              message:
+                  'An active macrocycle cannot follow a planned macrocycle.',
+            ),
+          );
+        }
+        sawActive = true;
+      }
+      if (isPlanned) {
+        plannedCount++;
+        if (plannedCount > 1) {
+          issues.add(
+            PlanningIssue(
+              code: 'series.multiple_planned',
+              path: '$path.status',
+              message: 'A series may contain at most one planned macrocycle.',
+            ),
+          );
+        }
+        sawPlanned = true;
       }
       final selections = {
         for (final selection in macrocycle.cycleSelections)
@@ -1055,7 +1128,7 @@ class ForeverSequenceCompiler implements ForeverProgramCompiler {
         }
       }
       final proposed = macrocycle.trainingMaxChoices.isNotEmpty
-          ? macrocycle.trainingMaxChoices
+          ? {...current, ...macrocycle.trainingMaxChoices}
           : macrocycle.intent == MacrocycleIntent.projected
           ? {
               for (final entry in current.entries)
@@ -1063,19 +1136,19 @@ class ForeverSequenceCompiler implements ForeverProgramCompiler {
                     entry.value + profile.progressionIncrements[entry.key]!,
             }
           : current;
-      final states = macrocycle.outcome?.trainingMaxStates.values;
-      final state = states == null || states.isEmpty
-          ? (macrocycle.intent == MacrocycleIntent.projected
-                ? TrainingMaxDecisionState.projected
-                : TrainingMaxDecisionState.confirmed)
-          : states.every((value) => value == TrainingMaxDecisionState.confirmed)
-          ? TrainingMaxDecisionState.confirmed
-          : states.first;
+      final fallbackState = macrocycle.intent == MacrocycleIntent.projected
+          ? TrainingMaxDecisionState.projected
+          : TrainingMaxDecisionState.confirmed;
+      final outcomeStates = macrocycle.outcome?.trainingMaxStates ?? const {};
+      final states = <String, TrainingMaxDecisionState>{
+        for (final lift in current.keys)
+          lift: outcomeStates[lift] ?? fallbackState,
+      };
       decisions.add(
         TrainingMaxDecision(
           nodeId: lastCycleNode!.nodeId,
           cycleInstanceId: macrocycle.instanceId,
-          state: state,
+          states: states,
           previousTrainingMaxes: current,
           proposedTrainingMaxes: proposed,
         ),

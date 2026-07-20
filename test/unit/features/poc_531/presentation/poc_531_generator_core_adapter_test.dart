@@ -25,6 +25,14 @@ void main() {
         'M2',
       ]);
       expect((macrocycles[1] as Map)['intent'], 'projected');
+      final firstGenerated =
+          (macrocycles.first as Map)['generatedProgram'] as Map;
+      final firstPayload = firstGenerated['payload'] as Map;
+      final compiledBlockIds = (firstPayload['blocks'] as List)
+          .map((block) => (block as Map)['id'])
+          .toList();
+      expect(compiledBlockIds, ['M1-C1', 'M1-C2', 'M1-P1', 'M1-C3', 'M1-P2']);
+      expect(((firstPayload['blocks'] as List)[3] as Map)['role'], 'anchor');
       expect(result.blocks.first.name, startsWith('M1 ·'));
       expect(
         result.blocks.any((block) => block.name.startsWith('M2 ·')),
@@ -47,6 +55,42 @@ void main() {
     expect((macrocycles.first as Map).containsKey('generatedProgram'), isFalse);
     expect((macrocycles.last as Map)['instanceId'], 'M2');
   });
+
+  test('planned M2 starts after the complete immutable M1 timeline', () async {
+    final configuration = _seriesConfiguration([
+      _macrocycle('M1', intent: 'active', status: 'completed'),
+      _macrocycle('M2', intent: 'projected', status: 'planned'),
+    ]);
+    (configuration['common'] as Map<String, Object?>)['startDate'] =
+        '2027-02-01T00:00:00.000Z';
+
+    final result = await core.generate(configuration);
+    final export = jsonDecode(result.exportJson) as Map<String, Object?>;
+    final generatedM2 =
+        ((export['macrocycles'] as List).last as Map)['generatedProgram']
+            as Map;
+
+    expect(jsonEncode(generatedM2), contains('2027-04-19'));
+  });
+
+  test(
+    'a fully historical terminated series exports without generation',
+    () async {
+      final configuration = _seriesConfiguration([
+        _macrocycle('M1', intent: 'active', status: 'completed'),
+      ]);
+      final forever = configuration['forever'] as Map<String, Object?>;
+      final series = forever['series'] as Map<String, Object?>;
+      series['terminated'] = true;
+
+      final result = await core.generate(configuration);
+      final export = jsonDecode(result.exportJson) as Map<String, Object?>;
+
+      expect(result.blocks, isEmpty);
+      expect(export['terminated'], isTrue);
+      expect((export['macrocycles'] as List), hasLength(1));
+    },
+  );
 
   test(
     'completed macrocycle is exported without losing any nested field',
@@ -73,7 +117,7 @@ void main() {
   test('uses 2027 start date and macrocycle-specific Training Maxes', () async {
     final second = _macrocycle('M2', intent: 'projected', status: 'planned');
     second['trainingMaxStates'] = {
-      'squat': {'state': 'confirmed', 'trainingMax': 200},
+      'squat': {'state': 'projected', 'trainingMax': 110},
     };
     final configuration = _seriesConfiguration([
       _macrocycle('M1', intent: 'active', status: 'active'),
@@ -85,7 +129,7 @@ void main() {
     final export = jsonDecode(result.exportJson) as Map<String, Object?>;
     final encoded = jsonEncode(export['macrocycles']);
     expect(encoded, contains('2027-02-01'));
-    expect(encoded, contains('200'));
+    expect(encoded, contains('110'));
   });
 
   test('refuses invalid intent, status, role, revision and protocol', () async {

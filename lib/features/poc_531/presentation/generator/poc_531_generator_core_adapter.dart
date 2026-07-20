@@ -161,9 +161,28 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
         throw const FormatException('Configuration incomplète.');
       }
       final plans = [
-        for (final configuration in request.configurations)
-          forever.generateForeverCalculatorProgram(configuration),
+        for (var index = 0; index < request.configurations.length; index++)
+          request.compiledSequences[index] == null
+              ? forever.generateForeverCalculatorProgram(
+                  request.configurations[index],
+                )
+              : core.generateProgram(
+                  request.configurations[index],
+                  foreverSequence: request.compiledSequences[index],
+                ),
       ];
+      if (plans.isEmpty) {
+        return GeneratorResult(
+          title: 'Série Forever',
+          blocks: const [],
+          exportJson: jsonEncode({
+            'schemaVersion': 4,
+            'seriesId': request.seriesId,
+            'terminated': request.terminated,
+            'macrocycles': request.exportMacrocycles(plans),
+          }),
+        );
+      }
       final definition = core.getProgramDefinition(plans.first.programId)!;
       return GeneratorResult(
         title: definition.name,
@@ -374,9 +393,11 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
     final macrocycles = <_GeneratedMacrocycle>[];
     final preservedMacrocycles = <Map<String, Object?>>[];
     final configurations = <core.ProgramConfiguration>[];
+    final compiledSequences = <planning.CompiledForeverSequence?>[];
     final sourceOrder = <String>[];
     final domainMacrocycles = <planning.ForeverMacrocycle>[];
     final futureDomainMacrocycles = <planning.ForeverMacrocycle>[];
+    final historicalInstanceIds = <String>{};
     final allIds = <String>{};
     for (final raw in rawMacrocycles) {
       if (raw is! Map) throw const FormatException('Macrocycle invalide.');
@@ -397,6 +418,7 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
         // Historical macrocycles are intentionally absent from generation:
         // their immutable snapshots remain owned by persistence.
         preservedMacrocycles.add(_deepCopyMap(macrocycle));
+        historicalInstanceIds.add(instanceId);
         continue;
       }
       if (macrocycle['recipeId'] != 'forever-2l1a-v2') {
@@ -406,19 +428,6 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
       }
       _validateExecutableMacrocycle(macrocycle);
       futureDomainMacrocycles.add(domainMacrocycle);
-      final macrocycleCommon = _commonWithTrainingMaxStates(
-        decoded.common,
-        macrocycle['trainingMaxStates'],
-      );
-      final firstStart = _startDate(decoded.common);
-      final configuration = _foreverConfiguration({
-        ...macrocycleCommon,
-        'foreverTemplateId': 'FV-236',
-        'startDate': firstStart.add(
-          Duration(days: configurations.length * 11 * 7),
-        ),
-      });
-      if (configuration == null) return null;
       macrocycles.add(
         _GeneratedMacrocycle(
           instanceId: instanceId,
@@ -430,7 +439,6 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
           },
         ),
       );
-      configurations.add(configuration);
     }
     final profile = _planningProfile(decoded.common);
     final domainSeries = planning.ForeverProgramSeries(
@@ -446,18 +454,45 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
       throw planning.ForeverCompilationException(validation);
     }
     if (futureDomainMacrocycles.isNotEmpty) {
-      const planning.ForeverSequenceCompiler().compileSeries(
-        planning.ForeverProgramSeries(
-          id: domainSeries.id,
-          profile: profile,
-          macrocycles: futureDomainMacrocycles,
+      final compiled = const planning.ForeverSequenceCompiler().compileSeries(
+        domainSeries,
+      );
+      var startDate = _startDate(decoded.common);
+      final historicalSequence = planning.CompiledForeverSequence(
+        nodes: compiled.nodes.where(
+          (node) => historicalInstanceIds.any(
+            (instanceId) => node.nodeId.startsWith('$instanceId-'),
+          ),
         ),
+        trainingMaxDecisions: const [],
       );
-    }
-    if (configurations.isEmpty) {
-      throw const FormatException(
-        'Une série doit contenir un macrocycle futur à générer.',
+      startDate = startDate.add(
+        Duration(days: _compiledWeeks(historicalSequence) * 7),
       );
+      for (final macrocycle in futureDomainMacrocycles) {
+        final sequence = planning.CompiledForeverSequence(
+          nodes: compiled.nodes.where(
+            (node) => node.nodeId.startsWith('${macrocycle.instanceId}-'),
+          ),
+          trainingMaxDecisions: compiled.trainingMaxDecisions.where(
+            (decision) => decision.cycleInstanceId == macrocycle.instanceId,
+          ),
+        );
+        final initialMaxes =
+            sequence.trainingMaxDecisions.single.previousTrainingMaxes;
+        final configuration = _foreverConfiguration({
+          ...decoded.common,
+          'lifts': _displayTrainingMaxes(initialMaxes),
+          'inputMode': 'tm',
+          'trainingMaxRatio': 100,
+          'foreverTemplateId': 'FV-236',
+          'startDate': startDate,
+        });
+        if (configuration == null) return null;
+        configurations.add(configuration);
+        compiledSequences.add(sequence);
+        startDate = startDate.add(Duration(days: _compiledWeeks(sequence) * 7));
+      }
     }
     return _ForeverGenerationRequest.series(
       seriesId: '${seriesValue['id'] ?? 'forever-series-v1'}',
@@ -466,8 +501,24 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
       sourceOrder: sourceOrder,
       macrocycles: macrocycles,
       configurations: configurations,
+      compiledSequences: compiledSequences,
     );
   }
+
+  static Map<String, double> _displayTrainingMaxes(
+    Map<String, double> trainingMaxes,
+  ) => {
+    'Press': trainingMaxes['overheadPress'] ?? trainingMaxes['press']!,
+    'Bench Press': trainingMaxes['benchPress'] ?? trainingMaxes['bench']!,
+    'Squat': trainingMaxes['squat']!,
+    'Deadlift': trainingMaxes['deadlift']!,
+  };
+
+  static int _compiledWeeks(planning.CompiledForeverSequence sequence) =>
+      sequence.nodes.fold(
+        0,
+        (weeks, node) => weeks + (node is planning.ForeverCycleNode ? 3 : 1),
+      );
 
   static void _validateExecutableMacrocycle(Map<String, Object?> macrocycle) {
     final slots = macrocycle['slots'];
@@ -555,11 +606,47 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
     };
     final slots = value['slots'];
     if (slots is! List) throw const FormatException('Slots manquants.');
+    final rawTrainingMaxStates = value['trainingMaxStates'];
+    final trainingMaxStates = <String, planning.TrainingMaxDecisionState>{};
+    final trainingMaxChoices = <String, double>{};
+    if (rawTrainingMaxStates is Map) {
+      for (final entry in rawTrainingMaxStates.entries) {
+        final lift = '${entry.key}';
+        final raw = entry.value;
+        final stateValue = raw is Map ? raw['state'] : raw;
+        final state = switch (stateValue) {
+          'confirmed' => planning.TrainingMaxDecisionState.confirmed,
+          'projected' => planning.TrainingMaxDecisionState.projected,
+          'proposed' => planning.TrainingMaxDecisionState.proposed,
+          'held' => planning.TrainingMaxDecisionState.held,
+          'reset' => planning.TrainingMaxDecisionState.reset,
+          _ => null,
+        };
+        if (state != null) trainingMaxStates[lift] = state;
+        if (raw is Map) {
+          final candidate =
+              raw['trainingMax'] ??
+              raw['confirmedTrainingMax'] ??
+              raw['proposedTrainingMax'] ??
+              raw['value'];
+          if (candidate is num) {
+            trainingMaxChoices[lift] = candidate.toDouble();
+          }
+        }
+      }
+    }
     return planning.ForeverMacrocycle(
       instanceId: value['instanceId']! as String,
       intent: intent,
       status: status,
       recipe: recipe,
+      outcome: trainingMaxStates.isEmpty
+          ? null
+          : planning.MacrocycleOutcome(
+              macrocycleInstanceId: value['instanceId']! as String,
+              trainingMaxStates: trainingMaxStates,
+            ),
+      trainingMaxChoices: trainingMaxChoices,
       cycleSelections: [
         for (final raw in slots.whereType<Map>())
           planning.CycleSlotSelection(
@@ -596,61 +683,6 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
           lift: lift == 'press' || lift == 'bench' ? 2.5 : 5,
       },
     );
-  }
-
-  Map<String, Object?> _commonWithTrainingMaxStates(
-    Map<String, Object?> common,
-    Object? rawStates,
-  ) {
-    if (rawStates is! Map || rawStates.isEmpty) return common;
-    final base = _trainingMaxes(common);
-    if (base == null) {
-      throw const FormatException('Training Maxes Forever incomplets.');
-    }
-    const aliases = {
-      'press': 'Press',
-      'overheadPress': 'Press',
-      'barbell.overhead-press': 'Press',
-      'bench': 'Bench Press',
-      'benchPress': 'Bench Press',
-      'barbell.bench-press': 'Bench Press',
-      'squat': 'Squat',
-      'barbell.back-squat': 'Squat',
-      'deadlift': 'Deadlift',
-      'barbell.deadlift': 'Deadlift',
-    };
-    final lifts = <String, double>{
-      'Press': base['press']!,
-      'Bench Press': base['bench']!,
-      'Squat': base['squat']!,
-      'Deadlift': base['deadlift']!,
-    };
-    for (final entry in rawStates.entries) {
-      final lift = aliases['${entry.key}'];
-      if (lift == null) {
-        throw FormatException('Training Max inconnu: ${entry.key}.');
-      }
-      final raw = entry.value;
-      final candidate = raw is num
-          ? raw
-          : raw is Map
-          ? raw['trainingMax'] ??
-                raw['confirmedTrainingMax'] ??
-                raw['proposedTrainingMax'] ??
-                raw['value']
-          : null;
-      if (candidate == null && raw is String) continue;
-      if (candidate is! num || candidate <= 0) {
-        throw FormatException('Training Max invalide pour ${entry.key}.');
-      }
-      lifts[lift] = candidate.toDouble();
-    }
-    return {
-      ...common,
-      'lifts': lifts,
-      'inputMode': 'tm',
-      'trainingMaxRatio': 100,
-    };
   }
 
   static DateTime _startDate(Map<String, Object?> common) =>
@@ -925,6 +957,7 @@ class _ForeverGenerationRequest {
     required this.sourceOrder,
     required this.macrocycles,
     required this.configurations,
+    required this.compiledSequences,
     required this.isSeries,
   });
 
@@ -937,6 +970,7 @@ class _ForeverGenerationRequest {
     sourceOrder: const ['M1'],
     macrocycles: const [_GeneratedMacrocycle(instanceId: 'M1', metadata: {})],
     configurations: [configuration],
+    compiledSequences: const [null],
     isSeries: false,
   );
 
@@ -947,6 +981,7 @@ class _ForeverGenerationRequest {
     required List<String> sourceOrder,
     required List<_GeneratedMacrocycle> macrocycles,
     required List<core.ProgramConfiguration> configurations,
+    required List<planning.CompiledForeverSequence?> compiledSequences,
   }) => _ForeverGenerationRequest._(
     seriesId: seriesId,
     terminated: terminated,
@@ -954,6 +989,7 @@ class _ForeverGenerationRequest {
     sourceOrder: List.unmodifiable(sourceOrder),
     macrocycles: List.unmodifiable(macrocycles),
     configurations: List.unmodifiable(configurations),
+    compiledSequences: List.unmodifiable(compiledSequences),
     isSeries: true,
   );
 
@@ -963,6 +999,7 @@ class _ForeverGenerationRequest {
   final List<String> sourceOrder;
   final List<_GeneratedMacrocycle> macrocycles;
   final List<core.ProgramConfiguration> configurations;
+  final List<planning.CompiledForeverSequence?> compiledSequences;
   final bool isSeries;
 
   List<Map<String, Object?>> exportMacrocycles(

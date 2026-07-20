@@ -10,6 +10,7 @@ import '../../programs/domain/v2/generation/generated_training_plan.dart';
 import '../../programs/domain/v2/program_domain.dart';
 import '../../training_max/domain/max_calculator.dart';
 import 'models.dart';
+import 'planning/planning.dart' as planning;
 
 export '../../programs/domain/training_models.dart' show MainLift, WeightUnit;
 export 'models.dart';
@@ -274,7 +275,10 @@ List<Recommendation> recommendPrograms(UserProfile profile) {
   return List.unmodifiable(results);
 }
 
-GeneratedProgram generateProgram(ProgramConfiguration configuration) {
+GeneratedProgram generateProgram(
+  ProgramConfiguration configuration, {
+  planning.CompiledForeverSequence? foreverSequence,
+}) {
   final issues = validateProgramConfiguration(
     configuration,
   ).where((issue) => issue.blocking).toList();
@@ -380,10 +384,34 @@ GeneratedProgram generateProgram(ProgramConfiguration configuration) {
         movement: movementMaxes[movement]! + increments[movement]! * count,
     };
 
+    final foreverNodeIds = foreverSequence == null
+        ? const <String>['C1', 'C2', 'C3']
+        : foreverSequence.nodes.whereType<planning.ForeverCycleNode>().map(
+            (node) => node.nodeId,
+          );
     final confirmedForeverNodes = <String, Map<MovementId, double>>{};
-    for (final nodeId in const ['C1', 'C2', 'C3']) {
+    for (final nodeId in foreverNodeIds) {
       final confirmation = confirmedAtNode(nodeId);
       if (confirmation != null) confirmedForeverNodes[nodeId] = confirmation;
+    }
+    final projectedForeverNodes = <String, Map<MovementId, double>>{};
+    if (foreverSequence != null) {
+      for (final decision in foreverSequence.trainingMaxDecisions) {
+        final values = {
+          for (final entry in decision.proposedTrainingMaxes.entries)
+            _movementFromPlanningId(entry.key): entry.value,
+        };
+        final hasProjectedState = decision.states.values.any(
+          (state) =>
+              state == planning.TrainingMaxDecisionState.projected ||
+              state == planning.TrainingMaxDecisionState.proposed,
+        );
+        if (hasProjectedState) {
+          projectedForeverNodes[decision.nodeId] = values;
+        } else {
+          confirmedForeverNodes[decision.nodeId] = values;
+        }
+      }
     }
 
     final canonicalAthlete = CanonicalAthleteConfiguration(
@@ -409,11 +437,13 @@ GeneratedProgram generateProgram(ProgramConfiguration configuration) {
           (program.generatorId == 'canonical-forever' ||
                   program.generatorId == 'canonical-forever-original-fsl') &&
               configuration.options.projectFutureTrainingMaxes
-          ? {
-              for (final node in const [('C1', 1), ('C2', 2), ('C3', 3)])
-                if (confirmedAtNode(node.$1) == null)
-                  node.$1: progressed(node.$2),
-            }
+          ? foreverSequence != null
+                ? projectedForeverNodes
+                : {
+                    for (final node in const [('C1', 1), ('C2', 2), ('C3', 3)])
+                      if (confirmedAtNode(node.$1) == null)
+                        node.$1: progressed(node.$2),
+                  }
           : const {},
       trainingMaxRatios: program.generatorId == 'canonical-bps'
           ? {
@@ -432,7 +462,11 @@ GeneratedProgram generateProgram(ProgramConfiguration configuration) {
       _ => throw StateError('No reviewed generator registered.'),
     };
     payload = const CanonicalPlanGenerator()
-        .generate(blueprint: blueprint, athlete: canonicalAthlete)
+        .generate(
+          blueprint: blueprint,
+          athlete: canonicalAthlete,
+          foreverSequence: foreverSequence,
+        )
         .toJson();
   }
   return GeneratedProgram(
@@ -553,6 +587,13 @@ MovementId _movement(MainLift lift) => switch (lift) {
   MainLift.benchPress => MovementId.benchPress,
   MainLift.deadlift => MovementId.deadlift,
   MainLift.overheadPress => MovementId.overheadPress,
+};
+MovementId _movementFromPlanningId(String lift) => switch (lift) {
+  'press' || 'overheadPress' => MovementId.overheadPress,
+  'bench' || 'benchPress' => MovementId.benchPress,
+  'squat' => MovementId.squat,
+  'deadlift' => MovementId.deadlift,
+  _ => throw StateError('Unsupported compiled Forever movement: $lift.'),
 };
 double _progression(MainLift lift, WeightUnit unit) => switch (unit) {
   WeightUnit.kilograms =>

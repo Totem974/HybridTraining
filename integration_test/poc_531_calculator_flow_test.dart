@@ -20,6 +20,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    if (configuration['mode'] == 'forever') {
+      await tester.tap(find.byKey(const ValueKey('forever-step-7')));
+      await tester.pumpAndSettle();
+    }
     await tester.ensureVisible(find.byKey(const Key('generate-program')));
     await tester.tap(find.byKey(const Key('generate-program')));
     await tester.pumpAndSettle();
@@ -59,5 +63,50 @@ void main() {
       'lifts': lifts,
       'days': 4,
     });
+  });
+
+  testWidgets('Forever M1 generation then completed M1 creates M2', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Poc531GeneratorPage(
+          core: const DomainPoc531GeneratorCore(),
+          initialConfiguration: const {
+            'mode': 'forever',
+            'foreverTemplateId': 'FV-236',
+            'lifts': lifts,
+            'days': 4,
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('forever-step-7')));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.byKey(const Key('generate-program')));
+    await tester.tap(find.byKey(const Key('generate-program')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('export-json')), findsOneWidget);
+
+    await tester.ensureVisible(
+      find.byKey(const Key('complete-active-macrocycle')),
+    );
+    await tester.tap(find.byKey(const Key('complete-active-macrocycle')));
+    await tester.pumpAndSettle();
+
+    final addNext = find.byKey(const Key('continue-next-macrocycle'));
+    expect(tester.widget<OutlinedButton>(addNext).onPressed, isNotNull);
+    await tester.ensureVisible(addNext);
+    await tester.tap(addNext);
+    await tester.pumpAndSettle();
+
+    expect(find.text('M1 · Completed'), findsOneWidget);
+    expect(find.text('M2 · Projected'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('generate-program')));
+    await tester.tap(find.byKey(const Key('generate-program')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('export-json')), findsOneWidget);
   });
 }
