@@ -8,7 +8,7 @@ Quatre numéros coexistent et ne sont pas interchangeables :
 |---|---:|---|---|
 | Base locale SQLite | **v5** | `DatabaseSchema.version` | Structure physique ouverte par `LocalDatabase` et migrations `onUpgrade`. |
 | Configuration du POC 5/3/1 | **v4** | `Poc531Configuration.schemaVersion` | Forme JSON des choix saisis ou restaurés par le composeur. Ce n'est pas une version SQLite. |
-| Plan logique Core | **v5** | modèles et stockage « Core v5 » | Modèle canonique de plan, prescriptions, provenance, transitions et amendements. « v5 » est ici une génération métier, même si son stockage a été ajouté avec SQLite v5. |
+| Plan logique Core | **v5** | `canonicalTrainingPlanSchemaVersion` | Modèle canonique de plan, prescriptions, provenance, transitions et amendements. « v5 » est ici une génération métier, même si son stockage a été ajouté avec SQLite v5. |
 | Sauvegarde native | **v5** | `BackupEnvelope.schemaVersion` | Format d'enveloppe export/import. Une sauvegarde n'est pas un fichier de base SQLite. |
 
 Le présent document décrit la migration de **base locale**. La configuration POC
@@ -86,7 +86,7 @@ unique respectant les dépendances de clés étrangères.
 |---|---|---|
 | export v5 puis dry-run et import | profil et programme restaurés ; dry-run sans écriture | **export, dry-run, atomic import and delete preserve a profile** |
 | inspection/import v1 à v5 | chaque version attend son préfixe de tables et complète les tables ultérieures à vide | **backup schemas v1 through v5 pass inspection and import** |
-| sauvegarde v1 utilisable | historique v1 et prochaine séance conservés, tables de plans v2 vides | **v1 backup imports into v2 without losing legacy history** (nom historique du test) |
+| sauvegarde v1 utilisable | historique v1 et prochaine séance conservés, tables de plans v2 vides | **v1 backup imports into v5 without losing legacy history** |
 | sauvegarde v2 | tables runtime v3 absentes restaurées vides | **v2 backup remains importable with empty runtime v3 tables** |
 | version inconnue | rapport d'erreur, données existantes non remplacées | **invalid backup never replaces existing data** |
 | document structurellement valide mais inutilisable | rapport d'erreur, profil existant conservé | **structurally valid but unusable backup never replaces a profile** |

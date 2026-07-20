@@ -4,6 +4,9 @@ import '../../training_models.dart';
 import '../program_domain.dart';
 import 'generated_training_plan.dart';
 
+/// Schema version of documents emitted by [CanonicalPlanGenerator].
+const canonicalTrainingPlanSchemaVersion = 5;
+
 enum CanonicalCycleModel { standard531, alternative351 }
 
 enum TrainingMaxDecisionState { previewed, confirmed }
@@ -87,7 +90,6 @@ class CanonicalAthleteConfiguration {
     required this.unit,
     required this.rounder,
     Map<MovementId, double>? confirmedBeyondTrainingMaxes,
-    Map<int, Map<MovementId, double>> confirmedTrainingMaxesByWeek = const {},
     Map<String, Map<MovementId, double>> confirmedTrainingMaxesByNode =
         const {},
     Map<String, Map<MovementId, double>> projectedTrainingMaxesByNode =
@@ -100,10 +102,6 @@ class CanonicalAthleteConfiguration {
        confirmedBeyondTrainingMaxes = confirmedBeyondTrainingMaxes == null
            ? null
            : Map.unmodifiable(confirmedBeyondTrainingMaxes),
-       confirmedTrainingMaxesByWeek = Map.unmodifiable({
-         for (final entry in confirmedTrainingMaxesByWeek.entries)
-           entry.key: Map<MovementId, double>.unmodifiable(entry.value),
-       }),
        confirmedTrainingMaxesByNode = Map.unmodifiable({
          for (final entry in confirmedTrainingMaxesByNode.entries)
            entry.key: Map<MovementId, double>.unmodifiable(entry.value),
@@ -122,7 +120,6 @@ class CanonicalAthleteConfiguration {
   final WeightUnit unit;
   final LoadRounder rounder;
   final Map<MovementId, double>? confirmedBeyondTrainingMaxes;
-  final Map<int, Map<MovementId, double>> confirmedTrainingMaxesByWeek;
   final Map<String, Map<MovementId, double>> confirmedTrainingMaxesByNode;
   final Map<String, Map<MovementId, double>> projectedTrainingMaxesByNode;
   final Map<MovementId, double> trainingMaxRatios;
@@ -499,7 +496,7 @@ class CanonicalPlanGenerator {
       ),
     );
     return CanonicalGeneratedPlan(
-      schemaVersion: 5,
+      schemaVersion: canonicalTrainingPlanSchemaVersion,
       blueprintId: blueprint.id,
       blueprintVersion: blueprint.version,
       sourceEdition: blueprint.sourceEdition,
@@ -579,7 +576,7 @@ class CanonicalPlanGenerator {
     ];
     if (confirmed == null) {
       return CanonicalGeneratedPlan(
-        schemaVersion: 5,
+        schemaVersion: canonicalTrainingPlanSchemaVersion,
         blueprintId: blueprint.id,
         blueprintVersion: blueprint.version,
         sourceEdition: blueprint.sourceEdition,
@@ -651,7 +648,7 @@ class CanonicalPlanGenerator {
       sequenceOffset: firstCheckpoint.length,
     );
     return CanonicalGeneratedPlan(
-      schemaVersion: 5,
+      schemaVersion: canonicalTrainingPlanSchemaVersion,
       blueprintId: blueprint.id,
       blueprintVersion: blueprint.version,
       sourceEdition: blueprint.sourceEdition,
@@ -765,8 +762,7 @@ class CanonicalPlanGenerator {
           : nodeId;
       final confirmed =
           athlete.confirmedTrainingMaxesByNode[nodeId] ??
-          athlete.confirmedTrainingMaxesByNode[checkpointId] ??
-          athlete.confirmedTrainingMaxesByWeek[afterWeek];
+          athlete.confirmedTrainingMaxesByNode[checkpointId];
       final effective =
           confirmed ??
           athlete.projectedTrainingMaxesByNode[nodeId] ??
@@ -1019,7 +1015,7 @@ class CanonicalPlanGenerator {
       );
     }
     return CanonicalGeneratedPlan(
-      schemaVersion: 5,
+      schemaVersion: canonicalTrainingPlanSchemaVersion,
       blueprintId: blueprint.id,
       blueprintVersion: blueprint.version,
       sourceEdition: blueprint.sourceEdition,
@@ -1189,7 +1185,7 @@ class CanonicalPlanGenerator {
     List<TrainingMaxTimelineDecision> timeline,
     bool awaitingConfirmation,
   ) => CanonicalGeneratedPlan(
-    schemaVersion: 5,
+    schemaVersion: canonicalTrainingPlanSchemaVersion,
     blueprintId: blueprint.id,
     blueprintVersion: blueprint.version,
     sourceEdition: blueprint.sourceEdition,
@@ -1362,14 +1358,6 @@ class CanonicalPlanGenerator {
           throw StateError(
             'Beyond cycle two requires the confirmed source-defined TM increase.',
           );
-        }
-      }
-    }
-    for (final checkpoint in athlete.confirmedTrainingMaxesByWeek.entries) {
-      for (final movement in athlete.movementOrder) {
-        if (checkpoint.value[movement] == null ||
-            checkpoint.value[movement]! <= 0) {
-          throw StateError('Every confirmed Forever checkpoint needs all TMs.');
         }
       }
     }

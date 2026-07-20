@@ -189,7 +189,7 @@ void main() {
     },
   );
 
-  test('v1 backup imports into v2 without losing legacy history', () async {
+  test('v1 backup imports into v5 without losing legacy history', () async {
     final temporary = await Directory.systemTemp.createTemp('hybrid-v1-');
     addTearDown(() => temporary.delete(recursive: true));
     final store = SqliteTrainingStore(

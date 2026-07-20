@@ -40,6 +40,16 @@ La nouvelle recette conserve C1 Leader, C2 Leader, Deload, C3 Anchor et TM Test,
 ainsi que prescriptions, provenance et ordre. Les nouveaux IDs de nœuds et états
 TM enrichissent l'export sans supprimer les anciens IDs/snapshots.
 
+Les confirmations de Training Max qui autorisent la progression Forever sont
+désormais indexées par l'identifiant du nœud compilé. Pour la séquence
+historique adaptée, les clés de compatibilité restent `C1`, `C2` et `C3` ; une
+confirmation indexée uniquement par numéro de semaine ne fait plus avancer
+Forever. Le support des confirmations hebdomadaires reste inchangé pour Beyond.
+
+`_LegacyForeverIdentityAdapter` reste volontairement en place afin de préserver
+les identifiants et snapshots historiques. Ce changement ne définit aucun
+calendrier de retrait de cet adaptateur.
+
 ## Déploiement
 
 Les anciens générateurs deviennent des adaptateurs de lecture/génération. Après

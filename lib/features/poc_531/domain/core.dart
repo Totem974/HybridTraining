@@ -292,6 +292,7 @@ GeneratedProgram generateProgram(
       ).trainingMax,
   };
   Map<String, Object?> payload;
+  var projectsUnconfirmedForeverNodes = false;
   if (program.generatorId == 'original-fsl') {
     const original = OriginalFslProgram();
     final rounder = LoadRounder(increment: configuration.roundingIncrement);
@@ -413,6 +414,17 @@ GeneratedProgram generateProgram(
         }
       }
     }
+    projectsUnconfirmedForeverNodes =
+        (program.generatorId == 'canonical-forever' ||
+            program.generatorId == 'canonical-forever-original-fsl') &&
+        configuration.options.projectFutureTrainingMaxes &&
+        (foreverSequence != null
+            ? projectedForeverNodes.isNotEmpty
+            : const [
+                'C1',
+                'C2',
+                'C3',
+              ].any((nodeId) => confirmedAtNode(nodeId) == null));
 
     final canonicalAthlete = CanonicalAthleteConfiguration(
       movementOrder: MainLift.values.map(_movement).toList(),
@@ -476,9 +488,11 @@ GeneratedProgram generateProgram(
     payload: Map.unmodifiable(payload),
     sources: program.sources,
     warnings:
-        configuration.options.projectFutureTrainingMaxes &&
-            configuration.options.confirmedTrainingMaxesByWeek.isEmpty &&
-            configuration.generation != Generation.original
+        (configuration.generation == Generation.forever
+            ? projectsUnconfirmedForeverNodes
+            : configuration.options.projectFutureTrainingMaxes &&
+                  configuration.generation != Generation.original &&
+                  configuration.options.confirmedTrainingMaxesByWeek.isEmpty)
         ? const [
             'Les Training Max futurs sont des projections explicites de la progression source ; confirmez-les aux checkpoints.',
           ]

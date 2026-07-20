@@ -274,6 +274,49 @@ void main() {
       expect(plan.payload['transitions'], isNotEmpty);
     });
 
+    test('a weekly confirmation alone does not advance Forever', () {
+      final plan = generateProgram(
+        _configuration(
+          'forever-original-531-fsl-2l1a-v1',
+          Generation.forever,
+          days: 4,
+          projectFutureTrainingMaxes: false,
+          confirmedTrainingMaxesByWeek: const {
+            10: {
+              MainLift.squat: 150,
+              MainLift.benchPress: 101.5,
+              MainLift.deadlift: 177.5,
+              MainLift.overheadPress: 72.5,
+            },
+          },
+        ),
+      );
+
+      expect(plan.payload['awaitingTrainingMaxConfirmation'], isTrue);
+      expect(plan.payload['blocks'], hasLength(5));
+      expect(plan.warnings, contains(contains('confirmation explicite')));
+    });
+
+    test('partial node confirmations keep the projection warning', () {
+      final plan = generateProgram(
+        _configuration(
+          'forever-original-531-fsl-2l1a-v1',
+          Generation.forever,
+          days: 4,
+          confirmedTrainingMaxesByNode: const {
+            'C1': {
+              MainLift.squat: 149,
+              MainLift.benchPress: 101.5,
+              MainLift.deadlift: 176,
+              MainLift.overheadPress: 70,
+            },
+          },
+        ),
+      );
+
+      expect(plan.warnings, contains(contains('projections explicites')));
+    });
+
     test('generates beginner Forever only with a sourced TM ratio', () {
       final plan = generateProgram(
         _configuration(
@@ -284,6 +327,10 @@ void main() {
         ),
       );
       expect(plan.payload['blocks'], isNotEmpty);
+      expect(
+        plan.warnings,
+        isNot(contains(contains('projections explicites'))),
+      );
     });
 
     test('serializes and restores a versioned plan', () {
@@ -326,6 +373,8 @@ ProgramConfiguration _configuration(
   double ratio = .9,
   bool powerliftingExtension = false,
   bool projectFutureTrainingMaxes = true,
+  Map<int, Map<MainLift, double>> confirmedTrainingMaxesByWeek = const {},
+  Map<String, Map<MainLift, double>> confirmedTrainingMaxesByNode = const {},
 }) {
   const weights = {
     MainLift.squat: 160.0,
@@ -350,6 +399,8 @@ ProgramConfiguration _configuration(
     trainingWeekdays: days == 3 ? const [1, 3, 5] : const [1, 2, 4, 5],
     roundingIncrement: 2.5,
     options: GenerationSpecificOptions(
+      confirmedTrainingMaxesByWeek: confirmedTrainingMaxesByWeek,
+      confirmedTrainingMaxesByNode: confirmedTrainingMaxesByNode,
       enablePowerliftingExtension: powerliftingExtension,
       projectFutureTrainingMaxes: projectFutureTrainingMaxes,
     ),

@@ -223,10 +223,10 @@ void main() {
             startDate: const LocalDate(2026, 7, 20),
             unit: WeightUnit.kilograms,
             rounder: const LoadRounder(increment: 2.5),
-            confirmedTrainingMaxesByWeek: {
-              3: afterThree,
-              6: afterSix,
-              10: afterTen,
+            confirmedTrainingMaxesByNode: {
+              'C1': afterThree,
+              'C2': afterSix,
+              'C3': afterTen,
             },
           ),
         ),

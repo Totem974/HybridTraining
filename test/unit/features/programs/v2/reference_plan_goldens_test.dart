@@ -30,7 +30,7 @@ void main() {
 
   CanonicalAthleteConfiguration athlete({
     Map<MovementId, double>? beyond,
-    Map<int, Map<MovementId, double>> forever = const {},
+    Map<String, Map<MovementId, double>> forever = const {},
   }) => CanonicalAthleteConfiguration(
     movementOrder: movements,
     trainingMaxes: initial,
@@ -40,7 +40,7 @@ void main() {
     unit: WeightUnit.kilograms,
     rounder: const LoadRounder(increment: 2.5),
     confirmedBeyondTrainingMaxes: beyond,
-    confirmedTrainingMaxesByWeek: forever,
+    confirmedTrainingMaxesByNode: forever,
   );
 
   test('Standard Powerlifting 4-week golden is stable', () {
@@ -73,7 +73,9 @@ void main() {
     final afterTen = progress(afterSix);
     final plan = const CanonicalPlanGenerator().generate(
       blueprint: CanonicalGenerationBlueprint.foreverOriginalFsl,
-      athlete: athlete(forever: {3: afterThree, 6: afterSix, 10: afterTen}),
+      athlete: athlete(
+        forever: {'C1': afterThree, 'C2': afterSix, 'C3': afterTen},
+      ),
     );
     _expectGolden('forever-original-fsl-2l1a.golden.json', plan.toJson());
   });

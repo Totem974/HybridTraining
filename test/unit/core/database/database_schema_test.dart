@@ -144,7 +144,7 @@ void main() {
   }
 
   test('v1 to v5 migration preserves legacy rows', () async {
-    final temporary = await Directory.systemTemp.createTemp('db-v1-v2-');
+    final temporary = await Directory.systemTemp.createTemp('db-v1-v5-');
     addTearDown(() => temporary.delete(recursive: true));
     final path = '${temporary.path}/migration.db';
     var database = await databaseFactoryFfi.openDatabase(

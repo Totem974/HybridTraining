@@ -31,7 +31,6 @@ void main() {
   CanonicalAthleteConfiguration athlete({
     List<int> weekdays = const [1, 2, 4, 5],
     Map<MovementId, double>? confirmed,
-    Map<int, Map<MovementId, double>> foreverConfirmations = const {},
     Map<String, Map<MovementId, double>> nodeConfirmations = const {},
   }) => CanonicalAthleteConfiguration(
     movementOrder: movements,
@@ -42,7 +41,6 @@ void main() {
     unit: WeightUnit.kilograms,
     rounder: const LoadRounder(increment: 2.5),
     confirmedBeyondTrainingMaxes: confirmed,
-    confirmedTrainingMaxesByWeek: foreverConfirmations,
     confirmedTrainingMaxesByNode: nodeConfirmations,
   );
 
@@ -52,7 +50,7 @@ void main() {
       athlete: athlete(),
     );
 
-    expect(plan.schemaVersion, 5);
+    expect(plan.schemaVersion, canonicalTrainingPlanSchemaVersion);
     expect(plan.sourceEdition, SourceEdition.powerlifting);
     expect(plan.generation, MethodGeneration.powerlifting);
     expect(plan.weeks, hasLength(4));
@@ -258,7 +256,7 @@ void main() {
     final plan = const CanonicalPlanGenerator().generate(
       blueprint: CanonicalGenerationBlueprint.foreverOriginalFsl,
       athlete: athlete(
-        foreverConfirmations: {3: afterThree, 6: afterSix, 10: afterTen},
+        nodeConfirmations: {'C1': afterThree, 'C2': afterSix, 'C3': afterTen},
       ),
     );
 
