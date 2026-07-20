@@ -478,6 +478,143 @@ void main() {
   });
 
   test(
+    'refuses a TM above the preview proposal without partial mutation',
+    () async {
+      final database = await local.open();
+      final activityBefore = await database.query(
+        'activity_prescriptions',
+        columns: ['id', 'unrounded_load', 'calculated_load'],
+        orderBy: 'id',
+      );
+      final setsBefore = await database.query(
+        'set_prescriptions',
+        columns: ['id', 'training_max', 'unrounded_load', 'prescribed_load'],
+        orderBy: 'id',
+      );
+      final pendingBefore = (await database.query(
+        'training_max_timeline',
+        where: "plan_id = ? AND movement_id = ? AND state = 'previewed'",
+        whereArgs: ['plan', MovementId.squat.value],
+        orderBy: 'sequence',
+        limit: 1,
+      )).single;
+      final proposed = (pendingBefore['proposed_training_max'] as num)
+          .toDouble();
+
+      await expectLater(
+        lifecycle.applyTrainingMaxDecision(
+          planId: 'plan',
+          movementId: MovementId.squat.value,
+          confirmedTrainingMax: proposed + 0.01,
+          reason: 'Fictitious decision above the previewed bound',
+          at: DateTime.utc(2026, 8, 10),
+        ),
+        throwsStateError,
+      );
+
+      expect(
+        await database.query(
+          'activity_prescriptions',
+          columns: ['id', 'unrounded_load', 'calculated_load'],
+          orderBy: 'id',
+        ),
+        activityBefore,
+      );
+      expect(
+        await database.query(
+          'set_prescriptions',
+          columns: ['id', 'training_max', 'unrounded_load', 'prescribed_load'],
+          orderBy: 'id',
+        ),
+        setsBefore,
+      );
+      final pendingAfter = (await database.query(
+        'training_max_timeline',
+        where: 'id = ?',
+        whereArgs: [pendingBefore['id']],
+      )).single;
+      expect(pendingAfter['state'], 'previewed');
+      expect(pendingAfter['confirmed_training_max'], isNull);
+      expect(pendingAfter['confirmed_at'], isNull);
+    },
+  );
+
+  test('amendment cannot bypass the previewed TM proposal', () async {
+    final database = await local.open();
+    final pending = (await database.query(
+      'training_max_timeline',
+      where: "plan_id = ? AND movement_id = ? AND state = 'previewed'",
+      whereArgs: ['plan', MovementId.squat.value],
+      orderBy: 'sequence',
+      limit: 1,
+    )).single;
+    final request = PlanAmendmentRequest(
+      planId: 'plan',
+      reason: 'Fictitious amendment above the previewed bound',
+      ruleId: 'TEST-TM-PROPOSAL-BOUND',
+      rescheduledSessions: {'plan-session-3': DateTime.utc(2026, 8, 20)},
+      trainingMaxChanges: {
+        MovementId.squat.value:
+            (pending['proposed_training_max'] as num).toDouble() + 0.01,
+      },
+    );
+    final preview = await lifecycle.previewAmendment(request);
+    final prescriptionsBefore = await database.query(
+      'activity_prescriptions',
+      columns: ['id', 'unrounded_load', 'calculated_load'],
+      orderBy: 'id',
+    );
+    final scheduleBefore = (await database.query(
+      'plan_training_sessions',
+      columns: ['scheduled_for'],
+      where: 'id = ?',
+      whereArgs: ['plan-session-3'],
+    )).single['scheduled_for'];
+
+    await expectLater(
+      lifecycle.applyAmendment(
+        request,
+        amendmentId: preview.amendmentId,
+        confirmed: true,
+      ),
+      throwsStateError,
+    );
+
+    expect(
+      await database.query(
+        'activity_prescriptions',
+        columns: ['id', 'unrounded_load', 'calculated_load'],
+        orderBy: 'id',
+      ),
+      prescriptionsBefore,
+    );
+    expect(
+      (await database.query(
+        'plan_training_sessions',
+        columns: ['scheduled_for'],
+        where: 'id = ?',
+        whereArgs: ['plan-session-3'],
+      )).single['scheduled_for'],
+      scheduleBefore,
+    );
+    final timelineAfter = (await database.query(
+      'training_max_timeline',
+      where: 'id = ?',
+      whereArgs: [pending['id']],
+    )).single;
+    expect(timelineAfter['state'], 'previewed');
+    expect(timelineAfter['confirmed_training_max'], isNull);
+    expect(
+      (await database.query(
+        'plan_amendments',
+        where: 'id = ?',
+        whereArgs: [preview.amendmentId],
+      )).single['state'],
+      'previewed',
+    );
+  });
+
+  test(
     'advances cycle, block and plan only when children are closed',
     () async {
       final database = await local.open();

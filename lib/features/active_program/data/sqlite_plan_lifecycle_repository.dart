@@ -226,19 +226,27 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
         }
       }
       for (final entry in request.trainingMaxChanges.entries) {
+        final timeline = await _pendingTimelineDecision(
+          tx,
+          planId: request.planId,
+          movementId: entry.key,
+          confirmedTrainingMax: entry.value,
+        );
         await _applyFutureTrainingMax(
           tx,
           planId: request.planId,
           movementId: entry.key,
           trainingMax: entry.value,
         );
-        await _confirmTimeline(
+        final timelineUpdated = await _confirmTimeline(
           tx,
-          planId: request.planId,
-          movementId: entry.key,
+          timelineId: timeline.id,
           trainingMax: entry.value,
           at: at,
         );
+        if (timelineUpdated != 1) {
+          throw StateError('No pending TM decision was found.');
+        }
       }
       final updated = await tx.update(
         'plan_amendments',
@@ -492,11 +500,19 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
     required String reason,
     required DateTime at,
   }) async {
-    if (confirmedTrainingMax <= 0 || reason.trim().isEmpty) {
+    if (!confirmedTrainingMax.isFinite ||
+        confirmedTrainingMax <= 0 ||
+        reason.trim().isEmpty) {
       throw ArgumentError('A positive TM and reason are required.');
     }
     final database = await localDatabase.open();
     await database.transaction((tx) async {
+      final timeline = await _pendingTimelineDecision(
+        tx,
+        planId: planId,
+        movementId: movementId,
+        confirmedTrainingMax: confirmedTrainingMax,
+      );
       await _applyFutureTrainingMax(
         tx,
         planId: planId,
@@ -505,8 +521,7 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
       );
       final updated = await _confirmTimeline(
         tx,
-        planId: planId,
-        movementId: movementId,
+        timelineId: timeline.id,
         trainingMax: confirmedTrainingMax,
         at: _date(at),
       );
@@ -514,22 +529,48 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
     });
   }
 
-  Future<int> _confirmTimeline(
+  Future<({String id, double previous, double proposed})>
+  _pendingTimelineDecision(
     DatabaseExecutor tx, {
     required String planId,
     required String movementId,
-    required double trainingMax,
-    required String at,
+    required double confirmedTrainingMax,
   }) async {
     final rows = await tx.query(
       'training_max_timeline',
-      columns: ['id'],
+      columns: ['id', 'previous_training_max', 'proposed_training_max'],
       where: "plan_id = ? AND movement_id = ? AND state = 'previewed'",
       whereArgs: [planId, movementId],
       orderBy: 'sequence',
       limit: 1,
     );
-    if (rows.isEmpty) return 0;
+    if (rows.isEmpty) {
+      throw StateError('No pending TM decision was found.');
+    }
+    final row = rows.single;
+    final previous = (row['previous_training_max'] as num).toDouble();
+    final proposed = (row['proposed_training_max'] as num).toDouble();
+    if (!previous.isFinite ||
+        previous <= 0 ||
+        !proposed.isFinite ||
+        proposed <= 0) {
+      throw StateError('The pending TM decision contains an invalid value.');
+    }
+    final comparisonTolerance = proposed.abs() * 1e-9 + 1e-9;
+    if (!confirmedTrainingMax.isFinite ||
+        confirmedTrainingMax <= 0 ||
+        confirmedTrainingMax - proposed > comparisonTolerance) {
+      throw StateError('The confirmed TM exceeds the proposed TM.');
+    }
+    return (id: row['id']! as String, previous: previous, proposed: proposed);
+  }
+
+  Future<int> _confirmTimeline(
+    DatabaseExecutor tx, {
+    required String timelineId,
+    required double trainingMax,
+    required String at,
+  }) async {
     return tx.update(
       'training_max_timeline',
       {
@@ -537,8 +578,8 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
         'confirmed_training_max': trainingMax,
         'confirmed_at': at,
       },
-      where: 'id = ?',
-      whereArgs: [rows.single['id']],
+      where: "id = ? AND state = 'previewed'",
+      whereArgs: [timelineId],
     );
   }
 

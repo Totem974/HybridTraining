@@ -327,6 +327,16 @@ class ForeverCompilationException implements Exception {
   final PlanningValidationResult validation;
 }
 
+class _TrainingMaxTransitionResolution {
+  const _TrainingMaxTransitionResolution({
+    required this.values,
+    required this.issues,
+  });
+
+  final Map<String, double> values;
+  final List<PlanningIssue> issues;
+}
+
 const foreverOriginalMainWorkRevision = ProgramRevision(
   id: 'forever-original-531-v1',
   version: 1,
@@ -1126,7 +1136,7 @@ List<PlanningIssue> _validateTrainingProfile(CommonTrainingProfile profile) {
     );
   }
   for (final entry in profile.trainingMaxes.entries) {
-    if (entry.value <= 0) {
+    if (!entry.value.isFinite || entry.value <= 0) {
       issues.add(
         PlanningIssue(
           code: 'profile.training_max_invalid',
@@ -1136,7 +1146,7 @@ List<PlanningIssue> _validateTrainingProfile(CommonTrainingProfile profile) {
       );
     }
     final increment = profile.progressionIncrements[entry.key];
-    if (increment == null || increment <= 0) {
+    if (increment == null || !increment.isFinite || increment <= 0) {
       issues.add(
         PlanningIssue(
           code: 'profile.progression_increment_invalid',
@@ -1299,7 +1309,12 @@ class ForeverSequenceCompiler implements ForeverProgramCompiler {
     final nodes = <ForeverPlanNode>[];
     final decisions = <TrainingMaxDecision>[];
     var current = profile!.trainingMaxes;
-    for (final macrocycle in series.macrocycles) {
+    for (
+      var macrocycleIndex = 0;
+      macrocycleIndex < series.macrocycles.length;
+      macrocycleIndex++
+    ) {
+      final macrocycle = series.macrocycles[macrocycleIndex];
       ForeverCycleNode? lastCycleNode;
       var cycleIndex = 0;
       for (final slot in macrocycle.recipe.slots) {
@@ -1337,15 +1352,25 @@ class ForeverSequenceCompiler implements ForeverProgramCompiler {
           );
         }
       }
-      final proposed = macrocycle.trainingMaxChoices.isNotEmpty
-          ? {...current, ...macrocycle.trainingMaxChoices}
-          : macrocycle.intent == MacrocycleIntent.projected
+      final transition = _resolveTrainingMaxTransition(
+        profile: profile,
+        currentTrainingMaxes: current,
+        macrocycle: macrocycle,
+        path: 'macrocycles[$macrocycleIndex]',
+      );
+      if (transition.issues.isNotEmpty) {
+        throw ForeverCompilationException(
+          PlanningValidationResult(transition.issues),
+        );
+      }
+      final proposed = macrocycle.intent == MacrocycleIntent.projected
           ? {
               for (final entry in current.entries)
-                entry.key:
-                    entry.value + profile.progressionIncrements[entry.key]!,
+                entry.key: macrocycle.trainingMaxChoices.containsKey(entry.key)
+                    ? transition.values[entry.key]!
+                    : entry.value + profile.progressionIncrements[entry.key]!,
             }
-          : current;
+          : transition.values;
       final fallbackState = macrocycle.intent == MacrocycleIntent.projected
           ? TrainingMaxDecisionState.projected
           : TrainingMaxDecisionState.confirmed;
@@ -1363,7 +1388,9 @@ class ForeverSequenceCompiler implements ForeverProgramCompiler {
           proposedTrainingMaxes: proposed,
         ),
       );
-      current = proposed;
+      if (macrocycle.intent != MacrocycleIntent.projected) {
+        current = proposed;
+      }
     }
     return CompiledForeverSequence(
       nodes: nodes,
@@ -1505,31 +1532,261 @@ class ForeverSequenceCompiler implements ForeverProgramCompiler {
     required Map<String, double> currentTrainingMaxes,
     required Map<String, TrainingMaxChoice> choices,
   }) {
-    final resolved = <String, double>{};
-    for (final entry in currentTrainingMaxes.entries) {
-      final choice = choices[entry.key];
-      final increment = profile.progressionIncrements[entry.key];
-      if (choice == null || increment == null || increment <= 0) {
-        throw ArgumentError('Every lift requires a sourced TM choice.');
-      }
-      if (choice.state == TrainingMaxDecisionState.projected ||
-          choice.state == TrainingMaxDecisionState.proposed) {
-        throw ArgumentError('A projected or proposed TM is not confirmed.');
-      }
-      if (choice.value <= 0 || choice.value > entry.value + increment) {
-        throw ArgumentError(
-          'A TM may not exceed the source-defined increment.',
+    final resolution = _resolveTrainingMaxChoices(
+      profile: profile,
+      currentTrainingMaxes: currentTrainingMaxes,
+      choices: choices,
+      path: 'trainingMaxChoices',
+    );
+    if (resolution.issues.isNotEmpty) {
+      throw ForeverCompilationException(
+        PlanningValidationResult(resolution.issues),
+      );
+    }
+    return resolution.values;
+  }
+}
+
+_TrainingMaxTransitionResolution _resolveTrainingMaxTransition({
+  required CommonTrainingProfile profile,
+  required Map<String, double> currentTrainingMaxes,
+  required ForeverMacrocycle macrocycle,
+  required String path,
+}) {
+  final outcome = macrocycle.outcome;
+  if (macrocycle.intent == MacrocycleIntent.projected) {
+    final issues = <PlanningIssue>[];
+    if (outcome != null &&
+        outcome.macrocycleInstanceId != macrocycle.instanceId) {
+      issues.add(
+        PlanningIssue(
+          code: 'training_max.outcome_macrocycle_mismatch',
+          path: '$path.outcome.macrocycleInstanceId',
+          message: 'The TM outcome must reference its macrocycle instance.',
+        ),
+      );
+    }
+    if (outcome == null && macrocycle.trainingMaxChoices.isEmpty) {
+      return _TrainingMaxTransitionResolution(
+        values: Map.unmodifiable(currentTrainingMaxes),
+        issues: List.unmodifiable(issues),
+      );
+    }
+    final states = {
+      for (final lift in currentTrainingMaxes.keys)
+        lift:
+            outcome?.trainingMaxStates[lift] ??
+            TrainingMaxDecisionState.projected,
+      ...?outcome?.trainingMaxStates,
+    };
+    final choices = <String, TrainingMaxChoice>{};
+    for (final entry in states.entries) {
+      final value = macrocycle.trainingMaxChoices[entry.key];
+      if (value != null) {
+        choices[entry.key] = TrainingMaxChoice(
+          state: entry.value,
+          value: value,
         );
       }
-      if (choice.state == TrainingMaxDecisionState.held &&
-          choice.value != entry.value) {
-        throw ArgumentError('A held TM must equal the current TM.');
-      }
-      resolved[entry.key] = choice.value;
     }
-    if (choices.keys.any((lift) => !currentTrainingMaxes.containsKey(lift))) {
-      throw ArgumentError('A TM choice references an unknown lift.');
-    }
-    return Map.unmodifiable(resolved);
+    final resolution = _resolveTrainingMaxChoices(
+      profile: profile,
+      currentTrainingMaxes: currentTrainingMaxes,
+      choices: choices,
+      path: '$path.trainingMaxChoices',
+      declaredStates: states,
+      declaredValues: macrocycle.trainingMaxChoices,
+      futurePreview: true,
+    );
+    return _TrainingMaxTransitionResolution(
+      values: resolution.values,
+      issues: List.unmodifiable([...issues, ...resolution.issues]),
+    );
   }
+  if (outcome == null) {
+    if (macrocycle.trainingMaxChoices.isEmpty) {
+      return _TrainingMaxTransitionResolution(
+        values: Map.unmodifiable(currentTrainingMaxes),
+        issues: const [],
+      );
+    }
+    return _TrainingMaxTransitionResolution(
+      values: Map.unmodifiable(currentTrainingMaxes),
+      issues: [
+        PlanningIssue(
+          code: 'training_max.outcome_missing',
+          path: '$path.outcome',
+          message: 'TM choices require an explicit macrocycle outcome.',
+        ),
+      ],
+    );
+  }
+  final issues = <PlanningIssue>[];
+  if (outcome.macrocycleInstanceId != macrocycle.instanceId) {
+    issues.add(
+      PlanningIssue(
+        code: 'training_max.outcome_macrocycle_mismatch',
+        path: '$path.outcome.macrocycleInstanceId',
+        message: 'The TM outcome must reference its macrocycle instance.',
+      ),
+    );
+  }
+  final choices = <String, TrainingMaxChoice>{};
+  for (final entry in outcome.trainingMaxStates.entries) {
+    final value = macrocycle.trainingMaxChoices[entry.key];
+    if (value != null) {
+      choices[entry.key] = TrainingMaxChoice(state: entry.value, value: value);
+    }
+  }
+  final resolution = _resolveTrainingMaxChoices(
+    profile: profile,
+    currentTrainingMaxes: currentTrainingMaxes,
+    choices: choices,
+    path: '$path.trainingMaxChoices',
+    declaredStates: outcome.trainingMaxStates,
+    declaredValues: macrocycle.trainingMaxChoices,
+  );
+  return _TrainingMaxTransitionResolution(
+    values: resolution.values,
+    issues: List.unmodifiable([...issues, ...resolution.issues]),
+  );
+}
+
+_TrainingMaxTransitionResolution _resolveTrainingMaxChoices({
+  required CommonTrainingProfile profile,
+  required Map<String, double> currentTrainingMaxes,
+  required Map<String, TrainingMaxChoice> choices,
+  required String path,
+  Map<String, TrainingMaxDecisionState>? declaredStates,
+  Map<String, double>? declaredValues,
+  bool futurePreview = false,
+}) {
+  final issues = <PlanningIssue>[];
+  final stateKeys = declaredStates?.keys.toSet() ?? choices.keys.toSet();
+  final valueKeys = declaredValues?.keys.toSet() ?? choices.keys.toSet();
+  final expectedKeys = currentTrainingMaxes.keys.toSet();
+  if (!futurePreview) {
+    for (final lift in expectedKeys.difference(stateKeys)) {
+      issues.add(
+        PlanningIssue(
+          code: 'training_max.state_missing',
+          path: '$path.$lift',
+          message: 'Every lift requires an explicit TM decision state.',
+        ),
+      );
+    }
+    for (final lift in expectedKeys.difference(valueKeys)) {
+      issues.add(
+        PlanningIssue(
+          code: 'training_max.value_missing',
+          path: '$path.$lift',
+          message: 'Every lift requires an explicit TM value.',
+        ),
+      );
+    }
+  }
+  for (final lift in stateKeys.union(valueKeys).difference(expectedKeys)) {
+    issues.add(
+      PlanningIssue(
+        code: 'training_max.unknown_lift',
+        path: '$path.$lift',
+        message: 'The TM transition references an unknown lift.',
+      ),
+    );
+  }
+  if (futurePreview && declaredStates != null) {
+    for (final entry in declaredStates.entries) {
+      final isFutureState =
+          entry.value == TrainingMaxDecisionState.projected ||
+          entry.value == TrainingMaxDecisionState.proposed;
+      if (!isFutureState) {
+        issues.add(
+          PlanningIssue(
+            code: 'training_max.historical_state_in_future',
+            path: '$path.${entry.key}.state',
+            message: 'A future TM preview must remain projected or proposed.',
+          ),
+        );
+      }
+    }
+  }
+  final resolved = <String, double>{};
+  for (final entry in currentTrainingMaxes.entries) {
+    final choice = choices[entry.key];
+    final increment = profile.progressionIncrements[entry.key];
+    if (!entry.value.isFinite || entry.value <= 0) {
+      issues.add(
+        PlanningIssue(
+          code: 'training_max.current_value_invalid',
+          path: '$path.${entry.key}.currentValue',
+          message: 'The current TM must be finite and positive.',
+        ),
+      );
+      continue;
+    }
+    if (increment == null || !increment.isFinite || increment <= 0) {
+      issues.add(
+        PlanningIssue(
+          code: 'training_max.increment_invalid',
+          path: '$path.${entry.key}.increment',
+          message: 'The sourced TM increment must be finite and positive.',
+        ),
+      );
+      continue;
+    }
+    if (choice == null) continue;
+    final isFutureState =
+        choice.state == TrainingMaxDecisionState.projected ||
+        choice.state == TrainingMaxDecisionState.proposed;
+    if (!futurePreview && isFutureState) {
+      issues.add(
+        PlanningIssue(
+          code: 'training_max.future_state_in_history',
+          path: '$path.${entry.key}.state',
+          message: 'Projected or proposed TM states cannot enter history.',
+        ),
+      );
+      continue;
+    }
+    if (futurePreview && !isFutureState) {
+      if (declaredStates == null) {
+        issues.add(
+          PlanningIssue(
+            code: 'training_max.historical_state_in_future',
+            path: '$path.${entry.key}.state',
+            message: 'A future TM preview must remain projected or proposed.',
+          ),
+        );
+      }
+      continue;
+    }
+    if (!choice.value.isFinite ||
+        choice.value <= 0 ||
+        choice.value > entry.value + increment) {
+      issues.add(
+        PlanningIssue(
+          code: 'training_max.value_out_of_bounds',
+          path: '$path.${entry.key}.value',
+          message: 'The TM must be positive and within the sourced increment.',
+        ),
+      );
+      continue;
+    }
+    if (choice.state == TrainingMaxDecisionState.held &&
+        choice.value != entry.value) {
+      issues.add(
+        PlanningIssue(
+          code: 'training_max.held_value_changed',
+          path: '$path.${entry.key}.value',
+          message: 'A held TM must equal the current TM.',
+        ),
+      );
+      continue;
+    }
+    resolved[entry.key] = choice.value;
+  }
+  return _TrainingMaxTransitionResolution(
+    values: Map.unmodifiable(resolved),
+    issues: List.unmodifiable(issues),
+  );
 }

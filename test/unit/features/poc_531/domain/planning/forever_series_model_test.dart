@@ -484,6 +484,315 @@ void main() {
       expect(() => decision.state, throwsStateError);
     });
 
+    test('compiler rejects a held TM whose value changed', () {
+      final series = ForeverProgramSeries(
+        id: 'changed-held-tm',
+        profile: profile(),
+        macrocycles: [
+          macrocycle(
+            id: 'M1',
+            outcome: MacrocycleOutcome(
+              macrocycleInstanceId: 'M1',
+              trainingMaxStates: const {
+                'press': TrainingMaxDecisionState.held,
+                'squat': TrainingMaxDecisionState.confirmed,
+              },
+            ),
+            trainingMaxChoices: const {'press': 51, 'squat': 105},
+          ),
+        ],
+      );
+
+      expect(
+        () => const ForeverSequenceCompiler().compileSeries(series),
+        throwsA(
+          isA<ForeverCompilationException>().having(
+            (error) => error.validation.issues.map((issue) => issue.code),
+            'issue codes',
+            contains('training_max.held_value_changed'),
+          ),
+        ),
+      );
+    });
+
+    test('compiler rejects a reset without an explicit value', () {
+      final series = ForeverProgramSeries(
+        id: 'missing-reset-value',
+        profile: profile(),
+        macrocycles: [
+          macrocycle(
+            id: 'M1',
+            outcome: MacrocycleOutcome(
+              macrocycleInstanceId: 'M1',
+              trainingMaxStates: const {
+                'press': TrainingMaxDecisionState.held,
+                'squat': TrainingMaxDecisionState.reset,
+              },
+            ),
+            trainingMaxChoices: const {'press': 50},
+          ),
+        ],
+      );
+
+      expect(
+        () => const ForeverSequenceCompiler().compileSeries(series),
+        throwsA(
+          isA<ForeverCompilationException>().having(
+            (error) => error.validation.issues.map((issue) => issue.code),
+            'issue codes',
+            contains('training_max.value_missing'),
+          ),
+        ),
+      );
+    });
+
+    test('compiler rejects projected TM states in completed history', () {
+      final series = ForeverProgramSeries(
+        id: 'future-state-in-history',
+        profile: profile(),
+        macrocycles: [
+          macrocycle(
+            id: 'M1',
+            outcome: MacrocycleOutcome(
+              macrocycleInstanceId: 'M1',
+              trainingMaxStates: const {
+                'press': TrainingMaxDecisionState.projected,
+                'squat': TrainingMaxDecisionState.proposed,
+              },
+            ),
+            trainingMaxChoices: const {'press': 52.5, 'squat': 105},
+          ),
+        ],
+      );
+
+      expect(
+        () => const ForeverSequenceCompiler().compileSeries(series),
+        throwsA(
+          isA<ForeverCompilationException>().having(
+            (error) => error.validation.issues.map((issue) => issue.code),
+            'issue codes',
+            everyElement('training_max.future_state_in_history'),
+          ),
+        ),
+      );
+    });
+
+    test('compiler rejects a mismatched outcome ID and an unknown lift', () {
+      final series = ForeverProgramSeries(
+        id: 'invalid-outcome-identity',
+        profile: profile(),
+        macrocycles: [
+          macrocycle(
+            id: 'M1',
+            outcome: MacrocycleOutcome(
+              macrocycleInstanceId: 'M-other',
+              trainingMaxStates: const {
+                'press': TrainingMaxDecisionState.held,
+                'squat': TrainingMaxDecisionState.held,
+                'deadlift': TrainingMaxDecisionState.reset,
+              },
+            ),
+            trainingMaxChoices: const {
+              'press': 50,
+              'squat': 100,
+              'deadlift': 120,
+            },
+          ),
+        ],
+      );
+
+      expect(
+        () => const ForeverSequenceCompiler().compileSeries(series),
+        throwsA(
+          isA<ForeverCompilationException>().having(
+            (error) => error.validation.issues.map((issue) => issue.code),
+            'issue codes',
+            allOf(
+              contains('training_max.outcome_macrocycle_mismatch'),
+              contains('training_max.unknown_lift'),
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('mixed held and reset values feed the next macrocycle exactly', () {
+      final series = ForeverProgramSeries(
+        id: 'mixed-transition',
+        profile: profile(),
+        macrocycles: [
+          macrocycle(
+            id: 'M1',
+            outcome: MacrocycleOutcome(
+              macrocycleInstanceId: 'M1',
+              trainingMaxStates: const {
+                'press': TrainingMaxDecisionState.held,
+                'squat': TrainingMaxDecisionState.reset,
+              },
+            ),
+            trainingMaxChoices: const {'press': 50, 'squat': 92.5},
+          ),
+          macrocycle(
+            id: 'M2',
+            intent: MacrocycleIntent.projected,
+            status: MacrocycleStatus.planned,
+          ),
+        ],
+      );
+
+      final decisions = const ForeverSequenceCompiler()
+          .compileSeries(series)
+          .trainingMaxDecisions;
+
+      expect(decisions[0].proposedTrainingMaxes, const {
+        'press': 50,
+        'squat': 92.5,
+      });
+      expect(decisions[1].previousTrainingMaxes, const {
+        'press': 50,
+        'squat': 92.5,
+      });
+      expect(decisions[1].proposedTrainingMaxes, const {
+        'press': 52.5,
+        'squat': 97.5,
+      });
+    });
+
+    test('explicit projected values drive the future macrocycle preview', () {
+      final series = ForeverProgramSeries(
+        id: 'explicit-future-preview',
+        profile: profile(),
+        macrocycles: [
+          macrocycle(id: 'M1'),
+          macrocycle(
+            id: 'M2',
+            intent: MacrocycleIntent.projected,
+            status: MacrocycleStatus.planned,
+            outcome: MacrocycleOutcome(
+              macrocycleInstanceId: 'M2',
+              trainingMaxStates: const {
+                'press': TrainingMaxDecisionState.projected,
+                'squat': TrainingMaxDecisionState.proposed,
+              },
+            ),
+            trainingMaxChoices: const {'press': 51.25, 'squat': 103},
+          ),
+        ],
+      );
+
+      final decisions = const ForeverSequenceCompiler()
+          .compileSeries(series)
+          .trainingMaxDecisions;
+
+      expect(decisions[1].previousTrainingMaxes, const {
+        'press': 50,
+        'squat': 100,
+      });
+      expect(decisions[1].proposedTrainingMaxes, const {
+        'press': 51.25,
+        'squat': 103,
+      });
+      expect(decisions[1].states, const {
+        'press': TrainingMaxDecisionState.projected,
+        'squat': TrainingMaxDecisionState.proposed,
+      });
+    });
+
+    test('projected outcome without choices still validates future states', () {
+      final series = ForeverProgramSeries(
+        id: 'invalid-empty-future-outcome',
+        profile: profile(),
+        macrocycles: [
+          macrocycle(id: 'M1'),
+          macrocycle(
+            id: 'M2',
+            intent: MacrocycleIntent.projected,
+            status: MacrocycleStatus.planned,
+            outcome: MacrocycleOutcome(
+              macrocycleInstanceId: 'M2',
+              trainingMaxStates: const {
+                'press': TrainingMaxDecisionState.held,
+                'squat': TrainingMaxDecisionState.reset,
+                'deadlift': TrainingMaxDecisionState.projected,
+              },
+            ),
+          ),
+        ],
+      );
+
+      expect(
+        () => const ForeverSequenceCompiler().compileSeries(series),
+        throwsA(
+          isA<ForeverCompilationException>().having(
+            (error) => error.validation.issues.map((issue) => issue.code),
+            'issue codes',
+            allOf(
+              contains('training_max.historical_state_in_future'),
+              contains('training_max.unknown_lift'),
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('compiler rejects a non-finite TM value', () {
+      final series = ForeverProgramSeries(
+        id: 'non-finite-tm',
+        profile: profile(),
+        macrocycles: [
+          macrocycle(
+            id: 'M1',
+            outcome: MacrocycleOutcome(
+              macrocycleInstanceId: 'M1',
+              trainingMaxStates: const {
+                'press': TrainingMaxDecisionState.held,
+                'squat': TrainingMaxDecisionState.reset,
+              },
+            ),
+            trainingMaxChoices: const {'press': 50, 'squat': double.nan},
+          ),
+        ],
+      );
+
+      expect(
+        () => const ForeverSequenceCompiler().compileSeries(series),
+        throwsA(
+          isA<ForeverCompilationException>().having(
+            (error) => error.validation.issues.map((issue) => issue.code),
+            'issue codes',
+            contains('training_max.value_out_of_bounds'),
+          ),
+        ),
+      );
+    });
+
+    test('compiler rejects non-finite profile TM and increment values', () {
+      final invalidProfile = CommonTrainingProfile(
+        trainingDaysPerWeek: 4,
+        trainingMaxes: const {'press': double.nan, 'squat': 100},
+        progressionIncrements: const {'press': 2.5, 'squat': double.infinity},
+      );
+      final series = ForeverProgramSeries(
+        id: 'non-finite-profile',
+        profile: invalidProfile,
+        macrocycles: [macrocycle(id: 'M1')],
+      );
+
+      expect(
+        () => const ForeverSequenceCompiler().compileSeries(series),
+        throwsA(
+          isA<ForeverCompilationException>().having(
+            (error) => error.validation.issues.map((issue) => issue.code),
+            'issue codes',
+            allOf(
+              contains('profile.training_max_invalid'),
+              contains('profile.progression_increment_invalid'),
+            ),
+          ),
+        ),
+      );
+    });
+
     test('only sourced cycle and protocol revisions resolve', () {
       const cycles = CycleStrategyRegistry();
       const protocols = ProtocolStrategyRegistry();
@@ -823,7 +1132,45 @@ void main() {
               ),
             },
           ),
-          throwsArgumentError,
+          throwsA(isA<ForeverCompilationException>()),
+        );
+      },
+    );
+
+    test(
+      'TM confirmation rejects non-finite current values and increments',
+      () {
+        final invalidProfile = CommonTrainingProfile(
+          trainingDaysPerWeek: 4,
+          trainingMaxes: const {'press': 50, 'squat': 100},
+          progressionIncrements: const {'press': 2.5, 'squat': double.infinity},
+        );
+
+        expect(
+          () => const ForeverSequenceCompiler().confirmTrainingMaxes(
+            profile: invalidProfile,
+            currentTrainingMaxes: const {'press': double.nan, 'squat': 100},
+            choices: const {
+              'press': TrainingMaxChoice(
+                state: TrainingMaxDecisionState.held,
+                value: 50,
+              ),
+              'squat': TrainingMaxChoice(
+                state: TrainingMaxDecisionState.confirmed,
+                value: 102.5,
+              ),
+            },
+          ),
+          throwsA(
+            isA<ForeverCompilationException>().having(
+              (error) => error.validation.issues.map((issue) => issue.code),
+              'issue codes',
+              allOf(
+                contains('training_max.current_value_invalid'),
+                contains('training_max.increment_invalid'),
+              ),
+            ),
+          ),
         );
       },
     );
