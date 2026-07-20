@@ -59,17 +59,19 @@ Validations exécutées le 20 juillet 2026 :
 
 - `dart format --set-exit-if-changed .` : réussi ;
 - `flutter analyze` : réussi, aucune anomalie ;
-- `flutter test --reporter compact` : réussi, 305 tests ;
+- `flutter test --reporter compact` : réussi, 321 tests ;
 - tests visuels desktop et mobile : réussis, 4/4 ;
 - tests ciblés génération canonique, adaptateur et widgets : réussis, 36/36 ;
 - tests ciblés du domaine planning : réussis, 21/21 ;
 - tests ciblés de persistance : réussis, 10/10.
 
 Google Chrome et le ChromeDriver officiel sont alignés en version
-150.0.7871.129. Le parcours `flutter drive` a réussi en 28,3 secondes : cinq
+150.0.7871.129. Le parcours `flutter drive` a réussi en 34,7 secondes : cinq
 tests sur cinq, dont les scénarios Original, Beyond et Forever M1 → M2.
 Firefox 152.0.6 avec GeckoDriver officiel 0.36.0 exécute les mêmes cinq tests
-avec succès en 28,0 secondes.
+avec succès en 34,7 secondes. Le scénario Forever termine M1 et M2, clôture la
+série puis recrée la page et restaure le snapshot v4 depuis le stockage local du
+navigateur, avec les TM Press 62,5 puis 65.
 
 Microsoft Edge et le pilote local protégé de `.SOURCE/` sont disponibles, mais
 le parcours Edge n’a pas été exécuté : malgré un WebDriver prêt, `flutter drive`

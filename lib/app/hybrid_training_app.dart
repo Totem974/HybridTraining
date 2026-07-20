@@ -8,6 +8,8 @@ import 'package:hybrid_training/features/core_validation/data/sqlite_core_valida
 import 'package:hybrid_training/features/core_validation/presentation/core_validation_controller.dart';
 import 'package:hybrid_training/features/core_validation/presentation/core_validation_shell.dart';
 import 'package:hybrid_training/features/poc_531/presentation/poc_531_routes.dart';
+import 'package:hybrid_training/features/poc_531/application/forever_series_configuration_repository.dart';
+import 'package:hybrid_training/features/poc_531/data/forever_series_configuration_repository.dart';
 import 'package:hybrid_training/features/poc_531/presentation/generator/poc_531_generator_core_adapter.dart';
 import 'package:hybrid_training/features/poc_531/presentation/generator/poc_531_generator_page.dart';
 
@@ -15,12 +17,14 @@ class HybridTrainingApp extends StatefulWidget {
   const HybridTrainingApp({
     required this.environment,
     this.repository,
+    this.foreverSeriesRepository,
     this.pocOnlyMode = kIsWeb,
     super.key,
   });
 
   final AppEnvironment environment;
   final CoreValidationRepository? repository;
+  final ForeverSeriesConfigurationRepository? foreverSeriesRepository;
   final bool pocOnlyMode;
 
   @override
@@ -29,10 +33,14 @@ class HybridTrainingApp extends StatefulWidget {
 
 class _HybridTrainingAppState extends State<HybridTrainingApp> {
   CoreValidationController? controller;
+  late final ForeverSeriesConfigurationRepository? foreverSeriesRepository;
 
   @override
   void initState() {
     super.initState();
+    foreverSeriesRepository =
+        widget.foreverSeriesRepository ??
+        (kIsWeb ? createLocalForeverSeriesConfigurationRepository() : null);
     if (!widget.pocOnlyMode) {
       controller = CoreValidationController(
         widget.repository ??
@@ -60,9 +68,16 @@ class _HybridTrainingAppState extends State<HybridTrainingApp> {
       ),
       useMaterial3: true,
     ),
-    onGenerateRoute: buildPoc531Route,
+    onGenerateRoute: (settings) => buildPoc531Route(
+      settings,
+      foreverSeriesRepository: foreverSeriesRepository,
+    ),
     home: widget.pocOnlyMode
-        ? const Poc531GeneratorPage(core: DomainPoc531GeneratorCore())
+        ? Poc531GeneratorPage(
+            core: const DomainPoc531GeneratorCore(),
+            foreverSeriesRepository: foreverSeriesRepository,
+            initialSeriesId: 'forever-series-v1',
+          )
         : CoreValidationShell(
             environment: widget.environment,
             controller: controller!,

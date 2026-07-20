@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/features/poc_531/presentation/generator/poc_531_generator_core_adapter.dart';
 import 'package:hybrid_training/features/poc_531/presentation/generator/poc_531_generator_page.dart';
+import 'package:hybrid_training/features/poc_531/application/forever_series_configuration_repository.dart';
 
 void main() {
   Future<void> openCalculator(WidgetTester tester) async {
@@ -726,6 +729,276 @@ void main() {
     expect(find.text('10 × 10 ratio'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('successful v4 generation saves and restores a Forever series', (
+    tester,
+  ) async {
+    final repository = _FakeForeverSeriesRepository();
+    final firstCore = _RecordingGeneratorCore();
+    Widget page(Poc531GeneratorCore core, Key key) => MaterialApp(
+      home: Poc531GeneratorPage(
+        key: key,
+        core: core,
+        foreverSeriesRepository: repository,
+        initialSeriesId: 'series-widget',
+        initialConfiguration: const {
+          'mode': 'forever',
+          'foreverTemplateId': 'FV-236',
+        },
+      ),
+    );
+
+    await tester.pumpWidget(page(firstCore, const ValueKey('first')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('forever-step-7')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const Key('complete-active-macrocycle')),
+    );
+    await tester.tap(find.byKey(const Key('complete-active-macrocycle')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const Key('continue-next-macrocycle')),
+    );
+    await tester.tap(find.byKey(const Key('continue-next-macrocycle')));
+    await tester.pumpAndSettle();
+
+    final savedSeries = (repository.saved!['forever'] as Map)['series'] as Map;
+    expect(savedSeries['macrocycles'], hasLength(2));
+    expect(
+      ((savedSeries['macrocycles'] as List).first as Map)['trainingMaxStates'],
+      isNotEmpty,
+    );
+
+    final restoredCore = _RecordingGeneratorCore();
+    await tester.pumpWidget(page(restoredCore, const ValueKey('restored')));
+    await tester.pumpAndSettle();
+    final restoredSeries =
+        (restoredCore.lastConfiguration!['forever'] as Map)['series'] as Map;
+    expect(restoredSeries['macrocycles'], hasLength(2));
+    expect(repository.loadIds, contains('series-widget'));
+  });
+
+  testWidgets('persistence errors remain visible and keep generated output', (
+    tester,
+  ) async {
+    final repository = _FakeForeverSeriesRepository(
+      throwOnLoad: true,
+      throwOnSave: true,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Poc531GeneratorPage(
+          core: _RecordingGeneratorCore(),
+          foreverSeriesRepository: repository,
+          initialSeriesId: 'series-error',
+          initialConfiguration: const {
+            'mode': 'forever',
+            'foreverTemplateId': 'FV-236',
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Unable to restore the saved Forever series.'),
+      findsWidgets,
+    );
+    await tester.tap(find.byKey(const ValueKey('forever-step-7')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('generate-program')));
+    await tester.tap(find.byKey(const Key('generate-program')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Unable to save the Forever series.'), findsWidgets);
+    expect(find.text('Recorded'), findsOneWidget);
+  });
+
+  testWidgets('late restore never overwrites configuration edited by user', (
+    tester,
+  ) async {
+    final repository = _CompleterForeverSeriesRepository();
+    final core = _RecordingGeneratorCore();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Poc531GeneratorPage(
+          core: core,
+          foreverSeriesRepository: repository,
+          initialSeriesId: 'series-late-load',
+          initialConfiguration: const {
+            'mode': 'forever',
+            'foreverTemplateId': 'FV-236',
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+    final persisted = _persistedConfiguration('series-late-load');
+    await tester.tap(find.text('Cycle 5/3/1'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('lift-Press')), '77');
+    await tester.pump();
+    repository.loadCompleter.complete(persisted);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<TextFormField>(find.byKey(const Key('lift-Press')))
+          .controller
+          ?.text,
+      '77',
+    );
+  });
+
+  testWidgets('queued saves keep the latest generated configuration last', (
+    tester,
+  ) async {
+    final repository = _OrderedSaveForeverSeriesRepository();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Poc531GeneratorPage(
+          core: _RecordingGeneratorCore(),
+          foreverSeriesRepository: repository,
+          initialSeriesId: 'series-save-order',
+          initialConfiguration: const {
+            'mode': 'forever',
+            'foreverTemplateId': 'FV-236',
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('forever-step-7')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('generate-program')));
+    await tester.tap(find.byKey(const Key('generate-program')));
+    await tester.pump();
+    expect(repository.startedSaves, 1);
+
+    await tester.ensureVisible(
+      find.byKey(const Key('complete-active-macrocycle')),
+    );
+    await tester.tap(find.byKey(const Key('complete-active-macrocycle')));
+    await tester.pump();
+    repository.secondGate.complete();
+    expect(repository.startedSaves, 1);
+    repository.firstGate.complete();
+    await tester.pumpAndSettle();
+
+    expect(repository.startedSaves, 2);
+    final forever = repository.saved!['forever'] as Map;
+    final series = forever['series'] as Map;
+    final macrocycles = series['macrocycles'] as List;
+    expect((macrocycles.single as Map)['status'], 'completed');
+  });
+}
+
+Map<String, Object?> _persistedConfiguration(String seriesId) => {
+  'schemaVersion': 4,
+  'mode': 'forever',
+  'common': <String, Object?>{'unit': 'kg'},
+  'forever': <String, Object?>{
+    'series': <String, Object?>{
+      'id': seriesId,
+      'terminated': false,
+      'macrocycles': <Object?>[
+        {
+          'instanceId': 'M1',
+          'intent': 'active',
+          'status': 'active',
+          'recipeId': 'forever-2l1a-v2',
+          'slots': <Object?>[
+            {
+              'slotId': 'leader-1',
+              'role': 'leader',
+              'cycleTemplateRevisionId': 'forever-original-fsl-leader-v1',
+            },
+            {
+              'slotId': 'leader-2',
+              'role': 'leader',
+              'cycleTemplateRevisionId': 'forever-original-fsl-leader-v1',
+            },
+            {
+              'slotId': 'anchor-1',
+              'role': 'anchor',
+              'cycleTemplateRevisionId': 'forever-original-pr-set-anchor-v1',
+            },
+          ],
+          'protocols': <Object?>[
+            {
+              'boundaryId': 'leaders-to-anchor',
+              'protocolTemplateRevisionId': 'forever-seventh-week-deload-v1',
+              'required': true,
+            },
+            {
+              'boundaryId': 'macrocycle-end',
+              'protocolTemplateRevisionId': 'forever-seventh-week-tm-test-v1',
+              'required': true,
+            },
+          ],
+          'trainingMaxStates': <String, Object?>{},
+        },
+      ],
+    },
+  },
+};
+
+class _CompleterForeverSeriesRepository
+    implements ForeverSeriesConfigurationRepository {
+  final Completer<Map<String, Object?>?> loadCompleter = Completer();
+
+  @override
+  Future<Map<String, Object?>?> load(String seriesId) => loadCompleter.future;
+
+  @override
+  Future<void> save(
+    String seriesId,
+    Map<String, Object?> configuration,
+  ) async {}
+}
+
+class _OrderedSaveForeverSeriesRepository
+    implements ForeverSeriesConfigurationRepository {
+  final Completer<void> firstGate = Completer();
+  final Completer<void> secondGate = Completer();
+  int startedSaves = 0;
+  Map<String, Object?>? saved;
+
+  @override
+  Future<Map<String, Object?>?> load(String seriesId) async => null;
+
+  @override
+  Future<void> save(String seriesId, Map<String, Object?> configuration) async {
+    final index = startedSaves++;
+    await (index == 0 ? firstGate.future : secondGate.future);
+    saved = configuration;
+  }
+}
+
+class _FakeForeverSeriesRepository
+    implements ForeverSeriesConfigurationRepository {
+  _FakeForeverSeriesRepository({
+    this.throwOnLoad = false,
+    this.throwOnSave = false,
+  });
+
+  final bool throwOnLoad;
+  final bool throwOnSave;
+  final List<String> loadIds = [];
+  Map<String, Object?>? saved;
+
+  @override
+  Future<Map<String, Object?>?> load(String seriesId) async {
+    loadIds.add(seriesId);
+    if (throwOnLoad) throw StateError('load failed');
+    return saved;
+  }
+
+  @override
+  Future<void> save(String seriesId, Map<String, Object?> configuration) async {
+    if (throwOnSave) throw StateError('save failed');
+    saved = configuration;
+  }
 }
 
 class _RecordingGeneratorCore implements Poc531GeneratorCore {

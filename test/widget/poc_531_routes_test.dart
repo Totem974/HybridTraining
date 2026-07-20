@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/features/poc_531/presentation/poc_531_routes.dart';
 import 'package:hybrid_training/app/bootstrap/app_environment.dart';
 import 'package:hybrid_training/app/hybrid_training_app.dart';
+import 'package:hybrid_training/features/poc_531/application/forever_series_configuration_repository.dart';
 
 void main() {
   testWidgets('web POC mode starts without constructing SQLite', (
@@ -60,4 +61,33 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('forever-timeline')), findsOneWidget);
   });
+
+  testWidgets('deep routes preserve the Forever repository injection', (
+    tester,
+  ) async {
+    final repository = _RouteForeverRepository();
+    final route = buildPoc531Route(
+      const RouteSettings(name: '/poc/531/program/FV-236?seriesId=deep-series'),
+      foreverSeriesRepository: repository,
+    );
+    await tester.pumpWidget(MaterialApp(onGenerateRoute: (_) => route));
+    await tester.pumpAndSettle();
+    expect(repository.loadedSeriesIds, ['deep-series']);
+  });
+}
+
+class _RouteForeverRepository implements ForeverSeriesConfigurationRepository {
+  final List<String> loadedSeriesIds = [];
+
+  @override
+  Future<Map<String, Object?>?> load(String seriesId) async {
+    loadedSeriesIds.add(seriesId);
+    return null;
+  }
+
+  @override
+  Future<void> save(
+    String seriesId,
+    Map<String, Object?> configuration,
+  ) async {}
 }

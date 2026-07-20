@@ -30,9 +30,11 @@ est rapporté sans déclarer le scénario passant.
 
 - `dart format --set-exit-if-changed .` : réussi ;
 - `flutter analyze` : réussi, aucun diagnostic ;
-- `flutter test --reporter compact` : réussi, 305 tests ;
-- Google Chrome : cinq scénarios E2E sur cinq réussis en 28,3 secondes ;
-- Mozilla Firefox : cinq scénarios E2E sur cinq réussis en 28,0 secondes ;
+- `flutter test --reporter compact` : réussi, 321 tests ;
+- Google Chrome : cinq scénarios E2E sur cinq réussis en 34,7 secondes ;
+- Mozilla Firefox : cinq scénarios E2E sur cinq réussis en 34,7 secondes ;
+- le scénario Forever termine M1 et M2, clôture la série, recharge une nouvelle
+  page depuis le stockage navigateur réel et vérifie les TM 62,5 puis 65 ;
 - Microsoft Edge : non exécuté ; malgré un WebDriver local prêt, `flutter
   drive` reste silencieux avant toute création de session. Ce blocage relève de
   l'outillage et aucun résultat Edge n'est déclaré ;

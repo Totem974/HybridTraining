@@ -2,10 +2,14 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:hybrid_training/features/poc_531/domain/core.dart' as core;
+import 'package:hybrid_training/features/poc_531/application/forever_series_configuration_repository.dart';
 import 'package:hybrid_training/features/poc_531/presentation/generator/poc_531_generator_core_adapter.dart';
 import 'package:hybrid_training/features/poc_531/presentation/generator/poc_531_generator_page.dart';
 
-Route<dynamic>? buildPoc531Route(RouteSettings settings) {
+Route<dynamic>? buildPoc531Route(
+  RouteSettings settings, {
+  ForeverSeriesConfigurationRepository? foreverSeriesRepository,
+}) {
   final uri = Uri.tryParse(settings.name ?? '');
   final path = uri?.path ?? settings.name;
   final arguments = settings.arguments is Map<String, Object?>
@@ -26,6 +30,8 @@ Route<dynamic>? buildPoc531Route(RouteSettings settings) {
         builder: (_) => Poc531GeneratorPage(
           core: const DomainPoc531GeneratorCore(),
           initialConfiguration: initial.isEmpty ? null : initial,
+          foreverSeriesRepository: foreverSeriesRepository,
+          initialSeriesId: uri?.queryParameters['seriesId'],
         ),
       );
     default:
@@ -36,6 +42,8 @@ Route<dynamic>? buildPoc531Route(RouteSettings settings) {
           settings: settings,
           builder: (_) => Poc531GeneratorPage(
             core: const DomainPoc531GeneratorCore(),
+            foreverSeriesRepository: foreverSeriesRepository,
+            initialSeriesId: uri?.queryParameters['seriesId'],
             initialConfiguration: {
               'mode': definition?.generation == core.Generation.forever
                   ? 'forever'

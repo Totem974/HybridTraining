@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hybrid_training/app/localization/app_strings.dart';
+import 'package:hybrid_training/features/poc_531/application/forever_series_configuration_repository.dart';
 
 abstract interface class Poc531GeneratorCore {
   GeneratorOptions get options;
@@ -161,10 +162,14 @@ class Poc531GeneratorPage extends StatefulWidget {
   const Poc531GeneratorPage({
     required this.core,
     this.initialConfiguration,
+    this.foreverSeriesRepository,
+    this.initialSeriesId,
     super.key,
   });
   final Poc531GeneratorCore core;
   final Map<String, Object?>? initialConfiguration;
+  final ForeverSeriesConfigurationRepository? foreverSeriesRepository;
+  final String? initialSeriesId;
   @override
   State<Poc531GeneratorPage> createState() => _CalculatorState();
 }
@@ -243,9 +248,12 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     for (final lift in _liftIds) lift: 50,
   };
   List<GeneratorWarning> _warnings = const [];
+  GeneratorWarning? _persistenceWarning;
   GeneratorResult? _result;
   PlateLoadingView? _loading;
   int _requestRevision = 0;
+  bool _configurationDirty = false;
+  Future<void> _saveQueue = Future<void>.value();
   int? _busyRevision;
   int _foreverStep = 0;
   String _continuationMode = 'repeatSame';
@@ -323,8 +331,52 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
         )
         .firstOrNull
         ?.id;
+    if (widget.initialSeriesId case final seriesId?
+        when seriesId.trim().isNotEmpty) {
+      _seriesId = seriesId;
+    }
     _restore(widget.initialConfiguration ?? const {});
-    WidgetsBinding.instance.addPostFrameCallback((_) => _validate());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _restorePersisted());
+  }
+
+  ForeverSeriesConfigurationStore? get _seriesStore =>
+      widget.foreverSeriesRepository == null
+      ? null
+      : ForeverSeriesConfigurationStore(widget.foreverSeriesRepository!);
+
+  Future<void> _restorePersisted() async {
+    final store = _seriesStore;
+    if (store == null ||
+        _foreverPlanKind != 'macrocycle' ||
+        (_mode != 'forever' && widget.initialSeriesId == null)) {
+      await _validate();
+      return;
+    }
+    final revisionBeforeLoad = _requestRevision;
+    try {
+      final configuration = await store.load(_seriesId);
+      if (!mounted) return;
+      if (configuration != null &&
+          !_configurationDirty &&
+          revisionBeforeLoad == _requestRevision) {
+        setState(() {
+          _restore(configuration);
+          _persistenceWarning = null;
+        });
+      }
+    } on Object {
+      if (mounted) {
+        setState(
+          () => _persistenceWarning = GeneratorWarning(
+            _isFrench
+                ? 'Impossible de restaurer la série Forever enregistrée.'
+                : 'Unable to restore the saved Forever series.',
+            isError: true,
+          ),
+        );
+      }
+    }
+    if (mounted) await _validate();
   }
 
   @override
@@ -595,8 +647,11 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                                 ],
                               ),
                       ),
-                      if (_warnings.isNotEmpty) ...[
+                      if (_warnings.isNotEmpty ||
+                          _persistenceWarning != null) ...[
                         const SizedBox(height: 16),
+                        if (_persistenceWarning case final warning?)
+                          _notice(warning),
                         for (final w in _warnings) _notice(w),
                       ],
                       const SizedBox(height: 26),
@@ -680,8 +735,9 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
               child: _foreverStepContent(),
             ),
           ),
-          if (_warnings.isNotEmpty) ...[
+          if (_warnings.isNotEmpty || _persistenceWarning != null) ...[
             const SizedBox(height: 16),
+            if (_persistenceWarning case final warning?) _notice(warning),
             for (final warning in _warnings) _notice(warning),
           ],
         ],
@@ -967,7 +1023,10 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                   ),
               ],
               onChanged: (value) {
-                if (value != null) setState(() => _continuationMode = value);
+                if (value != null) {
+                  _markDirty();
+                  setState(() => _continuationMode = value);
+                }
               },
             ),
             const SizedBox(height: 10),
@@ -1046,6 +1105,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
           ],
           onChanged: (value) {
             if (value == null) return;
+            _markDirty();
             setState(() {
               _trainingMaxActions[lift] = value;
               if (value == 'customProposal' &&
@@ -1075,7 +1135,10 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                         ? 'Saisissez une valeur dans cet intervalle.'
                         : 'Enter a value within this range.'),
             ),
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) {
+              _markDirty();
+              setState(() {});
+            },
           ),
         ],
       ],
@@ -2609,6 +2672,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   );
 
   Future<void> _changed() async {
+    _configurationDirty = true;
     final revision = ++_requestRevision;
     await _validate(revision: revision);
     if (revision != _requestRevision) return;
@@ -2639,9 +2703,13 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
       _busy = true;
     });
     try {
-      final r = await widget.core.generate(_configuration);
+      final configuration = _configuration;
+      final r = await widget.core.generate(configuration);
       if (mounted && activeRevision == _requestRevision) {
         setState(() => _result = r);
+        if (configuration['schemaVersion'] == 4) {
+          await _savePersisted(configuration, activeRevision);
+        }
       }
     } on Object catch (error) {
       if (mounted && activeRevision == _requestRevision) {
@@ -2656,6 +2724,56 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
       }
     }
   }
+
+  Future<void> _savePersisted(
+    Map<String, Object?> configuration,
+    int revision,
+  ) {
+    final store = _seriesStore;
+    if (store == null) return Future<void>.value();
+    final snapshot = _copyConfiguration(configuration);
+    final operation = _saveQueue.then((_) async {
+      try {
+        await store.save(_seriesId, snapshot);
+        if (mounted && revision == _requestRevision) {
+          setState(() => _persistenceWarning = null);
+        }
+      } on Object {
+        if (mounted && revision == _requestRevision) {
+          setState(
+            () => _persistenceWarning = GeneratorWarning(
+              _isFrench
+                  ? 'Impossible d’enregistrer la série Forever.'
+                  : 'Unable to save the Forever series.',
+              isError: true,
+            ),
+          );
+        }
+      }
+    });
+    _saveQueue = operation;
+    return operation;
+  }
+
+  void _markDirty() {
+    _configurationDirty = true;
+    _requestRevision++;
+  }
+
+  Map<String, Object?> _copyConfiguration(Map<String, Object?> source) => {
+    for (final entry in source.entries)
+      entry.key: switch (entry.value) {
+        Map value => _copyConfiguration(Map<String, Object?>.from(value)),
+        List value => [for (final item in value) _copyConfigurationValue(item)],
+        final value => value,
+      },
+  };
+
+  Object? _copyConfigurationValue(Object? value) => switch (value) {
+    Map map => _copyConfiguration(Map<String, Object?>.from(map)),
+    List list => [for (final item in list) _copyConfigurationValue(item)],
+    _ => value,
+  };
 
   void _syncDays() {
     final allowed = _allowedDays;

@@ -38,9 +38,11 @@ autres familles ne sont pas activés.
 
 - format : pass ;
 - analyse statique : pass ;
-- 305 tests unitaires/widget/routes/persistance/goldens : pass ;
-- E2E Google Chrome : 5/5 en 28,3 secondes ;
-- E2E Mozilla Firefox : 5/5 en 28,0 secondes ;
+- 321 tests unitaires/widget/routes/persistance/goldens : pass ;
+- E2E Google Chrome : 5/5 en 34,7 secondes ;
+- E2E Mozilla Firefox : 5/5 en 34,7 secondes ;
+- persistance Web réelle : série M1/M2 terminée restaurée après recréation de
+  la page, avec décisions TM et état de terminaison conservés ;
 - E2E Microsoft Edge : non exécuté ; malgré un WebDriver local prêt, `flutter
   drive` reste silencieux avant toute création de session ;
 - validations et builds Android : explicitement reportés à un chantier
