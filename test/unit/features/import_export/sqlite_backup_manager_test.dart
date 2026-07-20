@@ -101,6 +101,43 @@ void main() {
     expect(await database.query('program_definitions'), isNotEmpty);
   });
 
+  test('backup schemas v1 through v5 pass inspection and import', () async {
+    final temporary = await Directory.systemTemp.createTemp(
+      'hybrid-supported-backups-',
+    );
+    addTearDown(() => temporary.delete(recursive: true));
+    final store = SqliteTrainingStore(
+      localDatabase: LocalDatabase(
+        factory: databaseFactoryFfi,
+        databasePath: '${temporary.path}/supported.db',
+      ),
+    );
+    addTearDown(store.close);
+    await store.initialize();
+
+    final exported =
+        jsonDecode(await store.exportBackup()) as Map<String, Object?>;
+    final currentPayload = exported['payload']! as Map<String, Object?>;
+    const tableCountsByVersion = {1: 12, 2: 21, 3: 24, 4: 28, 5: 34};
+
+    for (final entry in tableCountsByVersion.entries) {
+      final document = Map<String, Object?>.from(exported);
+      document['schemaVersion'] = entry.key;
+      document['payload'] = Map<String, Object?>.fromEntries(
+        currentPayload.entries.take(entry.value),
+      );
+      final source = jsonEncode(document);
+
+      final inspection = await store.importBackup(source, dryRun: true);
+      expect(inspection.applied, isFalse, reason: 'schema v${entry.key}');
+      expect(inspection.issues, isEmpty, reason: 'schema v${entry.key}');
+
+      final imported = await store.importBackup(source, dryRun: false);
+      expect(imported.applied, isTrue, reason: 'schema v${entry.key}');
+      expect(imported.issues, isEmpty, reason: 'schema v${entry.key}');
+    }
+  });
+
   test(
     'structurally valid but unusable backup never replaces a profile',
     () async {

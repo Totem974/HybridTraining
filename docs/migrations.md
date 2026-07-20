@@ -1,13 +1,10 @@
 # Migrations and backups
 
-Database version 5 supports tested v1→v5, v2→v5, v3→v5, and v4→v5 upgrades.
-Migrations preserve legacy rows, convert resumable v3 execution into the unified
-runtime where possible, add v5 canonical metadata and generic prescriptions, and
-roll back atomically on interruption. Old tables remain until a later migration
-can remove them without compromising restore compatibility.
+La matrice exhaustive des migrations SQLite v1 à v5, des tables, de la
+conservation, de la provenance, de l'atomicité et des tests associés se trouve
+dans [Traçabilité SQLite v1 vers v5](migration/sqlite-v1-v5.md).
 
-Native backup schema v5 exports canonical and compatibility tables. V1–v4 backups
-remain accepted: absent later tables normalize to empty collections, validation
-and a detailed dry run happen before writes, and apply replaces data in one
-transaction. Invalid versions or rows produce an error report rather than silent
-loss.
+La configuration POC v4, le plan logique Core v5, le schéma SQLite v5 et la
+sauvegarde v5 sont des espaces de version distincts. La migration propre à la
+configuration Forever est décrite dans
+[Migration Forever](531-poc/forever-migration.md).

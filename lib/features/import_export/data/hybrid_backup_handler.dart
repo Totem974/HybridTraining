@@ -537,6 +537,7 @@ class HybridBackupHandler implements ImportFormatHandler {
     if (sourceVersion != 1 &&
         sourceVersion != 2 &&
         sourceVersion != 3 &&
+        sourceVersion != 4 &&
         sourceVersion != BackupEnvelope.schemaVersion) {
       issues.add(
         const ImportIssue(

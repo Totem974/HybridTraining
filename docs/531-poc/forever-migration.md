@@ -1,16 +1,33 @@
 # Migration Forever
 
-## Configuration v2 vers v3
+## Versions à ne pas confondre
 
-Le migrateur extrait unité, lifts, mode de saisie, ratio TM, jours, plaques,
-arrondi et options communes. Les options Classic rejoignent `cycle`; la sélection
-Forever rejoint `forever`.
+- la **configuration POC v4** est le JSON décodé par
+  `Poc531ConfigurationCodec` ;
+- le **plan Core v5** est le résultat métier canonique produit à partir de cette
+  configuration ;
+- le **schéma SQLite v5** persiste les structures Core et conserve les tables
+  historiques ;
+- la **sauvegarde v5** est l'enveloppe d'export/import, distincte du fichier
+  SQLite.
+
+La matrice des upgrades de base, leur atomicité et les preuves de conservation
+sont dans [Traçabilité SQLite v1 vers v5](../migration/sqlite-v1-v5.md).
+
+## Configuration v2 vers v4
+
+Le codec accepte les configurations v2 et v3, applique successivement les
+transformations v2→v3 puis v3→v4, et décode directement v4. Le migrateur extrait
+unité, lifts, mode de saisie, ratio TM, jours, plaques, arrondi et options
+communes. Les options Classic rejoignent `cycle`; la sélection Forever rejoint
+`forever`. La v4 ajoute la représentation de série Forever sans changer la
+version de la base SQLite.
 
 Aliases conservés :
 
-- `forever-original-531-fsl-2l1a-v1` → preset `FV-236` → recette
-  `forever-2l1a` ;
-- `forever-original-fsl-v1` → même recette ;
+- `forever-original-531-fsl-2l1a-v1` → preset `FV-236` → recette v3
+  `forever-2l1a` → recette canonique v4 `forever-2l1a-v2` ;
+- `forever-original-fsl-v1` → même chaîne de migration ;
 - `forever-beginner-prep-school-v1` → `FV-141` → programme autonome.
 
 Une sélection inconnue reste non exécutable et produit une erreur ; elle n'est
