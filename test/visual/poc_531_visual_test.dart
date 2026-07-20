@@ -23,16 +23,41 @@ void main() {
       matchesGoldenFile('goldens/poc-531-generator-mobile.png'),
     );
   });
+
+  testWidgets('captures Forever timeline on desktop', (tester) async {
+    await _viewport(tester, const Size(1200, 900));
+    await _pumpGeneratedProgram(tester, forever: true);
+    await expectLater(
+      find.byKey(const Key('poc-531-generator')),
+      matchesGoldenFile('goldens/poc-531-forever-desktop.png'),
+    );
+  });
+
+  testWidgets('captures Forever timeline on mobile without overflow', (
+    tester,
+  ) async {
+    await _viewport(tester, const Size(390, 844));
+    await _pumpGeneratedProgram(tester, forever: true);
+    await expectLater(
+      find.byKey(const Key('poc-531-generator')),
+      matchesGoldenFile('goldens/poc-531-forever-mobile.png'),
+    );
+  });
 }
 
-Future<void> _pumpGeneratedProgram(WidgetTester tester) async {
+Future<void> _pumpGeneratedProgram(
+  WidgetTester tester, {
+  bool forever = false,
+}) async {
   await tester.pumpWidget(
-    const MaterialApp(
+    MaterialApp(
       home: Poc531GeneratorPage(
-        core: DomainPoc531GeneratorCore(),
+        core: const DomainPoc531GeneratorCore(),
         initialConfiguration: {
-          'programId': 'BY-026',
-          'generation': 'beyond',
+          'programId': forever ? 'FV-236' : 'BY-026',
+          'generation': forever ? 'forever' : 'beyond',
+          if (forever) 'mode': 'forever',
+          if (forever) 'foreverTemplateId': 'FV-236',
           'unit': 'kg',
           'inputMode': '1RM',
           'trainingMaxRatio': 90.0,

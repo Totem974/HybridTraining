@@ -1,50 +1,55 @@
-# PR: Hybrid 5/3/1 single-page calculator backed by Core v5
+# PR: séparer Cycle 5/3/1 et composer Forever
 
-## Summary
+## Résumé
 
-This PR replaces the former landing/onboarding experience with one isolated
-Flutter Web calculator at `/poc/531`. Its functional structure follows the
-audited reference calculator without copying its code, assets, text, branding,
-CSS, or visual identity. All calculations are delegated to pure Dart domain
-packages.
+Ce changement transforme le choix Forever du générateur Web en une frontière de
+planification typée. Le mode Cycle conserve le calculateur Original/Beyond et ses
+extensions. Le mode Forever distingue programme autonome et macrocycle, compile
+la recette revue 2 Leaders / 1 Anchor et affiche ses protocoles automatiques dans
+une timeline.
 
-## What changed
+## Changements principaux
 
-- Direct single-page calculator with Weight, Template, Additional Options,
-  Plating & Barbell, Scheduling, Output, and Program sections.
-- 1RM, Training Max, Rep Max and 1+ Set input modes for the four canonical lifts.
-- Thirteen classic template families exposed from a typed catalogue, including
-  eight BBB variants.
-- Reviewed Original/Beyond warm-ups, 5/3/1 and 3/5/1 orders, deloads 1–5,
-  high-intensity deload, BBB, Pyramid, FSL, 5's Progression and Simplest
-  Strength prescriptions.
-- Forever mode backed by Core v5, with reviewed FV-141 and FV-236 definitions,
-  Leader/Anchor blocks and typed 7th Week transitions.
-- Responsive Hybrid dark/green interface, plate loading, JSON export and
-  serialized configuration sharing.
-- Removed onboarding page, tests and E2E flow.
+- contrôle segmenté Cycle 5/3/1 / Forever visible en haut ;
+- profil commun conservé et brouillons Cycle/Forever indépendants ;
+- domaine Dart pur avec configurations typées, révisions, rôles, protocoles,
+  pairing, validation structurée et projections TM par nœud ;
+- compilateur unique de `forever-2l1a` vers C1, C2, P1, C3, P2 ;
+- C2 identique à C1 et changement désactivé faute d'autre règle sourcée ;
+- Deload et TM Test auto-insérés, typés et non supprimables ;
+- Beginner Prep School maintenu comme programme autonome ;
+- schéma de configuration v3 déterministe et migration v2/aliases ;
+- restauration par URL `?mode=` et lien partagé contenant le payload v3 ;
+- TM futurs projetés, confirmations adressées par C1/C2/C3, plus aucune décision
+  Forever liée aux semaines 3, 6, 10 ou 11 ;
+- timeline responsive, contrôles clavier de réordonnancement et annonces de copie ;
+- audit, architecture, schéma, compatibilité, TM, migration, couverture et tests
+  documentés.
 
-## Catalogue truthfulness
+## Couverture honnête
 
-- Original, Beyond and Forever are the only primary generations.
-- Powerlifting remains a supplement, never a fourth generation.
-- All 354 imported rows remain classified in the auditable coverage report.
-- A visible calculator family is disabled when its structured prescription is
-  insufficient. No missing percentage, set, transition or compatibility rule is
-  invented.
+Activés : Forever Original + FSL, Beginner Prep School, 7th Week Deload et 7th
+Week Training Max Test. Une seule relation Original + FSL Leader → Anchor est
+recommandée. Les 180 autres entrées Forever restent documentaires/non
+exécutables; les entrées globales `NEEDS_REVIEW` restent bloquées. PR Test et
+autres familles ne sont pas activés.
 
 ## Validation
 
-- `flutter analyze`
-- `flutter test --coverage`
-- `flutter build web --release`
-- responsive calculator visual checks
+- format : pass ;
+- analyse statique : pass ;
+- 247 tests unitaires/widget/routes/persistance/goldens : pass ;
+- couverture globale : 87,30 % ;
+- quatre captures desktop/mobile : pass ;
+- Web release + dry run Wasm : pass ;
+- Android DEV/PROD debug : pass ;
+- E2E Android : tentative bloquée par le runner qui ne retrouve pas l'APK après
+  assemblage, puis `DELETE_FAILED_INTERNAL_ERROR` au nettoyage du device.
 
-## Known limits
+## Risques et suivi
 
-- Several reference families remain documentary until their full prescriptions
-  are encoded from the sources; they are visible but cannot generate a plan.
-- Joker sets remain a runtime decision after the performance set. The calculator
-  stores and validates the policy but does not pretend the athlete's live result
-  is known in advance.
-- No backend, account, payment, medical advice or outcome guarantee is included.
+- exécuter les scénarios E2E sur un runner Android/WebDriver sain ;
+- retirer définitivement l'adaptateur de checkpoints v2 par semaine après la
+  fenêtre de migration ;
+- localiser l'ensemble des chaînes historiques du calculateur ;
+- activer de nouveaux pairings uniquement après revue complète et sourcée.

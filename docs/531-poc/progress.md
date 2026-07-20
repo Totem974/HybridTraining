@@ -28,6 +28,36 @@
   testing contracts documented.
 - Twelve targeted domain and codec tests pass.
 
+## Forever mode composer — checkpoints 3–10 complete
+
+- Existing Core v5 Forever golden captured and verified before migration; it
+  remains byte-stable after the node-based compiler integration.
+- Canonical Forever checkpoints now resolve through C1/C2/C3. Display-week
+  coordinates are derived from sequence position and TM Test events use a typed
+  flag instead of week 11.
+- Future TM values can drive a complete preview while remaining projected;
+  confirmed values are stored separately and apply only to the future.
+- Top-level accessible Cycle 5/3/1 / Forever selector, independent mode drafts,
+  standalone/macrocycle choices, compiled timeline cards, locked automatic
+  protocols, disabled alternate C2 explanation, and filtered executable choices
+  are integrated.
+- Schema v3 share links and `?mode=cycle|forever` restoration are integrated;
+  plate counts and common inputs round-trip.
+- Keyboard move controls complement drag-and-drop scheduling.
+- 247 unit, widget, route, persistence and golden tests pass with 87.30% overall
+  line coverage. Four visual goldens cover Cycle and Forever on desktop/mobile.
+- Static analysis, Web release build, Wasm dry run, and Android DEV/PROD debug
+  builds pass.
+
+## Forever mode composer — checkpoint 11 QA
+
+- Full integration-test execution was attempted. Android assembled the test app
+  but Flutter could not locate the produced APK; device cleanup also returned
+  `DELETE_FAILED_INTERNAL_ERROR`. E2E execution is therefore blocked by the
+  runner/device environment and is not claimed as passing.
+- No additional Leader/Anchor family or PR Test was activated because no complete
+  reviewed rule is available.
+
 ## Checkpoint 1 — complete
 
 - Three read-only audits completed: repository, domain, and catalogue.
