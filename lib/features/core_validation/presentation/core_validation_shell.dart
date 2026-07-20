@@ -279,18 +279,29 @@ class _EnginePanelState extends State<_EnginePanel> {
               key: const Key('reschedule-workout'),
               onPressed: DateTime.tryParse(workoutDate.text) == null
                   ? null
-                  : () => controller.rescheduleWorkout(
+                  : () => controller.previewRescheduleWorkout(
                       DateTime.parse(workoutDate.text),
                     ),
               child: Text(strings.rescheduleWorkout),
             ),
             TextButton(
               key: const Key('skip-workout'),
-              onPressed: controller.skipWorkout,
+              onPressed: controller.previewSkipWorkout,
               child: Text(strings.skipWorkout),
             ),
           ],
         ),
+        if (controller.workoutAmendmentDraft != null) ...[
+          Text(
+            strings.switchPreviewReady,
+            key: const Key('workout-amendment-preview-ready'),
+          ),
+          FilledButton(
+            key: const Key('confirm-workout-amendment'),
+            onPressed: () => controller.applyWorkoutAmendment(confirmed: true),
+            child: Text(strings.confirm),
+          ),
+        ],
       ],
       if (workout.canRecord) ...[
         TextField(

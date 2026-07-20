@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:hybrid_training/core/database/local_database.dart';
 import 'package:hybrid_training/features/active_program/application/generate_beginner_plan.dart';
 import 'package:hybrid_training/features/active_program/application/program_switch.dart';
+import 'package:hybrid_training/features/active_program/application/plan_lifecycle.dart';
+import 'package:hybrid_training/features/active_program/data/sqlite_plan_lifecycle_repository.dart';
 import 'package:hybrid_training/features/active_program/data/sqlite_versioned_plan_store.dart';
 import 'package:hybrid_training/features/active_program/domain/versioned_training_plan.dart';
 import 'package:hybrid_training/features/core_validation/application/core_validation_repository.dart';
@@ -241,34 +243,69 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
   );
 
   @override
-  Future<void> skipWorkout() => _mutateWorkout(
-    eventType: 'skipped',
-    action: (current, at) => current.skip(at),
-    updateSession: (tx, sessionId, next, at) => tx.update(
-      'plan_training_sessions',
-      {'status': 'cancelled', 'completed_at': at.toIso8601String()},
-      where: "id = ? AND status = 'planned'",
-      whereArgs: [sessionId],
-    ),
-  );
+  Future<CoreWorkoutAmendmentDraft> previewSkipWorkout() async {
+    final request = await _workoutAmendmentRequest(skip: true);
+    return _previewWorkoutAmendment(request);
+  }
 
   @override
-  Future<void> rescheduleWorkout(DateTime date) async {
+  Future<CoreWorkoutAmendmentDraft> previewRescheduleWorkout(
+    DateTime date,
+  ) async {
+    final request = await _workoutAmendmentRequest(rescheduledFor: date);
+    return _previewWorkoutAmendment(request);
+  }
+
+  @override
+  Future<void> applyWorkoutAmendment(
+    PlanAmendmentRequest request, {
+    required String amendmentId,
+    required bool confirmed,
+  }) => _lifecycle.applyAmendment(
+    request,
+    amendmentId: amendmentId,
+    confirmed: confirmed,
+  );
+
+  SqlitePlanLifecycleRepository get _lifecycle => SqlitePlanLifecycleRepository(
+    localDatabase: localDatabase,
+    clock: _clock,
+  );
+
+  Future<CoreWorkoutAmendmentDraft> _previewWorkoutAmendment(
+    PlanAmendmentRequest request,
+  ) async => CoreWorkoutAmendmentDraft(
+    request: request,
+    preview: await _lifecycle.previewAmendment(request),
+  );
+
+  Future<PlanAmendmentRequest> _workoutAmendmentRequest({
+    bool skip = false,
+    DateTime? rescheduledFor,
+  }) async {
+    if (skip == (rescheduledFor != null)) {
+      throw ArgumentError('Exactly one workout amendment is required.');
+    }
     final database = await localDatabase.open();
-    await database.transaction((tx) async {
-      final session = await _firstOpenSession(tx);
-      if (session == null || session['status'] != 'planned') {
-        throw StateError('Only a planned workout can be rescheduled.');
-      }
-      final value = date.toIso8601String().substring(0, 10);
-      final updated = await tx.update(
-        'plan_training_sessions',
-        {'scheduled_for': value},
-        where: "id = ? AND status = 'planned'",
-        whereArgs: [session['id']],
-      );
-      if (updated != 1) throw StateError('The planned workout changed.');
-    });
+    final session = await _firstOpenSession(database);
+    if (session == null || session['status'] != 'planned') {
+      throw StateError('Only a planned workout can be amended.');
+    }
+    final sessionId = session['id']! as String;
+    return PlanAmendmentRequest(
+      planId: session['plan_id']! as String,
+      reason: skip
+          ? 'Workout skipped by explicit local user decision'
+          : 'Workout rescheduled by explicit local user decision',
+      // This identifies an audited UI decision, not a sourced 5/3/1 rule.
+      ruleId: skip
+          ? 'UI_DECISION_SKIP_WORKOUT'
+          : 'UI_DECISION_RESCHEDULE_WORKOUT',
+      skippedSessionIds: skip ? {sessionId} : const {},
+      rescheduledSessions: rescheduledFor == null
+          ? const {}
+          : {sessionId: rescheduledFor},
+    );
   }
 
   @override
@@ -457,7 +494,7 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
     DatabaseExecutor database,
   ) async {
     final rows = await database.rawQuery(
-      '''SELECT s.* FROM plan_training_sessions s
+      '''SELECT s.*, p.id AS plan_id FROM plan_training_sessions s
          JOIN plan_training_cycles c ON c.id = s.cycle_id
          JOIN training_blocks b ON b.id = c.block_id
          JOIN training_plans p ON p.id = b.plan_id

@@ -31,61 +31,22 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
         if (session == null) {
           throw StateError('Session is outside the plan: $sessionId');
         }
-        if (session['status'] == 'complete') {
-          throw StateError('Completed sessions are immutable: $sessionId');
+        if (session['status'] != 'planned') {
+          throw StateError(
+            'Only planned sessions can be rescheduled: $sessionId',
+          );
         }
       }
-      final completed = sessions
-          .where((row) => row['status'] == 'complete')
-          .map((row) => row['id']! as String)
-          .toList();
-      final active = sessions
-          .where(
-            (row) =>
-                row['status'] == 'started' ||
-                const {
-                  'activeSet',
-                  'resting',
-                  'paused',
-                }.contains(row['execution_state']),
-          )
-          .map((row) => row['id']! as String)
-          .toList();
-      final planned = sessions
-          .where((row) => row['status'] == 'planned')
-          .map((row) => row['id']! as String)
-          .toList();
-      var prescriptionChanges = 0;
-      for (final movement in request.trainingMaxChanges.keys) {
-        prescriptionChanges +=
-            Sqflite.firstIntValue(
-              await tx.rawQuery(
-                '''SELECT COUNT(*) FROM activity_prescriptions ap
-                   JOIN session_blocks sb ON sb.id = ap.session_block_id
-                   JOIN plan_training_sessions s ON s.id = sb.session_id
-                   JOIN plan_training_cycles c ON c.id = s.cycle_id
-                   JOIN training_blocks b ON b.id = c.block_id
-                   WHERE b.plan_id = ? AND s.status = 'planned'
-                     AND ap.movement_or_activity_id = ?''',
-                [request.planId, movement],
-              ),
-            ) ??
-            0;
-        prescriptionChanges +=
-            Sqflite.firstIntValue(
-              await tx.rawQuery(
-                '''SELECT COUNT(*) FROM set_prescriptions sp
-                   JOIN session_blocks sb ON sb.id = sp.session_block_id
-                   JOIN plan_training_sessions s ON s.id = sb.session_id
-                   JOIN plan_training_cycles c ON c.id = s.cycle_id
-                   JOIN training_blocks b ON b.id = c.block_id
-                   WHERE b.plan_id = ? AND s.status = 'planned'
-                     AND sb.movement_id = ?''',
-                [request.planId, movement],
-              ),
-            ) ??
-            0;
+      for (final sessionId in request.skippedSessionIds) {
+        final session = byId[sessionId];
+        if (session == null) {
+          throw StateError('Session is outside the plan: $sessionId');
+        }
+        if (session['status'] != 'planned') {
+          throw StateError('Only planned sessions can be skipped: $sessionId');
+        }
       }
+      final diff = await _expectedDiff(tx, sessions, request);
       final version =
           (Sqflite.firstIntValue(
             await tx.rawQuery(
@@ -97,20 +58,6 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
       final amendmentId = '${request.planId}:amendment:$version';
       final before = await _beforeSnapshot(tx, sessions, request);
       final after = _requestSnapshot(request);
-      final diff = {
-        'preservedCompletedSessionIds': completed,
-        'activeSessionIds': active,
-        'rescheduledSessionIds': request.rescheduledSessions.keys.toList(),
-        'regeneratedSessionIds': request.trainingMaxChanges.isEmpty
-            ? <String>[]
-            : planned,
-        'cancelledSessionIds':
-            request.activeSessionDisposition == ActiveSessionDisposition.abandon
-            ? active
-            : <String>[],
-        'trainingMaxChanges': request.trainingMaxChanges,
-        'prescriptionChanges': prescriptionChanges,
-      };
       await tx.insert('plan_amendments', {
         'id': amendmentId,
         'plan_id': request.planId,
@@ -127,18 +74,20 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
         amendmentId: amendmentId,
         planId: request.planId,
         version: version,
-        preservedCompletedSessionIds: completed,
-        activeSessionIds: active,
-        rescheduledSessionIds: request.rescheduledSessions.keys.toList(),
+        preservedCompletedSessionIds:
+            (diff['preservedCompletedSessionIds']! as List).cast<String>(),
+        activeSessionIds: (diff['activeSessionIds']! as List).cast<String>(),
+        rescheduledSessionIds: (diff['rescheduledSessionIds']! as List)
+            .cast<String>(),
         regeneratedSessionIds: request.trainingMaxChanges.isEmpty
             ? const []
-            : planned,
-        cancelledSessionIds:
-            request.activeSessionDisposition == ActiveSessionDisposition.abandon
-            ? active
-            : const [],
-        trainingMaxChanges: request.trainingMaxChanges,
-        prescriptionChanges: prescriptionChanges,
+            : (diff['regeneratedSessionIds']! as List).cast<String>(),
+        cancelledSessionIds: (diff['cancelledSessionIds']! as List)
+            .cast<String>(),
+        trainingMaxChanges: Map.unmodifiable(
+          (diff['trainingMaxChanges']! as Map).cast<String, double>(),
+        ),
+        prescriptionChanges: diff['prescriptionChanges']! as int,
       );
     });
   }
@@ -177,6 +126,12 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
         await _beforeSnapshot(tx, sessions, request),
       )) {
         throw StateError('The plan changed after the amendment preview.');
+      }
+      if (!_sameJson(
+        preview['diff_json']! as String,
+        await _expectedDiff(tx, sessions, request),
+      )) {
+        throw StateError('The amendment diff differs from its preview.');
       }
       final active = sessions.where(
         (row) =>
@@ -225,6 +180,21 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
           throw StateError('Only a planned future session can be rescheduled.');
         }
       }
+      for (final sessionId in request.skippedSessionIds) {
+        final updated = await tx.update(
+          'plan_training_sessions',
+          {
+            'status': 'cancelled',
+            'completed_at': at,
+            'notes': request.reason.trim(),
+          },
+          where: "id = ? AND status = 'planned'",
+          whereArgs: [sessionId],
+        );
+        if (updated != 1) {
+          throw StateError('Only a planned future session can be skipped.');
+        }
+      }
       for (final entry in request.trainingMaxChanges.entries) {
         final timeline = await _pendingTimelineDecision(
           tx,
@@ -258,33 +228,6 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
         throw StateError('The amendment preview could not be applied.');
       }
     });
-  }
-
-  @override
-  Future<void> rescheduleSession(String sessionId, DateTime date) async {
-    final database = await localDatabase.open();
-    final updated = await database.update(
-      'plan_training_sessions',
-      {'scheduled_for': _dateOnly(date)},
-      where: "id = ? AND status = 'planned'",
-      whereArgs: [sessionId],
-    );
-    if (updated != 1) throw StateError('Only a planned session can be moved.');
-  }
-
-  @override
-  Future<void> skipSession(String sessionId, {required String reason}) async {
-    if (reason.trim().isEmpty) throw ArgumentError.value(reason);
-    final database = await localDatabase.open();
-    final updated = await database.update(
-      'plan_training_sessions',
-      {'status': 'cancelled', 'completed_at': _date(clock()), 'notes': reason},
-      where: "id = ? AND status = 'planned'",
-      whereArgs: [sessionId],
-    );
-    if (updated != 1) {
-      throw StateError('Only a planned session can be skipped.');
-    }
   }
 
   @override
@@ -718,14 +661,98 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
   );
 
   void _validateRequest(PlanAmendmentRequest request) {
+    final rescheduledIds = request.rescheduledSessions.keys;
+    final hasBlankSessionId =
+        rescheduledIds.any((id) => id.trim().isEmpty) ||
+        request.skippedSessionIds.any((id) => id.trim().isEmpty);
+    final overlaps = rescheduledIds.any(request.skippedSessionIds.contains);
     if (request.planId.trim().isEmpty ||
         request.reason.trim().isEmpty ||
         request.ruleId.trim().isEmpty ||
         request.trainingMaxChanges.values.any((value) => value <= 0) ||
+        hasBlankSessionId ||
+        overlaps ||
         (request.rescheduledSessions.isEmpty &&
+            request.skippedSessionIds.isEmpty &&
             request.trainingMaxChanges.isEmpty)) {
       throw ArgumentError('A sourced, non-empty amendment is required.');
     }
+  }
+
+  Future<Map<String, Object?>> _expectedDiff(
+    DatabaseExecutor tx,
+    List<Map<String, Object?>> sessions,
+    PlanAmendmentRequest request,
+  ) async {
+    List<String> sessionIdsWhere(bool Function(Map<String, Object?>) test) =>
+        sessions.where(test).map((row) => row['id']! as String).toList()
+          ..sort();
+
+    final completed = sessionIdsWhere((row) => row['status'] == 'complete');
+    final active = sessionIdsWhere(
+      (row) =>
+          row['status'] == 'started' ||
+          const {
+            'activeSet',
+            'resting',
+            'paused',
+          }.contains(row['execution_state']),
+    );
+    final planned = sessionIdsWhere((row) => row['status'] == 'planned');
+    final rescheduled = request.rescheduledSessions.keys.toList()..sort();
+    final skipped = request.skippedSessionIds.toList()..sort();
+    final movements = request.trainingMaxChanges.keys.toList()..sort();
+    final trainingMaxChanges = <String, double>{
+      for (final movement in movements)
+        movement: request.trainingMaxChanges[movement]!,
+    };
+    var prescriptionChanges = 0;
+    for (final movement in movements) {
+      prescriptionChanges +=
+          Sqflite.firstIntValue(
+            await tx.rawQuery(
+              '''SELECT COUNT(*) FROM activity_prescriptions ap
+                 JOIN session_blocks sb ON sb.id = ap.session_block_id
+                 JOIN plan_training_sessions s ON s.id = sb.session_id
+                 JOIN plan_training_cycles c ON c.id = s.cycle_id
+                 JOIN training_blocks b ON b.id = c.block_id
+                 WHERE b.plan_id = ? AND s.status = 'planned'
+                   AND ap.movement_or_activity_id = ?''',
+              [request.planId, movement],
+            ),
+          ) ??
+          0;
+      prescriptionChanges +=
+          Sqflite.firstIntValue(
+            await tx.rawQuery(
+              '''SELECT COUNT(*) FROM set_prescriptions sp
+                 JOIN session_blocks sb ON sb.id = sp.session_block_id
+                 JOIN plan_training_sessions s ON s.id = sb.session_id
+                 JOIN plan_training_cycles c ON c.id = s.cycle_id
+                 JOIN training_blocks b ON b.id = c.block_id
+                 WHERE b.plan_id = ? AND s.status = 'planned'
+                   AND sb.movement_id = ?''',
+              [request.planId, movement],
+            ),
+          ) ??
+          0;
+    }
+    return {
+      'preservedCompletedSessionIds': completed,
+      'activeSessionIds': active,
+      'rescheduledSessionIds': rescheduled,
+      'regeneratedSessionIds': request.trainingMaxChanges.isEmpty
+          ? <String>[]
+          : planned,
+      'cancelledSessionIds': <String>{
+        ...skipped,
+        if (request.activeSessionDisposition ==
+            ActiveSessionDisposition.abandon)
+          ...active,
+      }.toList()..sort(),
+      'trainingMaxChanges': trainingMaxChanges,
+      'prescriptionChanges': prescriptionChanges,
+    };
   }
 
   Future<Map<String, Object?>> _beforeSnapshot(
@@ -856,15 +883,23 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
     };
   }
 
-  static Map<String, Object?> _requestSnapshot(PlanAmendmentRequest request) =>
-      {
-        'rescheduledSessions': {
-          for (final entry in request.rescheduledSessions.entries)
-            entry.key: _date(entry.value),
-        },
-        'trainingMaxChanges': request.trainingMaxChanges,
-        'activeSessionDisposition': request.activeSessionDisposition.name,
-      };
+  static Map<String, Object?> _requestSnapshot(PlanAmendmentRequest request) {
+    final rescheduledIds = request.rescheduledSessions.keys.toList()..sort();
+    final skippedIds = request.skippedSessionIds.toList()..sort();
+    final movements = request.trainingMaxChanges.keys.toList()..sort();
+    return {
+      'rescheduledSessions': {
+        for (final id in rescheduledIds)
+          id: _date(request.rescheduledSessions[id]!),
+      },
+      'skippedSessionIds': skippedIds,
+      'trainingMaxChanges': {
+        for (final movement in movements)
+          movement: request.trainingMaxChanges[movement],
+      },
+      'activeSessionDisposition': request.activeSessionDisposition.name,
+    };
+  }
 
   static bool _sameJson(String encoded, Object? value) =>
       jsonEncode(_canonicalJson(jsonDecode(encoded))) ==

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/app/bootstrap/app_environment.dart';
 import 'package:hybrid_training/app/hybrid_training_app.dart';
 import 'package:hybrid_training/features/active_program/application/program_switch.dart';
+import 'package:hybrid_training/features/active_program/application/plan_lifecycle.dart';
 import 'package:hybrid_training/features/core_validation/application/core_validation_repository.dart';
 import 'package:hybrid_training/features/core_validation/domain/core_validation_snapshot.dart';
 import 'package:hybrid_training/features/core_validation/domain/core_workout_snapshot.dart';
@@ -118,6 +119,33 @@ void main() {
     expect(find.byKey(const Key('actual-tonnage')), findsOneWidget);
   });
 
+  testWidgets('skip requires preview then explicit confirmation', (
+    tester,
+  ) async {
+    final repository = _FakeCoreRepository()..showPlannedWorkout = true;
+    await tester.pumpWidget(
+      HybridTrainingApp(
+        environment: AppEnvironment.dev,
+        repository: repository,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final skipButton = find.byKey(const Key('skip-workout'));
+    await tester.ensureVisible(skipButton);
+    await tester.tap(skipButton);
+    await tester.pumpAndSettle();
+    expect(repository.amendmentApplied, isFalse);
+    expect(
+      find.byKey(const Key('workout-amendment-preview-ready')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('confirm-workout-amendment')));
+    await tester.pumpAndSettle();
+    expect(repository.amendmentApplied, isTrue);
+  });
+
   testWidgets('import requires a successful simulation before atomic apply', (
     tester,
   ) async {
@@ -161,6 +189,8 @@ class _FakeCoreRepository implements CoreValidationRepository {
   final List<bool> importDryRuns = [];
   bool previewRequested = false;
   bool switchApplied = false;
+  bool amendmentApplied = false;
+  bool showPlannedWorkout = false;
 
   @override
   Future<void> applyProgramSwitch(
@@ -186,16 +216,45 @@ class _FakeCoreRepository implements CoreValidationRepository {
   Future<void> abandonWorkout() async {}
 
   @override
-  Future<void> skipWorkout() async {}
+  Future<void> applyWorkoutAmendment(
+    PlanAmendmentRequest request, {
+    required String amendmentId,
+    required bool confirmed,
+  }) async {
+    expect(amendmentId, 'amendment-1');
+    expect(confirmed, isTrue);
+    amendmentApplied = true;
+    showPlannedWorkout = false;
+  }
 
   @override
-  Future<void> rescheduleWorkout(DateTime date) async {}
+  Future<CoreWorkoutAmendmentDraft> previewSkipWorkout() async =>
+      _amendmentDraft(skip: true);
+
+  @override
+  Future<CoreWorkoutAmendmentDraft> previewRescheduleWorkout(
+    DateTime date,
+  ) async => _amendmentDraft(skip: false, date: date);
 
   @override
   Future<String> exportBackup() async => '{}';
 
   @override
-  Future<CoreWorkoutSnapshot?> loadFirstWorkout() async => null;
+  Future<CoreWorkoutSnapshot?> loadFirstWorkout() async => showPlannedWorkout
+      ? const CoreWorkoutSnapshot(
+          sessionId: 'session-1',
+          scheduledFor: '2026-07-20',
+          state: WorkoutExecutionState.planned,
+          currentSetNumber: 1,
+          totalSets: 1,
+          prescriptionId: 'set-1',
+          prescribedRepetitions: 5,
+          prescribedLoad: 40,
+          completedSets: 0,
+          restUntil: null,
+          itemKind: ExecutionItemKind.loadedSet,
+        )
+      : null;
 
   @override
   Future<void> pauseOrResumeWorkout() async {}
@@ -259,4 +318,34 @@ class _FakeCoreRepository implements CoreValidationRepository {
           actualTonnage: null,
         )
       : const CoreValidationSnapshot.empty();
+
+  CoreWorkoutAmendmentDraft _amendmentDraft({
+    required bool skip,
+    DateTime? date,
+  }) {
+    final request = PlanAmendmentRequest(
+      planId: 'plan-1',
+      reason: 'Explicit local user decision',
+      ruleId: skip
+          ? 'UI_DECISION_SKIP_WORKOUT'
+          : 'UI_DECISION_RESCHEDULE_WORKOUT',
+      skippedSessionIds: skip ? {'session-1'} : const {},
+      rescheduledSessions: date == null ? const {} : {'session-1': date},
+    );
+    return CoreWorkoutAmendmentDraft(
+      request: request,
+      preview: const PlanAmendmentPreview(
+        amendmentId: 'amendment-1',
+        planId: 'plan-1',
+        version: 1,
+        preservedCompletedSessionIds: [],
+        activeSessionIds: [],
+        rescheduledSessionIds: [],
+        regeneratedSessionIds: [],
+        cancelledSessionIds: ['session-1'],
+        trainingMaxChanges: {},
+        prescriptionChanges: 0,
+      ),
+    );
+  }
 }

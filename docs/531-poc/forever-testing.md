@@ -30,7 +30,7 @@ est rapporté sans déclarer le scénario passant.
 
 - `dart format --set-exit-if-changed .` : réussi ;
 - `flutter analyze` : réussi, aucun diagnostic ;
-- `flutter test --reporter compact` : réussi, 377 tests ;
+- `flutter test --reporter compact` : réussi, 383 tests ;
 - Google Chrome 150.0.7871.129 avec ChromeDriver 150.0.7871.124 : cinq
   scénarios E2E sur cinq réussis en 35,4 secondes ;
 - Mozilla Firefox : cinq scénarios E2E sur cinq réussis en 34,7 secondes ;

@@ -8,15 +8,18 @@ class PlanAmendmentRequest {
     required this.reason,
     required this.ruleId,
     Map<String, DateTime> rescheduledSessions = const {},
+    Set<String> skippedSessionIds = const {},
     Map<String, double> trainingMaxChanges = const {},
     this.activeSessionDisposition = ActiveSessionDisposition.reject,
   }) : rescheduledSessions = Map.unmodifiable(rescheduledSessions),
+       skippedSessionIds = Set.unmodifiable(skippedSessionIds),
        trainingMaxChanges = Map.unmodifiable(trainingMaxChanges);
 
   final String planId;
   final String reason;
   final String ruleId;
   final Map<String, DateTime> rescheduledSessions;
+  final Set<String> skippedSessionIds;
   final Map<String, double> trainingMaxChanges;
   final ActiveSessionDisposition activeSessionDisposition;
 }
@@ -74,8 +77,6 @@ abstract interface class PlanLifecycleRepository {
     required String amendmentId,
     required bool confirmed,
   });
-  Future<void> rescheduleSession(String sessionId, DateTime date);
-  Future<void> skipSession(String sessionId, {required String reason});
   Future<void> abandonActiveSession(String sessionId, {required String reason});
   Future<LifecycleStatus> completeWorkout(String sessionId, DateTime at);
   Future<LifecycleStatus> completeCycle(String cycleId, DateTime at);
@@ -110,20 +111,6 @@ class ApplyPlanAmendment {
     amendmentId: amendmentId,
     confirmed: confirmed,
   );
-}
-
-class ReschedulePlannedSession {
-  const ReschedulePlannedSession(this.repository);
-  final PlanLifecycleRepository repository;
-  Future<void> call(String sessionId, DateTime date) =>
-      repository.rescheduleSession(sessionId, date);
-}
-
-class SkipPlannedSession {
-  const SkipPlannedSession(this.repository);
-  final PlanLifecycleRepository repository;
-  Future<void> call(String sessionId, {required String reason}) =>
-      repository.skipSession(sessionId, reason: reason);
 }
 
 class AbandonActiveSession {

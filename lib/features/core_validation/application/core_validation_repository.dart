@@ -3,6 +3,17 @@ import '../domain/core_workout_snapshot.dart';
 import '../../import_export/domain/import_models.dart';
 import '../../workout_runtime/domain/workout_execution.dart';
 import '../../active_program/application/program_switch.dart';
+import '../../active_program/application/plan_lifecycle.dart';
+
+class CoreWorkoutAmendmentDraft {
+  const CoreWorkoutAmendmentDraft({
+    required this.request,
+    required this.preview,
+  });
+
+  final PlanAmendmentRequest request;
+  final PlanAmendmentPreview preview;
+}
 
 abstract interface class CoreValidationRepository {
   Future<CoreValidationSnapshot> load();
@@ -31,9 +42,15 @@ abstract interface class CoreValidationRepository {
 
   Future<void> abandonWorkout();
 
-  Future<void> skipWorkout();
+  Future<CoreWorkoutAmendmentDraft> previewSkipWorkout();
 
-  Future<void> rescheduleWorkout(DateTime date);
+  Future<CoreWorkoutAmendmentDraft> previewRescheduleWorkout(DateTime date);
+
+  Future<void> applyWorkoutAmendment(
+    PlanAmendmentRequest request, {
+    required String amendmentId,
+    required bool confirmed,
+  });
 
   Future<ProgramSwitchPreview> previewProgramSwitch(DateTime startDate);
 

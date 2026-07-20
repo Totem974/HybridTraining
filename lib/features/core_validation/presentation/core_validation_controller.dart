@@ -19,6 +19,7 @@ class CoreValidationController extends ChangeNotifier {
   String? exportedBackup;
   ImportReport? importReport;
   ProgramSwitchPreview? programSwitchPreview;
+  CoreWorkoutAmendmentDraft? workoutAmendmentDraft;
   String? _simulatedImportSource;
   bool _disposed = false;
 
@@ -77,10 +78,34 @@ class CoreValidationController extends ChangeNotifier {
 
   Future<void> abandonWorkout() => _workoutAction(repository.abandonWorkout);
 
-  Future<void> skipWorkout() => _workoutAction(repository.skipWorkout);
+  Future<void> previewSkipWorkout() async {
+    await _run(() async {
+      workoutAmendmentDraft = await repository.previewSkipWorkout();
+    });
+  }
 
-  Future<void> rescheduleWorkout(DateTime date) =>
-      _workoutAction(() => repository.rescheduleWorkout(date));
+  Future<void> previewRescheduleWorkout(DateTime date) async {
+    await _run(() async {
+      workoutAmendmentDraft = await repository.previewRescheduleWorkout(date);
+    });
+  }
+
+  Future<void> applyWorkoutAmendment({required bool confirmed}) async {
+    final draft = workoutAmendmentDraft;
+    if (draft == null) {
+      throw StateError('A workout amendment preview is required.');
+    }
+    await _run(() async {
+      await repository.applyWorkoutAmendment(
+        draft.request,
+        amendmentId: draft.preview.amendmentId,
+        confirmed: confirmed,
+      );
+      workoutAmendmentDraft = null;
+      workout = await repository.loadFirstWorkout();
+      snapshot = await repository.load();
+    });
+  }
 
   Future<void> previewProgramSwitch(DateTime startDate) async {
     await _run(() async {

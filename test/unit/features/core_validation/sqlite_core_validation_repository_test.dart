@@ -110,26 +110,75 @@ void main() {
     },
   );
 
-  test('planned workout can be rescheduled then skipped', () async {
-    await repository.createDevelopmentFixture();
-    final sessionId = (await repository.loadFirstWorkout())!.sessionId;
-    await repository.rescheduleWorkout(DateTime.utc(2026, 9, 1));
-    final database = await local.open();
-    expect(
-      (await database.query(
-        'plan_training_sessions',
-        columns: ['scheduled_for'],
-        where: 'id = ?',
-        whereArgs: [sessionId],
-      )).single['scheduled_for'],
-      '2026-09-01',
-    );
-    await repository.skipWorkout();
-    expect(
-      (await database.query('workout_executions', where: "state = 'skipped'")),
-      hasLength(1),
-    );
-  });
+  test(
+    'planned workout is rescheduled then skipped through previews',
+    () async {
+      await repository.createDevelopmentFixture();
+      final sessionId = (await repository.loadFirstWorkout())!.sessionId;
+      final reschedule = await repository.previewRescheduleWorkout(
+        DateTime.utc(2026, 9, 1),
+      );
+      await repository.applyWorkoutAmendment(
+        reschedule.request,
+        amendmentId: reschedule.preview.amendmentId,
+        confirmed: true,
+      );
+      final database = await local.open();
+      expect(
+        (await database.query(
+          'plan_training_sessions',
+          columns: ['scheduled_for'],
+          where: 'id = ?',
+          whereArgs: [sessionId],
+        )).single['scheduled_for'],
+        '2026-09-01',
+      );
+      final skip = await repository.previewSkipWorkout();
+      final skippedSessionId = skip.request.skippedSessionIds.single;
+      await repository.applyWorkoutAmendment(
+        skip.request,
+        amendmentId: skip.preview.amendmentId,
+        confirmed: true,
+      );
+      expect(
+        (await database.query(
+          'plan_training_sessions',
+          columns: ['status'],
+          where: 'id = ?',
+          whereArgs: [skippedSessionId],
+        )).single['status'],
+        'cancelled',
+      );
+      expect(await database.query('workout_executions'), isEmpty);
+    },
+  );
+
+  test(
+    'workout amendment cannot apply without explicit confirmation',
+    () async {
+      await repository.createDevelopmentFixture();
+      final draft = await repository.previewSkipWorkout();
+
+      await expectLater(
+        repository.applyWorkoutAmendment(
+          draft.request,
+          amendmentId: draft.preview.amendmentId,
+          confirmed: false,
+        ),
+        throwsStateError,
+      );
+
+      final database = await local.open();
+      expect(
+        (await database.query(
+          'plan_training_sessions',
+          where: 'id = ?',
+          whereArgs: [draft.request.skippedSessionIds.single],
+        )).single['status'],
+        'planned',
+      );
+    },
+  );
 
   test(
     'active workout requires explicit abandonment and preserves outcomes',

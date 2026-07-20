@@ -399,34 +399,246 @@ void main() {
     },
   );
 
+  test('skips a planned session only through a confirmed preview', () async {
+    final request = PlanAmendmentRequest(
+      planId: 'plan',
+      reason: 'Fictitious athlete-requested skip',
+      ruleId: 'TEST-SKIP-PREVIEW',
+      skippedSessionIds: {'plan-session-8'},
+    );
+    final preview = await lifecycle.previewAmendment(request);
+    expect(preview.cancelledSessionIds, ['plan-session-8']);
+    final database = await local.open();
+
+    await expectLater(
+      lifecycle.applyAmendment(
+        request,
+        amendmentId: preview.amendmentId,
+        confirmed: false,
+      ),
+      throwsStateError,
+    );
+    expect(
+      (await database.query(
+        'plan_training_sessions',
+        where: 'id = ?',
+        whereArgs: ['plan-session-8'],
+      )).single['status'],
+      'planned',
+    );
+
+    await lifecycle.applyAmendment(
+      request,
+      amendmentId: preview.amendmentId,
+      confirmed: true,
+    );
+    final skipped = (await database.query(
+      'plan_training_sessions',
+      where: 'id = ?',
+      whereArgs: ['plan-session-8'],
+    )).single;
+    expect(skipped['status'], 'cancelled');
+    expect(skipped['notes'], request.reason);
+    expect(skipped['completed_at'], isNotNull);
+    await expectLater(
+      lifecycle.applyAmendment(
+        request,
+        amendmentId: preview.amendmentId,
+        confirmed: true,
+      ),
+      throwsStateError,
+    );
+  });
+
+  test('skip preview rejects false token and altered request', () async {
+    final request = PlanAmendmentRequest(
+      planId: 'plan',
+      reason: 'Fictitious planned skip',
+      ruleId: 'TEST-SKIP-SIGNATURE',
+      skippedSessionIds: {'plan-session-8'},
+    );
+    final preview = await lifecycle.previewAmendment(request);
+    final database = await local.open();
+    await expectLater(
+      lifecycle.applyAmendment(
+        request,
+        amendmentId: '${preview.amendmentId}:false',
+        confirmed: true,
+      ),
+      throwsStateError,
+    );
+    await expectLater(
+      lifecycle.applyAmendment(
+        PlanAmendmentRequest(
+          planId: request.planId,
+          reason: request.reason,
+          ruleId: request.ruleId,
+          skippedSessionIds: {'plan-session-9'},
+        ),
+        amendmentId: preview.amendmentId,
+        confirmed: true,
+      ),
+      throwsStateError,
+    );
+    expect(
+      (await database.query(
+        'plan_training_sessions',
+        where: 'id IN (?, ?)',
+        whereArgs: ['plan-session-8', 'plan-session-9'],
+      )).every((row) => row['status'] == 'planned'),
+      isTrue,
+    );
+  });
+
+  test('corrupted persisted diff is refused without mutation', () async {
+    final request = PlanAmendmentRequest(
+      planId: 'plan',
+      reason: 'Fictitious athlete-requested skip',
+      ruleId: 'TEST-CORRUPT-DIFF',
+      skippedSessionIds: {'plan-session-8'},
+    );
+    final preview = await lifecycle.previewAmendment(request);
+    final database = await local.open();
+    await database.update(
+      'plan_amendments',
+      {'diff_json': '{"cancelledSessionIds":[]}'},
+      where: 'id = ?',
+      whereArgs: [preview.amendmentId],
+    );
+
+    await expectLater(
+      lifecycle.applyAmendment(
+        request,
+        amendmentId: preview.amendmentId,
+        confirmed: true,
+      ),
+      throwsStateError,
+    );
+
+    expect(
+      (await database.query(
+        'plan_training_sessions',
+        where: 'id = ?',
+        whereArgs: ['plan-session-8'],
+      )).single['status'],
+      'planned',
+    );
+    expect(
+      (await database.query(
+        'plan_amendments',
+        where: 'id = ?',
+        whereArgs: [preview.amendmentId],
+      )).single['state'],
+      'previewed',
+    );
+  });
+
   test(
-    'reschedules any identified planned session and refuses history',
+    'skip validation refuses blank, overlap, history and outside plan',
     () async {
-      await lifecycle.rescheduleSession(
-        'plan-session-8',
-        DateTime.utc(2026, 9, 1),
+      expect(
+        () => PlanAmendmentRequest(
+          planId: 'plan',
+          reason: 'Fictitious invalid skip',
+          ruleId: 'TEST-SKIP-INVALID',
+          skippedSessionIds: {' '},
+        ),
+        returnsNormally,
+      );
+      await expectLater(
+        lifecycle.previewAmendment(
+          PlanAmendmentRequest(
+            planId: 'plan',
+            reason: 'Fictitious invalid skip',
+            ruleId: 'TEST-SKIP-BLANK',
+            skippedSessionIds: {' '},
+          ),
+        ),
+        throwsArgumentError,
+      );
+      await expectLater(
+        lifecycle.previewAmendment(
+          PlanAmendmentRequest(
+            planId: 'plan',
+            reason: 'Fictitious overlap',
+            ruleId: 'TEST-SKIP-OVERLAP',
+            rescheduledSessions: {'plan-session-8': DateTime.utc(2026, 9, 1)},
+            skippedSessionIds: {'plan-session-8'},
+          ),
+        ),
+        throwsArgumentError,
       );
       final database = await local.open();
-      expect(
-        (await database.query(
-          'plan_training_sessions',
-          where: 'id = ?',
-          whereArgs: ['plan-session-8'],
-        )).single['scheduled_for'],
-        '2026-09-01',
-      );
       await database.update(
         'plan_training_sessions',
         {'status': 'complete'},
         where: 'id = ?',
-        whereArgs: ['plan-session-8'],
+        whereArgs: ['plan-session-1'],
       );
-      await expectLater(
-        lifecycle.rescheduleSession('plan-session-8', DateTime.utc(2026, 9, 2)),
-        throwsStateError,
-      );
+      for (final id in ['plan-session-1', 'outside-plan-session']) {
+        await expectLater(
+          lifecycle.previewAmendment(
+            PlanAmendmentRequest(
+              planId: 'plan',
+              reason: 'Fictitious rejected skip',
+              ruleId: 'TEST-SKIP-SCOPE',
+              skippedSessionIds: {id},
+            ),
+          ),
+          throwsStateError,
+        );
+      }
     },
   );
+
+  test('stale skip rolls back all amendment mutations', () async {
+    final request = PlanAmendmentRequest(
+      planId: 'plan',
+      reason: 'Fictitious atomic skip',
+      ruleId: 'TEST-SKIP-ROLLBACK',
+      rescheduledSessions: {'plan-session-9': DateTime.utc(2026, 9, 9)},
+      skippedSessionIds: {'plan-session-8'},
+    );
+    final preview = await lifecycle.previewAmendment(request);
+    final database = await local.open();
+    final scheduleBefore = (await database.query(
+      'plan_training_sessions',
+      columns: ['scheduled_for'],
+      where: 'id = ?',
+      whereArgs: ['plan-session-9'],
+    )).single['scheduled_for'];
+    await database.update(
+      'plan_training_sessions',
+      {'status': 'complete'},
+      where: 'id = ?',
+      whereArgs: ['plan-session-8'],
+    );
+    await expectLater(
+      lifecycle.applyAmendment(
+        request,
+        amendmentId: preview.amendmentId,
+        confirmed: true,
+      ),
+      throwsStateError,
+    );
+    expect(
+      (await database.query(
+        'plan_training_sessions',
+        columns: ['scheduled_for'],
+        where: 'id = ?',
+        whereArgs: ['plan-session-9'],
+      )).single['scheduled_for'],
+      scheduleBefore,
+    );
+    expect(
+      (await database.query(
+        'plan_amendments',
+        where: 'id = ?',
+        whereArgs: [preview.amendmentId],
+      )).single['state'],
+      'previewed',
+    );
+  });
 
   test('refuses a request changed after preview without mutation', () async {
     final previewed = PlanAmendmentRequest(
