@@ -320,9 +320,9 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
   @override
   Future<LifecycleStatus> completeWorkout(String sessionId, DateTime at) async {
     final database = await localDatabase.open();
-    final planId = await database.transaction((tx) async {
+    return database.transaction((tx) async {
       final rows = await tx.rawQuery(
-        '''SELECT p.id AS plan_id, e.state
+        '''SELECT p.id AS plan_id, s.status, s.completed_at, e.state
            FROM plan_training_sessions s
            JOIN plan_training_cycles c ON c.id = s.cycle_id
            JOIN training_blocks b ON b.id = c.block_id
@@ -331,18 +331,29 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
            WHERE s.id = ?''',
         [sessionId],
       );
-      if (rows.isEmpty || rows.single['state'] != 'completed') {
+      if (rows.length != 1 || rows.single['state'] != 'completed') {
         throw StateError('Workout execution must be completed first.');
       }
-      await tx.update(
-        'plan_training_sessions',
-        {'status': 'complete', 'completed_at': _date(at)},
-        where: 'id = ?',
-        whereArgs: [sessionId],
-      );
-      return rows.single['plan_id']! as String;
+      final status = rows.single['status'];
+      if (status == 'cancelled') {
+        throw StateError('A cancelled session cannot be completed.');
+      }
+      if (status == 'planned') {
+        throw StateError('A workout must be started before completion.');
+      }
+      if (status != 'complete') {
+        final updated = await tx.update(
+          'plan_training_sessions',
+          {'status': 'complete', 'completed_at': _date(at)},
+          where: "id = ? AND status = 'started'",
+          whereArgs: [sessionId],
+        );
+        if (updated != 1) {
+          throw StateError('Session changed before workout completion.');
+        }
+      }
+      return _advancePlanLifecycle(tx, rows.single['plan_id']! as String, at);
     });
-    return advancePlanLifecycle(planId, at);
   }
 
   @override
@@ -758,17 +769,90 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
         orderBy: 'sequence, id',
       );
     }
+    final activeSessionIds =
+        sessions
+            .where(
+              (row) =>
+                  row['status'] == 'started' ||
+                  const {
+                    'activeSet',
+                    'resting',
+                    'paused',
+                  }.contains(row['execution_state']),
+            )
+            .map((row) => row['id']! as String)
+            .toList()
+          ..sort();
+    final activeProgress = activeSessionIds.isEmpty
+        ? const <String, Object?>{
+            'executions': <Object?>[],
+            'outcomes': <Object?>[],
+            'events': <Object?>[],
+            'setPerformances': <Object?>[],
+            'activityResults': <Object?>[],
+          }
+        : await _activeProgressSnapshot(tx, activeSessionIds);
     return {
       'sessions': {
         for (final row in sessions)
           row['id']! as String: {
+            'cycleId': row['cycle_id'],
+            'sequence': row['sequence'],
             'status': row['status'],
             'scheduledFor': row['scheduled_for'],
+            'startedAt': row['started_at'],
+            'completedAt': row['completed_at'],
+            'notes': row['notes'],
+            'restUntil': row['rest_until'],
+            'programmingWeekNumber': row['programming_week_number'],
+            'sessionPosition': row['session_position'],
             'executionState': row['execution_state'],
           },
       },
       'prescriptionInputs': prescriptionInputs,
       'timelineInputs': timelineInputs,
+      'activeProgress': activeProgress,
+    };
+  }
+
+  Future<Map<String, Object?>> _activeProgressSnapshot(
+    DatabaseExecutor tx,
+    List<String> sessionIds,
+  ) async {
+    final placeholders = List.filled(sessionIds.length, '?').join(',');
+    return {
+      'executions': await tx.rawQuery(
+        '''SELECT * FROM workout_executions
+           WHERE session_id IN ($placeholders) ORDER BY session_id''',
+        sessionIds,
+      ),
+      'outcomes': await tx.rawQuery('''SELECT * FROM workout_set_outcomes
+           WHERE session_id IN ($placeholders)
+           ORDER BY session_id, sequence, prescription_id''', sessionIds),
+      'events': await tx.rawQuery('''SELECT * FROM workout_execution_events
+           WHERE session_id IN ($placeholders)
+           ORDER BY session_id, sequence, id''', sessionIds),
+      'setPerformances': await tx.rawQuery(
+        '''SELECT performance.* FROM set_performances performance
+           JOIN set_prescriptions prescription
+             ON prescription.id = performance.prescription_id
+           JOIN session_blocks block
+             ON block.id = prescription.session_block_id
+           WHERE block.session_id IN ($placeholders)
+           ORDER BY block.session_id, performance.prescription_id,
+                    performance.id''',
+        sessionIds,
+      ),
+      'activityResults': await tx.rawQuery(
+        '''SELECT result.* FROM activity_results result
+           JOIN activity_prescriptions prescription
+             ON prescription.id = result.prescription_id
+           JOIN session_blocks block
+             ON block.id = prescription.session_block_id
+           WHERE block.session_id IN ($placeholders)
+           ORDER BY block.session_id, result.prescription_id''',
+        sessionIds,
+      ),
     };
   }
 

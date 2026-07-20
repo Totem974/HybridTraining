@@ -72,7 +72,7 @@ Before delivery, run dependency resolution, formatting, analysis, the full test
 suite, the release build, and Chrome E2E. Record only results from the current
 revision; historical counts in `testing.md` are not live gates.
 
-Current local validation: 373 tests pass, static analysis reports no issue, and
+Current local validation: 377 tests pass, static analysis reports no issue, and
 release builds succeed for both `/` and `/hybrid/`. Chrome 150.0.7871.129 with
 ChromeDriver 150.0.7871.124 passes the five checked-in scenarios in 35.4
 seconds.

@@ -38,6 +38,231 @@ void main() {
     await temporary.delete(recursive: true);
   });
 
+  test('completeWorkout refuses cancelled and non-started sessions', () async {
+    final database = await local.open();
+    await database.insert('workout_executions', {
+      'session_id': 'plan-session-1',
+      'state': 'completed',
+      'active_set_index': 0,
+      'updated_at': '2026-07-21T07:00:00.000Z',
+      'ended_at': '2026-07-21T07:00:00.000Z',
+    });
+
+    await expectLater(
+      lifecycle.completeWorkout('plan-session-1', DateTime.utc(2026, 7, 21, 8)),
+      throwsStateError,
+    );
+    expect(
+      (await database.query(
+        'plan_training_sessions',
+        columns: ['status', 'completed_at'],
+        where: 'id = ?',
+        whereArgs: ['plan-session-1'],
+      )).single,
+      {'status': 'planned', 'completed_at': null},
+    );
+
+    const cancelledAt = '2026-07-21T07:30:00.000Z';
+    await database.update(
+      'plan_training_sessions',
+      {'status': 'cancelled', 'completed_at': cancelledAt},
+      where: 'id = ?',
+      whereArgs: ['plan-session-1'],
+    );
+    await expectLater(
+      lifecycle.completeWorkout('plan-session-1', DateTime.utc(2026, 7, 21, 9)),
+      throwsStateError,
+    );
+    expect(
+      (await database.query(
+        'plan_training_sessions',
+        columns: ['status', 'completed_at'],
+        where: 'id = ?',
+        whereArgs: ['plan-session-1'],
+      )).single,
+      {'status': 'cancelled', 'completed_at': cancelledAt},
+    );
+  });
+
+  test('completeWorkout is idempotent and preserves completed_at', () async {
+    final database = await local.open();
+    const completedAt = '2026-07-21T07:30:00.000Z';
+    await database.update(
+      'plan_training_sessions',
+      {'status': 'complete', 'completed_at': completedAt},
+      where: 'id = ?',
+      whereArgs: ['plan-session-1'],
+    );
+    await database.insert('workout_executions', {
+      'session_id': 'plan-session-1',
+      'state': 'completed',
+      'active_set_index': 0,
+      'updated_at': completedAt,
+      'ended_at': completedAt,
+    });
+
+    await lifecycle.completeWorkout(
+      'plan-session-1',
+      DateTime.utc(2026, 7, 22, 9),
+    );
+
+    expect(
+      (await database.query(
+        'plan_training_sessions',
+        columns: ['status', 'completed_at'],
+        where: 'id = ?',
+        whereArgs: ['plan-session-1'],
+      )).single,
+      {'status': 'complete', 'completed_at': completedAt},
+    );
+  });
+
+  test('completeWorkout rolls back when lifecycle advancement fails', () async {
+    final database = await local.open();
+    await database.update(
+      'plan_training_sessions',
+      {'status': 'started', 'started_at': '2026-07-21T07:00:00.000Z'},
+      where: 'id = ?',
+      whereArgs: ['plan-session-1'],
+    );
+    await database.insert('workout_executions', {
+      'session_id': 'plan-session-1',
+      'state': 'completed',
+      'active_set_index': 0,
+      'updated_at': '2026-07-21T08:00:00.000Z',
+      'ended_at': '2026-07-21T08:00:00.000Z',
+    });
+    await database.update(
+      'training_plans',
+      {'status': 'cancelled', 'completed_at': '2026-07-21T08:00:00.000Z'},
+      where: 'id = ?',
+      whereArgs: ['plan'],
+    );
+
+    await expectLater(
+      lifecycle.completeWorkout('plan-session-1', DateTime.utc(2026, 7, 21, 9)),
+      throwsStateError,
+    );
+    expect(
+      (await database.query(
+        'plan_training_sessions',
+        columns: ['status', 'completed_at'],
+        where: 'id = ?',
+        whereArgs: ['plan-session-1'],
+      )).single,
+      {'status': 'started', 'completed_at': null},
+    );
+  });
+
+  test('abandon preview is invalidated by active workout progress', () async {
+    final database = await local.open();
+    await database.update(
+      'plan_training_sessions',
+      {'status': 'started', 'started_at': '2026-07-21T07:00:00.000Z'},
+      where: 'id = ?',
+      whereArgs: ['plan-session-2'],
+    );
+    await database.insert('workout_executions', {
+      'session_id': 'plan-session-2',
+      'state': 'activeSet',
+      'active_set_index': 0,
+      'updated_at': '2026-07-21T07:00:00.000Z',
+    });
+    await database.insert('activity_results', {
+      'prescription_id': 'plan-session-2:set-1',
+      'status': 'pending',
+      'actual_json': '{}',
+      'notes': '',
+      'updated_at': '2026-07-21T07:00:00.000Z',
+    });
+    final request = PlanAmendmentRequest(
+      planId: 'plan',
+      reason: 'Abandon active fictitious workout',
+      ruleId: 'TEST-ACTIVE-PROGRESS-SIGNATURE',
+      rescheduledSessions: {'plan-session-3': DateTime.utc(2026, 8, 15)},
+      activeSessionDisposition: ActiveSessionDisposition.abandon,
+    );
+    final stalePreview = await lifecycle.previewAmendment(request);
+    await database.update(
+      'plan_training_sessions',
+      {'notes': 'Concurrent fictitious note'},
+      where: 'id = ?',
+      whereArgs: ['plan-session-2'],
+    );
+    await expectLater(
+      lifecycle.applyAmendment(
+        request,
+        amendmentId: stalePreview.amendmentId,
+        confirmed: true,
+      ),
+      throwsStateError,
+    );
+    await database.update(
+      'plan_training_sessions',
+      {'notes': ''},
+      where: 'id = ?',
+      whereArgs: ['plan-session-2'],
+    );
+    await database.update(
+      'activity_results',
+      {
+        'status': 'success',
+        'actual_json': '{"repetitions":5,"load":60}',
+        'updated_at': '2026-07-21T07:05:00.000Z',
+      },
+      where: 'prescription_id = ?',
+      whereArgs: ['plan-session-2:set-1'],
+    );
+
+    await expectLater(
+      lifecycle.applyAmendment(
+        request,
+        amendmentId: stalePreview.amendmentId,
+        confirmed: true,
+      ),
+      throwsStateError,
+    );
+    expect(
+      (await database.query(
+        'workout_executions',
+        where: 'session_id = ?',
+        whereArgs: ['plan-session-2'],
+      )).single['state'],
+      'activeSet',
+    );
+    expect(
+      (await database.query(
+        'plan_amendments',
+        where: 'id = ?',
+        whereArgs: [stalePreview.amendmentId],
+      )).single['state'],
+      'previewed',
+    );
+
+    final currentPreview = await lifecycle.previewAmendment(request);
+    await lifecycle.applyAmendment(
+      request,
+      amendmentId: currentPreview.amendmentId,
+      confirmed: true,
+    );
+    expect(
+      (await database.query(
+        'workout_executions',
+        where: 'session_id = ?',
+        whereArgs: ['plan-session-2'],
+      )).single['state'],
+      'abandoned',
+    );
+    expect(
+      (await database.query(
+        'plan_training_sessions',
+        where: 'id = ?',
+        whereArgs: ['plan-session-2'],
+      )).single['status'],
+      'cancelled',
+    );
+  });
+
   test(
     'preview then apply changes only future work and preserves history',
     () async {
