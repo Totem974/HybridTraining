@@ -166,6 +166,8 @@ class _FakeCoreRepository implements CoreValidationRepository {
   Future<void> applyProgramSwitch(
     DateTime startDate, {
     required bool abandonActiveSession,
+    required String previewId,
+    required bool confirmed,
   }) async => switchApplied = true;
 
   @override
@@ -202,6 +204,7 @@ class _FakeCoreRepository implements CoreValidationRepository {
   Future<ProgramSwitchPreview> previewProgramSwitch(DateTime startDate) async {
     previewRequested = true;
     return ProgramSwitchPreview(
+      previewId: 'preview-1',
       currentPlanId: 'current',
       nextPlanId: 'next',
       currentBlueprintId: 'bps',

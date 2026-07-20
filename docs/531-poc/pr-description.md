@@ -38,8 +38,9 @@ autres familles ne sont pas activés.
 
 - format : pass ;
 - analyse statique : pass ;
-- 372 tests unitaires/widget/routes/persistance/goldens : pass ;
-- E2E Google Chrome : 5/5 en 34,7 secondes ;
+- 373 tests unitaires/widget/routes/persistance/goldens : pass ;
+- E2E Google Chrome 150.0.7871.129 / ChromeDriver 150.0.7871.124 : 5/5 en
+  35,4 secondes ;
 - E2E Mozilla Firefox : 5/5 en 34,7 secondes ;
 - persistance Web réelle : série M1/M2 terminée restaurée après recréation de
   la page, avec décisions TM et état de terminaison conservés ;

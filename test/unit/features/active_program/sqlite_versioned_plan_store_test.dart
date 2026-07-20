@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -336,25 +337,197 @@ void main() {
         currentPlanId: 'plan-1',
         nextPlan: replacement,
         reason: 'Owner requested tested variant',
+        activeSessionDisposition: ActiveSessionDisposition.abandon,
       );
 
-      final preview = await store.previewProgramSwitch(request);
+      final supersededPreview = await store.previewProgramSwitch(request);
+      var preview = await store.previewProgramSwitch(request);
+      await expectLater(
+        store.applyProgramSwitch(
+          request,
+          previewId: supersededPreview.previewId,
+          confirmed: true,
+        ),
+        throwsStateError,
+      );
       expect(preview.completedSessionsPreserved, 1);
       expect(preview.activeSessionIds, ['session-2']);
       expect(preview.requiresActiveSessionDecision, isTrue);
       expect(await db.query('training_plans'), hasLength(1));
 
-      await expectLater(store.applyProgramSwitch(request), throwsStateError);
+      await expectLater(
+        store.applyProgramSwitch(request, previewId: '', confirmed: true),
+        throwsStateError,
+      );
+      await expectLater(
+        store.applyProgramSwitch(
+          request,
+          previewId: preview.previewId,
+          confirmed: false,
+        ),
+        throwsStateError,
+      );
       expect((await db.query('training_plans')).single['status'], 'active');
       expect(await db.query('plan_events'), isEmpty);
 
-      await store.applyProgramSwitch(
+      for (final changedRequest in [
         ProgramSwitchRequest(
           currentPlanId: 'plan-1',
           nextPlan: replacement,
-          reason: 'Owner requested tested variant',
+          reason: 'A changed reason',
           activeSessionDisposition: ActiveSessionDisposition.abandon,
         ),
+        ProgramSwitchRequest(
+          currentPlanId: 'plan-1',
+          nextPlan: replacement,
+          reason: request.reason,
+        ),
+        ProgramSwitchRequest(
+          currentPlanId: 'plan-1',
+          nextPlan: _replacementPlan(startDate: DateTime(2026, 8, 4)),
+          reason: request.reason,
+          activeSessionDisposition: ActiveSessionDisposition.abandon,
+        ),
+        ProgramSwitchRequest(
+          currentPlanId: 'plan-1',
+          nextPlan: _replacementPlan(id: 'another-replacement-plan'),
+          reason: request.reason,
+          activeSessionDisposition: ActiveSessionDisposition.abandon,
+        ),
+        ProgramSwitchRequest(
+          currentPlanId: 'plan-1',
+          nextPlan: _replacementPlan(createdAt: DateTime.utc(2026, 8, 2)),
+          reason: request.reason,
+          activeSessionDisposition: ActiveSessionDisposition.abandon,
+        ),
+      ]) {
+        await expectLater(
+          store.applyProgramSwitch(
+            changedRequest,
+            previewId: preview.previewId,
+            confirmed: true,
+          ),
+          throwsStateError,
+        );
+      }
+
+      await db.update(
+        'plan_training_sessions',
+        {'notes': 'stale'},
+        where: 'id = ?',
+        whereArgs: ['session-1'],
+      );
+      await expectLater(
+        store.applyProgramSwitch(
+          request,
+          previewId: preview.previewId,
+          confirmed: true,
+        ),
+        throwsStateError,
+      );
+      await db.update(
+        'plan_training_sessions',
+        {'notes': ''},
+        where: 'id = ?',
+        whereArgs: ['session-1'],
+      );
+      await db.update(
+        'workout_executions',
+        {'notes': 'stale'},
+        where: 'session_id = ?',
+        whereArgs: ['session-2'],
+      );
+      await expectLater(
+        store.applyProgramSwitch(
+          request,
+          previewId: preview.previewId,
+          confirmed: true,
+        ),
+        throwsStateError,
+      );
+      await db.update(
+        'workout_executions',
+        {'notes': ''},
+        where: 'session_id = ?',
+        whereArgs: ['session-2'],
+      );
+      final originalLoad = (await db.query(
+        'set_prescriptions',
+        columns: ['prescribed_load'],
+        where: 'id = ?',
+        whereArgs: ['squat-block-set'],
+      )).single['prescribed_load'];
+      await db.update(
+        'set_prescriptions',
+        {'prescribed_load': (originalLoad! as num).toDouble() + 2.5},
+        where: 'id = ?',
+        whereArgs: ['squat-block-set'],
+      );
+      await expectLater(
+        store.applyProgramSwitch(
+          request,
+          previewId: preview.previewId,
+          confirmed: true,
+        ),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            contains('changed after'),
+          ),
+        ),
+      );
+      expect((await db.query('training_plans')).single['status'], 'active');
+      expect(await db.query('plan_events'), isEmpty);
+      await db.update(
+        'set_prescriptions',
+        {'prescribed_load': originalLoad},
+        where: 'id = ?',
+        whereArgs: ['squat-block-set'],
+      );
+      final corruptedDiff =
+          jsonDecode(
+                (await db.query(
+                      'plan_amendments',
+                      columns: ['diff_json'],
+                      where: 'id = ?',
+                      whereArgs: [preview.previewId],
+                    )).single['diff_json']!
+                    as String,
+              )
+              as Map<String, Object?>;
+      corruptedDiff['plannedSessionsCancelled'] = 1;
+      await db.update(
+        'plan_amendments',
+        {'diff_json': jsonEncode(corruptedDiff)},
+        where: 'id = ?',
+        whereArgs: [preview.previewId],
+      );
+      await expectLater(
+        store.applyProgramSwitch(
+          request,
+          previewId: preview.previewId,
+          confirmed: true,
+        ),
+        throwsStateError,
+      );
+      expect(
+        (await db.query(
+          'plan_training_sessions',
+          where: "id = 'session-2'",
+        )).single['status'],
+        'started',
+      );
+      expect(
+        (await db.query('workout_executions')).single['state'],
+        'activeSet',
+      );
+      preview = await store.previewProgramSwitch(request);
+
+      await store.applyProgramSwitch(
+        request,
+        previewId: preview.previewId,
+        confirmed: true,
       );
       expect(
         (await db.query(
@@ -385,6 +558,14 @@ void main() {
       final event = (await db.query('plan_events')).single;
       expect(event['event_type'], 'programSwitch');
       expect(event['rule_provenance_json'], contains('Owner requested'));
+      await expectLater(
+        store.applyProgramSwitch(
+          request,
+          previewId: preview.previewId,
+          confirmed: true,
+        ),
+        throwsStateError,
+      );
     },
   );
 
@@ -724,10 +905,13 @@ VersionedTrainingPlan _plan({
 );
 
 VersionedTrainingPlan _replacementPlan({
+  String id = 'replacement-plan',
+  DateTime? startDate,
+  DateTime? createdAt,
   double roundingIncrement = 2.5,
   Map<String, Object?> details = const {'kind': 'work'},
 }) => VersionedTrainingPlan(
-  id: 'replacement-plan',
+  id: id,
   athleteId: 'athlete',
   blueprintId: 'reviewed-replacement-v1',
   blueprintVersion: 1,
@@ -742,7 +926,7 @@ VersionedTrainingPlan _replacementPlan({
     {'document': 'verified-fixture', 'status': 'verified'},
   ],
   macrocycle: 2,
-  createdAt: DateTime.utc(2026, 8, 1),
+  createdAt: createdAt ?? DateTime.utc(2026, 8, 1),
   blocks: [
     PlannedTrainingBlock(
       id: 'replacement-leader',
@@ -753,12 +937,12 @@ VersionedTrainingPlan _replacementPlan({
         PlannedCycle(
           id: 'replacement-cycle',
           sequence: 0,
-          startsOn: DateTime(2026, 8, 3),
+          startsOn: startDate ?? DateTime(2026, 8, 3),
           sessions: [
             PlannedSession(
               id: 'replacement-session',
               sequence: 0,
-              scheduledFor: DateTime(2026, 8, 3),
+              scheduledFor: startDate ?? DateTime(2026, 8, 3),
               blocks: [
                 _sessionBlock(
                   'replacement-squat-block',

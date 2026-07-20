@@ -40,6 +40,8 @@ abstract interface class CoreValidationRepository {
   Future<void> applyProgramSwitch(
     DateTime startDate, {
     required bool abandonActiveSession,
+    required String previewId,
+    required bool confirmed,
   });
 
   Future<String> exportBackup();

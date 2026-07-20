@@ -63,9 +63,14 @@ void main() {
     'confirmed program switch preserves history and activates next plan',
     () async {
       await repository.createDevelopmentFixture();
+      final preview = await repository.previewProgramSwitch(
+        DateTime.utc(2026, 8, 3),
+      );
       await repository.applyProgramSwitch(
         DateTime.utc(2026, 8, 3),
         abandonActiveSession: false,
+        previewId: preview.previewId,
+        confirmed: true,
       );
       final database = await local.open();
       final plans = await database.query(
@@ -76,6 +81,32 @@ void main() {
       expect(plans.first['status'], 'cancelled');
       expect(plans.last['status'], 'active');
       expect(await database.query('plan_events'), hasLength(1));
+    },
+  );
+
+  test(
+    'program switch remains applicable when the repository clock advances',
+    () async {
+      var now = DateTime.utc(2026, 7, 20, 10);
+      repository = SqliteCoreValidationRepository(
+        localDatabase: local,
+        clock: () => now,
+      );
+      await repository.createDevelopmentFixture();
+      final preview = await repository.previewProgramSwitch(
+        DateTime.utc(2026, 8, 3),
+      );
+      now = DateTime.utc(2026, 7, 20, 11);
+
+      await repository.applyProgramSwitch(
+        DateTime.utc(2026, 8, 3),
+        abandonActiveSession: false,
+        previewId: preview.previewId,
+        confirmed: true,
+      );
+
+      final database = await local.open();
+      expect(await database.query('training_plans'), hasLength(2));
     },
   );
 

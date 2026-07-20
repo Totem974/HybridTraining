@@ -273,7 +273,22 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
 
   @override
   Future<ProgramSwitchPreview> previewProgramSwitch(DateTime startDate) async {
-    final request = await _programSwitchRequest(startDate);
+    final database = await localDatabase.open();
+    final active =
+        Sqflite.firstIntValue(
+          await database.rawQuery('''
+      SELECT COUNT(*) FROM plan_training_sessions s
+      JOIN plan_training_cycles c ON c.id = s.cycle_id
+      JOIN training_blocks b ON b.id = c.block_id
+      JOIN training_plans p ON p.id = b.plan_id
+      WHERE p.status = 'active' AND s.status = 'started'
+    '''),
+        ) ??
+        0;
+    final request = await _programSwitchRequest(
+      startDate,
+      abandonActiveSession: active > 0,
+    );
     return SqliteVersionedPlanStore(
       localDatabase: localDatabase,
     ).previewProgramSwitch(request);
@@ -283,19 +298,51 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
   Future<void> applyProgramSwitch(
     DateTime startDate, {
     required bool abandonActiveSession,
+    required String previewId,
+    required bool confirmed,
   }) async {
+    final database = await localDatabase.open();
+    final previewRows = await database.query(
+      'plan_amendments',
+      columns: ['after_snapshot_json'],
+      where:
+          "id = ? AND state = 'previewed' AND rule_id = 'PROGRAM_SWITCH_PREVIEW'",
+      whereArgs: [previewId],
+      limit: 1,
+    );
+    if (previewRows.length != 1) {
+      throw StateError(
+        'A matching unapplied program switch preview is required.',
+      );
+    }
+    final previewSignature = jsonDecode(
+      previewRows.single['after_snapshot_json']! as String,
+    );
+    if (previewSignature is! Map<String, Object?> ||
+        previewSignature['nextPlan'] is! Map<String, Object?>) {
+      throw StateError('The program switch preview is invalid.');
+    }
+    final nextSignature = previewSignature['nextPlan']! as Map<String, Object?>;
+    final previewCreatedAt = DateTime.tryParse(
+      nextSignature['createdAt']?.toString() ?? '',
+    );
+    if (previewCreatedAt == null) {
+      throw StateError('The program switch preview has no creation time.');
+    }
     final request = await _programSwitchRequest(
       startDate,
       abandonActiveSession: abandonActiveSession,
+      createdAt: previewCreatedAt,
     );
     await SqliteVersionedPlanStore(
       localDatabase: localDatabase,
-    ).applyProgramSwitch(request);
+    ).applyProgramSwitch(request, previewId: previewId, confirmed: confirmed);
   }
 
   Future<ProgramSwitchRequest> _programSwitchRequest(
     DateTime startDate, {
     bool abandonActiveSession = false,
+    DateTime? createdAt,
   }) async {
     final database = await localDatabase.open();
     final rows = await database.rawQuery('''
@@ -362,7 +409,7 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
       id: 'preview-bps-$dateId',
       athleteId: row['athlete_id']! as String,
       macrocycle: 1,
-      createdAt: _clock().toUtc(),
+      createdAt: (createdAt ?? _clock()).toUtc(),
       generated: generated,
     );
     return ProgramSwitchRequest(

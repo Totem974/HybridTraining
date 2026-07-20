@@ -3,7 +3,7 @@
 ## Calculator parity validation (2026-07-20)
 
 - `flutter analyze`: no issues.
-- `flutter test --reporter compact`: 372 tests passed on the current recorded
+- `flutter test --reporter compact`: 373 tests passed on the current recorded
   revision.
 - Historical coverage baseline: 230 tests and 787/844 instrumented POC
   Core/catalog/application lines (93.25%); it is not the current suite count.
@@ -57,7 +57,7 @@ Forever v2 lot.
 ## Latest results
 
 - `flutter analyze`: pass, no issues.
-- `flutter test --reporter compact`: pass, 372 tests.
+- `flutter test --reporter compact`: pass, 373 tests.
 - Historical coverage baseline only: 787/844 instrumented POC
   Core/catalog/application lines, 93.25% (230-test suite at that time).
 - Branch records: unavailable (`BRF=0`) in the generated LCOV file.

@@ -28,29 +28,107 @@ class SqliteVersionedPlanStore
   ) async {
     _validateSwitchRequest(request);
     final database = await localDatabase.open();
-    final current = await _activePlan(database, request.currentPlanId);
-    await _validateCompatibility(database, current, request.nextPlan);
-    final counts = await _sessionStatusCounts(database, request.currentPlanId);
-    final activeIds = await _activeSessionIds(database, request.currentPlanId);
-    return ProgramSwitchPreview(
-      currentPlanId: request.currentPlanId,
-      nextPlanId: request.nextPlan.id,
-      currentBlueprintId: current['blueprint_id']! as String,
-      nextBlueprintId: request.nextPlan.blueprintId,
-      completedSessionsPreserved: counts['complete'] ?? 0,
-      plannedSessionsCancelled: counts['planned'] ?? 0,
-      activeSessionIds: List.unmodifiable(activeIds),
-      nextStartDate: _firstSessionDate(request.nextPlan),
-    );
+    return database.transaction((tx) async {
+      final current = await _activePlan(tx, request.currentPlanId);
+      await _validateCompatibility(tx, current, request.nextPlan);
+      final counts = await _sessionStatusCounts(tx, request.currentPlanId);
+      final activeIds = await _activeSessionIds(tx, request.currentPlanId);
+      final version =
+          Sqflite.firstIntValue(
+            await tx.rawQuery(
+              'SELECT COALESCE(MAX(version), 0) + 1 FROM plan_amendments WHERE plan_id = ?',
+              [request.currentPlanId],
+            ),
+          ) ??
+          1;
+      final previewId = '${request.currentPlanId}:program-switch:$version';
+      await tx.update(
+        'plan_amendments',
+        {'state': 'rejected'},
+        where:
+            "plan_id = ? AND state = 'previewed' AND rule_id = 'PROGRAM_SWITCH_PREVIEW'",
+        whereArgs: [request.currentPlanId],
+      );
+      final before = await _persistedProgramSwitchSignature(
+        tx,
+        request.currentPlanId,
+      );
+      final diff = {
+        'completedSessionsPreserved': counts['complete'] ?? 0,
+        'plannedSessionsCancelled': counts['planned'] ?? 0,
+        'activeSessionIds': activeIds,
+        'nextPlanId': request.nextPlan.id,
+      };
+      await tx.insert('plan_amendments', {
+        'id': previewId,
+        'plan_id': request.currentPlanId,
+        'version': version,
+        'state': 'previewed',
+        'reason': request.reason.trim(),
+        'rule_id': 'PROGRAM_SWITCH_PREVIEW',
+        'before_snapshot_json': canonicalJson(before),
+        'after_snapshot_json': canonicalJson(
+          _programSwitchRequestSignature(request),
+        ),
+        'diff_json': canonicalJson(diff),
+        'created_at': request.nextPlan.createdAt.toUtc().toIso8601String(),
+      });
+      return ProgramSwitchPreview(
+        previewId: previewId,
+        currentPlanId: request.currentPlanId,
+        nextPlanId: request.nextPlan.id,
+        currentBlueprintId: current['blueprint_id']! as String,
+        nextBlueprintId: request.nextPlan.blueprintId,
+        completedSessionsPreserved: counts['complete'] ?? 0,
+        plannedSessionsCancelled: counts['planned'] ?? 0,
+        activeSessionIds: List.unmodifiable(activeIds),
+        nextStartDate: _firstSessionDate(request.nextPlan),
+      );
+    });
   }
 
   @override
-  Future<void> applyProgramSwitch(ProgramSwitchRequest request) async {
+  Future<void> applyProgramSwitch(
+    ProgramSwitchRequest request, {
+    required String previewId,
+    required bool confirmed,
+  }) async {
     _validateSwitchRequest(request);
+    if (!confirmed) {
+      throw StateError('A program switch requires explicit confirmation.');
+    }
     final database = await localDatabase.open();
     await database.transaction((tx) async {
       final current = await _activePlan(tx, request.currentPlanId);
       await _validateCompatibility(tx, current, request.nextPlan);
+      final previews = await tx.query(
+        'plan_amendments',
+        where:
+            "id = ? AND plan_id = ? AND state = 'previewed' AND rule_id = 'PROGRAM_SWITCH_PREVIEW'",
+        whereArgs: [previewId, request.currentPlanId],
+        limit: 1,
+      );
+      if (previews.length != 1 ||
+          previews.single['after_snapshot_json'] !=
+              canonicalJson(_programSwitchRequestSignature(request))) {
+        throw StateError(
+          'A matching unapplied program switch preview is required.',
+        );
+      }
+      if (previews.single['before_snapshot_json'] !=
+          canonicalJson(
+            await _persistedProgramSwitchSignature(tx, request.currentPlanId),
+          )) {
+        throw StateError(
+          'The current program changed after the switch preview.',
+        );
+      }
+      final diff = jsonDecode(previews.single['diff_json']! as String);
+      if (diff is! Map<String, Object?> ||
+          diff['plannedSessionsCancelled'] is! int ||
+          diff['activeSessionIds'] is! List<Object?>) {
+        throw StateError('The program switch preview is invalid.');
+      }
       final activeIds = await _activeSessionIds(tx, request.currentPlanId);
       if (activeIds.isNotEmpty &&
           request.activeSessionDisposition == ActiveSessionDisposition.reject) {
@@ -75,7 +153,7 @@ class SqliteVersionedPlanStore
           [occurredAt, occurredAt, ...activeIds],
         );
       }
-      await tx.rawUpdate(
+      final cancelledPlanned = await tx.rawUpdate(
         '''UPDATE plan_training_sessions SET status = 'cancelled', completed_at = ?
            WHERE status = 'planned' AND cycle_id IN (
              SELECT c.id FROM plan_training_cycles c
@@ -83,6 +161,9 @@ class SqliteVersionedPlanStore
            )''',
         [occurredAt, request.currentPlanId],
       );
+      if (cancelledPlanned != diff['plannedSessionsCancelled']) {
+        throw StateError('The planned-session cardinality changed.');
+      }
       final closed = await tx.update(
         'training_plans',
         {'status': 'cancelled', 'completed_at': occurredAt},
@@ -112,6 +193,16 @@ class SqliteVersionedPlanStore
         'occurred_at': occurredAt,
       });
       await _insertPlan(tx, request.nextPlan);
+      final consumed = await tx.update(
+        'plan_amendments',
+        {'state': 'applied', 'applied_at': occurredAt},
+        where:
+            "id = ? AND plan_id = ? AND state = 'previewed' AND rule_id = 'PROGRAM_SWITCH_PREVIEW'",
+        whereArgs: [previewId, request.currentPlanId],
+      );
+      if (consumed != 1) {
+        throw StateError('The program switch preview changed.');
+      }
     });
   }
 
@@ -1037,6 +1128,145 @@ class SqliteVersionedPlanStore
       ),
     };
   }
+
+  Future<Map<String, Object?>> _persistedProgramSwitchSignature(
+    DatabaseExecutor tx,
+    String planId,
+  ) async {
+    Future<List<Map<String, Object?>>> rows(String sql) async =>
+        tx.rawQuery(sql, [planId]);
+
+    return {
+      'plan': await rows('''SELECT * FROM training_plans
+          WHERE id = ? AND status = 'active' ORDER BY id'''),
+      'definitionSnapshot': await rows('''SELECT d.*
+          FROM program_definition_snapshots d
+          JOIN training_plans p ON p.definition_snapshot_id = d.id
+          WHERE p.id = ? ORDER BY d.id'''),
+      'blocks': await rows('''SELECT b.* FROM training_blocks b
+          WHERE b.plan_id = ? ORDER BY b.sequence, b.id'''),
+      'cycles': await rows('''SELECT c.* FROM plan_training_cycles c
+          JOIN training_blocks b ON b.id = c.block_id
+          WHERE b.plan_id = ? ORDER BY b.sequence, c.sequence, c.id'''),
+      'sessions': await rows(
+        '''SELECT s.* FROM plan_training_sessions s
+          JOIN plan_training_cycles c ON c.id = s.cycle_id
+          JOIN training_blocks b ON b.id = c.block_id
+          WHERE b.plan_id = ? ORDER BY b.sequence, c.sequence, s.sequence, s.id''',
+      ),
+      'sessionBlocks': await rows('''SELECT sb.* FROM session_blocks sb
+          JOIN plan_training_sessions s ON s.id = sb.session_id
+          JOIN plan_training_cycles c ON c.id = s.cycle_id
+          JOIN training_blocks b ON b.id = c.block_id
+          WHERE b.plan_id = ?
+          ORDER BY b.sequence, c.sequence, s.sequence, sb.sequence, sb.id'''),
+      'setPrescriptions': await rows('''SELECT p.* FROM set_prescriptions p
+          JOIN session_blocks sb ON sb.id = p.session_block_id
+          JOIN plan_training_sessions s ON s.id = sb.session_id
+          JOIN plan_training_cycles c ON c.id = s.cycle_id
+          JOIN training_blocks b ON b.id = c.block_id
+          WHERE b.plan_id = ?
+          ORDER BY b.sequence, c.sequence, s.sequence, sb.sequence,
+                   p.sequence, p.id'''),
+      'setPerformances': await rows('''SELECT r.* FROM set_performances r
+          JOIN set_prescriptions p ON p.id = r.prescription_id
+          JOIN session_blocks sb ON sb.id = p.session_block_id
+          JOIN plan_training_sessions s ON s.id = sb.session_id
+          JOIN plan_training_cycles c ON c.id = s.cycle_id
+          JOIN training_blocks b ON b.id = c.block_id
+          WHERE b.plan_id = ? ORDER BY r.prescription_id'''),
+      'activityPrescriptions': await rows(
+        '''SELECT p.* FROM activity_prescriptions p
+          JOIN session_blocks sb ON sb.id = p.session_block_id
+          JOIN plan_training_sessions s ON s.id = sb.session_id
+          JOIN plan_training_cycles c ON c.id = s.cycle_id
+          JOIN training_blocks b ON b.id = c.block_id
+          WHERE b.plan_id = ?
+          ORDER BY b.sequence, c.sequence, s.sequence, sb.sequence,
+                   p.sequence, p.id''',
+      ),
+      'activityResults': await rows('''SELECT r.* FROM activity_results r
+          JOIN activity_prescriptions p ON p.id = r.prescription_id
+          JOIN session_blocks sb ON sb.id = p.session_block_id
+          JOIN plan_training_sessions s ON s.id = sb.session_id
+          JOIN plan_training_cycles c ON c.id = s.cycle_id
+          JOIN training_blocks b ON b.id = c.block_id
+          WHERE b.plan_id = ? ORDER BY r.prescription_id'''),
+      'runtimeSessions': await rows(
+        '''SELECT r.* FROM workout_runtime_sessions r
+          JOIN plan_training_sessions s ON s.id = r.session_id
+          JOIN plan_training_cycles c ON c.id = s.cycle_id
+          JOIN training_blocks b ON b.id = c.block_id
+          WHERE b.plan_id = ? ORDER BY r.session_id''',
+      ),
+      'runtimeBlocks': await rows('''SELECT r.* FROM workout_runtime_blocks r
+          JOIN session_blocks sb ON sb.id = r.session_block_id
+          JOIN plan_training_sessions s ON s.id = sb.session_id
+          JOIN plan_training_cycles c ON c.id = s.cycle_id
+          JOIN training_blocks b ON b.id = c.block_id
+          WHERE b.plan_id = ? ORDER BY r.session_block_id'''),
+      'workoutActivities': await rows('''SELECT a.* FROM workout_activities a
+          JOIN session_blocks sb ON sb.id = a.session_block_id
+          JOIN plan_training_sessions s ON s.id = sb.session_id
+          JOIN plan_training_cycles c ON c.id = s.cycle_id
+          JOIN training_blocks b ON b.id = c.block_id
+          WHERE b.plan_id = ?
+          ORDER BY a.session_block_id, a.sequence, a.id'''),
+      'executions': await rows('''SELECT e.* FROM workout_executions e
+          JOIN plan_training_sessions s ON s.id = e.session_id
+          JOIN plan_training_cycles c ON c.id = s.cycle_id
+          JOIN training_blocks b ON b.id = c.block_id
+          WHERE b.plan_id = ? ORDER BY e.session_id'''),
+      'setOutcomes': await rows(
+        '''SELECT o.* FROM workout_set_outcomes o
+          JOIN plan_training_sessions s ON s.id = o.session_id
+          JOIN plan_training_cycles c ON c.id = s.cycle_id
+          JOIN training_blocks b ON b.id = c.block_id
+          WHERE b.plan_id = ? ORDER BY o.session_id, o.sequence, o.prescription_id''',
+      ),
+      'executionEvents': await rows(
+        '''SELECT e.* FROM workout_execution_events e
+          JOIN plan_training_sessions s ON s.id = e.session_id
+          JOIN plan_training_cycles c ON c.id = s.cycle_id
+          JOIN training_blocks b ON b.id = c.block_id
+          WHERE b.plan_id = ? ORDER BY e.session_id, e.sequence, e.id''',
+      ),
+      'planEvents': await rows('''SELECT * FROM plan_events
+          WHERE plan_id = ? ORDER BY sequence, id'''),
+      'trainingMaxTimeline': await rows('''SELECT * FROM training_max_timeline
+          WHERE plan_id = ? ORDER BY sequence, movement_id, id'''),
+      'transitions': await rows('''SELECT * FROM plan_transitions_v5
+          WHERE plan_id = ? ORDER BY sequence, id'''),
+      'plannedEvents': await rows('''SELECT * FROM planned_events_v5
+          WHERE plan_id = ? ORDER BY sequence, id'''),
+    };
+  }
+
+  Map<String, Object?> _programSwitchRequestSignature(
+    ProgramSwitchRequest request,
+  ) => {
+    'currentPlanId': request.currentPlanId,
+    'reason': request.reason.trim(),
+    'activeSessionDisposition': request.activeSessionDisposition.name,
+    'nextPlan': {
+      ..._futureAmendmentSignature(
+        ForeverFutureAmendmentRequest(
+          currentPlanId: request.currentPlanId,
+          futurePlan: request.nextPlan,
+          reason: request.reason,
+          ruleId: 'PROGRAM_SWITCH_PREVIEW',
+        ),
+      ),
+      'createdAt': request.nextPlan.createdAt.toUtc().toIso8601String(),
+      'blueprintSnapshot': request.nextPlan.blueprintSnapshot,
+      'ruleProvenance': request.nextPlan.ruleProvenance,
+      'sourceEdition': request.nextPlan.sourceEdition?.name,
+      'generation': request.nextPlan.generation?.name,
+      'trainingMaxTimeline': request.nextPlan.trainingMaxTimeline,
+      'plannedEvents': request.nextPlan.plannedEvents,
+      'transitions': request.nextPlan.transitions,
+    },
+  };
 
   Map<String, Object?> _futureAmendmentSignature(
     ForeverFutureAmendmentRequest request,

@@ -96,6 +96,8 @@ class CoreValidationController extends ChangeNotifier {
       await repository.applyProgramSwitch(
         startDate,
         abandonActiveSession: abandonActiveSession,
+        previewId: programSwitchPreview?.previewId ?? '',
+        confirmed: true,
       );
       programSwitchPreview = null;
       snapshot = await repository.load();

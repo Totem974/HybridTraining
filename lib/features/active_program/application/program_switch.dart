@@ -4,6 +4,7 @@ enum ActiveSessionDisposition { reject, abandon }
 
 class ProgramSwitchPreview {
   const ProgramSwitchPreview({
+    required this.previewId,
     required this.currentPlanId,
     required this.nextPlanId,
     required this.currentBlueprintId,
@@ -14,6 +15,7 @@ class ProgramSwitchPreview {
     required this.nextStartDate,
   });
 
+  final String previewId;
   final String currentPlanId;
   final String nextPlanId;
   final String currentBlueprintId;
@@ -44,7 +46,11 @@ abstract interface class ProgramSwitchRepository {
   Future<ProgramSwitchPreview> previewProgramSwitch(
     ProgramSwitchRequest request,
   );
-  Future<void> applyProgramSwitch(ProgramSwitchRequest request);
+  Future<void> applyProgramSwitch(
+    ProgramSwitchRequest request, {
+    required String previewId,
+    required bool confirmed,
+  });
   Future<ForeverFutureAmendmentPreview> previewForeverFutureAmendment(
     ForeverFutureAmendmentRequest request,
   );
@@ -97,8 +103,15 @@ class PreviewProgramSwitch {
 class ApplyProgramSwitch {
   const ApplyProgramSwitch(this.repository);
   final ProgramSwitchRepository repository;
-  Future<void> call(ProgramSwitchRequest request) =>
-      repository.applyProgramSwitch(request);
+  Future<void> call(
+    ProgramSwitchRequest request, {
+    required String previewId,
+    required bool confirmed,
+  }) => repository.applyProgramSwitch(
+    request,
+    previewId: previewId,
+    confirmed: confirmed,
+  );
 }
 
 class PreviewForeverFutureAmendment {
