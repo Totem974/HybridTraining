@@ -4,6 +4,20 @@ enum ForeverPlanKind { standaloneProgram, macrocycle }
 
 enum CycleRole { leader, anchor }
 
+enum MacrocycleIntent { active, projected }
+
+enum MacrocycleStatus { planned, active, completed, cancelled }
+
+enum ContinuationMode { manual, repeatSame, cloneAndEdit, recommendNext }
+
+enum CompatibilityStatus {
+  recommended,
+  allowed,
+  restricted,
+  forbidden,
+  needsReview,
+}
+
 enum ProtocolPurpose {
   seventhWeekDeload,
   seventhWeekTrainingMaxTest,
@@ -158,11 +172,16 @@ class PairingRule {
 }
 
 class CompatibilityResult {
-  CompatibilityResult(Iterable<PlanningIssue> issues)
-    : issues = List.unmodifiable(issues);
+  CompatibilityResult(
+    Iterable<PlanningIssue> issues, {
+    this.status = CompatibilityStatus.allowed,
+  }) : issues = List.unmodifiable(issues);
 
   final List<PlanningIssue> issues;
+  final CompatibilityStatus status;
   bool get isCompatible =>
+      status != CompatibilityStatus.forbidden &&
+      status != CompatibilityStatus.needsReview &&
       issues.every((issue) => issue.severity != PlanningIssueSeverity.blocking);
 }
 
@@ -322,32 +341,257 @@ class ProtocolSelection {
   final bool autoInserted;
 }
 
-class MacrocycleRecipeDefinition {
-  const MacrocycleRecipeDefinition({
+class MacrocycleSlotDefinition {
+  const MacrocycleSlotDefinition({
+    required this.slotId,
+    required this.role,
+    this.defaultsToSlotId,
+  });
+
+  final String slotId;
+  final CycleRole role;
+  final String? defaultsToSlotId;
+}
+
+class CycleSlotSelection {
+  const CycleSlotSelection({
+    required this.slotId,
+    required this.cycleInstanceId,
+    required this.revision,
+  });
+
+  final String slotId;
+  final String cycleInstanceId;
+  final CycleTemplateRevision revision;
+}
+
+class BoundaryProtocolRule {
+  const BoundaryProtocolRule({
+    required this.boundaryId,
+    required this.afterSlotId,
+    required this.protocol,
+    required this.required,
+    required this.source,
+  });
+
+  final String boundaryId;
+  final String afterSlotId;
+  final ProtocolTemplateRevision protocol;
+  final bool required;
+  final RuleSource source;
+}
+
+class MacrocycleRecipeRevision {
+  const MacrocycleRecipeRevision({
     required this.id,
     required this.version,
     required this.kind,
     required this.source,
+    required this.status,
+    required this.slots,
+    required this.boundaryProtocols,
   });
   final String id;
   final int version;
   final ForeverPlanKind kind;
   final RuleSource source;
+  final CompatibilityStatus status;
+  final List<MacrocycleSlotDefinition> slots;
+  final List<BoundaryProtocolRule> boundaryProtocols;
+
+  bool get isExecutable =>
+      status != CompatibilityStatus.needsReview &&
+      status != CompatibilityStatus.forbidden;
 }
+
+typedef MacrocycleRecipeDefinition = MacrocycleRecipeRevision;
 
 typedef ForeverMacrocycleConfiguration = ForeverPlanningConfiguration;
 typedef TrainingMaxProjection = TrainingMaxDecision;
 typedef CompiledTrainingPlan = CompiledForeverSequence;
 
-const foreverTwoLeadersOneAnchorRecipe = MacrocycleRecipeDefinition(
-  id: 'forever-2l1a-v1',
+const foreverSeventhWeekDeloadRevision = ProtocolTemplateRevision(
+  id: 'forever-seventh-week-deload-v1',
   version: 1,
+  purpose: ProtocolPurpose.seventhWeekDeload,
+  source: RuleSource(
+    document: '5/3/1 Forever',
+    location: 'PDF pages 31 and 33',
+  ),
+);
+
+const foreverSeventhWeekTrainingMaxTestRevision = ProtocolTemplateRevision(
+  id: 'forever-seventh-week-tm-test-v1',
+  version: 1,
+  purpose: ProtocolPurpose.seventhWeekTrainingMaxTest,
+  source: RuleSource(document: '5/3/1 Forever', location: 'PDF pages 31-33'),
+);
+
+const foreverTwoLeadersOneAnchorRecipe = MacrocycleRecipeRevision(
+  id: 'forever-2l1a-v2',
+  version: 2,
   kind: ForeverPlanKind.macrocycle,
   source: RuleSource(
     document: '5/3/1 Forever',
     location: 'PDF pages 29-33 and 180-182',
   ),
+  status: CompatibilityStatus.recommended,
+  slots: [
+    MacrocycleSlotDefinition(slotId: 'leader-1', role: CycleRole.leader),
+    MacrocycleSlotDefinition(
+      slotId: 'leader-2',
+      role: CycleRole.leader,
+      defaultsToSlotId: 'leader-1',
+    ),
+    MacrocycleSlotDefinition(slotId: 'anchor-1', role: CycleRole.anchor),
+  ],
+  boundaryProtocols: [
+    BoundaryProtocolRule(
+      boundaryId: 'leaders-to-anchor',
+      afterSlotId: 'leader-2',
+      protocol: foreverSeventhWeekDeloadRevision,
+      required: true,
+      source: RuleSource(
+        document: '5/3/1 Forever',
+        location: 'PDF pages 31 and 33',
+      ),
+    ),
+    BoundaryProtocolRule(
+      boundaryId: 'macrocycle-end',
+      afterSlotId: 'anchor-1',
+      protocol: foreverSeventhWeekTrainingMaxTestRevision,
+      required: true,
+      source: RuleSource(
+        document: '5/3/1 Forever',
+        location: 'PDF pages 31-33',
+      ),
+    ),
+  ],
 );
+
+const foreverTwoLeadersTwoAnchorsRecipe = MacrocycleRecipeRevision(
+  id: 'forever-2l2a-v1',
+  version: 1,
+  kind: ForeverPlanKind.macrocycle,
+  source: RuleSource(document: 'NEEDS_REVIEW', location: 'NEEDS_REVIEW'),
+  status: CompatibilityStatus.needsReview,
+  slots: [],
+  boundaryProtocols: [],
+);
+
+const foreverThreeLeadersTwoAnchorsRecipe = MacrocycleRecipeRevision(
+  id: 'forever-3l2a-v1',
+  version: 1,
+  kind: ForeverPlanKind.macrocycle,
+  source: RuleSource(document: 'NEEDS_REVIEW', location: 'NEEDS_REVIEW'),
+  status: CompatibilityStatus.needsReview,
+  slots: [],
+  boundaryProtocols: [],
+);
+
+class CycleTransitionRule {
+  const CycleTransitionRule({
+    required this.fromTemplateRevisionId,
+    required this.fromRole,
+    required this.toTemplateRevisionId,
+    required this.toRole,
+    required this.status,
+    required this.allowedFrequencies,
+    required this.trainingMaxCompatibility,
+    required this.requiredEquipment,
+    required this.source,
+  });
+
+  final String fromTemplateRevisionId;
+  final CycleRole fromRole;
+  final String toTemplateRevisionId;
+  final CycleRole toRole;
+  final CompatibilityStatus status;
+  final List<int> allowedFrequencies;
+  final String trainingMaxCompatibility;
+  final List<String> requiredEquipment;
+  final RuleSource source;
+
+  CompatibilityResult evaluate({required int frequency}) {
+    final issues = <PlanningIssue>[];
+    if (!allowedFrequencies.contains(frequency)) {
+      issues.add(
+        const PlanningIssue(
+          code: 'transition.frequency_not_allowed',
+          path: 'trainingDaysPerWeek',
+          message: 'The selected transition does not allow this frequency.',
+        ),
+      );
+    }
+    if (status == CompatibilityStatus.forbidden ||
+        status == CompatibilityStatus.needsReview) {
+      issues.add(
+        PlanningIssue(
+          code: status == CompatibilityStatus.needsReview
+              ? 'transition.needs_review'
+              : 'transition.forbidden',
+          path: 'transition',
+          message: status == CompatibilityStatus.needsReview
+              ? 'A transition awaiting source review cannot be generated.'
+              : 'The selected transition is forbidden.',
+        ),
+      );
+    }
+    return CompatibilityResult(issues, status: status);
+  }
+}
+
+class ForeverMacrocycle {
+  ForeverMacrocycle({
+    required this.instanceId,
+    required this.intent,
+    required this.status,
+    required this.recipe,
+    required Iterable<CycleSlotSelection> cycleSelections,
+  }) : cycleSelections = List.unmodifiable(cycleSelections);
+
+  final String instanceId;
+  final MacrocycleIntent intent;
+  final MacrocycleStatus status;
+  final MacrocycleRecipeRevision recipe;
+  final List<CycleSlotSelection> cycleSelections;
+}
+
+class ForeverProgramSeries {
+  ForeverProgramSeries({
+    required this.id,
+    required Iterable<ForeverMacrocycle> macrocycles,
+    this.terminated = false,
+  }) : macrocycles = List.unmodifiable(macrocycles);
+
+  final String id;
+  final List<ForeverMacrocycle> macrocycles;
+  final bool terminated;
+}
+
+class MacrocycleOutcome {
+  MacrocycleOutcome({
+    required this.macrocycleInstanceId,
+    required Map<String, TrainingMaxDecisionState> trainingMaxStates,
+  }) : trainingMaxStates = Map.unmodifiable(trainingMaxStates);
+
+  final String macrocycleInstanceId;
+  final Map<String, TrainingMaxDecisionState> trainingMaxStates;
+}
+
+class MacrocycleContinuationProposal {
+  const MacrocycleContinuationProposal({
+    required this.mode,
+    required this.macrocycle,
+  });
+
+  final ContinuationMode mode;
+  final ForeverMacrocycle? macrocycle;
+}
+
+abstract interface class ForeverProgramCompiler {
+  CompiledForeverSequence compileSeries(ForeverProgramSeries series);
+}
 
 class ForeverSequenceCompiler {
   const ForeverSequenceCompiler();
