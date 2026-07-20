@@ -227,8 +227,15 @@ class WorkoutExecution {
 
   WorkoutExecution resume(DateTime at) {
     _require(WorkoutExecutionState.paused);
+    final resumeFrom =
+        pausedFrom == WorkoutExecutionState.resting &&
+            restUntil != null &&
+            !restUntil!.isAfter(at)
+        ? WorkoutExecutionState.activeSet
+        : (pausedFrom ?? WorkoutExecutionState.activeSet);
     return _copy(
-      state: pausedFrom ?? WorkoutExecutionState.activeSet,
+      state: resumeFrom,
+      clearRest: resumeFrom != WorkoutExecutionState.resting,
       clearPausedFrom: true,
       updatedAt: at,
     );

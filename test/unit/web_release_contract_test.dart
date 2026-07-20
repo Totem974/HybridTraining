@@ -17,6 +17,7 @@ void main() {
     final build = File('tool/build_web_release.ps1').readAsStringSync();
     final preview = File('tool/preview_web.ps1').readAsStringSync();
     final chrome = File('tool/run_chrome_e2e.ps1').readAsStringSync();
+    final smoke = File('tool/smoke_web_release.ps1').readAsStringSync();
 
     expect(build, contains('--base-href'));
     expect(preview, contains(r'[string]$BasePath'));
@@ -25,6 +26,14 @@ void main() {
     expect(chrome, contains(r'[int]$DriverPort'));
     expect(chrome, contains(r'[int]$TimeoutSeconds'));
     expect(chrome, contains('--driver-port='));
+    expect(smoke, contains(r'[string]$ChromeExecutable'));
+    expect(smoke, contains(r'[string]$BasePath'));
+    expect(smoke, contains(r'[int]$Port'));
+    expect(smoke, contains('--dump-dom'));
+    expect(smoke, contains('poc/531/generator'));
+    expect(smoke, contains('<flutter-view|flt-glass-pane'));
+    expect(smoke, contains('data-hybrid-route-ready'));
+    expect(smoke, contains('poc-531-generator'));
   });
 
   test(

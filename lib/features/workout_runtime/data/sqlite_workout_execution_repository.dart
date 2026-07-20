@@ -92,8 +92,10 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
       throw StateError('A mutation cannot replace the session identity.');
     }
     _requireSameTopology(current, next);
+    _requireValidMutation(current, next);
+    final journal = _canonicalJournal(current, next);
     await _persist(transaction, next);
-    await _appendEvent(transaction, next, eventType, payload);
+    await _appendEvent(transaction, next, journal.$1, journal.$2);
     return next;
   }
 
@@ -147,6 +149,353 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
       }
     }
   }
+
+  static void _requireValidMutation(
+    WorkoutExecution current,
+    WorkoutExecution next,
+  ) {
+    if (current.isClosed) {
+      throw StateError('A closed workout execution is immutable.');
+    }
+    final nextAt = next.updatedAt;
+    if (nextAt == null ||
+        (current.updatedAt != null && nextAt.isBefore(current.updatedAt!))) {
+      throw StateError('A workout mutation requires a monotone timestamp.');
+    }
+    _requireCoherentExecution(next);
+    if (!_allowedTransitions[current.state]!.contains(next.state)) {
+      throw StateError(
+        'Invalid workout execution transition: '
+        '${current.state.name} -> ${next.state.name}.',
+      );
+    }
+
+    final changedOutcomes = <int>[];
+    for (var index = 0; index < current.sets.length; index++) {
+      if (!_sameOutcome(current.sets[index], next.sets[index])) {
+        changedOutcomes.add(index);
+      }
+    }
+    if (changedOutcomes.isEmpty) {
+      final preservesHistory = _sameIndexes(
+        current.reversibleSetIndexes,
+        next.reversibleSetIndexes,
+      );
+      final closesHistory = next.isClosed && next.reversibleSetIndexes.isEmpty;
+      if (!preservesHistory && !closesHistory) {
+        throw StateError('A mutation cannot forge the reversible history.');
+      }
+      _requireExactControlTransition(current, next);
+      return;
+    }
+    if (changedOutcomes.length != 1) {
+      throw StateError('A mutation can change only one outcome at a time.');
+    }
+    final index = changedOutcomes.single;
+    final before = current.sets[index];
+    final after = next.sets[index];
+    final recorded =
+        current.state == WorkoutExecutionState.activeSet &&
+        index == current.activeSetIndex &&
+        before.isPending &&
+        !after.isPending &&
+        next.state == WorkoutExecutionState.activeSet &&
+        _sameIndexes(next.reversibleSetIndexes, [
+          ...current.reversibleSetIndexes,
+          index,
+        ]) &&
+        next.activeSetIndex == _nextPendingIndex(next.sets, index + 1, index) &&
+        after.recordedAt == next.updatedAt &&
+        next.restUntil == current.restUntil &&
+        next.pausedFrom == current.pausedFrom &&
+        next.notes == current.notes;
+    final undone =
+        current.reversibleSetIndexes.isNotEmpty &&
+        index == current.reversibleSetIndexes.last &&
+        !before.isPending &&
+        after.isPending &&
+        next.state == WorkoutExecutionState.activeSet &&
+        next.activeSetIndex == index &&
+        next.restUntil == null &&
+        next.pausedFrom == null &&
+        next.notes == current.notes &&
+        _sameIndexes(
+          next.reversibleSetIndexes,
+          current.reversibleSetIndexes.sublist(
+            0,
+            current.reversibleSetIndexes.length - 1,
+          ),
+        );
+    if (!recorded && !undone) {
+      throw StateError('Outcome changes must follow the workout domain API.');
+    }
+    if (recorded) _requireValidRecordedOutcome(after);
+  }
+
+  static (String, Map<String, Object?>) _canonicalJournal(
+    WorkoutExecution current,
+    WorkoutExecution next,
+  ) {
+    for (var index = 0; index < current.sets.length; index++) {
+      final before = current.sets[index];
+      final after = next.sets[index];
+      if (!_sameOutcome(before, after)) {
+        if (after.isPending) {
+          return ('lastSetUndone', {'prescriptionId': after.setId});
+        }
+        return (
+          after.storage == ExecutionItemStorage.genericActivity
+              ? 'activityRecorded'
+              : 'setRecorded',
+          {
+            'prescriptionId': after.setId,
+            'status': after.status.name,
+            'actualRepetitions': after.actualRepetitions,
+            'actualLoad': after.actualLoad,
+            'rpe': after.rpe,
+            'notes': after.notes,
+            'recordedAt': after.recordedAt!.toUtc().toIso8601String(),
+            'actualTotalRepetitions': after.actualTotalRepetitions,
+            'actualDurationSeconds': after.actualDurationSeconds,
+            'actualDistanceMeters': after.actualDistanceMeters,
+            'actualRounds': after.actualRounds,
+            'completed': after.completed,
+          },
+        );
+      }
+    }
+    if (current.state != next.state) {
+      final type = switch (next.state) {
+        WorkoutExecutionState.ready => 'ready',
+        WorkoutExecutionState.activeSet =>
+          current.state == WorkoutExecutionState.paused
+              ? 'resumed'
+              : current.state == WorkoutExecutionState.resting
+              ? 'restEnded'
+              : 'started',
+        WorkoutExecutionState.resting =>
+          current.state == WorkoutExecutionState.paused
+              ? 'resumed'
+              : 'restStarted',
+        WorkoutExecutionState.paused => 'paused',
+        WorkoutExecutionState.completed => 'completed',
+        WorkoutExecutionState.abandoned => 'abandoned',
+        WorkoutExecutionState.skipped => 'skipped',
+        WorkoutExecutionState.planned => throw StateError(
+          'A workout cannot transition back to planned.',
+        ),
+      };
+      return (
+        type,
+        next.state == WorkoutExecutionState.resting
+            ? {'restUntil': next.restUntil!.toUtc().toIso8601String()}
+            : const <String, Object?>{},
+      );
+    }
+    return ('notesUpdated', {'notes': next.notes});
+  }
+
+  static void _requireExactControlTransition(
+    WorkoutExecution current,
+    WorkoutExecution next,
+  ) {
+    final sameIndex = next.activeSetIndex == current.activeSetIndex;
+    final sameNotes = next.notes == current.notes;
+    final valid = switch ((current.state, next.state)) {
+      (final before, final after) when before == after =>
+        sameIndex &&
+            next.notes != current.notes &&
+            next.restUntil == current.restUntil &&
+            next.pausedFrom == current.pausedFrom,
+      (WorkoutExecutionState.planned, WorkoutExecutionState.ready) ||
+      (WorkoutExecutionState.planned, WorkoutExecutionState.activeSet) ||
+      (WorkoutExecutionState.ready, WorkoutExecutionState.activeSet) =>
+        sameIndex &&
+            sameNotes &&
+            next.restUntil == null &&
+            next.pausedFrom == null,
+      (WorkoutExecutionState.activeSet, WorkoutExecutionState.resting) =>
+        sameIndex &&
+            sameNotes &&
+            next.restUntil != null &&
+            next.pausedFrom == null,
+      (WorkoutExecutionState.resting, WorkoutExecutionState.activeSet) =>
+        sameIndex &&
+            sameNotes &&
+            next.restUntil == null &&
+            next.pausedFrom == null,
+      (WorkoutExecutionState.activeSet, WorkoutExecutionState.paused) ||
+      (WorkoutExecutionState.resting, WorkoutExecutionState.paused) =>
+        sameIndex &&
+            sameNotes &&
+            next.restUntil == current.restUntil &&
+            next.pausedFrom == current.state,
+      (WorkoutExecutionState.paused, WorkoutExecutionState.activeSet) ||
+      (WorkoutExecutionState.paused, WorkoutExecutionState.resting) =>
+        (next.state == current.pausedFrom ||
+                (current.pausedFrom == WorkoutExecutionState.resting &&
+                    next.state == WorkoutExecutionState.activeSet &&
+                    current.restUntil != null &&
+                    !current.restUntil!.isAfter(next.updatedAt!))) &&
+            sameIndex &&
+            sameNotes &&
+            (next.state == WorkoutExecutionState.resting
+                ? next.restUntil == current.restUntil
+                : next.restUntil == null) &&
+            next.pausedFrom == null,
+      (_, WorkoutExecutionState.completed) ||
+      (_, WorkoutExecutionState.abandoned) ||
+      (_, WorkoutExecutionState.skipped) =>
+        sameIndex &&
+            sameNotes &&
+            next.restUntil == null &&
+            next.pausedFrom == null &&
+            next.reversibleSetIndexes.isEmpty,
+      _ => false,
+    };
+    if (!valid) {
+      throw StateError('Workout control fields do not match the transition.');
+    }
+  }
+
+  static int _nextPendingIndex(
+    List<SetOutcome> outcomes,
+    int start,
+    int fallback,
+  ) {
+    for (var index = start; index < outcomes.length; index++) {
+      if (outcomes[index].isPending) return index;
+    }
+    return fallback;
+  }
+
+  static void _requireValidRecordedOutcome(SetOutcome outcome) {
+    if (outcome.recordedAt == null) {
+      throw StateError('A recorded outcome requires its recording time.');
+    }
+    try {
+      final rebuilt =
+          SetOutcome(
+            setId: outcome.setId,
+            kind: outcome.kind,
+            storage: outcome.storage,
+          ).record(
+            status: outcome.status,
+            recordedAt: outcome.recordedAt!,
+            actualRepetitions: outcome.actualRepetitions,
+            actualLoad: outcome.actualLoad,
+            rpe: outcome.rpe,
+            notes: outcome.notes,
+            actualTotalRepetitions: outcome.actualTotalRepetitions,
+            actualDurationSeconds: outcome.actualDurationSeconds,
+            actualDistanceMeters: outcome.actualDistanceMeters,
+            actualRounds: outcome.actualRounds,
+            completed: outcome.completed,
+          );
+      if (!_sameOutcome(rebuilt, outcome)) {
+        throw StateError('The recorded outcome is not canonical.');
+      }
+    } on ArgumentError catch (error) {
+      throw StateError('Invalid recorded outcome: $error');
+    }
+  }
+
+  static void _requireCoherentExecution(WorkoutExecution value) {
+    final resting = value.state == WorkoutExecutionState.resting;
+    final paused = value.state == WorkoutExecutionState.paused;
+    if (resting != (value.restUntil != null && !paused)) {
+      throw StateError('The workout rest state is inconsistent.');
+    }
+    if (value.restUntil != null &&
+        (value.updatedAt == null ||
+            !value.restUntil!.isAfter(value.updatedAt!))) {
+      throw StateError('Workout rest must end after the mutation time.');
+    }
+    if (paused) {
+      if (value.pausedFrom != WorkoutExecutionState.activeSet &&
+          value.pausedFrom != WorkoutExecutionState.resting) {
+        throw StateError('The paused workout origin is inconsistent.');
+      }
+      if ((value.pausedFrom == WorkoutExecutionState.resting) !=
+          (value.restUntil != null)) {
+        throw StateError('The paused workout rest state is inconsistent.');
+      }
+    } else if (value.pausedFrom != null) {
+      throw StateError('Only a paused workout can retain a paused origin.');
+    }
+    if (value.isClosed && value.reversibleSetIndexes.isNotEmpty) {
+      throw StateError('A closed workout cannot retain reversible outcomes.');
+    }
+    if (value.state == WorkoutExecutionState.completed &&
+        value.sets.any((outcome) => outcome.isPending)) {
+      throw StateError('A completed workout requires every outcome.');
+    }
+  }
+
+  static bool _sameIndexes(List<int> left, List<int> right) {
+    if (left.length != right.length) return false;
+    for (var index = 0; index < left.length; index++) {
+      if (left[index] != right[index]) return false;
+    }
+    return true;
+  }
+
+  static bool _sameOutcome(SetOutcome left, SetOutcome right) =>
+      left.setId == right.setId &&
+      left.kind == right.kind &&
+      left.storage == right.storage &&
+      left.status == right.status &&
+      left.actualRepetitions == right.actualRepetitions &&
+      left.actualLoad == right.actualLoad &&
+      left.rpe == right.rpe &&
+      left.notes == right.notes &&
+      left.recordedAt == right.recordedAt &&
+      left.actualTotalRepetitions == right.actualTotalRepetitions &&
+      left.actualDurationSeconds == right.actualDurationSeconds &&
+      left.actualDistanceMeters == right.actualDistanceMeters &&
+      left.actualRounds == right.actualRounds &&
+      left.completed == right.completed;
+
+  static const _allowedTransitions =
+      <WorkoutExecutionState, Set<WorkoutExecutionState>>{
+        WorkoutExecutionState.planned: {
+          WorkoutExecutionState.planned,
+          WorkoutExecutionState.ready,
+          WorkoutExecutionState.activeSet,
+          WorkoutExecutionState.abandoned,
+          WorkoutExecutionState.skipped,
+        },
+        WorkoutExecutionState.ready: {
+          WorkoutExecutionState.ready,
+          WorkoutExecutionState.activeSet,
+          WorkoutExecutionState.abandoned,
+          WorkoutExecutionState.skipped,
+        },
+        WorkoutExecutionState.activeSet: {
+          WorkoutExecutionState.activeSet,
+          WorkoutExecutionState.resting,
+          WorkoutExecutionState.paused,
+          WorkoutExecutionState.completed,
+          WorkoutExecutionState.abandoned,
+        },
+        WorkoutExecutionState.resting: {
+          WorkoutExecutionState.resting,
+          WorkoutExecutionState.activeSet,
+          WorkoutExecutionState.paused,
+          WorkoutExecutionState.completed,
+          WorkoutExecutionState.abandoned,
+        },
+        WorkoutExecutionState.paused: {
+          WorkoutExecutionState.paused,
+          WorkoutExecutionState.activeSet,
+          WorkoutExecutionState.resting,
+          WorkoutExecutionState.completed,
+          WorkoutExecutionState.abandoned,
+        },
+        WorkoutExecutionState.completed: {},
+        WorkoutExecutionState.abandoned: {},
+        WorkoutExecutionState.skipped: {},
+      };
 
   Future<WorkoutExecution?> loadInTransaction(
     DatabaseExecutor database,

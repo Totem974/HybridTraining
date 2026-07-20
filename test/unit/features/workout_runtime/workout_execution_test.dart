@@ -49,6 +49,19 @@ void main() {
     expect(execution.reversibleSetIndexes, isEmpty);
   });
 
+  test('resuming an expired paused rest advances to the active set', () {
+    final restUntil = t0.add(const Duration(minutes: 2));
+    final execution = planned()
+        .start(t0)
+        .beginRest(restUntil, t0)
+        .pause(t0.add(const Duration(minutes: 1)))
+        .resume(restUntil);
+
+    expect(execution.state, WorkoutExecutionState.activeSet);
+    expect(execution.restUntil, isNull);
+    expect(execution.pausedFrom, isNull);
+  });
+
   test('undo affects only the last reversible validation', () {
     var execution = planned().start(t0);
     execution = execution.recordActiveSet(

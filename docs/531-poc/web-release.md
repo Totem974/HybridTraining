@@ -46,6 +46,22 @@ flow through Flutter's `web-server` device. `-ChromeExecutable` can select a
 non-default Chrome binary. No browser, driver, generated release, or local path
 is part of the repository contract.
 
+## Compiled release smoke test
+
+After each release build, load the actual generated bundle and its deep link:
+
+```powershell
+.\tool\smoke_web_release.ps1 `
+  -ChromeExecutable "C:\path\to\chrome.exe" `
+  -BasePath / `
+  -Port 8081
+```
+
+For a sub-path build, pass `-BasePath /hybrid/`. This check serves `build/web`,
+starts headless Chrome, requires the Flutter host element to appear, and reloads
+`poc/531/generator`. It therefore covers the real bootstrap, assets, base href,
+SPA fallback, and compiled release rather than a test-only widget tree.
+
 ## Local data and transfer
 
 The Web POC stores Forever series snapshots in browser `localStorage`. Web
@@ -72,7 +88,8 @@ Before delivery, run dependency resolution, formatting, analysis, the full test
 suite, the release build, and Chrome E2E. Record only results from the current
 revision; historical counts in `testing.md` are not live gates.
 
-Current local validation: 393 tests pass, static analysis reports no issue, and
-release builds succeed for both `/` and `/hybrid/`. Chrome 150.0.7871.129 with
-ChromeDriver 150.0.7871.124 passes the five checked-in scenarios in 35.4
+Current local validation: 413 tests pass, static analysis reports no issue, and
+release builds succeed for both `/` and `/hybrid/`. Their compiled entry points
+and deep-link reloads pass the release smoke check. Chrome 150.0.7871.129 with
+ChromeDriver 150.0.7871.124 passes the five checked-in scenarios in 34.7
 seconds.

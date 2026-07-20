@@ -16,15 +16,7 @@ class SqliteWorkoutRuntimeStore {
     final db = await localDatabase.open();
     final now = _now();
     await db.transaction((tx) async {
-      final session = await tx.query(
-        'plan_training_sessions',
-        where: 'id = ?',
-        whereArgs: [workout.id],
-        limit: 1,
-      );
-      if (session.isEmpty) {
-        throw StateError('Planned session not found: ${workout.id}');
-      }
+      await _assertWritable(tx, workout.id, runtimeMayBeMissing: true);
       await tx.insert('workout_runtime_sessions', {
         'session_id': workout.id,
         'status': workout.status.name,
@@ -124,6 +116,10 @@ class SqliteWorkoutRuntimeStore {
     String sessionId, {
     required int blockSequence,
   }) => _transaction(sessionId, (tx, now) async {
+    final runtime = await _session(tx, sessionId);
+    if (runtime['status'] != 'started') {
+      throw StateError('Runtime session is not started: $sessionId');
+    }
     final exists =
         Sqflite.firstIntValue(
           await tx.rawQuery(
@@ -135,12 +131,15 @@ class SqliteWorkoutRuntimeStore {
     if (exists != 1) {
       throw StateError('Block sequence not found: $blockSequence');
     }
-    await tx.update(
+    final updated = await tx.update(
       'workout_runtime_sessions',
       {'active_block_sequence': blockSequence, 'updated_at': now},
       where: "session_id = ? AND status = 'started'",
       whereArgs: [sessionId],
     );
+    if (updated != 1) {
+      throw StateError('Runtime session is not started: $sessionId');
+    }
     await _activateCurrent(tx, sessionId, blockSequence, now);
   });
 
@@ -152,18 +151,19 @@ class SqliteWorkoutRuntimeStore {
     if (status == PrescriptionStatus.pending) {
       throw ArgumentError('A result cannot be pending.');
     }
-    final db = await localDatabase.open();
-    final updated = await db.update(
-      'workout_activities',
-      {
-        'status': status.name,
-        'result_json': jsonEncode(result),
-        'updated_at': _now(),
-      },
-      where: 'id = ?',
-      whereArgs: [activityId],
-    );
-    if (updated != 1) throw StateError('Activity not found: $activityId');
+    await _activityTransaction(activityId, (tx, now) async {
+      final updated = await tx.update(
+        'workout_activities',
+        {
+          'status': status.name,
+          'result_json': jsonEncode(result),
+          'updated_at': now,
+        },
+        where: 'id = ?',
+        whereArgs: [activityId],
+      );
+      if (updated != 1) throw StateError('Activity not found: $activityId');
+    });
   }
 
   Future<void> editResult(
@@ -172,29 +172,48 @@ class SqliteWorkoutRuntimeStore {
     Map<String, Object?> result,
   ) => record(activityId, status, result: result);
   Future<void> cancelResult(String activityId) async {
-    final db = await localDatabase.open();
-    final updated = await db.update(
-      'workout_activities',
-      {'status': 'pending', 'result_json': null, 'updated_at': _now()},
-      where: 'id = ?',
-      whereArgs: [activityId],
-    );
-    if (updated != 1) throw StateError('Activity not found: $activityId');
+    await _activityTransaction(activityId, (tx, now) async {
+      final updated = await tx.update(
+        'workout_activities',
+        {'status': 'pending', 'result_json': null, 'updated_at': now},
+        where: 'id = ?',
+        whereArgs: [activityId],
+      );
+      if (updated != 1) throw StateError('Activity not found: $activityId');
+    });
   }
 
   Future<void> setRest(String blockId, DateTime? until) async {
     final db = await localDatabase.open();
-    final updated = await db.update(
-      'workout_runtime_blocks',
-      {'rest_until': until?.toUtc().toIso8601String(), 'updated_at': _now()},
-      where: 'session_block_id = ?',
-      whereArgs: [blockId],
-    );
-    if (updated != 1) throw StateError('Runtime block not found: $blockId');
+    await db.transaction((tx) async {
+      final rows = await tx.rawQuery(
+        'SELECT session_id FROM session_blocks WHERE id = ?',
+        [blockId],
+      );
+      if (rows.isEmpty) throw StateError('Runtime block not found: $blockId');
+      await _assertWritable(tx, rows.single['session_id']! as String);
+      final updated = await tx.update(
+        'workout_runtime_blocks',
+        {'rest_until': until?.toUtc().toIso8601String(), 'updated_at': _now()},
+        where: 'session_block_id = ?',
+        whereArgs: [blockId],
+      );
+      if (updated != 1) throw StateError('Runtime block not found: $blockId');
+    });
   }
 
   Future<void> updateNotes(String sessionId, String notes) =>
-      _updateSession(sessionId, {'notes': notes});
+      _transaction(sessionId, (tx, now) async {
+        final updated = await tx.update(
+          'workout_runtime_sessions',
+          {'notes': notes, 'updated_at': now},
+          where: 'session_id = ?',
+          whereArgs: [sessionId],
+        );
+        if (updated != 1) {
+          throw StateError('Runtime session not found: $sessionId');
+        }
+      });
   Future<void> abandon(String sessionId) =>
       _close(sessionId, WorkoutSessionStatus.abandoned);
   Future<void> skipRest(String sessionId) => _transaction(sessionId, (
@@ -250,17 +269,6 @@ class SqliteWorkoutRuntimeStore {
     );
   }
 
-  Future<void> _updateSession(String id, Map<String, Object?> values) async {
-    final db = await localDatabase.open();
-    final updated = await db.update(
-      'workout_runtime_sessions',
-      {...values, 'updated_at': _now()},
-      where: 'session_id = ?',
-      whereArgs: [id],
-    );
-    if (updated != 1) throw StateError('Runtime session not found: $id');
-  }
-
   Future<Map<String, Object?>> _session(DatabaseExecutor tx, String id) async {
     final rows = await tx.query(
       'workout_runtime_sessions',
@@ -289,7 +297,71 @@ class SqliteWorkoutRuntimeStore {
     Future<void> Function(DatabaseExecutor, String) action,
   ) async {
     final db = await localDatabase.open();
-    await db.transaction((tx) => action(tx, _now()));
+    await db.transaction((tx) async {
+      await _assertWritable(tx, id);
+      await action(tx, _now());
+    });
+  }
+
+  Future<void> _activityTransaction(
+    String activityId,
+    Future<void> Function(DatabaseExecutor, String) action,
+  ) async {
+    final db = await localDatabase.open();
+    await db.transaction((tx) async {
+      final rows = await tx.rawQuery(
+        '''SELECT sb.session_id FROM workout_activities wa
+           JOIN session_blocks sb ON sb.id = wa.session_block_id
+           WHERE wa.id = ?''',
+        [activityId],
+      );
+      if (rows.isEmpty) throw StateError('Activity not found: $activityId');
+      await _assertWritable(tx, rows.single['session_id']! as String);
+      await action(tx, _now());
+    });
+  }
+
+  /// The v3 runtime is retained for backup/migration reads only. Any legacy
+  /// writer that is still called must respect the canonical v4 lifecycle.
+  Future<void> _assertWritable(
+    DatabaseExecutor tx,
+    String sessionId, {
+    bool runtimeMayBeMissing = false,
+  }) async {
+    final rows = await tx.rawQuery(
+      '''SELECT s.status AS session_status,
+                c.status AS cycle_status,
+                b.status AS block_status,
+                p.status AS plan_status,
+                r.status AS runtime_status
+         FROM plan_training_sessions s
+         JOIN plan_training_cycles c ON c.id = s.cycle_id
+         JOIN training_blocks b ON b.id = c.block_id
+         JOIN training_plans p ON p.id = b.plan_id
+         LEFT JOIN workout_runtime_sessions r ON r.session_id = s.id
+         WHERE s.id = ?''',
+      [sessionId],
+    );
+    if (rows.isEmpty) {
+      throw StateError('Planned session not found: $sessionId');
+    }
+    final row = rows.single;
+    if (!const {'planned', 'started'}.contains(row['session_status']) ||
+        !const {'planned', 'active'}.contains(row['cycle_status']) ||
+        !const {'planned', 'active'}.contains(row['block_status']) ||
+        !const {'planned', 'active'}.contains(row['plan_status'])) {
+      throw StateError('Session or an ancestor is closed: $sessionId');
+    }
+    final runtimeStatus = row['runtime_status'];
+    if (runtimeStatus == null) {
+      if (!runtimeMayBeMissing) {
+        throw StateError('Runtime session not found: $sessionId');
+      }
+      return;
+    }
+    if (const {'completed', 'abandoned', 'skipped'}.contains(runtimeStatus)) {
+      throw StateError('Runtime session is closed: $sessionId');
+    }
   }
 
   String _now() => _clock().toUtc().toIso8601String();

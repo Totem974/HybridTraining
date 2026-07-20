@@ -72,6 +72,22 @@ void main() {
     ]);
   });
 
+  test(
+    'navigation before start is rejected without partial mutation',
+    () async {
+      await store.initialize(_workout());
+      final db = await local.open();
+      final before = await _runtimeSnapshot(db);
+
+      await expectLater(
+        store.navigate('session', blockSequence: 1),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(await _runtimeSnapshot(db), before);
+    },
+  );
+
   test('supports edit, cancellation, abandonment and expired rest', () async {
     await store.initialize(_workout());
     await store.startOrResume('session');
@@ -93,43 +109,64 @@ void main() {
     );
   });
 
-  test('backup v3 restores the complete mutable runtime state', () async {
-    await store.initialize(_workout());
-    await store.startOrResume('session');
-    await store.record(
-      'warm-item',
-      PrescriptionStatus.success,
-      result: {'seconds': 240},
-    );
-    await store.navigate('session', blockSequence: 1);
-    await store.setRest('main', DateTime.utc(2026, 7, 18, 10, 3));
-    await store.updateNotes('session', 'Fictitious backup note');
+  test(
+    'sourced backup v3 restores the complete mutable runtime state',
+    () async {
+      final database = await local.open();
+      const reviewedSource =
+          '{"document":"5/3/1 Forever","location":"reviewed-runtime"}';
+      await database.update(
+        'training_plans',
+        {'source_edition': 'forever', 'ruleset_generation': 'forever'},
+        where: 'id = ?',
+        whereArgs: ['plan'],
+      );
+      await database.update(
+        'program_definition_snapshots',
+        {'rule_provenance_json': '[$reviewedSource]'},
+        where: 'id = ?',
+        whereArgs: ['snapshot'],
+      );
+      await database.update('session_blocks', {
+        'rule_provenance_json': reviewedSource,
+      });
+      await store.initialize(_workout());
+      await store.startOrResume('session');
+      await store.record(
+        'warm-item',
+        PrescriptionStatus.success,
+        result: {'seconds': 240},
+      );
+      await store.navigate('session', blockSequence: 1);
+      await store.setRest('main', DateTime.utc(2026, 7, 18, 10, 3));
+      await store.updateNotes('session', 'Fictitious backup note');
 
-    final backup = SqliteBackupManager(localDatabase: local);
-    final source = await backup.exportBackup(appVersion: 'test');
-    await backup.deleteAllData();
-    expect(await store.load('session'), isNull);
+      final backup = SqliteBackupManager(localDatabase: local);
+      final source = await backup.exportBackup(appVersion: 'test');
+      await backup.deleteAllData();
+      expect(await store.load('session'), isNull);
 
-    final report = await backup.importBackup(source, dryRun: false);
-    expect(
-      report.applied,
-      isTrue,
-      reason: report.issues
-          .map((issue) => '${issue.path}: ${issue.message}')
-          .join('\n'),
-    );
-    expect(report.issues, isEmpty);
-    final restored = await store.load('session');
-    expect(restored?['status'], 'started');
-    expect(restored?['active_block_sequence'], 1);
-    expect(restored?['notes'], 'Fictitious backup note');
-    final blocks = restored?['blocks']! as List<Map<String, Object?>>;
-    expect(blocks[1]['rest_until'], '2026-07-18T10:03:00.000Z');
-    final activities =
-        blocks.first['activities']! as List<Map<String, Object?>>;
-    expect(activities.single['status'], 'success');
-    expect(activities.single['result_json'], '{"seconds":240}');
-  });
+      final report = await backup.importBackup(source, dryRun: false);
+      expect(
+        report.applied,
+        isTrue,
+        reason: report.issues
+            .map((issue) => '${issue.path}: ${issue.message}')
+            .join('\n'),
+      );
+      expect(report.issues, isEmpty);
+      final restored = await store.load('session');
+      expect(restored?['status'], 'started');
+      expect(restored?['active_block_sequence'], 1);
+      expect(restored?['notes'], 'Fictitious backup note');
+      final blocks = restored?['blocks']! as List<Map<String, Object?>>;
+      expect(blocks[1]['rest_until'], '2026-07-18T10:03:00.000Z');
+      final activities =
+          blocks.first['activities']! as List<Map<String, Object?>>;
+      expect(activities.single['status'], 'success');
+      expect(activities.single['result_json'], '{"seconds":240}');
+    },
+  );
 
   test('SQLite failure rolls initialization back atomically', () async {
     final invalid = ComposableWorkout(
@@ -170,7 +207,107 @@ void main() {
     expect(await db.query('workout_runtime_blocks'), isEmpty);
     expect(await db.query('workout_activities'), isEmpty);
   });
+
+  for (final closure in [
+    ('plan', 'training_plans'),
+    ('block', 'training_blocks'),
+    ('cycle', 'plan_training_cycles'),
+    ('session', 'plan_training_sessions'),
+  ]) {
+    test('rejects legacy writes when the ${closure.$1} is closed', () async {
+      await store.initialize(_workout());
+      final db = await local.open();
+      await db.update(closure.$2, {'status': 'complete'});
+      final before = await _runtimeSnapshot(db);
+
+      await expectLater(
+        store.startOrResume('session'),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(await _runtimeSnapshot(db), before);
+    });
+  }
+
+  test(
+    'all legacy writers reject a closed hierarchy without partial mutation',
+    () async {
+      await store.initialize(_workout());
+      await store.startOrResume('session');
+      await store.record('warm-item', PrescriptionStatus.success);
+      final db = await local.open();
+      await db.update(
+        'plan_training_sessions',
+        {'status': 'complete', 'completed_at': '2026-07-18T11:00:00Z'},
+        where: 'id = ?',
+        whereArgs: ['session'],
+      );
+      final before = await _runtimeSnapshot(db);
+
+      final writes = <Future<void> Function()>[
+        () => store.initialize(_workout()),
+        () => store.startOrResume('session'),
+        () => store.navigate('session', blockSequence: 2),
+        () => store.record('warm-item', PrescriptionStatus.failure),
+        () => store.cancelResult('warm-item'),
+        () => store.setRest('warm', DateTime.utc(2026, 7, 18, 12)),
+        () => store.updateNotes('session', 'must not persist'),
+        () => store.abandon('session'),
+        () => store.skipRest('session'),
+        () => store.complete('session'),
+      ];
+      for (final write in writes) {
+        await expectLater(write(), throwsA(isA<StateError>()));
+      }
+
+      expect(await _runtimeSnapshot(db), before);
+    },
+  );
+
+  for (final terminal in ['completed', 'abandoned', 'skipped']) {
+    test('terminal legacy runtime $terminal is immutable', () async {
+      await store.initialize(_workout());
+      final db = await local.open();
+      await db.update(
+        'workout_runtime_sessions',
+        {
+          'status': terminal,
+          'ended_at': '2026-07-18T11:00:00Z',
+          'updated_at': '2026-07-18T11:00:00Z',
+        },
+        where: 'session_id = ?',
+        whereArgs: ['session'],
+      );
+      final before = await _runtimeSnapshot(db);
+
+      await expectLater(
+        store.updateNotes('session', 'must not persist'),
+        throwsA(isA<StateError>()),
+      );
+      await expectLater(
+        store.record('warm-item', PrescriptionStatus.success),
+        throwsA(isA<StateError>()),
+      );
+      await expectLater(
+        store.initialize(_workout()),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(await _runtimeSnapshot(db), before);
+    });
+  }
 }
+
+Future<Map<String, List<Map<String, Object?>>>> _runtimeSnapshot(
+  Database db,
+) async => {
+  'sessions': await db.query('workout_runtime_sessions', orderBy: 'session_id'),
+  'blocks': await db.query(
+    'workout_runtime_blocks',
+    orderBy: 'session_block_id',
+  ),
+  'activities': await db.query('workout_activities', orderBy: 'id'),
+};
 
 ComposableWorkout _workout() => ComposableWorkout(
   id: 'session',

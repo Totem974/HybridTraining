@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hybrid_training/app/localization/app_strings.dart';
+import 'package:hybrid_training/core/platform/browser_route_marker.dart';
 import 'package:hybrid_training/features/poc_531/application/forever_series_configuration_repository.dart';
 
 abstract interface class Poc531GeneratorCore {
@@ -336,7 +337,11 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
       _seriesId = seriesId;
     }
     _restore(widget.initialConfiguration ?? const {});
-    WidgetsBinding.instance.addPostFrameCallback((_) => _restorePersisted());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      markBrowserRouteReady('poc-531-generator');
+      _restorePersisted();
+    });
   }
 
   ForeverSeriesConfigurationStore? get _seriesStore =>

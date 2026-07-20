@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:hybrid_training/features/import_export/domain/backup_envelope.dart';
 import 'package:hybrid_training/features/import_export/domain/import_models.dart';
 import 'package:hybrid_training/features/import_export/domain/import_pipeline.dart';
@@ -636,6 +638,8 @@ class HybridBackupHandler implements ImportFormatHandler {
     }
     if (!issues.any((issue) => issue.severity == ImportSeverity.error)) {
       _validateUsableLegacySnapshot(normalizedPayload, issues);
+      _quarantineUnsourcedLegacyPlans(normalizedPayload, issues);
+      _validateExecutableProvenance(normalizedPayload, issues);
     }
     return ImportInspection(
       candidate: ImportCandidate(
@@ -644,6 +648,355 @@ class HybridBackupHandler implements ImportFormatHandler {
         payload: normalizedPayload,
       ),
       issues: issues,
+    );
+  }
+
+  static void _validateExecutableProvenance(
+    Map<String, Object?> payload,
+    List<ImportIssue> issues,
+  ) {
+    final activePlans = _rows(payload, 'training_plans')
+        .where((row) => const {'planned', 'active'}.contains(row['status']))
+        .toList(growable: false);
+    if (activePlans.isEmpty) return;
+
+    final activePlanIds = activePlans.map((row) => row['id']).toSet();
+    final snapshotIds = activePlans
+        .map((row) => row['definition_snapshot_id'])
+        .toSet();
+    for (final entry in activePlans.indexed) {
+      if (!const {
+            'original',
+            'powerlifting',
+            'beyond',
+            'forever',
+          }.contains(entry.$2['source_edition']) ||
+          !const {
+            'original',
+            'powerlifting',
+            'beyond',
+            'forever',
+          }.contains(entry.$2['ruleset_generation'])) {
+        _provenanceIssue('\$.payload.training_plans[${entry.$1}]', issues);
+      }
+    }
+    final blockIds = _rows(payload, 'training_blocks')
+        .where((row) => activePlanIds.contains(row['plan_id']))
+        .map((row) => row['id'])
+        .toSet();
+    final cycleIds = _rows(payload, 'plan_training_cycles')
+        .where((row) => blockIds.contains(row['block_id']))
+        .map((row) => row['id'])
+        .toSet();
+    final executableSessionIds = _rows(payload, 'plan_training_sessions')
+        .where(
+          (row) =>
+              cycleIds.contains(row['cycle_id']) &&
+              !const {'complete', 'cancelled'}.contains(row['status']),
+        )
+        .map((row) => row['id'])
+        .toSet();
+    final executableBlocks = _indexedRows(payload, 'session_blocks')
+        .where((entry) => executableSessionIds.contains(entry.$2['session_id']))
+        .toList(growable: false);
+    final executableBlockIds = executableBlocks
+        .map((entry) => entry.$2['id'])
+        .toSet();
+
+    final activeSnapshots = _indexedRows(
+      payload,
+      'program_definition_snapshots',
+    ).where((entry) => snapshotIds.contains(entry.$2['id'])).toList();
+    if (activeSnapshots.map((entry) => entry.$2['id']).toSet().length !=
+        snapshotIds.length) {
+      _provenanceIssue(r'$.payload.program_definition_snapshots', issues);
+    }
+    for (final entry in activeSnapshots) {
+      _requireProvenanceJson(
+        entry.$2['rule_provenance_json'],
+        '\$.payload.program_definition_snapshots[${entry.$1}].rule_provenance_json',
+        issues,
+        allowList: true,
+      );
+      _rejectNeedsReviewJson(
+        entry.$2['snapshot_json'],
+        '\$.payload.program_definition_snapshots[${entry.$1}].snapshot_json',
+        issues,
+      );
+    }
+    for (final entry in executableBlocks) {
+      _requireProvenanceJson(
+        entry.$2['rule_provenance_json'],
+        '\$.payload.session_blocks[${entry.$1}].rule_provenance_json',
+        issues,
+      );
+    }
+    for (final entry in _indexedRows(payload, 'set_prescriptions')) {
+      if (!executableBlockIds.contains(entry.$2['session_block_id'])) continue;
+      _requireProvenanceJson(
+        entry.$2['rule_provenance_json'],
+        '\$.payload.set_prescriptions[${entry.$1}].rule_provenance_json',
+        issues,
+      );
+      _rejectNeedsReviewJson(
+        entry.$2['prescription_json'],
+        '\$.payload.set_prescriptions[${entry.$1}].prescription_json',
+        issues,
+      );
+    }
+    for (final entry in _indexedRows(payload, 'activity_prescriptions')) {
+      if (!executableBlockIds.contains(entry.$2['session_block_id'])) continue;
+      _requireSourcedRule(entry, 'activity_prescriptions', issues);
+      _rejectNeedsReviewJson(
+        entry.$2['target_json'],
+        '\$.payload.activity_prescriptions[${entry.$1}].target_json',
+        issues,
+      );
+      if (!const {
+            'original',
+            'powerlifting',
+            'beyond',
+            'forever',
+          }.contains(entry.$2['source_edition']) ||
+          !const {
+            'original',
+            'powerlifting',
+            'beyond',
+            'forever',
+          }.contains(entry.$2['ruleset_generation'])) {
+        _provenanceIssue(
+          '\$.payload.activity_prescriptions[${entry.$1}]',
+          issues,
+        );
+      }
+    }
+    for (final table in const [
+      'training_max_timeline',
+      'plan_transitions_v5',
+      'planned_events_v5',
+    ]) {
+      for (final entry in _indexedRows(payload, table)) {
+        if (!activePlanIds.contains(entry.$2['plan_id'])) continue;
+        _requireSourcedRule(entry, table, issues);
+        if (table == 'planned_events_v5') {
+          _rejectNeedsReviewJson(
+            entry.$2['payload_json'],
+            '\$.payload.planned_events_v5[${entry.$1}].payload_json',
+            issues,
+          );
+        }
+      }
+    }
+  }
+
+  static void _quarantineUnsourcedLegacyPlans(
+    Map<String, Object?> payload,
+    List<ImportIssue> issues,
+  ) {
+    final candidatePlans = _rows(
+      payload,
+      'training_plans',
+    ).where((row) => const {'planned', 'active'}.contains(row['status']));
+    for (final plan in candidatePlans) {
+      final planId = plan['id'];
+      final snapshots = _rows(
+        payload,
+        'program_definition_snapshots',
+      ).where((row) => row['id'] == plan['definition_snapshot_id']);
+      final missingLegacyProvenance =
+          plan['source_edition'] == null ||
+          plan['ruleset_generation'] == null ||
+          snapshots.isEmpty ||
+          snapshots.any((row) => row['rule_provenance_json'] == null);
+      if (!missingLegacyProvenance) continue;
+
+      final blockIds = _rows(payload, 'training_blocks')
+          .where((row) => row['plan_id'] == planId)
+          .map((row) => row['id'])
+          .toSet();
+      final cycleIds = _rows(payload, 'plan_training_cycles')
+          .where((row) => blockIds.contains(row['block_id']))
+          .map((row) => row['id'])
+          .toSet();
+      final sessionIds = _rows(payload, 'plan_training_sessions')
+          .where((row) => cycleIds.contains(row['cycle_id']))
+          .map((row) => row['id'])
+          .toSet();
+      final sessionBlockIds = _rows(payload, 'session_blocks')
+          .where((row) => sessionIds.contains(row['session_id']))
+          .map((row) => row['id'])
+          .toSet();
+
+      plan['status'] = 'cancelled';
+      for (final row in _rows(payload, 'training_blocks')) {
+        if (blockIds.contains(row['id']) &&
+            const {'planned', 'active'}.contains(row['status'])) {
+          row['status'] = 'cancelled';
+        }
+      }
+      for (final row in _rows(payload, 'plan_training_cycles')) {
+        if (cycleIds.contains(row['id']) &&
+            const {'planned', 'active'}.contains(row['status'])) {
+          row['status'] = 'cancelled';
+        }
+      }
+      for (final row in _rows(payload, 'plan_training_sessions')) {
+        if (sessionIds.contains(row['id']) &&
+            const {'planned', 'started'}.contains(row['status'])) {
+          row['status'] = 'cancelled';
+        }
+      }
+      for (final row in _rows(payload, 'workout_runtime_sessions')) {
+        if (sessionIds.contains(row['session_id']) &&
+            !const {
+              'completed',
+              'abandoned',
+              'skipped',
+            }.contains(row['status'])) {
+          row['status'] = 'abandoned';
+        }
+      }
+      for (final row in _rows(payload, 'workout_runtime_blocks')) {
+        if (sessionBlockIds.contains(row['session_block_id']) &&
+            const {'pending', 'active'}.contains(row['status'])) {
+          row['status'] = 'skipped';
+        }
+      }
+      for (final row in _rows(payload, 'workout_executions')) {
+        if (sessionIds.contains(row['session_id']) &&
+            !const {
+              'completed',
+              'abandoned',
+              'skipped',
+            }.contains(row['state'])) {
+          row['state'] = 'abandoned';
+          row['rest_until'] = null;
+          row['paused_from'] = null;
+          row['reversible_stack_json'] = '[]';
+        }
+      }
+      for (final row in _rows(payload, 'training_max_timeline')) {
+        if (row['plan_id'] == planId && row['state'] == 'previewed') {
+          row['state'] = 'cancelled';
+        }
+      }
+      issues.add(
+        ImportIssue(
+          path: r'$.payload.training_plans',
+          message:
+              'A legacy plan without executable provenance was preserved in quarantine and cannot be resumed.',
+          severity: ImportSeverity.warning,
+        ),
+      );
+    }
+  }
+
+  static Iterable<(int, Map<String, Object?>)> _indexedRows(
+    Map<String, Object?> payload,
+    String table,
+  ) sync* {
+    final rows = payload[table] as List<Object?>? ?? const [];
+    for (var index = 0; index < rows.length; index++) {
+      final row = rows[index];
+      if (row is Map<String, Object?>) yield (index, row);
+    }
+  }
+
+  static void _requireSourcedRule(
+    (int, Map<String, Object?>) entry,
+    String table,
+    List<ImportIssue> issues,
+  ) {
+    final ruleId = entry.$2['rule_id'];
+    if (ruleId is! String || ruleId.trim().isEmpty || _isNeedsReview(ruleId)) {
+      _provenanceIssue('\$.payload.$table[${entry.$1}].rule_id', issues);
+    }
+    _requireProvenanceJson(
+      entry.$2['source_reference_json'],
+      '\$.payload.$table[${entry.$1}].source_reference_json',
+      issues,
+    );
+  }
+
+  static void _requireProvenanceJson(
+    Object? encoded,
+    String path,
+    List<ImportIssue> issues, {
+    bool allowList = false,
+  }) {
+    Object? decoded;
+    try {
+      decoded = encoded is String ? jsonDecode(encoded) : null;
+    } on FormatException {
+      _provenanceIssue(path, issues);
+      return;
+    }
+    final sources = allowList && decoded is List<Object?>
+        ? decoded
+        : <Object?>[decoded];
+    if (sources.isEmpty ||
+        sources.any((source) => !_isSourcedReference(source))) {
+      _provenanceIssue(path, issues);
+    }
+  }
+
+  static bool _isSourcedReference(Object? value) {
+    if (value is! Map<String, Object?>) return false;
+    final document = value['document'];
+    final location = value['location'];
+    return document is String &&
+        document.trim().isNotEmpty &&
+        !_isNeedsReview(document) &&
+        const {
+          '5/3/1 Original — Second Edition',
+          '5/3/1 — Second Edition',
+          '5/3/1 for Powerlifting',
+          '5/3/1 Forever',
+          'Beyond 5/3/1',
+          'Core v5 reviewed historical compatibility contract',
+          'TM-PROG-001',
+          'forever-original-fsl-v1',
+          'forever-program-catalog.md',
+        }.contains(document) &&
+        location is String &&
+        location.trim().isNotEmpty &&
+        !_isNeedsReview(location);
+  }
+
+  static void _rejectNeedsReviewJson(
+    Object? encoded,
+    String path,
+    List<ImportIssue> issues,
+  ) {
+    try {
+      final decoded = encoded is String ? jsonDecode(encoded) : null;
+      if (decoded == null || _containsNeedsReview(decoded)) {
+        _provenanceIssue(path, issues);
+      }
+    } on FormatException {
+      _provenanceIssue(path, issues);
+    }
+  }
+
+  static bool _containsNeedsReview(Object? value) => switch (value) {
+    String text => _isNeedsReview(text),
+    List<Object?> values => values.any(_containsNeedsReview),
+    Map<String, Object?> values => values.entries.any(
+      (entry) => _isNeedsReview(entry.key) || _containsNeedsReview(entry.value),
+    ),
+    _ => false,
+  };
+
+  static bool _isNeedsReview(String value) =>
+      value.toUpperCase().contains('NEEDS_REVIEW');
+
+  static void _provenanceIssue(String path, List<ImportIssue> issues) {
+    issues.add(
+      ImportIssue(
+        path: path,
+        message: 'Executable rules require valid reviewed source provenance.',
+        severity: ImportSeverity.error,
+      ),
     );
   }
 

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -90,6 +91,243 @@ void main() {
       (await repository.load('session'))?.state,
       WorkoutExecutionState.activeSet,
     );
+  });
+
+  for (final terminalState in const [
+    WorkoutExecutionState.completed,
+    WorkoutExecutionState.abandoned,
+    WorkoutExecutionState.skipped,
+  ]) {
+    test(
+      '${terminalState.name} execution cannot be reopened or altered',
+      () async {
+        final terminal = await _closeExecution(repository, terminalState);
+        final database = await local.open();
+        final executionBefore = await database.query('workout_executions');
+        final outcomesBefore = await database.query(
+          'workout_set_outcomes',
+          orderBy: 'sequence',
+        );
+        final eventsBefore = await database.query(
+          'workout_execution_events',
+          orderBy: 'sequence',
+        );
+
+        await expectLater(
+          repository.mutate(
+            'session',
+            eventType: 'forgedReopen',
+            action: (current) => _replaceExecution(
+              current,
+              state: WorkoutExecutionState.activeSet,
+            ),
+          ),
+          throwsStateError,
+        );
+        final alteredSets = [...terminal.sets];
+        alteredSets[0] = const SetOutcome(setId: 'set-1');
+        await expectLater(
+          repository.mutate(
+            'session',
+            eventType: 'forgedOutcome',
+            action: (current) => _replaceExecution(current, sets: alteredSets),
+          ),
+          throwsStateError,
+        );
+
+        expect(await database.query('workout_executions'), executionBefore);
+        expect(
+          await database.query('workout_set_outcomes', orderBy: 'sequence'),
+          outcomesBefore,
+        );
+        expect(
+          await database.query('workout_execution_events', orderBy: 'sequence'),
+          eventsBefore,
+        );
+      },
+    );
+  }
+
+  test(
+    'direct construction cannot forge an invalid state transition',
+    () async {
+      await repository.create('session');
+      final at = DateTime.utc(2026, 7, 20, 10);
+      await repository.mutate(
+        'session',
+        eventType: 'started',
+        action: (current) => current.start(at),
+      );
+      final database = await local.open();
+      final eventsBefore = await database.query('workout_execution_events');
+
+      await expectLater(
+        repository.mutate(
+          'session',
+          eventType: 'forgedReady',
+          action: (current) =>
+              _replaceExecution(current, state: WorkoutExecutionState.ready),
+        ),
+        throwsStateError,
+      );
+
+      expect(
+        (await repository.load('session'))?.state,
+        WorkoutExecutionState.activeSet,
+      );
+      expect(await database.query('workout_execution_events'), eventsBefore);
+    },
+  );
+
+  test('journal is derived from the mutation and no-op is rejected', () async {
+    await repository.create('session');
+    final at = DateTime.utc(2026, 7, 20, 10);
+    await repository.mutate(
+      'session',
+      eventType: 'forgedCompleted',
+      payload: const {'forged': true},
+      action: (current) => current.updateNotes('Canonical note', at),
+    );
+    final database = await local.open();
+    final events = await database.query(
+      'workout_execution_events',
+      orderBy: 'sequence',
+    );
+    expect(events.last['event_type'], 'notesUpdated');
+    expect(events.last['payload_json'], '{"notes":"Canonical note"}');
+
+    await expectLater(
+      repository.mutate(
+        'session',
+        eventType: 'forgedNoOp',
+        action: (current) => current,
+      ),
+      throwsStateError,
+    );
+    expect(await database.query('workout_execution_events'), events);
+  });
+
+  test(
+    'result journal preserves values after undo and rest end is explicit',
+    () async {
+      await repository.create('session');
+      final at = DateTime.utc(2026, 7, 20, 10);
+      await repository.mutate(
+        'session',
+        eventType: 'ignored',
+        action: (current) => current.start(at),
+      );
+      await repository.mutate(
+        'session',
+        eventType: 'ignored',
+        action: (current) => current.beginRest(
+          at.add(const Duration(minutes: 2)),
+          at.add(const Duration(minutes: 1)),
+        ),
+      );
+      await repository.mutate(
+        'session',
+        eventType: 'ignored',
+        action: (current) =>
+            current.endRest(at.add(const Duration(minutes: 2))),
+      );
+      final recordedAt = at.add(const Duration(minutes: 3));
+      await repository.mutate(
+        'session',
+        eventType: 'ignored',
+        action: (current) => current.recordActiveSet(
+          status: SetOutcomeStatus.success,
+          actualRepetitions: 5,
+          actualLoad: 102.5,
+          rpe: 8.5,
+          notes: 'Fictitious canonical result',
+          at: recordedAt,
+        ),
+      );
+      await repository.mutate(
+        'session',
+        eventType: 'ignored',
+        action: (current) =>
+            current.undoLastOutcome(at.add(const Duration(minutes: 4))),
+      );
+
+      final database = await local.open();
+      final events = await database.query(
+        'workout_execution_events',
+        orderBy: 'sequence',
+      );
+      expect(events.map((event) => event['event_type']), contains('restEnded'));
+      final recorded = events.singleWhere(
+        (event) => event['event_type'] == 'setRecorded',
+      );
+      expect(jsonDecode(recorded['payload_json']! as String), {
+        'prescriptionId': 'set-1',
+        'status': 'success',
+        'actualRepetitions': 5,
+        'actualLoad': 102.5,
+        'rpe': 8.5,
+        'notes': 'Fictitious canonical result',
+        'recordedAt': recordedAt.toIso8601String(),
+        'actualTotalRepetitions': null,
+        'actualDurationSeconds': null,
+        'actualDistanceMeters': null,
+        'actualRounds': null,
+        'completed': null,
+      });
+      expect(events.last['event_type'], 'lastSetUndone');
+      expect((await repository.load('session'))!.sets.first.isPending, isTrue);
+    },
+  );
+
+  test('invalid mutation timestamps and expired rest roll back', () async {
+    await repository.create('session');
+    final at = DateTime.utc(2026, 7, 20, 10);
+    final started = await repository.mutate(
+      'session',
+      eventType: 'started',
+      action: (current) => current.start(at),
+    );
+    final database = await local.open();
+    final executionBefore = await database.query('workout_executions');
+    final eventsBefore = await database.query('workout_execution_events');
+
+    final invalidValues = <WorkoutExecution>[
+      WorkoutExecution(
+        sessionId: started.sessionId,
+        sets: started.sets,
+        state: started.state,
+        activeSetIndex: started.activeSetIndex,
+        notes: 'Missing time',
+      ),
+      WorkoutExecution(
+        sessionId: started.sessionId,
+        sets: started.sets,
+        state: started.state,
+        activeSetIndex: started.activeSetIndex,
+        notes: 'Earlier time',
+        updatedAt: at.subtract(const Duration(seconds: 1)),
+      ),
+      WorkoutExecution(
+        sessionId: started.sessionId,
+        sets: started.sets,
+        state: WorkoutExecutionState.resting,
+        activeSetIndex: started.activeSetIndex,
+        restUntil: at,
+        updatedAt: at,
+      ),
+    ];
+    for (final invalid in invalidValues) {
+      await expectLater(
+        repository.mutate(
+          'session',
+          eventType: 'forgedTime',
+          action: (_) => invalid,
+        ),
+        throwsStateError,
+      );
+    }
+    expect(await database.query('workout_executions'), executionBefore);
+    expect(await database.query('workout_execution_events'), eventsBefore);
   });
 
   test('create rejects every closed session hierarchy', () async {
@@ -334,6 +572,66 @@ void main() {
     expect(await database.query('activity_results'), hasLength(4));
   });
 }
+
+Future<WorkoutExecution> _closeExecution(
+  SqliteWorkoutExecutionRepository repository,
+  WorkoutExecutionState state,
+) async {
+  final at = DateTime.utc(2026, 7, 20, 10);
+  await repository.create('session');
+  if (state == WorkoutExecutionState.skipped) {
+    return repository.mutate(
+      'session',
+      eventType: 'skipped',
+      action: (current) => current.skip(at),
+    );
+  }
+  await repository.mutate(
+    'session',
+    eventType: 'started',
+    action: (current) => current.start(at),
+  );
+  if (state == WorkoutExecutionState.abandoned) {
+    return repository.mutate(
+      'session',
+      eventType: 'abandoned',
+      action: (current) => current.abandon(at.add(const Duration(minutes: 1))),
+    );
+  }
+  for (var index = 0; index < 2; index++) {
+    await repository.mutate(
+      'session',
+      eventType: 'setRecorded',
+      action: (current) => current.recordActiveSet(
+        status: SetOutcomeStatus.success,
+        actualRepetitions: 5,
+        actualLoad: 100,
+        at: at.add(Duration(minutes: index + 1)),
+      ),
+    );
+  }
+  return repository.mutate(
+    'session',
+    eventType: 'completed',
+    action: (current) => current.complete(at.add(const Duration(minutes: 3))),
+  );
+}
+
+WorkoutExecution _replaceExecution(
+  WorkoutExecution current, {
+  WorkoutExecutionState? state,
+  List<SetOutcome>? sets,
+}) => WorkoutExecution(
+  sessionId: current.sessionId,
+  sets: sets ?? current.sets,
+  state: state ?? current.state,
+  activeSetIndex: current.activeSetIndex,
+  restUntil: current.restUntil,
+  pausedFrom: current.pausedFrom,
+  notes: current.notes,
+  reversibleSetIndexes: current.reversibleSetIndexes,
+  updatedAt: DateTime.utc(2026, 7, 20, 20),
+);
 
 Future<void> _seedSession(LocalDatabase local) async {
   final database = await local.open();
