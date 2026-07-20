@@ -13,6 +13,21 @@
   Forever sequence compiler.
 - No product implementation started before completion of the audit.
 
+## Forever mode composer — checkpoint 2 complete
+
+- Pure-Dart planning boundary added with typed cycle/Forever configurations,
+  common profile, revisioned cycle/protocol selections, explicit pairing rules,
+  structured compatibility issues, and node-based TM projections.
+- `forever-2l1a` now compiles deterministically to C1, C2, P1, C3, P2; mandatory
+  protocols are auto-inserted and a different C2 is rejected without a sourced
+  rule.
+- Configuration schema v3 codec added with deterministic encoding, strict version
+  validation, explicit v2 migration, legacy aliases, standalone Beginner Prep
+  School, and macrocycle FV-236 restoration.
+- Architecture, schema, compatibility, TM lifecycle, migration, coverage, and
+  testing contracts documented.
+- Twelve targeted domain and codec tests pass.
+
 ## Checkpoint 1 — complete
 
 - Three read-only audits completed: repository, domain, and catalogue.
