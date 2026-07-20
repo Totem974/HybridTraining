@@ -374,6 +374,16 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                   inputDecorationTheme: const InputDecorationTheme(
                     filled: true,
                     fillColor: Colors.white,
+                    labelStyle: TextStyle(color: Color(0xff3d4652)),
+                    floatingLabelStyle: TextStyle(
+                      color: Color(0xff9ed4ff),
+                      backgroundColor: Color(0xff323232),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    hintStyle: TextStyle(color: Color(0xff5f6874)),
+                    suffixStyle: TextStyle(color: Color(0xff3d4652)),
+                    prefixStyle: TextStyle(color: Color(0xff3d4652)),
+                    errorStyle: TextStyle(color: Color(0xffffb4ab)),
                     border: OutlineInputBorder(),
                   ),
                   segmentedButtonTheme: SegmentedButtonThemeData(
@@ -545,6 +555,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   );
   TextStyle get _label =>
       const TextStyle(color: Color(0xfff0f0f0), fontWeight: FontWeight.w700);
+  TextStyle get _inputTextStyle =>
+      const TextStyle(color: Color(0xff181818), fontWeight: FontWeight.w600);
 
   Widget _weight() => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -581,6 +593,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                           child: TextFormField(
                             key: ValueKey('reps-$lift'),
                             controller: _reps[lift],
+                            style: _inputTextStyle,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
                               isDense: true,
@@ -594,6 +607,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                         child: TextFormField(
                           key: ValueKey('lift-$lift'),
                           controller: _weights[lift],
+                          style: _inputTextStyle,
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
@@ -616,6 +630,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                     child: TextFormField(
                       key: const Key('tm-ratio'),
                       controller: _ratio,
+                      style: _inputTextStyle,
                       enabled: _input != 'tm',
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
@@ -681,6 +696,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
             if (_mode == 'classic') ...[
               DropdownButtonFormField<String>(
                 key: const Key('program'),
+                style: _inputTextStyle,
+                dropdownColor: Colors.white,
                 initialValue: _templateId,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Template'),
@@ -715,6 +732,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
               if ((_template?.variants.length ?? 0) > 1)
                 DropdownButtonFormField<String>(
                   key: const Key('variant'),
+                  style: _inputTextStyle,
+                  dropdownColor: Colors.white,
                   initialValue: _variantId,
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Variant'),
@@ -830,6 +849,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                             child: TextField(
                               key: ValueKey('simplest-strength-reps-$lift'),
                               controller: _simplestStrengthReps[lift],
+                              style: _inputTextStyle,
                               keyboardType: TextInputType.number,
                               decoration: const InputDecoration(
                                 isDense: true,
@@ -845,6 +865,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                           child: TextField(
                             key: ValueKey('simplest-strength-weight-$lift'),
                             controller: _simplestStrengthWeights[lift],
+                            style: _inputTextStyle,
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
@@ -861,6 +882,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                 TextField(
                   key: const Key('simplest-strength-tm-ratio'),
                   controller: _simplestStrengthRatio,
+                  style: _inputTextStyle,
                   enabled: _simplestStrengthInput == 'oneRm',
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
@@ -876,6 +898,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<int>(
+                        style: _inputTextStyle,
+                        dropdownColor: Colors.white,
                         initialValue: _bodyweightTotalReps,
                         decoration: const InputDecoration(
                           labelText: 'Reps / exercise',
@@ -897,6 +921,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: DropdownButtonFormField<int>(
+                        style: _inputTextStyle,
+                        dropdownColor: Colors.white,
                         initialValue: _bodyweightSetCount,
                         decoration: const InputDecoration(labelText: 'Sets'),
                         items: [
@@ -1004,6 +1030,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
               ],
             ] else ...[
               DropdownButtonFormField<String>(
+                style: _inputTextStyle,
+                dropdownColor: Colors.white,
                 initialValue: _foreverId,
                 isExpanded: true,
                 decoration: const InputDecoration(
@@ -1069,6 +1097,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
         final items = [
           _optionColumn('WARMUP', [
             DropdownButtonFormField<String>(
+              style: _inputTextStyle,
+              dropdownColor: Colors.white,
               initialValue: _warmup,
               isExpanded: true,
               decoration: const InputDecoration(labelText: 'Option'),
@@ -1103,6 +1133,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
           ]),
           _optionColumn('DELOAD', [
             DropdownButtonFormField<String>(
+              style: _inputTextStyle,
+              dropdownColor: Colors.white,
               initialValue: _deload,
               isExpanded: true,
               decoration: const InputDecoration(labelText: 'Option'),
@@ -1170,6 +1202,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     void Function(int) assign, {
     List<int> values = const [30, 40, 50, 60, 70],
   }) => DropdownButtonFormField<int>(
+    style: _inputTextStyle,
+    dropdownColor: Colors.white,
     initialValue: values.contains(value) ? value : values.first,
     decoration: InputDecoration(labelText: label),
     items: [
@@ -1188,6 +1222,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     void Function(int) assign, {
     String suffix = '',
   }) => DropdownButtonFormField<int>(
+    style: _inputTextStyle,
+    dropdownColor: Colors.white,
     initialValue: values.contains(value) ? value : values.first,
     decoration: InputDecoration(labelText: label),
     items: [
@@ -1255,6 +1291,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
             Expanded(
               child: TextField(
                 controller: _bar,
+                style: _inputTextStyle,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: 'Barbell weight',

@@ -62,6 +62,24 @@ void main() {
     },
   );
 
+  testWidgets('light input surfaces use dark readable text', (tester) async {
+    await openCalculator(tester);
+    final editable = tester.widget<EditableText>(
+      find.descendant(
+        of: find.byKey(const Key('lift-Press')),
+        matching: find.byType(EditableText),
+      ),
+    );
+    expect(editable.style.color, const Color(0xff181818));
+    final fieldContext = tester.element(find.byKey(const Key('lift-Press')));
+    final theme = Theme.of(fieldContext);
+    expect(theme.inputDecorationTheme.fillColor, Colors.white);
+    expect(
+      theme.inputDecorationTheme.floatingLabelStyle?.color,
+      const Color(0xff9ed4ff),
+    );
+  });
+
   testWidgets('Forever switches to the reviewed Leader Anchor calculator', (
     tester,
   ) async {
