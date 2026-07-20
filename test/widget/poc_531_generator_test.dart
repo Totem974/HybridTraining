@@ -104,6 +104,56 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Template Forever exécutable'), findsOneWidget);
     expect(find.textContaining('Leader'), findsWidgets);
+    expect(find.byKey(const Key('forever-timeline')), findsOneWidget);
+    expect(find.text('7th Week Deload'), findsOneWidget);
+    expect(find.text('7th Week Training Max Test'), findsOneWidget);
+  });
+
+  testWidgets('mode selector preserves common inputs and both mode drafts', (
+    tester,
+  ) async {
+    await openCalculator(tester);
+    expect(find.text('Cycle 5/3/1'), findsOneWidget);
+    expect(find.text('Original, Beyond et extensions'), findsOneWidget);
+
+    await tester.enterText(find.byKey(const Key('lift-Press')), '72');
+    await tester.tap(find.byKey(const Key('program')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Triumvirate').last);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Forever'));
+    await tester.pumpAndSettle();
+    expect(find.text('Leaders, Anchors et macrocycles'), findsOneWidget);
+    expect(find.byKey(const Key('forever-timeline')), findsOneWidget);
+
+    await tester.tap(find.text('Cycle 5/3/1'));
+    await tester.pumpAndSettle();
+    expect(find.text('Triumvirate'), findsWidgets);
+    expect(
+      tester
+          .widget<TextFormField>(find.byKey(const Key('lift-Press')))
+          .controller
+          ?.text,
+      '72',
+    );
+
+    await tester.tap(find.text('Forever'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('forever-timeline')), findsOneWidget);
+  });
+
+  testWidgets('standalone Forever keeps Beginner Prep School out of 2L/1A', (
+    tester,
+  ) async {
+    await openCalculator(tester);
+    await tester.tap(find.text('Forever'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Programme autonome'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Beginner Prep School'), findsWidgets);
+    expect(find.text('7th Week Deload'), findsNothing);
+    expect(find.text('Utiliser un autre Leader pour C2'), findsNothing);
   });
 
   testWidgets(

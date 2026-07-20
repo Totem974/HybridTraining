@@ -5,6 +5,9 @@ import 'package:hybrid_training/features/poc_531/domain/calculator/calculator.da
 import 'package:hybrid_training/features/poc_531/domain/core.dart' as core;
 import 'package:hybrid_training/features/poc_531/domain/forever_calculator/forever_calculator.dart'
     as forever;
+import 'package:hybrid_training/features/poc_531/application/poc_531_configuration_codec.dart';
+import 'package:hybrid_training/features/poc_531/domain/planning/planning.dart'
+    as planning;
 import 'package:hybrid_training/features/poc_531/presentation/generator/poc_531_generator_page.dart';
 
 /// Translation-only adapter. Every prescription and compatibility decision is
@@ -42,10 +45,14 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
           executable: template.selectable,
           days: template.daysPerWeek,
           blockedReason: template.unavailableReason,
+          planKind: template.id == 'FV-141'
+              ? 'standaloneProgram'
+              : 'macrocycle',
           sequence: [
             for (final block in template.sequence)
               '${_blockLabel(block.kind)} · semaines ${block.startWeek}–${block.startWeek + block.durationWeeks - 1}',
           ],
+          timeline: _timeline(template),
         ),
     ],
   );
@@ -56,6 +63,74 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
     forever.ForeverBlockKind.seventhWeekDeload => '7th Week Deload',
     forever.ForeverBlockKind.seventhWeekTmTest => '7th Week TM Test',
   };
+
+  static List<ForeverTimelineNodeChoice> _timeline(
+    forever.ForeverCalculatorTemplate template,
+  ) {
+    if (!template.selectable) return const [];
+    if (template.id == 'FV-141') {
+      return const [
+        ForeverTimelineNodeChoice(
+          id: 'C1',
+          title: 'Beginner Prep School',
+          details: ['Programme autonome', '3 jours', '3 semaines', 'Current'],
+          protocol: false,
+        ),
+      ];
+    }
+    final profile = planning.CommonTrainingProfile(
+      trainingDaysPerWeek: 4,
+      trainingWeekdays: [1, 2, 4, 5],
+      trainingMaxes: {'press': 1},
+      progressionIncrements: {'press': 1},
+    );
+    final configuration = planning.ForeverPlanningConfiguration(
+      profile: profile,
+      kind: planning.ForeverPlanKind.macrocycle,
+      firstLeader: planning.foreverOriginalFslCycleRevision,
+      secondLeader: planning.foreverOriginalFslCycleRevision,
+      anchor: planning.foreverOriginalFslCycleRevision,
+    );
+    return [
+      for (final node
+          in const planning.ForeverSequenceCompiler().compileStructure(
+            configuration,
+          ))
+        switch (node) {
+          planning.ForeverCycleNode cycle => ForeverTimelineNodeChoice(
+            id: cycle.nodeId,
+            title: cycle.role == planning.CycleRole.leader
+                ? 'Leader · Original + FSL'
+                : 'Anchor · Original 5/3/1',
+            details: [
+              'Current',
+              '4 jours',
+              'TM 85–90%',
+              cycle.role == planning.CycleRole.leader
+                  ? 'Main work 3/5/1 · FSL 5×5'
+                  : 'Main work 5/3/1',
+              '3 semaines',
+              'Source revue',
+            ],
+            protocol: false,
+          ),
+          planning.ForeverProtocolNode protocol => ForeverTimelineNodeChoice(
+            id: protocol.nodeId,
+            title:
+                protocol.purpose == planning.ProtocolPurpose.seventhWeekDeload
+                ? '7th Week Deload'
+                : '7th Week Training Max Test',
+            details: [
+              '1 semaine',
+              'Automatique',
+              'Inséré par la recette forever-2l1a',
+            ],
+            protocol: true,
+            autoInserted: protocol.autoInserted,
+          ),
+        },
+    ];
+  }
 
   @override
   Future<List<GeneratorWarning>> validate(Map<String, Object?> value) async {
@@ -331,7 +406,14 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
   @override
   Future<String> serializeConfiguration(
     Map<String, Object?> configuration,
-  ) async => jsonEncode(configuration);
+  ) async {
+    const codec = Poc531ConfigurationCodec();
+    final version = configuration['schemaVersion'];
+    final decoded = version == Poc531Configuration.schemaVersion
+        ? codec.decodeMap(configuration)
+        : codec.decodeMap({...configuration, 'schemaVersion': 2});
+    return codec.encode(decoded);
+  }
 
   @override
   Future<PlateLoadingView> calculatePlateLoading({
@@ -344,7 +426,10 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
       weight,
       core.PlateInventory(
         barWeight: barWeight,
-        plates: {for (final plate in inventory) plate: 2},
+        plates: {
+          for (final plate in inventory.toSet())
+            plate: inventory.where((candidate) => candidate == plate).length,
+        },
       ),
     );
     return PlateLoadingView(

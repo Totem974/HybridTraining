@@ -65,6 +65,8 @@ class ForeverTemplateChoice {
     required this.variant,
     required this.executable,
     required this.sequence,
+    this.planKind = 'macrocycle',
+    this.timeline = const [],
     this.days,
     this.blockedReason,
   });
@@ -73,6 +75,24 @@ class ForeverTemplateChoice {
   final int? days;
   final String? blockedReason;
   final List<String> sequence;
+  final String planKind;
+  final List<ForeverTimelineNodeChoice> timeline;
+}
+
+class ForeverTimelineNodeChoice {
+  const ForeverTimelineNodeChoice({
+    required this.id,
+    required this.title,
+    required this.details,
+    required this.protocol,
+    this.autoInserted = false,
+  });
+
+  final String id;
+  final String title;
+  final List<String> details;
+  final bool protocol;
+  final bool autoInserted;
 }
 
 class ProgramChoice {
@@ -199,6 +219,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     .125: 0,
   };
   String _mode = 'classic', _input = 'oneRm', _unit = 'kg';
+  String _foreverPlanKind = 'macrocycle';
   String _simplestStrengthInput = 'oneRm';
   String? _templateId, _variantId, _foreverId;
   int _days = 4, _supplemental = 50, _jokerCap = 10;
@@ -283,7 +304,13 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
         .where((v) => v.executable)
         .firstOrNull
         ?.id;
-    _foreverId = _forever.where((e) => e.executable).firstOrNull?.id;
+    _foreverId = _forever
+        .where(
+          (template) =>
+              template.executable && template.planKind == _foreverPlanKind,
+        )
+        .firstOrNull
+        ?.id;
     _restore(widget.initialConfiguration ?? const {});
     WidgetsBinding.instance.addPostFrameCallback((_) => _validate());
   }
@@ -316,6 +343,13 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     'variantId': _variantId,
     'foreverTemplateId': _foreverId,
     'days': _days,
+    'trainingWeekdays': List.generate(_days, (index) => index + 1),
+    'roundingIncrement': _unit == 'lb' ? 5.0 : 2.5,
+    'startDate': '2026-01-05',
+    'barWeight': double.tryParse(_bar.text),
+    'plates': {
+      for (final entry in _plateCounts.entries) '${entry.key}': entry.value,
+    },
     'supplementalPercent': _supplemental,
     'bbbUseSameRatio': _bbbUseSameRatio,
     'bbbRatiosByLift': _bbbRatiosByLift,
@@ -411,6 +445,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _header(),
+                    const SizedBox(height: 16),
+                    _modeSelector(),
                     const SizedBox(height: 24),
                     LayoutBuilder(
                       builder: (context, box) => box.maxWidth > 850
@@ -531,6 +567,94 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
         ),
       ),
     ],
+  );
+
+  Widget _modeSelector() => Semantics(
+    label: 'Mode de programmation',
+    container: true,
+    child: _card(
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SegmentedButton<String>(
+            key: const Key('planning-mode-selector'),
+            segments: const [
+              ButtonSegment(
+                value: 'classic',
+                label: Text('Cycle 5/3/1'),
+                tooltip: 'Original, Beyond et extensions',
+              ),
+              ButtonSegment(
+                value: 'forever',
+                label: Text('Forever'),
+                tooltip: 'Leaders, Anchors et macrocycles',
+              ),
+            ],
+            selected: {_mode},
+            onSelectionChanged: (values) => _switchMode(values.first),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _mode == 'classic'
+                ? 'Original, Beyond et extensions'
+                : 'Leaders, Anchors et macrocycles',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Color(0xffd8d8d8)),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  void _switchMode(String mode) {
+    if (mode == _mode) return;
+    setState(() {
+      _mode = mode;
+      _result = null;
+      _warnings = const [];
+      _syncDays();
+    });
+    SystemNavigator.routeInformationUpdated(
+      uri: Uri(
+        path: '/poc/531/generator',
+        queryParameters: {'mode': mode == 'classic' ? 'cycle' : 'forever'},
+      ),
+      replace: true,
+    );
+    _changed();
+  }
+
+  Widget _foreverTimeline(List<ForeverTimelineNodeChoice> nodes) => Semantics(
+    label: 'Timeline Forever',
+    child: Column(
+      key: const Key('forever-timeline'),
+      children: [
+        for (final node in nodes)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Card(
+              color: node.protocol
+                  ? const Color(0xff24405a)
+                  : const Color(0xff454545),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: const Color(0xff2c9eff),
+                  foregroundColor: const Color(0xff181818),
+                  child: Text(node.id),
+                ),
+                title: Text(node.title),
+                subtitle: Text(node.details.join(' · ')),
+                trailing: node.autoInserted
+                    ? const Tooltip(
+                        message: 'Protocole obligatoire inséré par le CORE',
+                        child: Icon(Icons.lock_outline),
+                      )
+                    : const Icon(Icons.check_circle_outline),
+              ),
+            ),
+          ),
+      ],
+    ),
   );
   Widget _heading(String value) => Padding(
     padding: const EdgeInsets.only(bottom: 9),
@@ -683,22 +807,6 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
       _card(
         Column(
           children: [
-            SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'classic', label: Text('Classic')),
-                ButtonSegment(value: 'forever', label: Text('Forever')),
-              ],
-              selected: {_mode},
-              onSelectionChanged: (v) {
-                setState(() {
-                  _mode = v.first;
-                  _result = null;
-                  _syncDays();
-                });
-                _changed();
-              },
-            ),
-            const SizedBox(height: 14),
             if (_mode == 'classic') ...[
               DropdownButtonFormField<String>(
                 key: const Key('program'),
@@ -1035,6 +1143,38 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                   ),
               ],
             ] else ...[
+              SegmentedButton<String>(
+                key: const Key('forever-plan-kind'),
+                segments: const [
+                  ButtonSegment(
+                    value: 'standaloneProgram',
+                    label: Text('Programme autonome'),
+                  ),
+                  ButtonSegment(
+                    value: 'macrocycle',
+                    label: Text('Construire un macrocycle'),
+                  ),
+                ],
+                selected: {_foreverPlanKind},
+                onSelectionChanged: (values) {
+                  final kind = values.first;
+                  setState(() {
+                    _foreverPlanKind = kind;
+                    _foreverId = _forever
+                        .where(
+                          (template) =>
+                              template.executable &&
+                              template.planKind == _foreverPlanKind,
+                        )
+                        .firstOrNull
+                        ?.id;
+                    _syncDays();
+                    _result = null;
+                  });
+                  _changed();
+                },
+              ),
+              const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 style: _inputTextStyle,
                 dropdownColor: Colors.white,
@@ -1044,7 +1184,9 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                   labelText: 'Template Forever exécutable',
                 ),
                 items: [
-                  for (final t in _forever.where((e) => e.executable))
+                  for (final t in _forever.where(
+                    (e) => e.executable && e.planKind == _foreverPlanKind,
+                  ))
                     DropdownMenuItem(
                       value: t.id,
                       child: Text('${t.name} · ${t.variant}'),
@@ -1060,17 +1202,32 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
               ),
               if (_foreverTemplate != null) ...[
                 const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Wrap(
-                    spacing: 7,
-                    runSpacing: 7,
-                    children: [
-                      for (final step in _foreverTemplate!.sequence)
-                        Chip(label: Text(step)),
-                    ],
+                if (_foreverTemplate!.timeline.isEmpty)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Wrap(
+                      spacing: 7,
+                      runSpacing: 7,
+                      children: [
+                        for (final step in _foreverTemplate!.sequence)
+                          Chip(label: Text(step)),
+                      ],
+                    ),
+                  )
+                else
+                  _foreverTimeline(_foreverTemplate!.timeline),
+                if (_foreverPlanKind == 'macrocycle') ...[
+                  const SizedBox(height: 10),
+                  const CheckboxListTile(
+                    value: false,
+                    onChanged: null,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('Utiliser un autre Leader pour C2'),
+                    subtitle: Text(
+                      'Aucun autre Leader compatible et sourcé n’est disponible.',
+                    ),
                   ),
-                ),
+                ],
               ],
               if (_forever.where((e) => !e.executable).isNotEmpty)
                 ExpansionTile(
@@ -1322,6 +1479,32 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
               ),
           ],
         ),
+        Wrap(
+          spacing: 4,
+          children: [
+            for (var i = 0; i < _liftOrder.length; i++)
+              Semantics(
+                label: 'Réordonner ${_liftDisplayName(_liftOrder[i])}',
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: 'Monter ${_liftDisplayName(_liftOrder[i])}',
+                      onPressed: i == 0 ? null : () => _moveLift(i, i - 1),
+                      icon: const Icon(Icons.arrow_back),
+                    ),
+                    IconButton(
+                      tooltip: 'Descendre ${_liftDisplayName(_liftOrder[i])}',
+                      onPressed: i == _liftOrder.length - 1
+                          ? null
+                          : () => _moveLift(i, i + 1),
+                      icon: const Icon(Icons.arrow_forward),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
         const Divider(),
         Row(
           children: [
@@ -1483,6 +1666,14 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     _ => Icons.fitness_center,
   };
 
+  void _moveLift(int from, int to) {
+    setState(() {
+      final lift = _liftOrder.removeAt(from);
+      _liftOrder.insert(to, lift);
+    });
+    _changed();
+  }
+
   Widget _outputActions() => _card(
     Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1500,6 +1691,12 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
           onPressed: _loadExample,
           child: const Text('Charger un exemple'),
         ),
+        OutlinedButton.icon(
+          key: const Key('share-configuration'),
+          onPressed: _shareConfiguration,
+          icon: const Icon(Icons.share),
+          label: const Text('SHARE CONFIGURATION'),
+        ),
         if (_result != null) ...[
           OutlinedButton.icon(
             key: const Key('export-json'),
@@ -1508,16 +1705,27 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
             icon: const Icon(Icons.copy),
             label: const Text('COPY JSON'),
           ),
-          OutlinedButton.icon(
-            onPressed: () =>
-                Clipboard.setData(ClipboardData(text: _result!.exportJson)),
-            icon: const Icon(Icons.share),
-            label: const Text('SHARE CONFIGURATION'),
-          ),
         ],
       ],
     ),
   );
+
+  Future<void> _shareConfiguration() async {
+    final payload = await widget.core.serializeConfiguration(_configuration);
+    final link = Uri(
+      path: '/poc/531/generator',
+      queryParameters: {
+        'mode': _mode == 'classic' ? 'cycle' : 'forever',
+        'configuration': payload,
+      },
+    );
+    await Clipboard.setData(ClipboardData(text: link.toString()));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Lien de configuration v3 copié.')),
+    );
+  }
+
   Widget _notice(GeneratorWarning w) => Semantics(
     liveRegion: true,
     child: Container(
@@ -1722,8 +1930,30 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   }
 
   void _restore(Map<String, Object?> v) {
-    _mode = v['mode'] as String? ?? _mode;
-    _foreverId = v['foreverTemplateId'] as String? ?? _foreverId;
+    if (v['schemaVersion'] == 3 && v['common'] is Map) {
+      final common = Map<String, Object?>.from(v['common']! as Map);
+      final branch = v[v['mode'] == 'forever' ? 'forever' : 'cycle'];
+      _restore({
+        ...common,
+        if (branch is Map) ...Map<String, Object?>.from(branch),
+        'schemaVersion': 2,
+        'mode': v['mode'],
+        if (branch is Map && branch['programId'] != null)
+          'foreverTemplateId': branch['programId'],
+      });
+      return;
+    }
+    final restoredMode = v['mode'];
+    if (restoredMode == 'cycle' || restoredMode == 'classic') {
+      _mode = 'classic';
+    } else if (restoredMode == 'forever') {
+      _mode = 'forever';
+    }
+    final restoredForeverId = v['foreverTemplateId'];
+    if (restoredForeverId is String &&
+        _forever.any((template) => template.id == restoredForeverId)) {
+      _foreverId = restoredForeverId;
+    }
     _unit = v['unit'] as String? ?? _unit;
     final old = v['inputMode'];
     _input = switch (old) {
@@ -1739,6 +1969,15 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     if (upperBase is num) _warmupBaseUpper.text = '$upperBase';
     final lowerBase = v['warmupBaseLower'];
     if (lowerBase is num) _warmupBaseLower.text = '$lowerBase';
+    final barWeight = v['barWeight'];
+    if (barWeight is num) _bar.text = '$barWeight';
+    final plates = v['plates'];
+    if (plates is Map) {
+      for (final plate in _plateCounts.keys) {
+        final count = plates['$plate'];
+        if (count is int) _plateCounts[plate] = count;
+      }
+    }
     final lv = v['lifts'];
     if (lv is Map) {
       for (final l in _lifts) {
@@ -1761,6 +2000,20 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
         _variantId = _template?.variants.firstOrNull?.id;
       }
     }
+    final restoredTemplateId = v['templateId'];
+    if (restoredTemplateId is String &&
+        _classic.any((template) => template.id == restoredTemplateId)) {
+      _templateId = restoredTemplateId;
+    }
+    final restoredVariantId = v['variantId'];
+    if (restoredVariantId is String &&
+        (_template?.variants.any(
+              (variant) => variant.id == restoredVariantId,
+            ) ??
+            false)) {
+      _variantId = restoredVariantId;
+    }
+    _foreverPlanKind = _foreverTemplate?.planKind ?? _foreverPlanKind;
     _days = v['days'] as int? ?? _days;
     _syncDays();
   }

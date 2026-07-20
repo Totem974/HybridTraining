@@ -48,4 +48,17 @@ void main() {
     expect(find.text('Template Forever exécutable'), findsOneWidget);
     expect(find.textContaining('Leader'), findsWidgets);
   });
+
+  testWidgets('generator restores Forever mode from the query string', (
+    tester,
+  ) async {
+    final route = buildPoc531Route(
+      const RouteSettings(name: '/poc/531/generator?mode=forever'),
+    );
+    expect(route, isNotNull);
+    await tester.pumpWidget(MaterialApp(onGenerateRoute: (_) => route));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('forever-timeline')), findsOneWidget);
+    expect(find.text('Leaders, Anchors et macrocycles'), findsOneWidget);
+  });
 }
