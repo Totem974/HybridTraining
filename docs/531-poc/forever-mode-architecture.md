@@ -23,9 +23,11 @@ Le flux cible est :
 
 ```text
 ProgramLibrary
-  → MacrocycleRecipeDefinition + CycleSelection
+  → ForeverProgramSeries + MacrocycleRecipeDefinition + CycleSelection
+  → MacrocycleSeriesValidator
   → ForeverSequenceCompiler
-  → CanonicalPlanGenerator (adaptateur de prescriptions)
+  → CycleStrategyRegistry + ProtocolStrategyRegistry
+  → CanonicalPlanGenerator (interpréteur)
   → CompiledTrainingPlan / VersionedTrainingPlan
 ```
 
@@ -35,11 +37,13 @@ sont des nœuds distincts, jamais des cycles artificiels.
 
 ## Migration progressive
 
-`CanonicalPlanGenerator._forever` reste temporairement l'adaptateur de
-prescriptions historiques. La structure qu'il reçoit vient désormais de la
-recette compilée. Le calculateur POC et l'UI consomment la même séquence compilée.
-`OriginalFslMacrocycleAdapter` reste une compatibilité historique et ne décide
-plus d'une nouvelle séquence.
+`CanonicalPlanGenerator._forever` interprète désormais la séquence compilée et
+les stratégies immuables enregistrées. Il ne contient plus de table locale de
+semaines, pourcentages, rôles ou protocoles. Le chemin historique sans séquence
+explicite passe lui aussi par la recette, le validateur et le compilateur ; un
+adaptateur limité aux identifiants conserve seulement les IDs de transport du
+golden historique. `OriginalFslMacrocycleAdapter` reste une compatibilité
+historique et ne décide plus d'une nouvelle séquence.
 
 ## Invariants
 
@@ -48,4 +52,7 @@ plus d'une nouvelle séquence.
 - un pairing est autorisé uniquement par une règle explicite et sourcée ;
 - les protocoles obligatoires sont auto-insérés et non supprimables ;
 - les décisions TM référencent une instance de cycle, un nœud et une frontière ;
-- le même payload v3 produit la même séquence ordonnée.
+- une stratégie inconnue, incohérente ou `needsReview` bloque avant génération ;
+- l'adaptation historique conserve les décisions TM une pour une et n'en crée
+  aucune ;
+- le même payload v4 produit la même séquence ordonnée.

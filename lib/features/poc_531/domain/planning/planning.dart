@@ -890,6 +890,55 @@ abstract interface class ForeverProgramCompiler {
   CompiledForeverSequence compileSeries(ForeverProgramSeries series);
 }
 
+enum ForeverPrescriptionKind {
+  mainWork,
+  performanceSet,
+  supplemental,
+  trainingMaxTest,
+}
+
+class ForeverSetPrescription {
+  const ForeverSetPrescription({
+    required this.percentage,
+    required this.repetitions,
+    required this.kind,
+    required this.ruleId,
+    required this.source,
+  });
+
+  final double percentage;
+  final int repetitions;
+  final ForeverPrescriptionKind kind;
+  final String ruleId;
+  final RuleSource source;
+}
+
+class ForeverCycleStrategy {
+  ForeverCycleStrategy({
+    required this.revision,
+    required this.role,
+    required Iterable<Iterable<ForeverSetPrescription>> weeks,
+  }) : weeks = List.unmodifiable(
+         weeks.map((week) => List<ForeverSetPrescription>.unmodifiable(week)),
+       );
+
+  final CycleTemplateRevision revision;
+  final CycleRole role;
+  final List<List<ForeverSetPrescription>> weeks;
+}
+
+class ForeverProtocolStrategy {
+  ForeverProtocolStrategy({
+    required this.revision,
+    required Iterable<ForeverSetPrescription> prescriptions,
+    required this.isTrainingMaxTest,
+  }) : prescriptions = List.unmodifiable(prescriptions);
+
+  final ProtocolTemplateRevision revision;
+  final List<ForeverSetPrescription> prescriptions;
+  final bool isTrainingMaxTest;
+}
+
 class CycleStrategyRegistry {
   const CycleStrategyRegistry();
 
@@ -898,6 +947,31 @@ class CycleStrategyRegistry {
     'forever-original-pr-set-anchor-v1' => foreverOriginalPrSetAnchorRevision,
     _ => null,
   };
+
+  ForeverCycleStrategy? resolveStrategy(
+    String revisionId, {
+    required CycleRole role,
+  }) {
+    final revision = resolve(revisionId);
+    if (revision == null) return null;
+    if (role == CycleRole.leader &&
+        revisionId == foreverOriginalFslLeaderRevision.id) {
+      return ForeverCycleStrategy(
+        revision: revision,
+        role: role,
+        weeks: _foreverLeaderPrescriptionWeeks,
+      );
+    }
+    if (role == CycleRole.anchor &&
+        revisionId == foreverOriginalPrSetAnchorRevision.id) {
+      return ForeverCycleStrategy(
+        revision: revision,
+        role: role,
+        weeks: _foreverAnchorPrescriptionWeeks,
+      );
+    }
+    return null;
+  }
 }
 
 class ProtocolStrategyRegistry {
@@ -909,7 +983,127 @@ class ProtocolStrategyRegistry {
       foreverSeventhWeekTrainingMaxTestRevision,
     _ => null,
   };
+
+  ForeverProtocolStrategy? resolveStrategy(String revisionId) {
+    final revision = resolve(revisionId);
+    if (revision == null) return null;
+    if (revisionId == foreverSeventhWeekDeloadRevision.id) {
+      return ForeverProtocolStrategy(
+        revision: revision,
+        prescriptions: _foreverDeloadPrescriptions,
+        isTrainingMaxTest: false,
+      );
+    }
+    if (revisionId == foreverSeventhWeekTrainingMaxTestRevision.id) {
+      return ForeverProtocolStrategy(
+        revision: revision,
+        prescriptions: _foreverTrainingMaxTestPrescriptions,
+        isTrainingMaxTest: true,
+      );
+    }
+    return null;
+  }
 }
+
+ForeverSetPrescription _foreverSet({
+  required double percentage,
+  required int repetitions,
+  required ForeverPrescriptionKind kind,
+  required String ruleId,
+  required RuleSource source,
+}) => ForeverSetPrescription(
+  percentage: percentage,
+  repetitions: repetitions,
+  kind: kind,
+  ruleId: ruleId,
+  source: source,
+);
+
+final List<List<ForeverSetPrescription>> _foreverLeaderPrescriptionWeeks = [
+  _foreverWorkWeek(1, const [(0.70, 3), (0.80, 3), (0.90, 3)], true, 0.70),
+  _foreverWorkWeek(2, const [(0.65, 5), (0.75, 5), (0.85, 5)], false, 0.65),
+  _foreverWorkWeek(3, const [(0.75, 5), (0.85, 3), (0.95, 1)], true, 0.75),
+];
+
+final List<List<ForeverSetPrescription>> _foreverAnchorPrescriptionWeeks = [
+  _foreverAnchorWeek(1, const [(0.65, 5), (0.75, 5), (0.85, 5)]),
+  _foreverAnchorWeek(2, const [(0.70, 3), (0.80, 3), (0.90, 3)]),
+  _foreverAnchorWeek(3, const [(0.75, 5), (0.85, 3), (0.95, 1)]),
+];
+
+List<ForeverSetPrescription> _foreverWorkWeek(
+  int week,
+  List<(double, int)> main,
+  bool performance,
+  double fslPercentage,
+) => [
+  for (final set in main.indexed)
+    _foreverSet(
+      percentage: set.$2.$1,
+      repetitions: set.$2.$2,
+      kind: performance && set.$1 == main.length - 1
+          ? ForeverPrescriptionKind.performanceSet
+          : ForeverPrescriptionKind.mainWork,
+      ruleId: 'FOREVER-ORIGINAL-FSL-L-W$week-M${set.$1 + 1}',
+      source: foreverOriginalMainWorkRevision.source,
+    ),
+  for (var set = 1; set <= 5; set++)
+    _foreverSet(
+      percentage: fslPercentage,
+      repetitions: 5,
+      kind: ForeverPrescriptionKind.supplemental,
+      ruleId: 'FOREVER-ORIGINAL-FSL-L-W$week-FSL-$set',
+      source: foreverFirstSetLastRevision.source,
+    ),
+];
+
+List<ForeverSetPrescription> _foreverAnchorWeek(
+  int week,
+  List<(double, int)> main,
+) => [
+  for (final set in main.indexed)
+    _foreverSet(
+      percentage: set.$2.$1,
+      repetitions: set.$2.$2,
+      kind: set.$1 == main.length - 1
+          ? ForeverPrescriptionKind.performanceSet
+          : ForeverPrescriptionKind.mainWork,
+      ruleId: 'FOREVER-ORIGINAL-FSL-A-W$week-M${set.$1 + 1}',
+      source: foreverOriginalPrSetRevision.source,
+    ),
+];
+
+final List<ForeverSetPrescription> _foreverDeloadPrescriptions = [
+  for (final set in const [(0.70, 5), (0.80, 3), (0.90, 1), (1.0, 1)].indexed)
+    _foreverSet(
+      percentage: set.$2.$1,
+      repetitions: set.$2.$2,
+      kind: ForeverPrescriptionKind.mainWork,
+      ruleId: const [
+        'FOREVER-7W-DELOAD-70',
+        'FOREVER-7W-DELOAD-80',
+        'FOREVER-7W-DELOAD-90',
+        'FOREVER-7W-DELOAD-TM',
+      ][set.$1],
+      source: foreverSeventhWeekDeloadRevision.source,
+    ),
+];
+
+final List<ForeverSetPrescription> _foreverTrainingMaxTestPrescriptions = [
+  for (final set in const [(0.70, 5), (0.80, 5), (0.90, 5), (1.0, 3)].indexed)
+    _foreverSet(
+      percentage: set.$2.$1,
+      repetitions: set.$2.$2,
+      kind: ForeverPrescriptionKind.trainingMaxTest,
+      ruleId: const [
+        'FOREVER-7W-TMTEST-70',
+        'FOREVER-7W-TMTEST-80',
+        'FOREVER-7W-TMTEST-90',
+        'FOREVER-7W-TMTEST-TM',
+      ][set.$1],
+      source: foreverSeventhWeekTrainingMaxTestRevision.source,
+    ),
+];
 
 List<PlanningIssue> _validateTrainingProfile(CommonTrainingProfile profile) {
   final issues = <PlanningIssue>[];
@@ -1047,6 +1241,11 @@ class ForeverSequenceCompiler implements ForeverProgramCompiler {
     } else {
       issues.addAll(_validateTrainingProfile(profile));
     }
+    if (issues.any(
+      (issue) => issue.severity == PlanningIssueSeverity.blocking,
+    )) {
+      throw ForeverCompilationException(PlanningValidationResult(issues));
+    }
     for (
       var macrocycleIndex = 0;
       macrocycleIndex < series.macrocycles.length;
@@ -1054,7 +1253,14 @@ class ForeverSequenceCompiler implements ForeverProgramCompiler {
     ) {
       final macrocycle = series.macrocycles[macrocycleIndex];
       for (final selection in macrocycle.cycleSelections) {
-        if (cycleStrategies.resolve(selection.revision.id) == null) {
+        final slot = macrocycle.recipe.slots.singleWhere(
+          (item) => item.slotId == selection.slotId,
+        );
+        if (cycleStrategies.resolveStrategy(
+              selection.revision.id,
+              role: slot.role,
+            ) ==
+            null) {
           issues.add(
             PlanningIssue(
               code: 'strategy.cycle_not_registered',
@@ -1068,7 +1274,11 @@ class ForeverSequenceCompiler implements ForeverProgramCompiler {
       for (final boundary in macrocycle.recipe.boundaryProtocols.where(
         (rule) => rule.required,
       )) {
-        if (protocolStrategies.resolve(boundary.protocol.id) == null) {
+        final strategy = protocolStrategies.resolveStrategy(
+          boundary.protocol.id,
+        );
+        if (strategy == null ||
+            strategy.revision.purpose != boundary.protocol.purpose) {
           issues.add(
             PlanningIssue(
               code: 'strategy.protocol_not_registered',
@@ -1097,9 +1307,9 @@ class ForeverSequenceCompiler implements ForeverProgramCompiler {
           (item) => item.slotId == slot.slotId,
         );
         final nodeId = '${macrocycle.instanceId}-C${++cycleIndex}';
-        final resolvedRevision = cycleStrategies.resolve(
-          selection.revision.id,
-        )!;
+        final resolvedRevision = cycleStrategies
+            .resolveStrategy(selection.revision.id, role: slot.role)!
+            .revision;
         lastCycleNode = ForeverCycleNode(
           nodeId: nodeId,
           source: macrocycle.recipe.source,

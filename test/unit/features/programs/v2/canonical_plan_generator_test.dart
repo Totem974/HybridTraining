@@ -217,16 +217,22 @@ void main() {
     );
   });
 
-  test('Forever is staged at every source-defined TM checkpoint', () {
+  test('legacy adapter preserves the single compiled Anchor checkpoint', () {
     final plan = const CanonicalPlanGenerator().generate(
       blueprint: CanonicalGenerationBlueprint.foreverOriginalFsl,
       athlete: athlete(),
     );
 
-    expect(plan.weeks, hasLength(3));
-    expect(plan.blocks.single.role, BlockRole.leader);
-    expect(plan.trainingMaxTimeline, hasLength(4));
-    expect(plan.trainingMaxTimeline.first.afterProgrammingWeek, 3);
+    expect(plan.weeks, hasLength(11));
+    expect(plan.blocks, hasLength(5));
+    expect(plan.trainingMaxTimeline, hasLength(8));
+    expect(
+      plan.trainingMaxTimeline
+          .map((decision) => decision.afterProgrammingWeek)
+          .toSet(),
+      {10, 11},
+      reason: 'No Leader checkpoint may be invented by the identity adapter.',
+    );
     expect(plan.awaitingTrainingMaxConfirmation, isTrue);
   });
 
@@ -266,6 +272,13 @@ void main() {
       BlockRole.seventhWeek,
       BlockRole.anchor,
       BlockRole.trainingMaxTest,
+    ]);
+    expect(plan.blocks.map((block) => block.id), [
+      'forever-leader-1',
+      'forever-leader-2',
+      'forever-seventh-week-deload',
+      'forever-anchor-1',
+      'forever-seventh-week-tm-test',
     ]);
     expect(plan.blocks[2].seventhWeekPurpose, SeventhWeekPurpose.deload);
     expect(
@@ -311,10 +324,10 @@ void main() {
         planning.ForeverCycleNode(
           nodeId: 'macro-7-C1',
           source: source,
-          templateRevisionId: 'forever-original-531-fsl-v1',
+          templateRevisionId: 'forever-original-pr-set-anchor-v1',
           cycleInstanceId: 'custom-anchor',
           role: planning.CycleRole.anchor,
-          revision: planning.foreverOriginalFslCycleRevision,
+          revision: planning.foreverOriginalPrSetAnchorRevision,
         ),
         planning.ForeverProtocolNode(
           nodeId: 'macro-7-P1',
@@ -347,6 +360,102 @@ void main() {
     expect(plan.trainingMaxTimeline, hasLength(8));
   });
 
+  test('confirmed final cycle checkpoint without TM test is not awaiting', () {
+    const source = planning.RuleSource(
+      document: '5/3/1 Forever',
+      location: 'PDF pages 180-182',
+    );
+    final proposed = {
+      for (final movement in movements)
+        movement.value: trainingMaxes[movement]! + increments[movement]!,
+    };
+    final sequence = planning.CompiledForeverSequence(
+      nodes: const [
+        planning.ForeverCycleNode(
+          nodeId: 'final-anchor',
+          source: source,
+          templateRevisionId: 'forever-original-pr-set-anchor-v1',
+          cycleInstanceId: 'final-anchor-instance',
+          role: planning.CycleRole.anchor,
+          revision: planning.foreverOriginalPrSetAnchorRevision,
+        ),
+      ],
+      trainingMaxDecisions: [
+        planning.TrainingMaxDecision(
+          nodeId: 'final-anchor',
+          cycleInstanceId: 'final-anchor-instance',
+          states: {
+            for (final movement in movements)
+              movement.value: planning.TrainingMaxDecisionState.projected,
+          },
+          previousTrainingMaxes: {
+            for (final movement in movements)
+              movement.value: trainingMaxes[movement]!,
+          },
+          proposedTrainingMaxes: proposed,
+        ),
+      ],
+    );
+    final confirmed = {
+      for (final movement in movements) movement: proposed[movement.value]!,
+    };
+
+    final plan = const CanonicalPlanGenerator().generate(
+      blueprint: CanonicalGenerationBlueprint.foreverOriginalFsl,
+      athlete: athlete(nodeConfirmations: {'final-anchor': confirmed}),
+      foreverSequence: sequence,
+    );
+
+    expect(plan.blocks, hasLength(1));
+    expect(plan.awaitingTrainingMaxConfirmation, isFalse);
+  });
+
+  test('unconfirmed final cycle checkpoint without TM test is awaiting', () {
+    const source = planning.RuleSource(
+      document: '5/3/1 Forever',
+      location: 'PDF pages 180-182',
+    );
+    final sequence = planning.CompiledForeverSequence(
+      nodes: const [
+        planning.ForeverCycleNode(
+          nodeId: 'final-anchor',
+          source: source,
+          templateRevisionId: 'forever-original-pr-set-anchor-v1',
+          cycleInstanceId: 'final-anchor-instance',
+          role: planning.CycleRole.anchor,
+          revision: planning.foreverOriginalPrSetAnchorRevision,
+        ),
+      ],
+      trainingMaxDecisions: [
+        planning.TrainingMaxDecision(
+          nodeId: 'final-anchor',
+          cycleInstanceId: 'final-anchor-instance',
+          states: {
+            for (final movement in movements)
+              movement.value: planning.TrainingMaxDecisionState.projected,
+          },
+          previousTrainingMaxes: {
+            for (final movement in movements)
+              movement.value: trainingMaxes[movement]!,
+          },
+          proposedTrainingMaxes: {
+            for (final movement in movements)
+              movement.value: trainingMaxes[movement]! + increments[movement]!,
+          },
+        ),
+      ],
+    );
+
+    final plan = const CanonicalPlanGenerator().generate(
+      blueprint: CanonicalGenerationBlueprint.foreverOriginalFsl,
+      athlete: athlete(),
+      foreverSequence: sequence,
+    );
+
+    expect(plan.blocks, hasLength(1));
+    expect(plan.awaitingTrainingMaxConfirmation, isTrue);
+  });
+
   test('compiled Forever sequence is rejected for another generation', () {
     final sequence = planning.CompiledForeverSequence(
       nodes: const [],
@@ -360,6 +469,75 @@ void main() {
         foreverSequence: sequence,
       ),
       throwsArgumentError,
+    );
+  });
+
+  test('unknown Forever revision fails structurally before generation', () {
+    const source = planning.RuleSource(
+      document: 'NEEDS_REVIEW',
+      location: 'NEEDS_REVIEW',
+    );
+    final sequence = planning.CompiledForeverSequence(
+      nodes: const [
+        planning.ForeverCycleNode(
+          nodeId: 'unknown-cycle',
+          source: source,
+          templateRevisionId: 'NEEDS_REVIEW',
+          cycleInstanceId: 'unknown',
+          role: planning.CycleRole.leader,
+          revision: planning.foreverOriginalFslLeaderRevision,
+        ),
+      ],
+      trainingMaxDecisions: const [],
+    );
+
+    expect(
+      () => const CanonicalPlanGenerator().generate(
+        blueprint: CanonicalGenerationBlueprint.foreverOriginalFsl,
+        athlete: athlete(),
+        foreverSequence: sequence,
+      ),
+      throwsA(
+        isA<planning.ForeverCompilationException>().having(
+          (error) => error.validation.issues.map((issue) => issue.code),
+          'issue codes',
+          contains('strategy.cycle_not_registered'),
+        ),
+      ),
+    );
+  });
+
+  test('protocol purpose cannot override the registered revision', () {
+    const source = planning.RuleSource(
+      document: '5/3/1 Forever',
+      location: 'PDF pages 31 and 33',
+    );
+    final sequence = planning.CompiledForeverSequence(
+      nodes: const [
+        planning.ForeverProtocolNode(
+          nodeId: 'mismatched-protocol',
+          source: source,
+          templateRevisionId: 'forever-seventh-week-deload-v1',
+          purpose: planning.ProtocolPurpose.seventhWeekTrainingMaxTest,
+          afterCycleInstanceId: 'leader-2',
+        ),
+      ],
+      trainingMaxDecisions: const [],
+    );
+
+    expect(
+      () => const CanonicalPlanGenerator().generate(
+        blueprint: CanonicalGenerationBlueprint.foreverOriginalFsl,
+        athlete: athlete(),
+        foreverSequence: sequence,
+      ),
+      throwsA(
+        isA<planning.ForeverCompilationException>().having(
+          (error) => error.validation.issues.map((issue) => issue.code),
+          'issue codes',
+          contains('strategy.protocol_not_registered'),
+        ),
+      ),
     );
   });
 }

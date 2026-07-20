@@ -1,6 +1,36 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/features/poc_531/domain/planning/planning.dart';
 
+List<(double, int, ForeverPrescriptionKind, String, String, String)>
+_expectedLeaderWeek(
+  int week,
+  List<double> percentages,
+  List<int> repetitions,
+  bool performance,
+  double fslPercentage,
+) => [
+  for (var index = 0; index < percentages.length; index++)
+    (
+      percentages[index],
+      repetitions[index],
+      performance && index == percentages.length - 1
+          ? ForeverPrescriptionKind.performanceSet
+          : ForeverPrescriptionKind.mainWork,
+      'FOREVER-ORIGINAL-FSL-L-W$week-M${index + 1}',
+      '5/3/1 Forever',
+      'PDF pages 180-182',
+    ),
+  for (var set = 1; set <= 5; set++)
+    (
+      fslPercentage,
+      5,
+      ForeverPrescriptionKind.supplemental,
+      'FOREVER-ORIGINAL-FSL-L-W$week-FSL-$set',
+      '5/3/1 Forever',
+      'PDF pages 180-182',
+    ),
+];
+
 void main() {
   ForeverMacrocycle macrocycle({
     required String id,
@@ -316,6 +346,113 @@ void main() {
       },
     );
 
+    test('compiler reports an unknown slot instead of throwing StateError', () {
+      final invalid = ForeverProgramSeries(
+        id: 'unknown-slot',
+        profile: profile(),
+        macrocycles: [
+          ForeverMacrocycle(
+            instanceId: 'M1',
+            intent: MacrocycleIntent.active,
+            status: MacrocycleStatus.active,
+            recipe: foreverTwoLeadersOneAnchorRecipe,
+            cycleSelections: [
+              ...macrocycle(id: 'M1').cycleSelections,
+              const CycleSlotSelection(
+                slotId: 'intruder',
+                cycleInstanceId: 'M1-intruder',
+                revision: foreverOriginalFslLeaderRevision,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      expect(
+        () => const ForeverSequenceCompiler().compileSeries(invalid),
+        throwsA(
+          isA<ForeverCompilationException>().having(
+            (error) => error.validation.issues.map((issue) => issue.code),
+            'issue codes',
+            contains('macrocycle.unknown_slot'),
+          ),
+        ),
+      );
+    });
+
+    test(
+      'compiler rejects a protocol purpose mismatched with its strategy',
+      () {
+        const mismatched = ProtocolTemplateRevision(
+          id: 'forever-seventh-week-deload-v1',
+          version: 1,
+          purpose: ProtocolPurpose.seventhWeekTrainingMaxTest,
+          source: RuleSource(
+            document: '5/3/1 Forever',
+            location: 'PDF pages 31 and 33',
+          ),
+        );
+        const recipe = MacrocycleRecipeRevision(
+          id: 'mismatched-protocol',
+          version: 1,
+          kind: ForeverPlanKind.macrocycle,
+          source: RuleSource(
+            document: '5/3/1 Forever',
+            location: 'PDF pages 29-33 and 180-182',
+          ),
+          status: CompatibilityStatus.recommended,
+          slots: [
+            MacrocycleSlotDefinition(
+              slotId: 'leader-1',
+              role: CycleRole.leader,
+            ),
+          ],
+          boundaryProtocols: [
+            BoundaryProtocolRule(
+              boundaryId: 'bad',
+              afterSlotId: 'leader-1',
+              protocol: mismatched,
+              required: true,
+              source: RuleSource(
+                document: '5/3/1 Forever',
+                location: 'PDF pages 31 and 33',
+              ),
+            ),
+          ],
+        );
+        final series = ForeverProgramSeries(
+          id: 'mismatch',
+          profile: profile(),
+          macrocycles: [
+            ForeverMacrocycle(
+              instanceId: 'M1',
+              intent: MacrocycleIntent.active,
+              status: MacrocycleStatus.active,
+              recipe: recipe,
+              cycleSelections: const [
+                CycleSlotSelection(
+                  slotId: 'leader-1',
+                  cycleInstanceId: 'M1-leader-1',
+                  revision: foreverOriginalFslLeaderRevision,
+                ),
+              ],
+            ),
+          ],
+        );
+
+        expect(
+          () => const ForeverSequenceCompiler().compileSeries(series),
+          throwsA(
+            isA<ForeverCompilationException>().having(
+              (error) => error.validation.issues.map((issue) => issue.code),
+              'issue codes',
+              contains('strategy.protocol_not_registered'),
+            ),
+          ),
+        );
+      },
+    );
+
     test('compiler preserves a distinct Training Max state for every lift', () {
       final series = ForeverProgramSeries(
         id: 'mixed-tm-states',
@@ -360,10 +497,197 @@ void main() {
       );
       expect(cycles.resolve('NEEDS_REVIEW'), isNull);
       expect(
+        cycles
+            .resolveStrategy(
+              foreverOriginalFslLeaderRevision.id,
+              role: CycleRole.leader,
+            )!
+            .weeks
+            .first
+            .where((set) => set.kind == ForeverPrescriptionKind.supplemental),
+        hasLength(5),
+      );
+      expect(
         protocols.resolve(foreverSeventhWeekDeloadRevision.id),
         same(foreverSeventhWeekDeloadRevision),
       );
       expect(protocols.resolve('forbidden'), isNull);
+      expect(
+        protocols
+            .resolveStrategy(foreverSeventhWeekTrainingMaxTestRevision.id)!
+            .prescriptions
+            .every(
+              (set) => set.kind == ForeverPrescriptionKind.trainingMaxTest,
+            ),
+        isTrue,
+      );
+    });
+
+    test('registered prescriptions are exact and deeply immutable', () {
+      final leader = const CycleStrategyRegistry().resolveStrategy(
+        foreverOriginalFslLeaderRevision.id,
+        role: CycleRole.leader,
+      )!;
+      expect(
+        leader.weeks
+            .map(
+              (week) => week
+                  .map(
+                    (set) => (
+                      set.percentage,
+                      set.repetitions,
+                      set.kind,
+                      set.ruleId,
+                      set.source.document,
+                      set.source.location,
+                    ),
+                  )
+                  .toList(),
+            )
+            .toList(),
+        [
+          _expectedLeaderWeek(1, [.70, .80, .90], [3, 3, 3], true, .70),
+          _expectedLeaderWeek(2, [.65, .75, .85], [5, 5, 5], false, .65),
+          _expectedLeaderWeek(3, [.75, .85, .95], [5, 3, 1], true, .75),
+        ],
+      );
+      expect(() => leader.weeks.add(const []), throwsUnsupportedError);
+      expect(
+        () => leader.weeks.first.add(leader.weeks.first.first),
+        throwsUnsupportedError,
+      );
+      final anchor = const CycleStrategyRegistry().resolveStrategy(
+        foreverOriginalPrSetAnchorRevision.id,
+        role: CycleRole.anchor,
+      )!;
+      expect(
+        anchor.weeks
+            .map(
+              (week) => week
+                  .map(
+                    (set) => (
+                      set.percentage,
+                      set.repetitions,
+                      set.kind,
+                      set.ruleId,
+                      set.source.document,
+                      set.source.location,
+                    ),
+                  )
+                  .toList(),
+            )
+            .toList(),
+        [
+          for (final week in const [
+            (1, [.65, .75, .85], [5, 5, 5]),
+            (2, [.70, .80, .90], [3, 3, 3]),
+            (3, [.75, .85, .95], [5, 3, 1]),
+          ])
+            [
+              for (var index = 0; index < 3; index++)
+                (
+                  week.$2[index],
+                  week.$3[index],
+                  index == 2
+                      ? ForeverPrescriptionKind.performanceSet
+                      : ForeverPrescriptionKind.mainWork,
+                  'FOREVER-ORIGINAL-FSL-A-W${week.$1}-M${index + 1}',
+                  '5/3/1 Forever',
+                  'PDF pages 180-182',
+                ),
+            ],
+        ],
+      );
+
+      final deload = const ProtocolStrategyRegistry().resolveStrategy(
+        foreverSeventhWeekDeloadRevision.id,
+      )!;
+      expect(
+        deload.prescriptions
+            .map(
+              (set) => (
+                set.percentage,
+                set.repetitions,
+                set.kind,
+                set.ruleId,
+                set.source.document,
+                set.source.location,
+              ),
+            )
+            .toList(),
+        const [
+          (
+            .70,
+            5,
+            ForeverPrescriptionKind.mainWork,
+            'FOREVER-7W-DELOAD-70',
+            '5/3/1 Forever',
+            'PDF pages 31 and 33',
+          ),
+          (
+            .80,
+            3,
+            ForeverPrescriptionKind.mainWork,
+            'FOREVER-7W-DELOAD-80',
+            '5/3/1 Forever',
+            'PDF pages 31 and 33',
+          ),
+          (
+            .90,
+            1,
+            ForeverPrescriptionKind.mainWork,
+            'FOREVER-7W-DELOAD-90',
+            '5/3/1 Forever',
+            'PDF pages 31 and 33',
+          ),
+          (
+            1.0,
+            1,
+            ForeverPrescriptionKind.mainWork,
+            'FOREVER-7W-DELOAD-TM',
+            '5/3/1 Forever',
+            'PDF pages 31 and 33',
+          ),
+        ],
+      );
+
+      final test = const ProtocolStrategyRegistry().resolveStrategy(
+        foreverSeventhWeekTrainingMaxTestRevision.id,
+      )!;
+      expect(
+        test.prescriptions
+            .map(
+              (set) => (
+                set.percentage,
+                set.repetitions,
+                set.kind,
+                set.ruleId,
+                set.source.document,
+                set.source.location,
+              ),
+            )
+            .toList(),
+        [
+          for (final item in const [
+            (.70, 5, '70'),
+            (.80, 5, '80'),
+            (.90, 5, '90'),
+            (1.0, 3, 'TM'),
+          ])
+            (
+              item.$1,
+              item.$2,
+              ForeverPrescriptionKind.trainingMaxTest,
+              'FOREVER-7W-TMTEST-${item.$3}',
+              '5/3/1 Forever',
+              'PDF pages 31-33',
+            ),
+        ],
+      );
+      expect(
+        () => test.prescriptions.add(test.prescriptions.first),
+        throwsUnsupportedError,
+      );
     });
 
     test(

@@ -77,64 +77,6 @@ class CanonicalGenerationBlueprint {
 RuleReference _ruleReference(planning.RuleSource source) =>
     RuleReference(document: source.document, location: source.location);
 
-final _legacyForeverNodes = <planning.ForeverPlanNode>[
-  planning.ForeverCycleNode(
-    nodeId: 'C1',
-    source: const planning.RuleSource(
-      document: '5/3/1 Forever',
-      location: 'PDF pages 29-33 and 180-182',
-    ),
-    templateRevisionId: planning.foreverOriginalFslCycleRevision.id,
-    cycleInstanceId: 'leader-1',
-    role: planning.CycleRole.leader,
-    revision: planning.foreverOriginalFslCycleRevision,
-  ),
-  planning.ForeverCycleNode(
-    nodeId: 'C2',
-    source: const planning.RuleSource(
-      document: '5/3/1 Forever',
-      location: 'PDF pages 29-33 and 180-182',
-    ),
-    templateRevisionId: planning.foreverOriginalFslCycleRevision.id,
-    cycleInstanceId: 'leader-2',
-    role: planning.CycleRole.leader,
-    revision: planning.foreverOriginalFslCycleRevision,
-  ),
-  const planning.ForeverProtocolNode(
-    nodeId: 'P1',
-    source: planning.RuleSource(
-      document: '5/3/1 Forever',
-      location: 'PDF pages 31 and 33',
-    ),
-    templateRevisionId: 'forever-seventh-week-deload-v1',
-    autoInserted: true,
-    purpose: planning.ProtocolPurpose.seventhWeekDeload,
-    afterCycleInstanceId: 'leader-2',
-  ),
-  planning.ForeverCycleNode(
-    nodeId: 'C3',
-    source: const planning.RuleSource(
-      document: '5/3/1 Forever',
-      location: 'PDF pages 29-33 and 180-182',
-    ),
-    templateRevisionId: planning.foreverOriginalFslCycleRevision.id,
-    cycleInstanceId: 'anchor-1',
-    role: planning.CycleRole.anchor,
-    revision: planning.foreverOriginalFslCycleRevision,
-  ),
-  const planning.ForeverProtocolNode(
-    nodeId: 'P2',
-    source: planning.RuleSource(
-      document: '5/3/1 Forever',
-      location: 'PDF pages 31-33',
-    ),
-    templateRevisionId: 'forever-seventh-week-tm-test-v1',
-    autoInserted: true,
-    purpose: planning.ProtocolPurpose.seventhWeekTrainingMaxTest,
-    afterCycleInstanceId: 'anchor-1',
-  ),
-];
-
 class CanonicalAthleteConfiguration {
   CanonicalAthleteConfiguration({
     required List<MovementId> movementOrder,
@@ -379,8 +321,109 @@ class CanonicalGeneratedPlan {
   };
 }
 
+planning.CompiledForeverSequence _compileLegacyForeverSequence(
+  CanonicalAthleteConfiguration athlete,
+  planning.CycleStrategyRegistry cycleStrategies,
+  planning.ProtocolStrategyRegistry protocolStrategies,
+) {
+  final profile = planning.CommonTrainingProfile(
+    unit: athlete.unit == WeightUnit.kilograms
+        ? planning.TrainingUnit.kilograms
+        : planning.TrainingUnit.pounds,
+    trainingDaysPerWeek: athlete.trainingWeekdays.length,
+    liftOrder: athlete.movementOrder.map((movement) => movement.value).toList(),
+    trainingWeekdays: athlete.trainingWeekdays,
+    roundingIncrement: athlete.rounder.increment,
+    trainingMaxes: {
+      for (final entry in athlete.trainingMaxes.entries)
+        entry.key.value: entry.value,
+    },
+    progressionIncrements: {
+      for (final entry in athlete.progressionIncrements.entries)
+        entry.key.value: entry.value,
+    },
+  );
+  final series = planning.createForeverOriginalFslSeries(profile: profile);
+  final compiled = planning.ForeverSequenceCompiler(
+    cycleStrategies: cycleStrategies,
+    protocolStrategies: protocolStrategies,
+  ).compileSeries(series);
+  return _LegacyForeverIdentityAdapter.adapt(compiled);
+}
+
+abstract final class _LegacyForeverIdentityAdapter {
+  static const _nodeIds = {
+    'M1-C1': 'forever-leader-1',
+    'M1-C2': 'forever-leader-2',
+    'M1-P1': 'forever-seventh-week-deload',
+    'M1-C3': 'forever-anchor-1',
+    'M1-P2': 'forever-seventh-week-tm-test',
+  };
+
+  static const _checkpointIds = {
+    'forever-leader-1': 'C1',
+    'forever-leader-2': 'C2',
+    'forever-anchor-1': 'C3',
+  };
+
+  static planning.CompiledForeverSequence adapt(
+    planning.CompiledForeverSequence compiled,
+  ) {
+    final nodes = [for (final node in compiled.nodes) _adaptNode(node)];
+    return planning.CompiledForeverSequence(
+      nodes: nodes,
+      trainingMaxDecisions: [
+        for (final decision in compiled.trainingMaxDecisions)
+          planning.TrainingMaxDecision(
+            nodeId: _nodeIds[decision.nodeId] ?? decision.nodeId,
+            cycleInstanceId: decision.cycleInstanceId,
+            states: decision.states,
+            previousTrainingMaxes: decision.previousTrainingMaxes,
+            proposedTrainingMaxes: decision.proposedTrainingMaxes,
+          ),
+      ],
+    );
+  }
+
+  static String checkpointId(String nodeId) => _checkpointIds[nodeId] ?? nodeId;
+
+  static planning.ForeverPlanNode _adaptNode(planning.ForeverPlanNode node) {
+    final nodeId = _nodeIds[node.nodeId];
+    if (nodeId == null) {
+      throw StateError(
+        'Unexpected canonical legacy node identity: ${node.nodeId}.',
+      );
+    }
+    if (node is planning.ForeverCycleNode) {
+      return planning.ForeverCycleNode(
+        nodeId: nodeId,
+        source: node.source,
+        templateRevisionId: node.templateRevisionId,
+        cycleInstanceId: node.cycleInstanceId,
+        role: node.role,
+        revision: node.revision,
+      );
+    }
+    final protocol = node as planning.ForeverProtocolNode;
+    return planning.ForeverProtocolNode(
+      nodeId: nodeId,
+      source: protocol.source,
+      templateRevisionId: protocol.templateRevisionId,
+      autoInserted: protocol.autoInserted,
+      purpose: protocol.purpose,
+      afterCycleInstanceId: protocol.afterCycleInstanceId,
+    );
+  }
+}
+
 class CanonicalPlanGenerator {
-  const CanonicalPlanGenerator();
+  const CanonicalPlanGenerator({
+    this.cycleStrategies = const planning.CycleStrategyRegistry(),
+    this.protocolStrategies = const planning.ProtocolStrategyRegistry(),
+  });
+
+  final planning.CycleStrategyRegistry cycleStrategies;
+  final planning.ProtocolStrategyRegistry protocolStrategies;
 
   CanonicalGeneratedPlan generate({
     required CanonicalGenerationBlueprint blueprint,
@@ -625,12 +668,60 @@ class CanonicalPlanGenerator {
     CanonicalAthleteConfiguration athlete, {
     planning.CompiledForeverSequence? sequence,
   }) {
+    final compiled =
+        sequence ??
+        _compileLegacyForeverSequence(
+          athlete,
+          cycleStrategies,
+          protocolStrategies,
+        );
+    final strategyIssues = <planning.PlanningIssue>[];
+    for (final node in compiled.nodes) {
+      if (node is planning.ForeverCycleNode) {
+        if (node.templateRevisionId != node.revision.id ||
+            cycleStrategies.resolveStrategy(
+                  node.templateRevisionId,
+                  role: node.role,
+                ) ==
+                null) {
+          strategyIssues.add(
+            planning.PlanningIssue(
+              code: 'strategy.cycle_not_registered',
+              path: 'nodes.${node.nodeId}.templateRevisionId',
+              message:
+                  'The cycle revision and role have no sourced executable prescription strategy.',
+            ),
+          );
+        }
+      } else if (node is planning.ForeverProtocolNode) {
+        final strategy = protocolStrategies.resolveStrategy(
+          node.templateRevisionId,
+        );
+        if (strategy == null || strategy.revision.purpose != node.purpose) {
+          strategyIssues.add(
+            planning.PlanningIssue(
+              code: 'strategy.protocol_not_registered',
+              path: 'nodes.${node.nodeId}.templateRevisionId',
+              message:
+                  'The protocol revision and purpose have no sourced executable prescription strategy.',
+            ),
+          );
+        }
+      }
+    }
+    if (strategyIssues.isNotEmpty) {
+      throw planning.ForeverCompilationException(
+        planning.PlanningValidationResult(strategyIssues),
+      );
+    }
     var cursor = athlete.startDate;
     var sessionNumber = 0;
     var programmingWeek = 1;
     var currentTrainingMaxes = athlete.trainingMaxes;
     final blocks = <CanonicalGeneratedBlock>[];
     final timeline = <TrainingMaxTimelineDecision>[];
+    var awaitingCheckpoint = false;
+    var protocolDecisionRequired = false;
 
     CanonicalGeneratedBlock workCycle({
       required String id,
@@ -669,14 +760,19 @@ class CanonicalPlanGenerator {
 
     bool confirmCheckpoint(String nodeId, RuleReference source) {
       final afterWeek = programmingWeek - 1;
+      final checkpointId = sequence == null
+          ? _LegacyForeverIdentityAdapter.checkpointId(nodeId)
+          : nodeId;
       final confirmed =
           athlete.confirmedTrainingMaxesByNode[nodeId] ??
+          athlete.confirmedTrainingMaxesByNode[checkpointId] ??
           athlete.confirmedTrainingMaxesByWeek[afterWeek];
       final effective =
-          confirmed ?? athlete.projectedTrainingMaxesByNode[nodeId];
-      if (sequence != null &&
-          effective == null &&
-          !sequence.trainingMaxDecisions.any(
+          confirmed ??
+          athlete.projectedTrainingMaxesByNode[nodeId] ??
+          athlete.projectedTrainingMaxesByNode[checkpointId];
+      if (effective == null &&
+          !compiled.trainingMaxDecisions.any(
             (decision) => decision.nodeId == nodeId,
           )) {
         return true;
@@ -709,77 +805,50 @@ class CanonicalPlanGenerator {
       return true;
     }
 
-    final nodes = sequence?.nodes ?? _legacyForeverNodes;
     var cycleNumber = 0;
-    for (final node in nodes) {
+    for (final node in compiled.nodes) {
       if (node is planning.ForeverCycleNode) {
-        final supportedRevision = switch (node.role) {
-          planning.CycleRole.leader =>
-            node.revision.id == planning.foreverOriginalFslLeaderRevision.id ||
-                node.revision.id == planning.foreverOriginalFslCycleRevision.id,
-          planning.CycleRole.anchor =>
-            node.revision.id ==
-                    planning.foreverOriginalPrSetAnchorRevision.id ||
-                node.revision.id == planning.foreverOriginalFslCycleRevision.id,
-        };
-        if (!supportedRevision) {
-          throw StateError(
-            'No canonical prescriptions are registered for Forever cycle revision ${node.revision.id}.',
-          );
+        if (awaitingCheckpoint) {
+          return _foreverPlan(blueprint, athlete, blocks, timeline, true);
         }
+        final strategy = cycleStrategies.resolveStrategy(
+          node.templateRevisionId,
+          role: node.role,
+        )!;
         cycleNumber++;
-        final role = switch (node.role) {
-          planning.CycleRole.leader => BlockRole.leader,
-          planning.CycleRole.anchor => BlockRole.anchor,
-        };
+        final role = strategy.role == planning.CycleRole.leader
+            ? BlockRole.leader
+            : BlockRole.anchor;
         blocks.add(
           workCycle(
-            id: sequence == null
-                ? 'forever-${node.cycleInstanceId}'
-                : node.nodeId,
+            id: node.nodeId,
             role: role,
-            schemes: role == BlockRole.leader
-                ? _foreverLeaderWeeks
-                : _foreverAnchorWeeks,
+            schemes: strategy.weeks.map(_foreverScheme).toList(),
             cycleNumber: cycleNumber,
-            source: sequence == null
-                ? _foreverOriginalFslSource
-                : _ruleReference(node.source),
+            source: _ruleReference(strategy.revision.mainWork.source),
           ),
         );
         if (!confirmCheckpoint(node.nodeId, _foreverProgressionSource)) {
-          return _foreverPlan(blueprint, athlete, blocks, timeline, true);
+          awaitingCheckpoint = true;
         }
         continue;
       }
 
       final protocol = node as planning.ForeverProtocolNode;
-      final (
-        _WeekScheme scheme,
-        BlockType type,
-        BlockRole role,
-        SeventhWeekPurpose purpose,
-        RuleReference source,
-      ) = switch (protocol.purpose) {
-        planning.ProtocolPurpose.seventhWeekDeload => (
-          _foreverDeload,
-          BlockType.deload,
-          BlockRole.seventhWeek,
-          SeventhWeekPurpose.deload,
-          _ruleReference(protocol.source),
-        ),
-        planning.ProtocolPurpose.seventhWeekTrainingMaxTest => (
-          _foreverTrainingMaxTest,
-          BlockType.test,
-          BlockRole.trainingMaxTest,
-          SeventhWeekPurpose.trainingMaxTest,
-          _ruleReference(protocol.source),
-        ),
-        planning.ProtocolPurpose.seventhWeekPersonalRecordTest =>
-          throw StateError(
-            'No canonical prescriptions are registered for the seventh-week personal-record test.',
-          ),
-      };
+      final strategy = protocolStrategies.resolveStrategy(
+        protocol.templateRevisionId,
+      )!;
+      final scheme = _foreverScheme(strategy.prescriptions);
+      final type = strategy.isTrainingMaxTest
+          ? BlockType.test
+          : BlockType.deload;
+      final role = strategy.isTrainingMaxTest
+          ? BlockRole.trainingMaxTest
+          : BlockRole.seventhWeek;
+      final purpose = strategy.isTrainingMaxTest
+          ? SeventhWeekPurpose.trainingMaxTest
+          : SeventhWeekPurpose.deload;
+      final source = _ruleReference(strategy.revision.source);
       final generated = _week(
         blueprint: blueprint,
         athlete: athlete,
@@ -792,11 +861,7 @@ class CanonicalPlanGenerator {
       );
       blocks.add(
         CanonicalGeneratedBlock(
-          id: sequence == null
-              ? purpose == SeventhWeekPurpose.deload
-                    ? 'forever-seventh-week-deload'
-                    : 'forever-seventh-week-tm-test'
-              : protocol.nodeId,
+          id: protocol.nodeId,
           type: type,
           role: role,
           seventhWeekPurpose: purpose,
@@ -808,7 +873,8 @@ class CanonicalPlanGenerator {
       );
       cursor = generated.nextDate;
       sessionNumber += athlete.movementOrder.length;
-      if (purpose == SeventhWeekPurpose.trainingMaxTest) {
+      if (strategy.isTrainingMaxTest) {
+        protocolDecisionRequired = true;
         timeline.addAll(
           _testDecisions(
             athlete: athlete,
@@ -820,7 +886,13 @@ class CanonicalPlanGenerator {
       }
       programmingWeek++;
     }
-    return _foreverPlan(blueprint, athlete, blocks, timeline, true);
+    return _foreverPlan(
+      blueprint,
+      athlete,
+      blocks,
+      timeline,
+      awaitingCheckpoint || protocolDecisionRequired,
+    );
   }
 
   CanonicalGeneratedPlan _beginnerPrepSchool(
@@ -1383,6 +1455,29 @@ class _WeekScheme {
   final List<_SetScheme> sets;
 }
 
+_WeekScheme _foreverScheme(
+  List<planning.ForeverSetPrescription> prescriptions,
+) => _WeekScheme([
+  for (final prescription in prescriptions)
+    _SetScheme(
+      percentage: prescription.percentage,
+      repetitions: prescription.repetitions,
+      performance:
+          prescription.kind == planning.ForeverPrescriptionKind.performanceSet,
+      kind: switch (prescription.kind) {
+        planning.ForeverPrescriptionKind.mainWork => null,
+        planning.ForeverPrescriptionKind.performanceSet =>
+          PrescriptionKind.performanceSet,
+        planning.ForeverPrescriptionKind.supplemental =>
+          PrescriptionKind.supplemental,
+        planning.ForeverPrescriptionKind.trainingMaxTest =>
+          PrescriptionKind.trainingMaxTest,
+      },
+      ruleId: prescription.ruleId,
+      source: _ruleReference(prescription.source),
+    ),
+]);
+
 const _powerliftingSetsSource = RuleReference(
   document: '5/3/1 for Powerlifting',
   location: 'PDF page 11',
@@ -1390,14 +1485,6 @@ const _powerliftingSetsSource = RuleReference(
 const _powerliftingDeloadSource = RuleReference(
   document: '5/3/1 for Powerlifting',
   location: 'PDF pages 11 and 13',
-);
-const _foreverOriginalFslSource = RuleReference(
-  document: '5/3/1 Forever',
-  location: 'PDF pages 180-182',
-);
-const _foreverDeloadSource = RuleReference(
-  document: '5/3/1 Forever',
-  location: 'PDF pages 31 and 33',
 );
 const _foreverTrainingMaxTestSource = RuleReference(
   document: '5/3/1 Forever',
@@ -1579,162 +1666,6 @@ const _deload = _WeekScheme([
     performance: false,
     ruleId: 'POWERLIFTING-DELOAD-S3',
     source: _powerliftingDeloadSource,
-  ),
-]);
-
-final _foreverLeaderWeeks = [
-  _foreverWorkWeek(
-    week: 1,
-    main: const [
-      (percentage: .70, reps: 3),
-      (percentage: .80, reps: 3),
-      (percentage: .90, reps: 3),
-    ],
-    performance: true,
-    fslPercentage: .70,
-  ),
-  _foreverWorkWeek(
-    week: 2,
-    main: const [
-      (percentage: .65, reps: 5),
-      (percentage: .75, reps: 5),
-      (percentage: .85, reps: 5),
-    ],
-    performance: false,
-    fslPercentage: .65,
-  ),
-  _foreverWorkWeek(
-    week: 3,
-    main: const [
-      (percentage: .75, reps: 5),
-      (percentage: .85, reps: 3),
-      (percentage: .95, reps: 1),
-    ],
-    performance: true,
-    fslPercentage: .75,
-  ),
-];
-
-final _foreverAnchorWeeks = [
-  _foreverAnchorWeek(1, const [
-    (percentage: .65, reps: 5),
-    (percentage: .75, reps: 5),
-    (percentage: .85, reps: 5),
-  ]),
-  _foreverAnchorWeek(2, const [
-    (percentage: .70, reps: 3),
-    (percentage: .80, reps: 3),
-    (percentage: .90, reps: 3),
-  ]),
-  _foreverAnchorWeek(3, const [
-    (percentage: .75, reps: 5),
-    (percentage: .85, reps: 3),
-    (percentage: .95, reps: 1),
-  ]),
-];
-
-_WeekScheme _foreverWorkWeek({
-  required int week,
-  required List<({double percentage, int reps})> main,
-  required bool performance,
-  required double fslPercentage,
-}) => _WeekScheme([
-  for (final set in main.indexed)
-    _SetScheme(
-      percentage: set.$2.percentage,
-      repetitions: set.$2.reps,
-      performance: performance && set.$1 == main.length - 1,
-      ruleId: 'FOREVER-ORIGINAL-FSL-L-W$week-M${set.$1 + 1}',
-      source: _foreverOriginalFslSource,
-    ),
-  for (var set = 1; set <= 5; set++)
-    _SetScheme(
-      percentage: fslPercentage,
-      repetitions: 5,
-      performance: false,
-      kind: PrescriptionKind.supplemental,
-      ruleId: 'FOREVER-ORIGINAL-FSL-L-W$week-FSL-$set',
-      source: _foreverOriginalFslSource,
-    ),
-]);
-
-_WeekScheme _foreverAnchorWeek(
-  int week,
-  List<({double percentage, int reps})> main,
-) => _WeekScheme([
-  for (final set in main.indexed)
-    _SetScheme(
-      percentage: set.$2.percentage,
-      repetitions: set.$2.reps,
-      performance: set.$1 == main.length - 1,
-      ruleId: 'FOREVER-ORIGINAL-FSL-A-W$week-M${set.$1 + 1}',
-      source: _foreverOriginalFslSource,
-    ),
-]);
-
-const _foreverDeload = _WeekScheme([
-  _SetScheme(
-    percentage: .70,
-    repetitions: 5,
-    performance: false,
-    ruleId: 'FOREVER-7W-DELOAD-70',
-    source: _foreverDeloadSource,
-  ),
-  _SetScheme(
-    percentage: .80,
-    repetitions: 3,
-    performance: false,
-    ruleId: 'FOREVER-7W-DELOAD-80',
-    source: _foreverDeloadSource,
-  ),
-  _SetScheme(
-    percentage: .90,
-    repetitions: 1,
-    performance: false,
-    ruleId: 'FOREVER-7W-DELOAD-90',
-    source: _foreverDeloadSource,
-  ),
-  _SetScheme(
-    percentage: 1,
-    repetitions: 1,
-    performance: false,
-    ruleId: 'FOREVER-7W-DELOAD-TM',
-    source: _foreverDeloadSource,
-  ),
-]);
-
-const _foreverTrainingMaxTest = _WeekScheme([
-  _SetScheme(
-    percentage: .70,
-    repetitions: 5,
-    performance: false,
-    kind: PrescriptionKind.trainingMaxTest,
-    ruleId: 'FOREVER-7W-TMTEST-70',
-    source: _foreverTrainingMaxTestSource,
-  ),
-  _SetScheme(
-    percentage: .80,
-    repetitions: 5,
-    performance: false,
-    kind: PrescriptionKind.trainingMaxTest,
-    ruleId: 'FOREVER-7W-TMTEST-80',
-    source: _foreverTrainingMaxTestSource,
-  ),
-  _SetScheme(
-    percentage: .90,
-    repetitions: 5,
-    performance: false,
-    kind: PrescriptionKind.trainingMaxTest,
-    ruleId: 'FOREVER-7W-TMTEST-90',
-    source: _foreverTrainingMaxTestSource,
-  ),
-  _SetScheme(
-    percentage: 1,
-    repetitions: 3,
-    performance: false,
-    kind: PrescriptionKind.trainingMaxTest,
-    ruleId: 'FOREVER-7W-TMTEST-TM',
-    source: _foreverTrainingMaxTestSource,
   ),
 ]);
 
