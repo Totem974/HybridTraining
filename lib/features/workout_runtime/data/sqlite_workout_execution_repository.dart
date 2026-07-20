@@ -22,6 +22,7 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
     DatabaseExecutor transaction,
     String sessionId,
   ) async {
+    await _requireExecutableSession(transaction, sessionId);
     final existing = await loadInTransaction(transaction, sessionId);
     if (existing != null) return existing;
     final prescriptions = await _prescriptionItems(transaction, sessionId);
@@ -81,6 +82,7 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
     Map<String, Object?> payload = const {},
     required WorkoutExecution Function(WorkoutExecution current) action,
   }) async {
+    await _requireExecutableSession(transaction, sessionId);
     final current = await loadInTransaction(transaction, sessionId);
     if (current == null) {
       throw StateError('Workout execution not found: $sessionId');
@@ -89,9 +91,61 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
     if (next.sessionId != current.sessionId) {
       throw StateError('A mutation cannot replace the session identity.');
     }
+    _requireSameTopology(current, next);
     await _persist(transaction, next);
     await _appendEvent(transaction, next, eventType, payload);
     return next;
+  }
+
+  Future<void> _requireExecutableSession(
+    DatabaseExecutor database,
+    String sessionId,
+  ) async {
+    final rows = await database.rawQuery(
+      '''SELECT s.status AS session_status,
+                c.status AS cycle_status,
+                b.status AS block_status,
+                p.status AS plan_status
+           FROM plan_training_sessions s
+           JOIN plan_training_cycles c ON c.id = s.cycle_id
+           JOIN training_blocks b ON b.id = c.block_id
+           JOIN training_plans p ON p.id = b.plan_id
+          WHERE s.id = ?''',
+      [sessionId],
+    );
+    if (rows.length != 1) {
+      throw StateError('Training session not found: $sessionId');
+    }
+    final status = rows.single;
+    final sessionStatus = status['session_status'] as String;
+    const openAncestorStatuses = {'planned', 'active'};
+    if ((sessionStatus != 'planned' && sessionStatus != 'started') ||
+        !openAncestorStatuses.contains(status['cycle_status']) ||
+        !openAncestorStatuses.contains(status['block_status']) ||
+        !openAncestorStatuses.contains(status['plan_status'])) {
+      throw StateError(
+        'Workout execution is not allowed for a closed or inactive '
+        'session hierarchy: $sessionId',
+      );
+    }
+  }
+
+  static void _requireSameTopology(
+    WorkoutExecution current,
+    WorkoutExecution next,
+  ) {
+    if (next.sets.length != current.sets.length) {
+      throw StateError('A mutation cannot replace the execution topology.');
+    }
+    for (var index = 0; index < current.sets.length; index++) {
+      final before = current.sets[index];
+      final after = next.sets[index];
+      if (after.setId != before.setId ||
+          after.kind != before.kind ||
+          after.storage != before.storage) {
+        throw StateError('A mutation cannot replace the execution topology.');
+      }
+    }
   }
 
   Future<WorkoutExecution?> loadInTransaction(
@@ -214,8 +268,14 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
         final updated = await database.update(
           'activity_results',
           values,
-          where: 'prescription_id = ?',
-          whereArgs: [outcome.setId],
+          where: '''prescription_id = ? AND EXISTS (
+            SELECT 1
+              FROM activity_prescriptions ap
+              JOIN session_blocks sb ON sb.id = ap.session_block_id
+             WHERE ap.id = activity_results.prescription_id
+               AND sb.session_id = ?
+          )''',
+          whereArgs: [outcome.setId, execution.sessionId],
         );
         if (updated == 0) {
           await database.insert('activity_results', {
@@ -239,8 +299,8 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
       final updatedOutcome = await database.update(
         'workout_set_outcomes',
         outcomeValues,
-        where: 'prescription_id = ?',
-        whereArgs: [outcome.setId],
+        where: 'prescription_id = ? AND session_id = ?',
+        whereArgs: [outcome.setId, execution.sessionId],
       );
       if (updatedOutcome == 0) {
         await database.insert('workout_set_outcomes', {
@@ -284,15 +344,35 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
   Future<List<Map<String, Object?>>> _prescriptionItems(
     DatabaseExecutor database,
     String sessionId,
-  ) => database.rawQuery(
-    '''SELECT sp.id, 'loadedSet' AS item_kind, 'legacySet' AS storage_kind,
+  ) async {
+    final misownedOutcomes =
+        Sqflite.firstIntValue(
+          await database.rawQuery(
+            '''SELECT COUNT(*)
+                 FROM workout_set_outcomes wo
+                 JOIN set_prescriptions sp ON sp.id = wo.prescription_id
+                 JOIN session_blocks sb ON sb.id = sp.session_block_id
+                WHERE (sb.session_id = ? OR wo.session_id = ?)
+                  AND wo.session_id <> sb.session_id''',
+            [sessionId, sessionId],
+          ),
+        ) ??
+        0;
+    if (misownedOutcomes != 0) {
+      throw StateError(
+        'A workout outcome belongs to a different session: $sessionId',
+      );
+    }
+    return database.rawQuery(
+      '''SELECT sp.id, 'loadedSet' AS item_kind, 'legacySet' AS storage_kind,
               sb.sequence AS block_sequence, sp.sequence AS item_sequence,
               wo.status AS outcome_status, wo.actual_repetitions,
               wo.actual_load, wo.rpe, wo.notes, wo.recorded_at,
               NULL AS actual_json
          FROM set_prescriptions sp
          JOIN session_blocks sb ON sb.id = sp.session_block_id
-         LEFT JOIN workout_set_outcomes wo ON wo.prescription_id = sp.id
+         LEFT JOIN workout_set_outcomes wo
+           ON wo.prescription_id = sp.id AND wo.session_id = ?
         WHERE sb.session_id = ?
        UNION ALL
        SELECT ap.id,
@@ -303,13 +383,14 @@ class SqliteWorkoutExecutionRepository implements WorkoutExecutionRepository {
               ar.status AS outcome_status, NULL AS actual_repetitions,
               NULL AS actual_load, ar.rpe, ar.notes, ar.recorded_at,
               ar.actual_json
-         FROM activity_prescriptions ap
+        FROM activity_prescriptions ap
          JOIN session_blocks sb ON sb.id = ap.session_block_id
-         LEFT JOIN activity_results ar ON ar.prescription_id = ap.id
-        WHERE sb.session_id = ?
-       ORDER BY block_sequence, item_sequence, item_kind''',
-    [sessionId, sessionId],
-  );
+        LEFT JOIN activity_results ar ON ar.prescription_id = ap.id
+       WHERE sb.session_id = ?
+       ORDER BY 4, 5, 2, 3, 1''',
+      [sessionId, sessionId, sessionId],
+    );
+  }
 
   static Map<String, Object?>? _actual(Object? encoded) => encoded == null
       ? null

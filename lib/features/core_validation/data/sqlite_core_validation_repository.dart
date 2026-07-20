@@ -514,7 +514,7 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
       '''SELECT sp.id, sp.prescribed_reps, sp.prescribed_load,
                 NULL AS target_json, NULL AS calculated_load,
                 sb.sequence AS block_sequence, sp.sequence AS item_sequence,
-                'loadedSet' AS item_kind
+                'loadedSet' AS item_kind, 'legacySet' AS storage_kind
          FROM set_prescriptions sp
          JOIN session_blocks sb ON sb.id = sp.session_block_id
          WHERE sb.session_id = ?
@@ -523,11 +523,12 @@ class SqliteCoreValidationRepository implements CoreValidationRepository {
                 ap.target_json, ap.calculated_load,
                 sb.sequence AS block_sequence, ap.sequence AS item_sequence,
                 CASE WHEN ap.target_type = 'setsRepsLoad'
-                     THEN 'loadedSet' ELSE 'activity' END AS item_kind
+                     THEN 'loadedSet' ELSE 'activity' END AS item_kind,
+                'genericActivity' AS storage_kind
          FROM activity_prescriptions ap
          JOIN session_blocks sb ON sb.id = ap.session_block_id
          WHERE sb.session_id = ?
-         ORDER BY block_sequence, item_sequence, item_kind''',
+         ORDER BY 6, 7, 8, 9, 1''',
       [sessionId, sessionId],
     );
     if (prescriptions.isEmpty) {

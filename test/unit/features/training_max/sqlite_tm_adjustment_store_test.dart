@@ -92,4 +92,181 @@ void main() {
       hasLength(1),
     );
   });
+
+  test(
+    'selects latest instant when imported ISO dates use mixed offsets',
+    () async {
+      final database = await local.open();
+      await database.insert('training_max_history', {
+        'id': 'mixed-offset-actual-latest',
+        'athlete_id': 'dev-core-athlete',
+        'exercise_id': 'squat',
+        'one_rep_max': 130.0,
+        'training_max': 110.0,
+        'unit': 'kg',
+        'effective_at': '2026-07-20T23:30:00-10:00',
+      });
+      await database.insert('training_max_history', {
+        'id': 'mixed-offset-text-latest',
+        'athlete_id': 'dev-core-athlete',
+        'exercise_id': 'squat',
+        'one_rep_max': 125.0,
+        'training_max': 105.0,
+        'unit': 'kg',
+        'effective_at': '2026-07-21T08:00:00Z',
+      });
+      final decision = TmAdjustmentDecision.progress(
+        movement: MainLift.squat,
+        previousTrainingMax: 110,
+        requestedIncrease: 5,
+        unit: WeightUnit.kilograms,
+        reason: 'Completed reviewed cycle',
+      );
+
+      await store.apply(
+        id: 'tm-adjustment-mixed-offset',
+        planId: 'dev-bps-plan-1',
+        athleteId: 'dev-core-athlete',
+        unit: 'kg',
+        decision: decision,
+        effectiveAt: DateTime.utc(2026, 7, 21, 10),
+      );
+
+      expect(
+        (await database.query(
+          'training_max_history',
+          where: "exercise_id = 'squat'",
+        )).map((row) => row['training_max']),
+        containsAll(<double>[100, 105, 110, 115]),
+      );
+      expect(await database.query('plan_events'), hasLength(1));
+    },
+  );
+
+  test('invalid imported effective date aborts without writing', () async {
+    final database = await local.open();
+    await database.insert('training_max_history', {
+      'id': 'invalid-effective-date',
+      'athlete_id': 'dev-core-athlete',
+      'exercise_id': 'squat',
+      'one_rep_max': 125.0,
+      'training_max': 105.0,
+      'unit': 'kg',
+      'effective_at': 'not-an-instant',
+    });
+    final decision = TmAdjustmentDecision.progress(
+      movement: MainLift.squat,
+      previousTrainingMax: 105,
+      requestedIncrease: 5,
+      unit: WeightUnit.kilograms,
+      reason: 'Completed reviewed cycle',
+    );
+
+    await expectLater(
+      store.apply(
+        id: 'tm-adjustment-invalid-date',
+        planId: 'dev-bps-plan-1',
+        athleteId: 'dev-core-athlete',
+        unit: 'kg',
+        decision: decision,
+        effectiveAt: DateTime.utc(2026, 7, 22),
+      ),
+      throwsStateError,
+    );
+
+    expect(await database.query('plan_events'), isEmpty);
+    expect(
+      await database.query(
+        'training_max_history',
+        where: "exercise_id = 'squat'",
+      ),
+      hasLength(2),
+    );
+  });
+
+  test('equivalent imported instants abort ambiguous history', () async {
+    final database = await local.open();
+    for (final row in [
+      ('ambiguous-z', 105.0, '2026-07-21T08:00:00Z'),
+      ('ambiguous-offset', 110.0, '2026-07-21T10:00:00+02:00'),
+    ]) {
+      await database.insert('training_max_history', {
+        'id': row.$1,
+        'athlete_id': 'dev-core-athlete',
+        'exercise_id': 'squat',
+        'one_rep_max': 130.0,
+        'training_max': row.$2,
+        'unit': 'kg',
+        'effective_at': row.$3,
+      });
+    }
+    final decision = TmAdjustmentDecision.progress(
+      movement: MainLift.squat,
+      previousTrainingMax: 110,
+      requestedIncrease: 5,
+      unit: WeightUnit.kilograms,
+      reason: 'Completed reviewed cycle',
+    );
+
+    await expectLater(
+      store.apply(
+        id: 'tm-adjustment-ambiguous-date',
+        planId: 'dev-bps-plan-1',
+        athleteId: 'dev-core-athlete',
+        unit: 'kg',
+        decision: decision,
+        effectiveAt: DateTime.utc(2026, 7, 22),
+      ),
+      throwsStateError,
+    );
+
+    expect(await database.query('plan_events'), isEmpty);
+    expect(
+      await database.query(
+        'training_max_history',
+        where: "exercise_id = 'squat'",
+      ),
+      hasLength(3),
+    );
+  });
+
+  for (final chronology in <String, DateTime>{
+    'earlier': DateTime.utc(2026, 7, 19),
+    'equal': DateTime.utc(2026, 7, 20),
+  }.entries) {
+    test(
+      '${chronology.key} effective date rolls back both history and event',
+      () async {
+        final decision = TmAdjustmentDecision.progress(
+          movement: MainLift.squat,
+          previousTrainingMax: 100,
+          requestedIncrease: 5,
+          unit: WeightUnit.kilograms,
+          reason: 'Completed reviewed cycle',
+        );
+
+        await expectLater(
+          store.apply(
+            id: 'tm-adjustment-${chronology.key}',
+            planId: 'dev-bps-plan-1',
+            athleteId: 'dev-core-athlete',
+            unit: 'kg',
+            decision: decision,
+            effectiveAt: chronology.value,
+          ),
+          throwsStateError,
+        );
+
+        final database = await local.open();
+        expect(await database.query('plan_events'), isEmpty);
+        expect(
+          await database.query(
+            'training_max_history',
+            where: "exercise_id = 'squat'",
+          ),
+          hasLength(1),
+        );
+      },
+    );
+  }
 }

@@ -92,6 +92,185 @@ void main() {
     );
   });
 
+  test('create rejects every closed session hierarchy', () async {
+    final database = await local.open();
+    final cases = <(String, String, String)>[
+      ('plan_training_sessions', 'session', 'complete'),
+      ('plan_training_sessions', 'session', 'cancelled'),
+      ('plan_training_cycles', 'cycle', 'complete'),
+      ('plan_training_cycles', 'cycle', 'cancelled'),
+      ('training_blocks', 'block', 'complete'),
+      ('training_blocks', 'block', 'cancelled'),
+      ('training_plans', 'plan', 'complete'),
+      ('training_plans', 'plan', 'cancelled'),
+    ];
+    for (final entry in cases) {
+      await database.update(
+        entry.$1,
+        {'status': entry.$3},
+        where: 'id = ?',
+        whereArgs: [entry.$2],
+      );
+      await expectLater(repository.create('session'), throwsStateError);
+      expect(await database.query('workout_executions'), isEmpty);
+      expect(await database.query('workout_execution_events'), isEmpty);
+      await database.update(
+        entry.$1,
+        {'status': entry.$1 == 'plan_training_sessions' ? 'planned' : 'active'},
+        where: 'id = ?',
+        whereArgs: [entry.$2],
+      );
+    }
+  });
+
+  test(
+    'mutation rejects a hierarchy closed after execution creation',
+    () async {
+      await repository.create('session');
+      final database = await local.open();
+      final cases = <(String, String, String)>[
+        ('plan_training_sessions', 'session', 'complete'),
+        ('plan_training_cycles', 'cycle', 'complete'),
+        ('training_blocks', 'block', 'cancelled'),
+        ('training_plans', 'plan', 'complete'),
+      ];
+      for (final entry in cases) {
+        await database.update(
+          entry.$1,
+          {'status': entry.$3},
+          where: 'id = ?',
+          whereArgs: [entry.$2],
+        );
+        await expectLater(
+          repository.mutate(
+            'session',
+            eventType: 'forbidden',
+            action: (current) => current.updateNotes(
+              'must not persist',
+              DateTime.utc(2026, 7, 20, 14),
+            ),
+          ),
+          throwsStateError,
+        );
+        expect((await repository.load('session'))?.notes, isEmpty);
+        expect(await database.query('workout_execution_events'), hasLength(1));
+        await database.update(
+          entry.$1,
+          {
+            'status': entry.$1 == 'plan_training_sessions'
+                ? 'planned'
+                : 'active',
+          },
+          where: 'id = ?',
+          whereArgs: [entry.$2],
+        );
+      }
+    },
+  );
+
+  test(
+    'mutation cannot substitute a prescription from another session',
+    () async {
+      await repository.create('session');
+      final database = await local.open();
+      final outcomesBefore = await database.query(
+        'workout_set_outcomes',
+        orderBy: 'session_id, sequence',
+      );
+      final eventsBefore = await database.query(
+        'workout_execution_events',
+        orderBy: 'session_id, sequence',
+      );
+      await expectLater(
+        repository.mutate(
+          'session',
+          eventType: 'setRecorded',
+          action: (current) => WorkoutExecution(
+            sessionId: current.sessionId,
+            sets: [
+              const SetOutcome(setId: 'set-other'),
+              current.sets[1],
+            ],
+            state: current.state,
+            activeSetIndex: current.activeSetIndex,
+            notes: current.notes,
+            reversibleSetIndexes: current.reversibleSetIndexes,
+            updatedAt: DateTime.utc(2026, 7, 20, 15),
+          ),
+        ),
+        throwsStateError,
+      );
+      expect(
+        await database.query(
+          'workout_set_outcomes',
+          orderBy: 'session_id, sequence',
+        ),
+        outcomesBefore,
+      );
+      expect(await database.query('activity_results'), isEmpty);
+      expect(
+        await database.query(
+          'workout_execution_events',
+          orderBy: 'session_id, sequence',
+        ),
+        eventsBefore,
+      );
+      expect(
+        (await repository.load('session'))?.sets.map((item) => item.setId),
+        ['set-1', 'set-2'],
+      );
+    },
+  );
+
+  test('rejects an outcome linked to the wrong owning session', () async {
+    final database = await local.open();
+    await database.insert('workout_set_outcomes', {
+      'prescription_id': 'set-1',
+      'session_id': 'other-session',
+      'sequence': 0,
+      'status': 'success',
+      'actual_repetitions': 99,
+      'notes': 'Fictitious inconsistent result',
+      'updated_at': '2026-07-20T16:00:00.000Z',
+    });
+
+    await expectLater(repository.create('session'), throwsStateError);
+
+    expect(await database.query('workout_executions'), isEmpty);
+    expect(await database.query('workout_execution_events'), isEmpty);
+    expect(await database.query('workout_set_outcomes'), hasLength(1));
+  });
+
+  test('orders colliding prescription kinds deterministically', () async {
+    final database = await local.open();
+    await database.insert('activity_prescriptions', {
+      'id': 'activity-collision',
+      'session_block_id': 'session-block',
+      'sequence': 0,
+      'movement_or_activity_id': 'fictitious-collision',
+      'target_type': 'setsRepsLoad',
+      'target_json': '{}',
+      'prescription_kind': 'assistance',
+      'rule_id': 'TEST-COLLISION',
+      'source_edition': 'forever',
+      'ruleset_generation': 'forever',
+      'source_reference_json': '{}',
+    });
+
+    final created = await repository.create('session');
+
+    expect(created.sets.map((item) => item.setId), [
+      'activity-collision',
+      'set-1',
+      'set-2',
+    ]);
+    expect(created.sets.map((item) => item.storage), [
+      ExecutionItemStorage.genericActivity,
+      ExecutionItemStorage.legacySet,
+      ExecutionItemStorage.legacySet,
+    ]);
+  });
+
   test('executes generic activities and resumes partial progress', () async {
     final created = await repository.create('activity-session');
     expect(created.sets, hasLength(4));
@@ -208,6 +387,13 @@ Future<void> _seedSession(LocalDatabase local) async {
     'status': 'planned',
   });
   await database.insert('plan_training_sessions', {
+    'id': 'other-session',
+    'cycle_id': 'cycle',
+    'sequence': 2,
+    'scheduled_for': '2026-07-22',
+    'status': 'planned',
+  });
+  await database.insert('plan_training_sessions', {
     'id': 'activity-session',
     'cycle_id': 'cycle',
     'sequence': 1,
@@ -236,6 +422,26 @@ Future<void> _seedSession(LocalDatabase local) async {
       'rule_provenance_json': '{}',
     });
   }
+  await database.insert('session_blocks', {
+    'id': 'other-session-block',
+    'session_id': 'other-session',
+    'sequence': 0,
+    'kind': 'mainWork',
+    'rule_provenance_json': '{}',
+  });
+  await database.insert('set_prescriptions', {
+    'id': 'set-other',
+    'session_block_id': 'other-session-block',
+    'sequence': 0,
+    'training_max': 100.0,
+    'percentage': 0.65,
+    'unrounded_load': 65.0,
+    'rounding_increment': 2.5,
+    'prescribed_load': 65.0,
+    'prescribed_reps': 5,
+    'prescription_json': '{}',
+    'rule_provenance_json': '{}',
+  });
   await database.insert('session_blocks', {
     'id': 'activity-block',
     'session_id': 'activity-session',
