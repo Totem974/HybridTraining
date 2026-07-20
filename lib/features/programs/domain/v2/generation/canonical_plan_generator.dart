@@ -84,6 +84,10 @@ class CanonicalAthleteConfiguration {
     required this.rounder,
     Map<MovementId, double>? confirmedBeyondTrainingMaxes,
     Map<int, Map<MovementId, double>> confirmedTrainingMaxesByWeek = const {},
+    Map<String, Map<MovementId, double>> confirmedTrainingMaxesByNode =
+        const {},
+    Map<String, Map<MovementId, double>> projectedTrainingMaxesByNode =
+        const {},
     Map<MovementId, double> trainingMaxRatios = const {},
   }) : movementOrder = List.unmodifiable(movementOrder),
        trainingMaxes = Map.unmodifiable(trainingMaxes),
@@ -94,6 +98,14 @@ class CanonicalAthleteConfiguration {
            : Map.unmodifiable(confirmedBeyondTrainingMaxes),
        confirmedTrainingMaxesByWeek = Map.unmodifiable({
          for (final entry in confirmedTrainingMaxesByWeek.entries)
+           entry.key: Map<MovementId, double>.unmodifiable(entry.value),
+       }),
+       confirmedTrainingMaxesByNode = Map.unmodifiable({
+         for (final entry in confirmedTrainingMaxesByNode.entries)
+           entry.key: Map<MovementId, double>.unmodifiable(entry.value),
+       }),
+       projectedTrainingMaxesByNode = Map.unmodifiable({
+         for (final entry in projectedTrainingMaxesByNode.entries)
            entry.key: Map<MovementId, double>.unmodifiable(entry.value),
        }),
        trainingMaxRatios = Map.unmodifiable(trainingMaxRatios);
@@ -107,6 +119,8 @@ class CanonicalAthleteConfiguration {
   final LoadRounder rounder;
   final Map<MovementId, double>? confirmedBeyondTrainingMaxes;
   final Map<int, Map<MovementId, double>> confirmedTrainingMaxesByWeek;
+  final Map<String, Map<MovementId, double>> confirmedTrainingMaxesByNode;
+  final Map<String, Map<MovementId, double>> projectedTrainingMaxesByNode;
   final Map<MovementId, double> trainingMaxRatios;
 }
 
@@ -197,6 +211,7 @@ class TrainingMaxTimelineDecision {
     required this.reason,
     required this.source,
     this.confirmedTrainingMax,
+    this.isTrainingMaxTest = false,
   });
 
   final String id;
@@ -209,6 +224,7 @@ class TrainingMaxTimelineDecision {
   final TrainingMaxDecisionState state;
   final String reason;
   final RuleReference source;
+  final bool isTrainingMaxTest;
 
   Map<String, Object?> toJson() => {
     'id': id,
@@ -273,7 +289,7 @@ class CanonicalGeneratedPlan {
       {
         'id': 'event-${decision.id}',
         'sequence': decision.sequence,
-        'eventType': decision.afterProgrammingWeek == 11
+        'eventType': decision.isTrainingMaxTest
             ? 'trainingMaxTest'
             : 'trainingMaxDecision',
         'programmingWeekNumber': decision.afterProgrammingWeek,
@@ -575,14 +591,19 @@ class CanonicalPlanGenerator {
       );
     }
 
-    bool confirmCheckpoint(int afterWeek, RuleReference source) {
-      final confirmed = athlete.confirmedTrainingMaxesByWeek[afterWeek];
-      if (confirmed != null) {
+    bool confirmCheckpoint(String nodeId, RuleReference source) {
+      final afterWeek = programmingWeek - 1;
+      final confirmed =
+          athlete.confirmedTrainingMaxesByNode[nodeId] ??
+          athlete.confirmedTrainingMaxesByWeek[afterWeek];
+      final effective =
+          confirmed ?? athlete.projectedTrainingMaxesByNode[nodeId];
+      if (effective != null) {
         for (final movement in athlete.movementOrder) {
           final maximum =
               currentTrainingMaxes[movement]! +
               athlete.progressionIncrements[movement]!;
-          final value = confirmed[movement];
+          final value = effective[movement];
           if (value == null || value <= 0 || value > maximum) {
             throw StateError(
               'Forever TM decisions may hold, reset, or use at most the source-defined increment.',
@@ -600,8 +621,8 @@ class CanonicalPlanGenerator {
           sequenceOffset: timeline.length,
         ),
       );
-      if (confirmed == null) return false;
-      currentTrainingMaxes = confirmed;
+      if (effective == null) return false;
+      currentTrainingMaxes = effective;
       return true;
     }
 
@@ -614,7 +635,7 @@ class CanonicalPlanGenerator {
         source: _foreverOriginalFslSource,
       ),
     );
-    if (!confirmCheckpoint(3, _foreverProgressionSource)) {
+    if (!confirmCheckpoint('C1', _foreverProgressionSource)) {
       return _foreverPlan(blueprint, athlete, blocks, timeline, true);
     }
 
@@ -627,7 +648,7 @@ class CanonicalPlanGenerator {
         source: _foreverOriginalFslSource,
       ),
     );
-    if (!confirmCheckpoint(6, _foreverProgressionSource)) {
+    if (!confirmCheckpoint('C2', _foreverProgressionSource)) {
       return _foreverPlan(blueprint, athlete, blocks, timeline, true);
     }
 
@@ -636,7 +657,7 @@ class CanonicalPlanGenerator {
       athlete: athlete,
       trainingMaxes: currentTrainingMaxes,
       scheme: _foreverDeload,
-      programmingWeek: 7,
+      programmingWeek: programmingWeek,
       cycleNumber: 2,
       cursor: cursor,
       firstSessionNumber: sessionNumber,
@@ -655,7 +676,7 @@ class CanonicalPlanGenerator {
     );
     cursor = deload.nextDate;
     sessionNumber += athlete.movementOrder.length;
-    programmingWeek = 8;
+    programmingWeek++;
 
     blocks.add(
       workCycle(
@@ -666,7 +687,7 @@ class CanonicalPlanGenerator {
         source: _foreverOriginalFslSource,
       ),
     );
-    if (!confirmCheckpoint(10, _foreverProgressionSource)) {
+    if (!confirmCheckpoint('C3', _foreverProgressionSource)) {
       return _foreverPlan(blueprint, athlete, blocks, timeline, true);
     }
 
@@ -675,7 +696,7 @@ class CanonicalPlanGenerator {
       athlete: athlete,
       trainingMaxes: currentTrainingMaxes,
       scheme: _foreverTrainingMaxTest,
-      programmingWeek: 11,
+      programmingWeek: programmingWeek,
       cycleNumber: 3,
       cursor: cursor,
       firstSessionNumber: sessionNumber,
@@ -696,6 +717,7 @@ class CanonicalPlanGenerator {
       _testDecisions(
         athlete: athlete,
         trainingMaxes: currentTrainingMaxes,
+        afterProgrammingWeek: programmingWeek,
         sequenceOffset: timeline.length,
       ),
     );
@@ -1010,6 +1032,7 @@ class CanonicalPlanGenerator {
   List<TrainingMaxTimelineDecision> _testDecisions({
     required CanonicalAthleteConfiguration athlete,
     required Map<MovementId, double> trainingMaxes,
+    required int afterProgrammingWeek,
     required int sequenceOffset,
   }) => [
     for (final movementEntry in athlete.movementOrder.indexed)
@@ -1017,12 +1040,13 @@ class CanonicalPlanGenerator {
         id: 'tm-test-week-11-${movementEntry.$2.value}',
         sequence: sequenceOffset + movementEntry.$1,
         movementId: movementEntry.$2,
-        afterProgrammingWeek: 11,
+        afterProgrammingWeek: afterProgrammingWeek,
         previousTrainingMax: trainingMaxes[movementEntry.$2]!,
         proposedTrainingMax: trainingMaxes[movementEntry.$2]!,
         state: TrainingMaxDecisionState.previewed,
         reason: 'TM Test result must confirm hold, progress, or reset.',
         source: _foreverTrainingMaxTestSource,
+        isTrainingMaxTest: true,
       ),
   ];
 
@@ -1170,15 +1194,34 @@ class CanonicalPlanGenerator {
       }
     }
     for (final checkpoint in athlete.confirmedTrainingMaxesByWeek.entries) {
-      if (!{3, 6, 10}.contains(checkpoint.key)) {
+      for (final movement in athlete.movementOrder) {
+        if (checkpoint.value[movement] == null ||
+            checkpoint.value[movement]! <= 0) {
+          throw StateError('Every confirmed Forever checkpoint needs all TMs.');
+        }
+      }
+    }
+    for (final checkpoint in athlete.confirmedTrainingMaxesByNode.entries) {
+      if (!{'C1', 'C2', 'C3'}.contains(checkpoint.key)) {
+        throw StateError('Unsupported Forever TM node: ${checkpoint.key}.');
+      }
+      for (final movement in athlete.movementOrder) {
+        if (checkpoint.value[movement] == null ||
+            checkpoint.value[movement]! <= 0) {
+          throw StateError('Every confirmed Forever node needs all TMs.');
+        }
+      }
+    }
+    for (final checkpoint in athlete.projectedTrainingMaxesByNode.entries) {
+      if (!{'C1', 'C2', 'C3'}.contains(checkpoint.key)) {
         throw StateError(
-          'Unsupported Forever TM checkpoint: ${checkpoint.key}.',
+          'Unsupported Forever TM projection: ${checkpoint.key}.',
         );
       }
       for (final movement in athlete.movementOrder) {
         if (checkpoint.value[movement] == null ||
             checkpoint.value[movement]! <= 0) {
-          throw StateError('Every confirmed Forever checkpoint needs all TMs.');
+          throw StateError('Every projected Forever node needs all TMs.');
         }
       }
     }

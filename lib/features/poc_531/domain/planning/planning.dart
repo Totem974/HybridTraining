@@ -444,48 +444,7 @@ class ForeverSequenceCompiler {
     final validation = validate(configuration);
     if (!validation.isValid) throw ForeverCompilationException(validation);
 
-    final nodes = <ForeverPlanNode>[
-      ForeverCycleNode(
-        nodeId: 'C1',
-        templateRevisionId: 'forever-original-531-fsl-v1',
-        cycleInstanceId: 'leader-1',
-        role: CycleRole.leader,
-        revision: configuration.firstLeader,
-        source: _sequenceSource,
-      ),
-      ForeverCycleNode(
-        nodeId: 'C2',
-        templateRevisionId: 'forever-original-531-fsl-v1',
-        cycleInstanceId: 'leader-2',
-        role: CycleRole.leader,
-        revision: configuration.secondLeader,
-        source: _sequenceSource,
-      ),
-      const ForeverProtocolNode(
-        nodeId: 'P1',
-        templateRevisionId: 'forever-seventh-week-deload-v1',
-        autoInserted: true,
-        purpose: ProtocolPurpose.seventhWeekDeload,
-        afterCycleInstanceId: 'leader-2',
-        source: _deloadSource,
-      ),
-      ForeverCycleNode(
-        nodeId: 'C3',
-        templateRevisionId: 'forever-original-531-fsl-v1',
-        cycleInstanceId: 'anchor-1',
-        role: CycleRole.anchor,
-        revision: configuration.anchor,
-        source: _sequenceSource,
-      ),
-      const ForeverProtocolNode(
-        nodeId: 'P2',
-        templateRevisionId: 'forever-seventh-week-tm-test-v1',
-        autoInserted: true,
-        purpose: ProtocolPurpose.seventhWeekTrainingMaxTest,
-        afterCycleInstanceId: 'anchor-1',
-        source: _testSource,
-      ),
-    ];
+    final nodes = compileStructure(configuration);
 
     var current = configuration.profile.trainingMaxes;
     final decisions = <TrainingMaxDecision>[];
@@ -512,4 +471,49 @@ class ForeverSequenceCompiler {
       trainingMaxDecisions: decisions,
     );
   }
+
+  List<ForeverPlanNode> compileStructure(
+    ForeverPlanningConfiguration configuration,
+  ) => List.unmodifiable(<ForeverPlanNode>[
+    ForeverCycleNode(
+      nodeId: 'C1',
+      templateRevisionId: 'forever-original-531-fsl-v1',
+      cycleInstanceId: 'leader-1',
+      role: CycleRole.leader,
+      revision: configuration.firstLeader,
+      source: _sequenceSource,
+    ),
+    ForeverCycleNode(
+      nodeId: 'C2',
+      templateRevisionId: 'forever-original-531-fsl-v1',
+      cycleInstanceId: 'leader-2',
+      role: CycleRole.leader,
+      revision: configuration.secondLeader,
+      source: _sequenceSource,
+    ),
+    const ForeverProtocolNode(
+      nodeId: 'P1',
+      templateRevisionId: 'forever-seventh-week-deload-v1',
+      autoInserted: true,
+      purpose: ProtocolPurpose.seventhWeekDeload,
+      afterCycleInstanceId: 'leader-2',
+      source: _deloadSource,
+    ),
+    ForeverCycleNode(
+      nodeId: 'C3',
+      templateRevisionId: 'forever-original-531-fsl-v1',
+      cycleInstanceId: 'anchor-1',
+      role: CycleRole.anchor,
+      revision: configuration.anchor,
+      source: _sequenceSource,
+    ),
+    const ForeverProtocolNode(
+      nodeId: 'P2',
+      templateRevisionId: 'forever-seventh-week-tm-test-v1',
+      autoInserted: true,
+      purpose: ProtocolPurpose.seventhWeekTrainingMaxTest,
+      afterCycleInstanceId: 'anchor-1',
+      source: _testSource,
+    ),
+  ]);
 }

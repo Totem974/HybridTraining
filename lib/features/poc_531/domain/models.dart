@@ -105,10 +105,12 @@ class TrainingMaxResult {
 class GenerationSpecificOptions {
   const GenerationSpecificOptions({
     this.confirmedTrainingMaxesByWeek = const {},
+    this.confirmedTrainingMaxesByNode = const {},
     this.enablePowerliftingExtension = false,
     this.projectFutureTrainingMaxes = false,
   });
   final Map<int, Map<MainLift, double>> confirmedTrainingMaxesByWeek;
+  final Map<String, Map<MainLift, double>> confirmedTrainingMaxesByNode;
   final bool enablePowerliftingExtension;
   final bool projectFutureTrainingMaxes;
 }

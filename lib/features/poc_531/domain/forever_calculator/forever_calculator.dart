@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../core.dart' as core;
+import '../planning/planning.dart' as planning;
 
 export '../core.dart'
     show
@@ -94,7 +95,7 @@ const _bpsSource = core.SourceProvenance(
   pages: '50–57',
 );
 
-const _templates = <ForeverCalculatorTemplate>[
+final _templates = <ForeverCalculatorTemplate>[
   ForeverCalculatorTemplate(
     id: 'FV-141',
     name: 'Beginner Prep School',
@@ -119,38 +120,7 @@ const _templates = <ForeverCalculatorTemplate>[
     selectable: true,
     daysPerWeek: 4,
     trainingMaxPolicy: ForeverTrainingMaxPolicy.confirmAtCheckpoints,
-    sequence: [
-      ForeverSequenceBlock(
-        kind: ForeverBlockKind.leader,
-        startWeek: 1,
-        durationWeeks: 3,
-        source: _fslSource,
-      ),
-      ForeverSequenceBlock(
-        kind: ForeverBlockKind.leader,
-        startWeek: 4,
-        durationWeeks: 3,
-        source: _fslSource,
-      ),
-      ForeverSequenceBlock(
-        kind: ForeverBlockKind.seventhWeekDeload,
-        startWeek: 7,
-        durationWeeks: 1,
-        source: _fslSource,
-      ),
-      ForeverSequenceBlock(
-        kind: ForeverBlockKind.anchor,
-        startWeek: 8,
-        durationWeeks: 3,
-        source: _fslSource,
-      ),
-      ForeverSequenceBlock(
-        kind: ForeverBlockKind.seventhWeekTmTest,
-        startWeek: 11,
-        durationWeeks: 1,
-        source: _fslSource,
-      ),
-    ],
+    sequence: _compiledForeverOriginalFslSequence(),
     sources: [_fslSource],
   ),
   ForeverCalculatorTemplate(
@@ -202,6 +172,49 @@ const _templates = <ForeverCalculatorTemplate>[
         'NEEDS_REVIEW: no complete reviewed calculator strategy is available.',
   ),
 ];
+
+List<ForeverSequenceBlock> _compiledForeverOriginalFslSequence() {
+  final profile = planning.CommonTrainingProfile(
+    trainingDaysPerWeek: 4,
+    trainingWeekdays: [1, 2, 4, 5],
+    trainingMaxes: {'press': 1},
+    progressionIncrements: {'press': 1},
+  );
+  final configuration = planning.ForeverPlanningConfiguration(
+    profile: profile,
+    kind: planning.ForeverPlanKind.macrocycle,
+    firstLeader: planning.foreverOriginalFslCycleRevision,
+    secondLeader: planning.foreverOriginalFslCycleRevision,
+    anchor: planning.foreverOriginalFslCycleRevision,
+  );
+  var startWeek = 1;
+  return [
+    for (final node
+        in const planning.ForeverSequenceCompiler().compileStructure(
+          configuration,
+        ))
+      () {
+        final duration = node is planning.ForeverCycleNode ? 3 : 1;
+        final block = ForeverSequenceBlock(
+          kind: switch (node) {
+            planning.ForeverCycleNode cycle =>
+              cycle.role == planning.CycleRole.leader
+                  ? ForeverBlockKind.leader
+                  : ForeverBlockKind.anchor,
+            planning.ForeverProtocolNode protocol =>
+              protocol.purpose == planning.ProtocolPurpose.seventhWeekDeload
+                  ? ForeverBlockKind.seventhWeekDeload
+                  : ForeverBlockKind.seventhWeekTmTest,
+          },
+          startWeek: startWeek,
+          durationWeeks: duration,
+          source: _fslSource,
+        );
+        startWeek += duration;
+        return block;
+      }(),
+  ];
+}
 
 /// Lists both executable presets and clearly labelled documentary entries.
 List<ForeverCalculatorTemplate> listForeverCalculatorTemplates({

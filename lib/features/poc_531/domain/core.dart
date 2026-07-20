@@ -367,10 +367,24 @@ GeneratedProgram generateProgram(ProgramConfiguration configuration) {
       };
     }
 
+    Map<MovementId, double>? confirmedAtNode(String nodeId) {
+      final values = configuration.options.confirmedTrainingMaxesByNode[nodeId];
+      if (values == null) return null;
+      return {
+        for (final entry in values.entries) _movement(entry.key): entry.value,
+      };
+    }
+
     Map<MovementId, double> progressed(int count) => {
       for (final movement in movementMaxes.keys)
         movement: movementMaxes[movement]! + increments[movement]! * count,
     };
+
+    final confirmedForeverNodes = <String, Map<MovementId, double>>{};
+    for (final nodeId in const ['C1', 'C2', 'C3']) {
+      final confirmation = confirmedAtNode(nodeId);
+      if (confirmation != null) confirmedForeverNodes[nodeId] = confirmation;
+    }
 
     final canonicalAthlete = CanonicalAthleteConfiguration(
       movementOrder: MainLift.values.map(_movement).toList(),
@@ -386,19 +400,19 @@ GeneratedProgram generateProgram(ProgramConfiguration configuration) {
                     ? progressed(1)
                     : null)
           : null,
-      confirmedTrainingMaxesByWeek:
+      confirmedTrainingMaxesByNode:
           program.generatorId == 'canonical-forever' ||
               program.generatorId == 'canonical-forever-original-fsl'
+          ? confirmedForeverNodes
+          : const {},
+      projectedTrainingMaxesByNode:
+          (program.generatorId == 'canonical-forever' ||
+                  program.generatorId == 'canonical-forever-original-fsl') &&
+              configuration.options.projectFutureTrainingMaxes
           ? {
-              for (final week in const [3, 6, 10])
-                if (confirmedAt(week) case final confirmation?)
-                  week: confirmation
-                else if (configuration.options.projectFutureTrainingMaxes)
-                  week: progressed(switch (week) {
-                    3 => 1,
-                    6 => 2,
-                    _ => 3,
-                  }),
+              for (final node in const [('C1', 1), ('C2', 2), ('C3', 3)])
+                if (confirmedAtNode(node.$1) == null)
+                  node.$1: progressed(node.$2),
             }
           : const {},
       trainingMaxRatios: program.generatorId == 'canonical-bps'
