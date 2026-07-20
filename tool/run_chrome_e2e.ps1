@@ -67,13 +67,36 @@ try {
         '-d', 'web-server', '--browser-name=chrome',
         "--driver-port=$DriverPort", "--web-port=$WebPort"
     )
-    $flutterProcess = Start-Process -FilePath $flutter -ArgumentList $arguments -WorkingDirectory $repositoryRoot -PassThru -NoNewWindow
+    $escapedFlutter = $flutter.Replace("'", "''")
+    $escapedArguments = $arguments | ForEach-Object {
+        "'" + $_.Replace("'", "''") + "'"
+    }
+    $runnerCommand = "& '$escapedFlutter' " + ($escapedArguments -join ' ') + '; exit $LASTEXITCODE'
+    $encodedCommand = [Convert]::ToBase64String(
+        [Text.Encoding]::Unicode.GetBytes($runnerCommand)
+    )
+    $runnerInfo = [Diagnostics.ProcessStartInfo]::new()
+    $runnerInfo.FileName = 'powershell.exe'
+    $runnerInfo.Arguments = "-NoProfile -NonInteractive -EncodedCommand $encodedCommand"
+    $runnerInfo.WorkingDirectory = $repositoryRoot
+    $runnerInfo.UseShellExecute = $false
+    $flutterProcess = [Diagnostics.Process]::new()
+    $flutterProcess.StartInfo = $runnerInfo
+    if (-not $flutterProcess.Start()) {
+        throw 'Chrome E2E process could not be started.'
+    }
     if (-not $flutterProcess.WaitForExit($TimeoutSeconds * 1000)) {
         Stop-ProcessTree $flutterProcess
         throw "Chrome E2E exceeded the $TimeoutSeconds-second timeout."
     }
-    if ($flutterProcess.ExitCode -ne 0) {
-        throw "Chrome E2E failed with exit code $($flutterProcess.ExitCode)."
+    $flutterProcess.WaitForExit()
+    $flutterProcess.Refresh()
+    $flutterExitCode = $flutterProcess.ExitCode
+    if ($null -eq $flutterExitCode) {
+        throw 'Chrome E2E process ended without an observable exit code.'
+    }
+    if ($flutterExitCode -ne 0) {
+        throw "Chrome E2E failed with exit code $flutterExitCode."
     }
 }
 finally {
