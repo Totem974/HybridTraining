@@ -95,22 +95,8 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
           ) ??
           1);
       final amendmentId = '${request.planId}:amendment:$version';
-      final before = {
-        'sessions': {
-          for (final row in sessions)
-            row['id']! as String: {
-              'status': row['status'],
-              'scheduledFor': row['scheduled_for'],
-            },
-        },
-      };
-      final after = {
-        'rescheduledSessions': {
-          for (final entry in request.rescheduledSessions.entries)
-            entry.key: _date(entry.value),
-        },
-        'trainingMaxChanges': request.trainingMaxChanges,
-      };
+      final before = await _beforeSnapshot(tx, sessions, request);
+      final after = _requestSnapshot(request);
       final diff = {
         'preservedCompletedSessionIds': completed,
         'activeSessionIds': active,
@@ -177,6 +163,21 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
         throw StateError('A matching unapplied preview is required.');
       }
       final sessions = await _planSessions(tx, request.planId);
+      final preview = amendment.single;
+      if (preview['reason'] != request.reason.trim() ||
+          preview['rule_id'] != request.ruleId.trim() ||
+          !_sameJson(
+            preview['after_snapshot_json']! as String,
+            _requestSnapshot(request),
+          )) {
+        throw StateError('The amendment request differs from its preview.');
+      }
+      if (!_sameJson(
+        preview['before_snapshot_json']! as String,
+        await _beforeSnapshot(tx, sessions, request),
+      )) {
+        throw StateError('The plan changed after the amendment preview.');
+      }
       final active = sessions.where(
         (row) =>
             row['status'] == 'started' ||
@@ -194,18 +195,24 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
       final at = _date(clock());
       for (final row in active) {
         final sessionId = row['id']! as String;
-        await tx.update(
+        final executionUpdated = await tx.update(
           'workout_executions',
           {'state': 'abandoned', 'ended_at': at, 'updated_at': at},
-          where: 'session_id = ?',
+          where: "session_id = ? AND state IN ('activeSet','resting','paused')",
           whereArgs: [sessionId],
         );
-        await tx.update(
+        if (executionUpdated != 1) {
+          throw StateError('The active workout changed after its preview.');
+        }
+        final sessionUpdated = await tx.update(
           'plan_training_sessions',
           {'status': 'cancelled', 'completed_at': at},
-          where: 'id = ?',
+          where: "id = ? AND status = 'started'",
           whereArgs: [sessionId],
         );
+        if (sessionUpdated != 1) {
+          throw StateError('The active session changed after its preview.');
+        }
       }
       for (final entry in request.rescheduledSessions.entries) {
         final updated = await tx.update(
@@ -233,12 +240,15 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
           at: at,
         );
       }
-      await tx.update(
+      final updated = await tx.update(
         'plan_amendments',
         {'state': 'applied', 'applied_at': at},
         where: "id = ? AND state = 'previewed'",
         whereArgs: [amendmentId],
       );
+      if (updated != 1) {
+        throw StateError('The amendment preview could not be applied.');
+      }
     });
   }
 
@@ -618,6 +628,86 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
             request.trainingMaxChanges.isEmpty)) {
       throw ArgumentError('A sourced, non-empty amendment is required.');
     }
+  }
+
+  Future<Map<String, Object?>> _beforeSnapshot(
+    DatabaseExecutor tx,
+    List<Map<String, Object?>> sessions,
+    PlanAmendmentRequest request,
+  ) async {
+    final movements = request.trainingMaxChanges.keys.toList()..sort();
+    final prescriptionInputs = <String, Object?>{};
+    final timelineInputs = <String, Object?>{};
+    for (final movement in movements) {
+      prescriptionInputs[movement] = {
+        'activities': await tx.rawQuery(
+          '''SELECT ap.id, ap.target_json, ap.rounding_increment
+             FROM activity_prescriptions ap
+             JOIN session_blocks sb ON sb.id = ap.session_block_id
+             JOIN plan_training_sessions s ON s.id = sb.session_id
+             JOIN plan_training_cycles c ON c.id = s.cycle_id
+             JOIN training_blocks b ON b.id = c.block_id
+             WHERE b.plan_id = ? AND s.status = 'planned'
+               AND ap.movement_or_activity_id = ? ORDER BY ap.id''',
+          [request.planId, movement],
+        ),
+        'sets': await tx.rawQuery(
+          '''SELECT sp.id, sp.percentage, sp.rounding_increment
+             FROM set_prescriptions sp
+             JOIN session_blocks sb ON sb.id = sp.session_block_id
+             JOIN plan_training_sessions s ON s.id = sb.session_id
+             JOIN plan_training_cycles c ON c.id = s.cycle_id
+             JOIN training_blocks b ON b.id = c.block_id
+             WHERE b.plan_id = ? AND s.status = 'planned'
+               AND sb.movement_id = ? ORDER BY sp.id''',
+          [request.planId, movement],
+        ),
+      };
+      timelineInputs[movement] = await tx.query(
+        'training_max_timeline',
+        columns: ['id', 'sequence', 'state'],
+        where: 'plan_id = ? AND movement_id = ?',
+        whereArgs: [request.planId, movement],
+        orderBy: 'sequence, id',
+      );
+    }
+    return {
+      'sessions': {
+        for (final row in sessions)
+          row['id']! as String: {
+            'status': row['status'],
+            'scheduledFor': row['scheduled_for'],
+            'executionState': row['execution_state'],
+          },
+      },
+      'prescriptionInputs': prescriptionInputs,
+      'timelineInputs': timelineInputs,
+    };
+  }
+
+  static Map<String, Object?> _requestSnapshot(PlanAmendmentRequest request) =>
+      {
+        'rescheduledSessions': {
+          for (final entry in request.rescheduledSessions.entries)
+            entry.key: _date(entry.value),
+        },
+        'trainingMaxChanges': request.trainingMaxChanges,
+        'activeSessionDisposition': request.activeSessionDisposition.name,
+      };
+
+  static bool _sameJson(String encoded, Object? value) =>
+      jsonEncode(_canonicalJson(jsonDecode(encoded))) ==
+      jsonEncode(_canonicalJson(value));
+
+  static Object? _canonicalJson(Object? value) {
+    if (value is Map) {
+      final keys = value.keys.cast<String>().toList()..sort();
+      return <String, Object?>{
+        for (final key in keys) key: _canonicalJson(value[key]),
+      };
+    }
+    if (value is List) return value.map(_canonicalJson).toList();
+    return value;
   }
 
   static String _date(DateTime value) => value.toUtc().toIso8601String();

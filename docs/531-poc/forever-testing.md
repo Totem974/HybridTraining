@@ -30,7 +30,7 @@ est rapporté sans déclarer le scénario passant.
 
 - `dart format --set-exit-if-changed .` : réussi ;
 - `flutter analyze` : réussi, aucun diagnostic ;
-- `flutter test --reporter compact` : réussi, 347 tests ;
+- `flutter test --reporter compact` : réussi, 351 tests ;
 - Google Chrome : cinq scénarios E2E sur cinq réussis en 34,7 secondes ;
 - Mozilla Firefox : cinq scénarios E2E sur cinq réussis en 34,7 secondes ;
 - le scénario Forever termine M1 et M2, clôture la série, recharge une nouvelle

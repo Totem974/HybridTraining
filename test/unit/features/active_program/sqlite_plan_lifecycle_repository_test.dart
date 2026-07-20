@@ -203,6 +203,231 @@ void main() {
     },
   );
 
+  test('refuses a request changed after preview without mutation', () async {
+    final previewed = PlanAmendmentRequest(
+      planId: 'plan',
+      reason: 'Previewed fictitious reschedule',
+      ruleId: 'TEST-PREVIEW-MATCH',
+      rescheduledSessions: {'plan-session-3': DateTime.utc(2026, 8, 15)},
+    );
+    final preview = await lifecycle.previewAmendment(previewed);
+    final database = await local.open();
+    final originalSchedule = (await database.query(
+      'plan_training_sessions',
+      columns: ['scheduled_for'],
+      where: 'id = ?',
+      whereArgs: ['plan-session-3'],
+    )).single['scheduled_for'];
+    final changed = PlanAmendmentRequest(
+      planId: previewed.planId,
+      reason: previewed.reason,
+      ruleId: previewed.ruleId,
+      rescheduledSessions: {'plan-session-3': DateTime.utc(2026, 8, 16)},
+    );
+
+    await expectLater(
+      lifecycle.applyAmendment(
+        changed,
+        amendmentId: preview.amendmentId,
+        confirmed: true,
+      ),
+      throwsStateError,
+    );
+
+    expect(
+      (await database.query(
+        'plan_training_sessions',
+        where: 'id = ?',
+        whereArgs: ['plan-session-3'],
+      )).single['scheduled_for'],
+      originalSchedule,
+    );
+    expect(
+      (await database.query(
+        'plan_amendments',
+        where: 'id = ?',
+        whereArgs: [preview.amendmentId],
+      )).single['state'],
+      'previewed',
+    );
+  });
+
+  test('refuses a stale persisted state without partial mutation', () async {
+    final request = PlanAmendmentRequest(
+      planId: 'plan',
+      reason: 'Previewed before external future change',
+      ruleId: 'TEST-STALE-PREVIEW',
+      rescheduledSessions: {'plan-session-3': DateTime.utc(2026, 8, 15)},
+    );
+    final preview = await lifecycle.previewAmendment(request);
+    final database = await local.open();
+    final originalTargetSchedule = (await database.query(
+      'plan_training_sessions',
+      columns: ['scheduled_for'],
+      where: 'id = ?',
+      whereArgs: ['plan-session-3'],
+    )).single['scheduled_for'];
+    await database.update(
+      'plan_training_sessions',
+      {'scheduled_for': '2026-08-01'},
+      where: 'id = ?',
+      whereArgs: ['plan-session-8'],
+    );
+
+    await expectLater(
+      lifecycle.applyAmendment(
+        request,
+        amendmentId: preview.amendmentId,
+        confirmed: true,
+      ),
+      throwsStateError,
+    );
+
+    expect(
+      (await database.query(
+        'plan_training_sessions',
+        where: 'id = ?',
+        whereArgs: ['plan-session-3'],
+      )).single['scheduled_for'],
+      originalTargetSchedule,
+    );
+    expect(
+      (await database.query(
+        'plan_training_sessions',
+        where: 'id = ?',
+        whereArgs: ['plan-session-8'],
+      )).single['scheduled_for'],
+      '2026-08-01',
+    );
+    expect(
+      (await database.query(
+        'plan_amendments',
+        where: 'id = ?',
+        whereArgs: [preview.amendmentId],
+      )).single['state'],
+      'previewed',
+    );
+  });
+
+  test('refuses an active execution completed after preview', () async {
+    final database = await local.open();
+    await database.update(
+      'plan_training_sessions',
+      {'status': 'started'},
+      where: 'id = ?',
+      whereArgs: ['plan-session-2'],
+    );
+    await database.insert('workout_executions', {
+      'session_id': 'plan-session-2',
+      'state': 'activeSet',
+      'active_set_index': 0,
+      'notes': '',
+      'reversible_stack_json': '[]',
+      'updated_at': '2026-07-21T07:00:00.000Z',
+    });
+    final request = PlanAmendmentRequest(
+      planId: 'plan',
+      reason: 'Preview while a fictitious workout is active',
+      ruleId: 'TEST-ACTIVE-RACE',
+      rescheduledSessions: {'plan-session-3': DateTime.utc(2026, 8, 15)},
+      activeSessionDisposition: ActiveSessionDisposition.abandon,
+    );
+    final preview = await lifecycle.previewAmendment(request);
+    await database.update(
+      'workout_executions',
+      {'state': 'completed'},
+      where: 'session_id = ?',
+      whereArgs: ['plan-session-2'],
+    );
+
+    await expectLater(
+      lifecycle.applyAmendment(
+        request,
+        amendmentId: preview.amendmentId,
+        confirmed: true,
+      ),
+      throwsStateError,
+    );
+
+    expect(
+      (await database.query(
+        'workout_executions',
+        where: 'session_id = ?',
+        whereArgs: ['plan-session-2'],
+      )).single['state'],
+      'completed',
+    );
+    expect(
+      (await database.query(
+        'plan_amendments',
+        where: 'id = ?',
+        whereArgs: [preview.amendmentId],
+      )).single['state'],
+      'previewed',
+    );
+  });
+
+  test('refuses changed TM calculation inputs after preview', () async {
+    final request = PlanAmendmentRequest(
+      planId: 'plan',
+      reason: 'Preview fictitious TM recalculation',
+      ruleId: 'TEST-TM-INPUT-RACE',
+      trainingMaxChanges: {MovementId.squat.value: 110},
+    );
+    final preview = await lifecycle.previewAmendment(request);
+    final database = await local.open();
+    final prescription = (await database.rawQuery(
+      '''SELECT ap.id, ap.calculated_load
+         FROM activity_prescriptions ap
+         JOIN session_blocks sb ON sb.id = ap.session_block_id
+         JOIN plan_training_sessions s ON s.id = sb.session_id
+         WHERE s.status = 'planned' AND ap.movement_or_activity_id = ?
+         ORDER BY ap.id LIMIT 1''',
+      [MovementId.squat.value],
+    )).single;
+    await database.update(
+      'activity_prescriptions',
+      {'target_json': '{"percentage":0.01}'},
+      where: 'id = ?',
+      whereArgs: [prescription['id']],
+    );
+
+    await expectLater(
+      lifecycle.applyAmendment(
+        request,
+        amendmentId: preview.amendmentId,
+        confirmed: true,
+      ),
+      throwsStateError,
+    );
+
+    expect(
+      (await database.query(
+        'activity_prescriptions',
+        columns: ['calculated_load'],
+        where: 'id = ?',
+        whereArgs: [prescription['id']],
+      )).single['calculated_load'],
+      prescription['calculated_load'],
+    );
+    expect(
+      await database.query(
+        'training_max_timeline',
+        where: "movement_id = ? AND state = 'confirmed'",
+        whereArgs: [MovementId.squat.value],
+      ),
+      hasLength(1),
+    );
+    expect(
+      (await database.query(
+        'plan_amendments',
+        where: 'id = ?',
+        whereArgs: [preview.amendmentId],
+      )).single['state'],
+      'previewed',
+    );
+  });
+
   test('confirmed TM decision rewrites only future prescriptions', () async {
     final database = await local.open();
     await database.update(
