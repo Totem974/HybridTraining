@@ -51,6 +51,22 @@ void main() {
     expect(find.text('Skip warm-up'), findsOneWidget);
   });
 
+  testWidgets('warmup offers Original and Beyond with required base weights', (
+    tester,
+  ) async {
+    await openCalculator(tester);
+    expect(find.text('None'), findsNothing);
+    expect(find.text('Original'), findsWidgets);
+    await tester.tap(find.text('Original').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Beyond 5/3/1').last);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('warmup-base-lower')), findsOneWidget);
+    expect(find.byKey(const Key('warmup-base-upper')), findsOneWidget);
+    expect(find.text('Lower Body'), findsOneWidget);
+    expect(find.text('Upper Body'), findsOneWidget);
+  });
+
   testWidgets(
     '1 Rep Max mode displays editable repetitions for all four lifts',
     (tester) async {

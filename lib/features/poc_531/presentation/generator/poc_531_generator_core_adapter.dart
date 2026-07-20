@@ -166,6 +166,8 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
       daysPerWeek: value['days'] as int? ?? 4,
       unit: value['unit'] as String? ?? 'kg',
       supplementalPercent: value['supplementalPercent'] as int? ?? 50,
+      warmupBaseUpper: (value['warmupBaseUpper'] as num?)?.toDouble() ?? 95,
+      warmupBaseLower: (value['warmupBaseLower'] as num?)?.toDouble() ?? 135,
       bbbPercents:
           value['bbbUseSameRatio'] == false && value['bbbRatiosByLift'] is Map
           ? (value['bbbRatiosByLift'] as Map).map(

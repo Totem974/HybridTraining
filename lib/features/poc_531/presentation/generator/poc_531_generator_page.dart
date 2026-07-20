@@ -163,6 +163,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   };
   final _ratio = TextEditingController(text: '90');
   final _simplestStrengthRatio = TextEditingController(text: '90');
+  final _warmupBaseUpper = TextEditingController(text: '95');
+  final _warmupBaseLower = TextEditingController(text: '135');
   final _simplestStrengthWeights = {
     'Close Grip Bench': TextEditingController(text: '50'),
     'Incline Press': TextEditingController(text: '75'),
@@ -202,7 +204,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   int _days = 4, _supplemental = 50, _jokerCap = 10;
   int _bodyweightTotalReps = 75, _bodyweightSetCount = 5;
   int _fslSetCount = 3, _fslRepetitions = 5, _gvtRatio = 30;
-  String _warmup = 'none', _deload = 'deload1', _weekOrder = '531';
+  String _warmup = 'original', _deload = 'deload1', _weekOrder = '531';
   bool _jokers = false,
       _skipDeloadWarmup = false,
       _gvtAlternateExercise = false,
@@ -295,6 +297,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
       ..._simplestStrengthReps.values,
       _ratio,
       _simplestStrengthRatio,
+      _warmupBaseUpper,
+      _warmupBaseLower,
       _bar,
     ]) {
       c.dispose();
@@ -340,6 +344,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     'weekOrder': _weekOrder,
     'bastardWorkOrder': _bastardWorkOrder,
     'warmup': _warmup,
+    'warmupBaseUpper': double.tryParse(_warmupBaseUpper.text),
+    'warmupBaseLower': double.tryParse(_warmupBaseLower.text),
     'jokersEnabled': _jokers,
     'jokerIncrement': 5,
     'jokerCap': _jokerCap,
@@ -1103,7 +1109,6 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
               isExpanded: true,
               decoration: const InputDecoration(labelText: 'Option'),
               items: const [
-                DropdownMenuItem(value: 'none', child: Text('None')),
                 DropdownMenuItem(value: 'original', child: Text('Original')),
                 DropdownMenuItem(value: 'beyond', child: Text('Beyond 5/3/1')),
               ],
@@ -1112,6 +1117,38 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                 _changed();
               },
             ),
+            if (_warmup == 'beyond') ...[
+              const SizedBox(height: 10),
+              Text('Base Weight', style: _label),
+              const SizedBox(height: 8),
+              TextField(
+                key: const Key('warmup-base-lower'),
+                controller: _warmupBaseLower,
+                style: _inputTextStyle,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: InputDecoration(
+                  labelText: 'Lower Body',
+                  suffixText: _unit,
+                ),
+                onChanged: (_) => _changed(),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                key: const Key('warmup-base-upper'),
+                controller: _warmupBaseUpper,
+                style: _inputTextStyle,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: InputDecoration(
+                  labelText: 'Upper Body',
+                  suffixText: _unit,
+                ),
+                onChanged: (_) => _changed(),
+              ),
+            ],
           ]),
           _optionColumn('JOKER SETS', [
             SwitchListTile(
@@ -1698,6 +1735,10 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     };
     final r = v['trainingMaxRatio'];
     if (r is num) _ratio.text = '$r';
+    final upperBase = v['warmupBaseUpper'];
+    if (upperBase is num) _warmupBaseUpper.text = '$upperBase';
+    final lowerBase = v['warmupBaseLower'];
+    if (lowerBase is num) _warmupBaseLower.text = '$lowerBase';
     final lv = v['lifts'];
     if (lv is Map) {
       for (final l in _lifts) {

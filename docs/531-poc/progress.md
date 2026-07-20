@@ -133,8 +133,11 @@
   newly selected Forever program.
 - Three-session weeks distribute their cards across the complete available
   width. Text and reorder-chip contrast were strengthened.
-- Final validation: static analysis clean, 229 tests passed, Web release build
+- Final validation: static analysis clean, 230 tests passed, Web release build
   passed, and POC Core/catalog/application line coverage is 93.25%.
 - White input surfaces now force dark value, menu and suffix text; floating
   labels use high-contrast blue on the dark card background. Disabled and error
   states retain explicit readable colors on desktop and mobile.
+- Warmup now exposes only the canonical Original and Beyond choices. Beyond
+  reveals separate upper- and lower-body base weights, preserves them in the
+  serialized configuration and passes them into the calculator engine.
