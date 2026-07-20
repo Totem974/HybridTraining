@@ -348,48 +348,72 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
   @override
   Future<LifecycleStatus> completeCycle(String cycleId, DateTime at) async {
     final database = await localDatabase.open();
-    final rows = await database.rawQuery(
-      '''SELECT c.block_id, b.plan_id,
+    return database.transaction((tx) async {
+      final rows = await tx.rawQuery(
+        '''SELECT c.status, c.block_id, b.plan_id,
                 SUM(CASE WHEN s.status IN ('complete','cancelled') THEN 0 ELSE 1 END) AS open_count
          FROM plan_training_cycles c
          JOIN training_blocks b ON b.id = c.block_id
          JOIN plan_training_sessions s ON s.cycle_id = c.id
          WHERE c.id = ? GROUP BY c.id''',
-      [cycleId],
-    );
-    if (rows.isEmpty || (rows.single['open_count']! as int) != 0) {
-      throw StateError('Every session must be closed before cycle completion.');
-    }
-    await database.update(
-      'plan_training_cycles',
-      {'status': 'complete'},
-      where: 'id = ?',
-      whereArgs: [cycleId],
-    );
-    return advancePlanLifecycle(rows.single['plan_id']! as String, at);
+        [cycleId],
+      );
+      if (rows.isEmpty || (rows.single['open_count']! as int) != 0) {
+        throw StateError(
+          'Every session must be closed before cycle completion.',
+        );
+      }
+      final status = rows.single['status'];
+      if (status == 'cancelled') {
+        throw StateError('A cancelled cycle cannot be completed.');
+      }
+      if (status != 'complete') {
+        final updated = await tx.update(
+          'plan_training_cycles',
+          {'status': 'complete'},
+          where: "id = ? AND status IN ('planned','active')",
+          whereArgs: [cycleId],
+        );
+        if (updated != 1) {
+          throw StateError('Cycle changed before completion.');
+        }
+      }
+      return _advancePlanLifecycle(tx, rows.single['plan_id']! as String, at);
+    });
   }
 
   @override
   Future<LifecycleStatus> completeBlock(String blockId, DateTime at) async {
     final database = await localDatabase.open();
-    final rows = await database.rawQuery(
-      '''SELECT b.plan_id,
+    return database.transaction((tx) async {
+      final rows = await tx.rawQuery(
+        '''SELECT b.status, b.plan_id,
                 SUM(CASE WHEN c.status IN ('complete','cancelled') THEN 0 ELSE 1 END) AS open_count
          FROM training_blocks b
          JOIN plan_training_cycles c ON c.block_id = b.id
          WHERE b.id = ? GROUP BY b.id''',
-      [blockId],
-    );
-    if (rows.isEmpty || (rows.single['open_count']! as int) != 0) {
-      throw StateError('Every cycle must be closed before block completion.');
-    }
-    await database.update(
-      'training_blocks',
-      {'status': 'complete', 'completed_at': _date(at)},
-      where: 'id = ?',
-      whereArgs: [blockId],
-    );
-    return advancePlanLifecycle(rows.single['plan_id']! as String, at);
+        [blockId],
+      );
+      if (rows.isEmpty || (rows.single['open_count']! as int) != 0) {
+        throw StateError('Every cycle must be closed before block completion.');
+      }
+      final status = rows.single['status'];
+      if (status == 'cancelled') {
+        throw StateError('A cancelled block cannot be completed.');
+      }
+      if (status != 'complete') {
+        final updated = await tx.update(
+          'training_blocks',
+          {'status': 'complete', 'completed_at': _date(at)},
+          where: "id = ? AND status IN ('planned','active')",
+          whereArgs: [blockId],
+        );
+        if (updated != 1) {
+          throw StateError('Block changed before completion.');
+        }
+      }
+      return _advancePlanLifecycle(tx, rows.single['plan_id']! as String, at);
+    });
   }
 
   @override
@@ -398,92 +422,114 @@ class SqlitePlanLifecycleRepository implements PlanLifecycleRepository {
     DateTime at,
   ) async {
     final database = await localDatabase.open();
-    return database.transaction((tx) async {
-      await tx.rawUpdate(
-        '''UPDATE plan_training_cycles SET status = 'complete'
+    return database.transaction((tx) => _advancePlanLifecycle(tx, planId, at));
+  }
+
+  Future<LifecycleStatus> _advancePlanLifecycle(
+    DatabaseExecutor tx,
+    String planId,
+    DateTime at,
+  ) async {
+    final plans = await tx.query(
+      'training_plans',
+      columns: ['status'],
+      where: 'id = ?',
+      whereArgs: [planId],
+      limit: 2,
+    );
+    if (plans.length != 1) throw StateError('Plan not found: $planId');
+    final planStatus = plans.single['status'];
+    if (planStatus == 'cancelled') {
+      throw StateError('A cancelled plan cannot advance.');
+    }
+
+    await tx.rawUpdate(
+      '''UPDATE plan_training_cycles SET status = 'complete'
            WHERE block_id IN (SELECT id FROM training_blocks WHERE plan_id = ?)
-             AND status != 'complete'
+             AND status IN ('planned','active')
              AND NOT EXISTS (
                SELECT 1 FROM plan_training_sessions s
                WHERE s.cycle_id = plan_training_cycles.id
                  AND s.status NOT IN ('complete','cancelled'))''',
-        [planId],
-      );
-      await tx.rawUpdate(
-        '''UPDATE training_blocks SET status = 'complete', completed_at = ?
-           WHERE plan_id = ? AND status != 'complete'
+      [planId],
+    );
+    await tx.rawUpdate(
+      '''UPDATE training_blocks SET status = 'complete', completed_at = ?
+           WHERE plan_id = ? AND status IN ('planned','active')
              AND NOT EXISTS (
                SELECT 1 FROM plan_training_cycles c
                WHERE c.block_id = training_blocks.id
                  AND c.status NOT IN ('complete','cancelled'))''',
-        [_date(at), planId],
-      );
-      final blocks = await tx.query(
+      [_date(at), planId],
+    );
+    final blocks = await tx.query(
+      'training_blocks',
+      where: 'plan_id = ?',
+      whereArgs: [planId],
+      orderBy: 'sequence',
+    );
+    if (blocks.isEmpty) throw StateError('Plan not found: $planId');
+    final next = blocks.cast<Map<String, Object?>>().firstWhere(
+      (row) => row['status'] == 'planned',
+      orElse: () => const {},
+    );
+    if (next.isNotEmpty) {
+      await tx.update(
         'training_blocks',
-        where: 'plan_id = ?',
+        {'status': 'active', 'started_at': _date(at)},
+        where: 'id = ?',
+        whereArgs: [next['id']],
+      );
+    }
+    final planComplete = blocks.every(
+      (row) => const {'complete', 'cancelled'}.contains(row['status']),
+    );
+    if (planComplete) {
+      final updated = await tx.update(
+        'training_plans',
+        {'status': 'complete', 'completed_at': _date(at)},
+        where: "id = ? AND status IN ('planned','active')",
         whereArgs: [planId],
-        orderBy: 'sequence',
       );
-      if (blocks.isEmpty) throw StateError('Plan not found: $planId');
-      final next = blocks.cast<Map<String, Object?>>().firstWhere(
-        (row) => row['status'] == 'planned',
-        orElse: () => const {},
-      );
-      if (next.isNotEmpty) {
-        await tx.update(
-          'training_blocks',
-          {'status': 'active', 'started_at': _date(at)},
-          where: 'id = ?',
-          whereArgs: [next['id']],
-        );
+      if (planStatus != 'complete' && updated != 1) {
+        throw StateError('Plan changed before completion.');
       }
-      final planComplete = blocks.every(
-        (row) => const {'complete', 'cancelled'}.contains(row['status']),
-      );
-      if (planComplete) {
-        await tx.update(
-          'training_plans',
-          {'status': 'complete', 'completed_at': _date(at)},
-          where: 'id = ?',
-          whereArgs: [planId],
-        );
-      }
-      final completedWeek =
-          Sqflite.firstIntValue(
-            await tx.rawQuery(
-              '''SELECT MAX(s.programming_week_number)
+    }
+    final completedWeek =
+        Sqflite.firstIntValue(
+          await tx.rawQuery(
+            '''SELECT MAX(s.programming_week_number)
                  FROM plan_training_sessions s
                  JOIN plan_training_cycles c ON c.id = s.cycle_id
                  JOIN training_blocks b ON b.id = c.block_id
                  WHERE b.plan_id = ? AND s.status = 'complete' ''',
-              [planId],
-            ),
-          ) ??
-          0;
-      final decisionRequired =
-          (Sqflite.firstIntValue(
-                    await tx.rawQuery(
-                      '''SELECT COUNT(*) FROM training_max_timeline
+            [planId],
+          ),
+        ) ??
+        0;
+    final decisionRequired =
+        (Sqflite.firstIntValue(
+                  await tx.rawQuery(
+                    '''SELECT COUNT(*) FROM training_max_timeline
                      WHERE plan_id = ? AND state = 'previewed'
                        AND sequence IN (
                          SELECT MIN(sequence) FROM training_max_timeline
                          WHERE plan_id = ? AND state = 'previewed'
                        )''',
-                      [planId, planId],
-                    ),
-                  ) ??
-                  0) >
-              0 &&
-          completedWeek > 0;
-      return LifecycleStatus(
-        sessionComplete: true,
-        cycleComplete: blocks.any((row) => row['status'] == 'complete'),
-        blockComplete: blocks.any((row) => row['status'] == 'complete'),
-        planComplete: planComplete,
-        trainingMaxDecisionRequired: decisionRequired,
-        nextBlockId: next['id'] as String?,
-      );
-    });
+                    [planId, planId],
+                  ),
+                ) ??
+                0) >
+            0 &&
+        completedWeek > 0;
+    return LifecycleStatus(
+      sessionComplete: true,
+      cycleComplete: blocks.any((row) => row['status'] == 'complete'),
+      blockComplete: blocks.any((row) => row['status'] == 'complete'),
+      planComplete: planComplete,
+      trainingMaxDecisionRequired: decisionRequired,
+      nextBlockId: next['id'] as String?,
+    );
   }
 
   @override

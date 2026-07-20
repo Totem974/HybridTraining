@@ -640,8 +640,308 @@ void main() {
         (await database.query('training_plans')).single['status'],
         'complete',
       );
+      final completedAt = (await database.query(
+        'training_plans',
+        columns: ['completed_at'],
+      )).single['completed_at'];
+      final repeated = await lifecycle.advancePlanLifecycle(
+        'plan',
+        DateTime.utc(2026, 10, 2),
+      );
+      expect(repeated.planComplete, isTrue);
+      expect(
+        (await database.query(
+          'training_plans',
+          columns: ['completed_at'],
+        )).single['completed_at'],
+        completedAt,
+      );
     },
   );
+
+  test(
+    'a cancelled cycle stays terminal when its sessions are closed',
+    () async {
+      final database = await local.open();
+      final cycleId =
+          (await database.query(
+                'plan_training_cycles',
+                columns: ['id'],
+                orderBy: 'sequence',
+                limit: 1,
+              )).single['id']!
+              as String;
+      await database.update(
+        'plan_training_sessions',
+        {'status': 'complete'},
+        where: 'cycle_id = ?',
+        whereArgs: [cycleId],
+      );
+      await database.update(
+        'plan_training_cycles',
+        {'status': 'cancelled'},
+        where: 'id = ?',
+        whereArgs: [cycleId],
+      );
+
+      await lifecycle.advancePlanLifecycle('plan', DateTime.utc(2026, 10, 1));
+      expect(
+        (await database.query(
+          'plan_training_cycles',
+          columns: ['status'],
+          where: 'id = ?',
+          whereArgs: [cycleId],
+        )).single['status'],
+        'cancelled',
+      );
+      await expectLater(
+        lifecycle.completeCycle(cycleId, DateTime.utc(2026, 10, 2)),
+        throwsStateError,
+      );
+      expect(
+        (await database.query(
+          'plan_training_cycles',
+          columns: ['status'],
+          where: 'id = ?',
+          whereArgs: [cycleId],
+        )).single['status'],
+        'cancelled',
+      );
+    },
+  );
+
+  test('a cancelled block keeps its terminal status and timestamp', () async {
+    final database = await local.open();
+    final blockId =
+        (await database.query(
+              'training_blocks',
+              columns: ['id'],
+              orderBy: 'sequence',
+              limit: 1,
+            )).single['id']!
+            as String;
+    await database.update(
+      'plan_training_cycles',
+      {'status': 'complete'},
+      where: 'block_id = ?',
+      whereArgs: [blockId],
+    );
+    const cancelledAt = '2026-09-30T07:00:00.000Z';
+    await database.update(
+      'training_blocks',
+      {'status': 'cancelled', 'completed_at': cancelledAt},
+      where: 'id = ?',
+      whereArgs: [blockId],
+    );
+
+    await lifecycle.advancePlanLifecycle('plan', DateTime.utc(2026, 10, 1));
+    final afterAdvance = (await database.query(
+      'training_blocks',
+      columns: ['status', 'completed_at'],
+      where: 'id = ?',
+      whereArgs: [blockId],
+    )).single;
+    expect(afterAdvance['status'], 'cancelled');
+    expect(afterAdvance['completed_at'], cancelledAt);
+    await expectLater(
+      lifecycle.completeBlock(blockId, DateTime.utc(2026, 10, 2)),
+      throwsStateError,
+    );
+    expect(
+      (await database.query(
+        'training_blocks',
+        columns: ['status', 'completed_at'],
+        where: 'id = ?',
+        whereArgs: [blockId],
+      )).single,
+      {'status': 'cancelled', 'completed_at': cancelledAt},
+    );
+  });
+
+  test(
+    'a cancelled plan refuses advancement without changing descendants',
+    () async {
+      final database = await local.open();
+      await database.update('plan_training_sessions', {'status': 'complete'});
+      const cancelledAt = '2026-09-30T07:00:00.000Z';
+      await database.update(
+        'training_plans',
+        {'status': 'cancelled', 'completed_at': cancelledAt},
+        where: 'id = ?',
+        whereArgs: ['plan'],
+      );
+      final cyclesBefore = await database.query(
+        'plan_training_cycles',
+        columns: ['id', 'status'],
+        orderBy: 'id',
+      );
+      final blocksBefore = await database.query(
+        'training_blocks',
+        columns: ['id', 'status', 'started_at', 'completed_at'],
+        orderBy: 'id',
+      );
+
+      await expectLater(
+        lifecycle.advancePlanLifecycle('plan', DateTime.utc(2026, 10, 1)),
+        throwsStateError,
+      );
+      await expectLater(
+        lifecycle.completeTrainingPlan('plan', DateTime.utc(2026, 10, 2)),
+        throwsStateError,
+      );
+      expect(
+        await database.query(
+          'plan_training_cycles',
+          columns: ['id', 'status'],
+          orderBy: 'id',
+        ),
+        cyclesBefore,
+      );
+      expect(
+        await database.query(
+          'training_blocks',
+          columns: ['id', 'status', 'started_at', 'completed_at'],
+          orderBy: 'id',
+        ),
+        blocksBefore,
+      );
+      expect(
+        (await database.query(
+          'training_plans',
+          columns: ['status', 'completed_at'],
+          where: 'id = ?',
+          whereArgs: ['plan'],
+        )).single,
+        {'status': 'cancelled', 'completed_at': cancelledAt},
+      );
+    },
+  );
+
+  test('cycle completion rolls back when its plan is cancelled', () async {
+    final database = await local.open();
+    final cycle = (await database.rawQuery(
+      '''SELECT c.id, c.status
+         FROM plan_training_cycles c
+         JOIN training_blocks b ON b.id = c.block_id
+         WHERE b.plan_id = ? AND c.status IN ('planned','active')
+         ORDER BY b.sequence, c.sequence LIMIT 1''',
+      ['plan'],
+    )).single;
+    final cycleId = cycle['id']! as String;
+    await database.update(
+      'plan_training_sessions',
+      {'status': 'complete'},
+      where: 'cycle_id = ?',
+      whereArgs: [cycleId],
+    );
+    const cancelledAt = '2026-09-30T07:00:00.000Z';
+    await database.update(
+      'training_plans',
+      {'status': 'cancelled', 'completed_at': cancelledAt},
+      where: 'id = ?',
+      whereArgs: ['plan'],
+    );
+    final blocksBefore = await database.query(
+      'training_blocks',
+      columns: ['id', 'status', 'started_at', 'completed_at'],
+      orderBy: 'id',
+    );
+
+    await expectLater(
+      lifecycle.completeCycle(cycleId, DateTime.utc(2026, 10, 1)),
+      throwsStateError,
+    );
+
+    expect(
+      (await database.query(
+        'plan_training_cycles',
+        columns: ['status'],
+        where: 'id = ?',
+        whereArgs: [cycleId],
+      )).single['status'],
+      cycle['status'],
+    );
+    expect(
+      await database.query(
+        'training_blocks',
+        columns: ['id', 'status', 'started_at', 'completed_at'],
+        orderBy: 'id',
+      ),
+      blocksBefore,
+    );
+    expect(
+      (await database.query(
+        'training_plans',
+        columns: ['status', 'completed_at'],
+        where: 'id = ?',
+        whereArgs: ['plan'],
+      )).single,
+      {'status': 'cancelled', 'completed_at': cancelledAt},
+    );
+  });
+
+  test('block completion rolls back when its plan is cancelled', () async {
+    final database = await local.open();
+    final block = (await database.query(
+      'training_blocks',
+      columns: ['id', 'status', 'started_at', 'completed_at'],
+      where: "plan_id = ? AND status IN ('planned','active')",
+      whereArgs: ['plan'],
+      orderBy: 'sequence',
+      limit: 1,
+    )).single;
+    final blockId = block['id']! as String;
+    await database.update(
+      'plan_training_cycles',
+      {'status': 'complete'},
+      where: 'block_id = ?',
+      whereArgs: [blockId],
+    );
+    const cancelledAt = '2026-09-30T07:00:00.000Z';
+    await database.update(
+      'training_plans',
+      {'status': 'cancelled', 'completed_at': cancelledAt},
+      where: 'id = ?',
+      whereArgs: ['plan'],
+    );
+    final cyclesBefore = await database.query(
+      'plan_training_cycles',
+      columns: ['id', 'status'],
+      orderBy: 'id',
+    );
+
+    await expectLater(
+      lifecycle.completeBlock(blockId, DateTime.utc(2026, 10, 1)),
+      throwsStateError,
+    );
+
+    expect(
+      (await database.query(
+        'training_blocks',
+        columns: ['id', 'status', 'started_at', 'completed_at'],
+        where: 'id = ?',
+        whereArgs: [blockId],
+      )).single,
+      block,
+    );
+    expect(
+      await database.query(
+        'plan_training_cycles',
+        columns: ['id', 'status'],
+        orderBy: 'id',
+      ),
+      cyclesBefore,
+    );
+    expect(
+      (await database.query(
+        'training_plans',
+        columns: ['status', 'completed_at'],
+        where: 'id = ?',
+        whereArgs: ['plan'],
+      )).single,
+      {'status': 'cancelled', 'completed_at': cancelledAt},
+    );
+  });
 }
 
 Future<void> _seedBeyondPlan(LocalDatabase local) async {
