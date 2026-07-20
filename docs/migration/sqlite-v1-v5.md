@@ -81,8 +81,20 @@ domaine.
 - Il n'existe pas de downgrade v5→v4 ni de suppression des tables historiques.
   Le retour applicatif repose sur une sauvegarde compatible, pas sur une
   migration SQLite descendante.
-- Le test d'interruption démontre la transaction d'upgrade sur un scénario v1 ;
-  il ne simule pas une interruption distincte à chacune des étapes v2–v5.
+- Le test d'interruption v1 démontre la transaction d'upgrade sur un scénario
+  minimal. Les tests tabulaires **v2 to v3 upgrade is atomic and restorable**,
+  **v3 to v4 upgrade is atomic and restorable** et **v4 to v5 upgrade is atomic
+  and restorable** injectent une exception tardive après le retour complet de
+  `DatabaseSchema.migrate`. Chaque test rouvre le vrai fichier source et vérifie
+  sa version, sa sentinelle, l'absence des tables et index destination, ainsi que
+  l'absence des colonnes ajoutées par `ALTER TABLE` en v5. Le cas v3 conserve en
+  outre ses lignes runtime historiques et ne laisse aucune entité canonique v4.
+  Une seconde ouverture sans exception termine ensuite la même migration et
+  prouve que le fichier reste restaurable.
+- Cette preuve couvre une exception Dart tardive dans la transaction
+  `onUpgrade`. Elle ne simule pas l'arrêt brutal du processus ou de la machine ;
+  cette garantie de crash-recovery relève du journal transactionnel SQLite et
+  demanderait un test multiprocessus dédié.
 
 ## Sauvegarde v5 et restauration historique
 

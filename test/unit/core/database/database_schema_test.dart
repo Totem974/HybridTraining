@@ -383,11 +383,123 @@ void main() {
       throwsA(isA<StateError>()),
     );
   });
+
+  for (final transition in _atomicUpgradeTransitions) {
+    test(
+      'v${transition.sourceVersion} to v${transition.targetVersion} upgrade is atomic and restorable',
+      () async {
+        final temporary = await Directory.systemTemp.createTemp('db-atomic-');
+        addTearDown(() => temporary.delete(recursive: true));
+        final path = '${temporary.path}/atomic.db';
+        var database = await _createVersionedDatabase(
+          path,
+          transition.sourceVersion,
+        );
+        addTearDown(() async {
+          if (database.isOpen) await database.close();
+        });
+        await database.insert('app_metadata', {
+          'key': 'atomicity-sentinel',
+          'value': 'v${transition.sourceVersion}',
+        });
+        if (transition.sourceVersion == 3) {
+          await _seedV3Session(database, status: 'started', setCount: 1);
+        }
+        await database.close();
+
+        await expectLater(
+          databaseFactoryFfi.openDatabase(
+            path,
+            options: OpenDatabaseOptions(
+              version: transition.targetVersion,
+              onUpgrade: (db, oldVersion, newVersion) async {
+                await DatabaseSchema.migrate(db, oldVersion, newVersion);
+                throw StateError('simulated late upgrade failure');
+              },
+            ),
+          ),
+          throwsA(isA<StateError>()),
+        );
+
+        database = await databaseFactoryFfi.openDatabase(
+          path,
+          options: OpenDatabaseOptions(readOnly: true),
+        );
+        expect(await database.getVersion(), transition.sourceVersion);
+        expect(await database.query('app_metadata'), [
+          {
+            'key': 'atomicity-sentinel',
+            'value': 'v${transition.sourceVersion}',
+          },
+        ]);
+        expect(
+          await _tables(database),
+          isNot(contains(anyOf(transition.tables))),
+        );
+        expect(
+          await _indexes(database),
+          isNot(contains(anyOf(transition.indexes))),
+        );
+        for (final entry in transition.columns.entries) {
+          expect(
+            await _columns(database, entry.key),
+            isNot(contains(anyOf(entry.value))),
+          );
+        }
+        if (transition.sourceVersion == 3) {
+          expect(
+            await database.query('workout_runtime_sessions'),
+            hasLength(1),
+          );
+          expect(await database.query('set_prescriptions'), hasLength(1));
+        }
+        await database.close();
+
+        database = await databaseFactoryFfi.openDatabase(
+          path,
+          options: OpenDatabaseOptions(
+            version: transition.targetVersion,
+            onUpgrade: DatabaseSchema.migrate,
+          ),
+        );
+        expect(await database.getVersion(), transition.targetVersion);
+        expect(await _tables(database), containsAll(transition.tables));
+        expect(await _indexes(database), containsAll(transition.indexes));
+        for (final entry in transition.columns.entries) {
+          expect(await _columns(database, entry.key), containsAll(entry.value));
+        }
+        expect(await database.query('app_metadata'), [
+          {
+            'key': 'atomicity-sentinel',
+            'value': 'v${transition.sourceVersion}',
+          },
+        ]);
+        if (transition.sourceVersion == 3) {
+          expect(
+            await database.query('workout_runtime_sessions'),
+            hasLength(1),
+          );
+          expect(await database.query('set_prescriptions'), hasLength(1));
+          expect(await database.query('workout_executions'), hasLength(1));
+          expect(await database.query('workout_set_outcomes'), hasLength(1));
+          expect(
+            await database.query('workout_execution_events'),
+            hasLength(1),
+          );
+        }
+      },
+    );
+  }
 }
 
 Future<Set<Object?>> _tables(Database database) async =>
     (await database.rawQuery(
       "SELECT name FROM sqlite_master WHERE type = 'table'",
+    )).map((row) => row['name']).toSet();
+
+Future<Set<Object?>> _indexes(Database database) async =>
+    (await database.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'index'",
     )).map((row) => row['name']).toSet();
 
 Future<Set<Object?>> _columns(Database database, String table) async =>
@@ -407,6 +519,83 @@ Future<Database> _v3Database() => databaseFactoryFfi.openDatabase(
     },
   ),
 );
+
+Future<Database> _createVersionedDatabase(String path, int version) =>
+    databaseFactoryFfi.openDatabase(
+      path,
+      options: OpenDatabaseOptions(
+        version: version,
+        onCreate: (db, createdVersion) async {
+          await DatabaseSchema.createV1(db);
+          await DatabaseSchema.createV2(db);
+          if (createdVersion >= 3) await DatabaseSchema.createV3(db);
+          if (createdVersion >= 4) await DatabaseSchema.createV4(db);
+        },
+      ),
+    );
+
+class _AtomicUpgradeTransition {
+  const _AtomicUpgradeTransition(
+    this.sourceVersion,
+    this.targetVersion,
+    this.tables,
+    this.indexes, [
+    this.columns = const {},
+  ]);
+
+  final int sourceVersion;
+  final int targetVersion;
+  final List<String> tables;
+  final List<String> indexes;
+  final Map<String, List<String>> columns;
+}
+
+const _atomicUpgradeTransitions = [
+  _AtomicUpgradeTransition(
+    2,
+    3,
+    [
+      'workout_runtime_sessions',
+      'workout_runtime_blocks',
+      'workout_activities',
+    ],
+    ['workout_activities_block_idx'],
+  ),
+  _AtomicUpgradeTransition(
+    3,
+    4,
+    ['workout_executions', 'workout_set_outcomes', 'workout_execution_events'],
+    ['workout_outcomes_session_idx', 'workout_events_session_idx'],
+  ),
+  _AtomicUpgradeTransition(
+    4,
+    5,
+    [
+      'activity_prescriptions',
+      'activity_results',
+      'training_max_timeline',
+      'plan_amendments',
+      'plan_transitions_v5',
+      'planned_events_v5',
+    ],
+    [
+      'activity_prescriptions_block_idx',
+      'tm_timeline_plan_idx',
+      'plan_amendments_plan_idx',
+    ],
+    {
+      'training_plans': ['source_edition', 'ruleset_generation'],
+      'training_blocks': [
+        'block_type',
+        'ruleset_role',
+        'seventh_week_purpose',
+        'programming_block_number',
+      ],
+      'plan_training_cycles': ['programming_cycle_number'],
+      'plan_training_sessions': ['programming_week_number', 'session_position'],
+    },
+  ),
+];
 
 Future<void> _seedV3Session(
   Database database, {
