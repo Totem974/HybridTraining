@@ -1,20 +1,30 @@
 # AGENTS.md
 
-## Phase temporaire : reconstruction du coeur Forever
+## Phase temporaire : séries de macrocycles Forever v2
 
-- Branche de travail : `rebuild/forever-engine-core-20260719`.
+- Branche source en lecture seule : `refactor/forever-mode-composer`.
+- Branche de travail : `refactor/forever-macrocycle-series-v2`.
 - Remote de travail temporaire et unique : `GitHub`. `GiTea` reste hors circuit.
-- Priorite absolue au domaine Dart pur, a la tracabilite des regles et aux tests.
-- L'UI produit et l'onboarding sont geles et doivent sortir du chemin actif.
-- Seul un Core Validation Shell minimal peut exposer le moteur pendant cette phase.
-- Aucune regle non sourcee ou `NEEDS_REVIEW` ne peut devenir executable.
-- `.SOURCE/` ne peut etre archive ou nettoye qu'apres manifeste, archive externe
-  integrale et verification de cette archive dans le cadre de cette tache.
+- La mission couvre le domaine Dart pur, le schéma v4 et ses migrations, le
+  compilateur, la persistance, le composeur UI, l'accessibilité, les tests et la
+  documentation nécessaires au vertical slice Forever.
+- `ProgramLibrary -> ForeverProgramSeries -> MacrocycleSeriesValidator ->
+  ForeverSequenceCompiler -> CycleStrategyRegistry / ProtocolStrategyRegistry
+  -> VersionedTrainingPlan` est la chaîne d'autorité cible.
+- Aucune règle non sourcée ou `NEEDS_REVIEW` ne peut devenir exécutable.
+- Les plans existants, les anciens snapshots et les goldens historiques doivent
+  être préservés ou rester fonctionnellement équivalents.
+- Une série extensible ajoute un macrocycle à la fois ; aucune séquence infinie
+  ne doit être matérialisée.
+- Les séances et macrocycles terminés sont immuables. Seul le futur peut être
+  régénéré.
+- `.SOURCE/` ne peut être archivé ou nettoyé qu'après manifeste, archive externe
+  intégrale et vérification de cette archive dans le cadre de cette tâche.
 - Aucune suppression distante ni aucun push sans liste finale et autorisation
-  explicite du proprietaire.
-- Les commandes de qualite et validations Android de ce fichier restent
+  explicite du propriétaire.
+- Les commandes de qualité et validations Android de ce fichier restent
   obligatoires.
-- Ces consignes sont temporaires et ne constituent pas une decision produit
+- Ces consignes sont temporaires et ne constituent pas une décision produit
   permanente.
 
 ## Projet
@@ -80,11 +90,17 @@ documenter la commande, le blocage et la validation encore nécessaire.
 ## Git
 
 - Branche de référence : `kevin` en minuscules.
-- Remote de travail temporaire et unique : `GitHub` / `origin` ; `GiTea` est hors circuit.
-- Branche de travail actuelle : `rebuild/forever-engine-core-20260719`, qui remplace les anciennes références Base0 pour la reconstruction Core v5.
-- `master` et `kevin` sont protégées : ne jamais les modifier, les rebaser, les fusionner ou les pousser directement.
+- Branche source de cette mission : `refactor/forever-mode-composer`, en lecture
+  seule.
+- Branche de travail actuelle : `refactor/forever-macrocycle-series-v2`, créée
+  depuis la branche source.
+- Remote de travail temporaire et unique : `GitHub` / `origin` ; `GiTea` est hors
+  circuit.
+- `master`, `kevin` et la branche source sont protégées : ne jamais les modifier,
+  les rebaser, les fusionner ou les pousser directement.
 - Ne jamais utiliser de push forcé ou supprimer l'historique.
-- Pousser uniquement `rebuild/forever-engine-core-20260719`, sur GitHub, après les validations finales autorisées.
+- Pousser uniquement `refactor/forever-macrocycle-series-v2`, sur GitHub, après
+  les validations finales et l'autorisation explicite du propriétaire.
 - Préférer de petits commits cohérents aux changements monolithiques.
 - Vérifier `git status --short` avant et après une tâche.
 - Préserver les changements utilisateur sans reset ni stash non autorisé.
