@@ -222,24 +222,84 @@ class Poc531ConfigurationCodec {
   }
 
   static void _validateForeverV4(Map<String, Object?> forever) {
-    final hasStandalone = forever['standaloneProgramId'] is String;
-    final hasSeries = forever['series'] is Map;
+    final standaloneValue = forever['standaloneProgramId'];
+    final seriesValue = forever['series'];
+    if (standaloneValue != null && standaloneValue is! String) {
+      throw const FormatException('standaloneProgramId must be a string.');
+    }
+    if (seriesValue != null && seriesValue is! Map) {
+      throw const FormatException('series must be an object.');
+    }
+    final hasStandalone = standaloneValue is String;
+    final hasSeries = seriesValue is Map;
     if (hasStandalone == hasSeries) {
       throw const FormatException(
         'Forever must contain exactly one of standaloneProgramId or series.',
       );
     }
-    if (hasStandalone) return;
+    if (hasStandalone) {
+      if (standaloneValue.isEmpty) {
+        throw const FormatException(
+          'standaloneProgramId must be a non-empty string.',
+        );
+      }
+      return;
+    }
     final series = _stringMap(forever['series']! as Map);
+    if (series['id'] is! String || (series['id'] as String).isEmpty) {
+      throw const FormatException('series.id must be a non-empty string.');
+    }
+    if (series['terminated'] is! bool) {
+      throw const FormatException('series.terminated must be a boolean.');
+    }
     final macrocycles = series['macrocycles'];
     if (macrocycles is! List) {
       throw const FormatException('series.macrocycles must be a list.');
     }
+    final instanceIds = <String>{};
+    var projectedWasSeen = false;
     for (final value in macrocycles) {
       if (value is! Map) {
         throw const FormatException('Every macrocycle must be an object.');
       }
       final macrocycle = _stringMap(value);
+      if (macrocycle['recipeId'] is! String ||
+          (macrocycle['recipeId'] as String).isEmpty) {
+        throw const FormatException(
+          'macrocycle.recipeId must be a non-empty string.',
+        );
+      }
+      final instanceId = macrocycle['instanceId'];
+      if (instanceId is! String || instanceId.isEmpty) {
+        throw const FormatException(
+          'macrocycle.instanceId must be a non-empty string.',
+        );
+      }
+      if (!instanceIds.add(instanceId)) {
+        throw FormatException('Duplicate macrocycle instanceId: $instanceId.');
+      }
+      final intent = macrocycle['intent'];
+      if (intent != 'active' && intent != 'projected') {
+        throw FormatException('Unsupported macrocycle intent: $intent.');
+      }
+      if (intent == 'projected') projectedWasSeen = true;
+      if (intent == 'active' && projectedWasSeen) {
+        throw const FormatException(
+          'An active macrocycle cannot follow a projected macrocycle.',
+        );
+      }
+      final status = macrocycle['status'];
+      if (!_macrocycleStatuses.contains(status)) {
+        throw FormatException('Unsupported macrocycle status: $status.');
+      }
+      if (series['terminated'] == true &&
+          (intent == 'projected' ||
+              status == 'active' ||
+              status == 'planned')) {
+        throw const FormatException(
+          'A terminated series cannot contain active or future macrocycles.',
+        );
+      }
       if (macrocycle['recipeId'] == 'forever-2l2a-v1' ||
           macrocycle['recipeId'] == 'forever-3l2a-v1' ||
           macrocycle['status'] == 'needsReview' ||
@@ -252,14 +312,114 @@ class Poc531ConfigurationCodec {
         if (macrocycle[key] is! List) {
           throw FormatException('macrocycle.$key must be a list.');
         }
+        if ((macrocycle[key]! as List).any((value) => value is! Map)) {
+          throw FormatException(
+            'Every macrocycle.$key item must be an object.',
+          );
+        }
       }
       if (macrocycle['trainingMaxStates'] is! Map) {
         throw const FormatException(
           'macrocycle.trainingMaxStates must be an object.',
         );
       }
+      final trainingMaxStates = macrocycle['trainingMaxStates'] as Map;
+      for (final entry in trainingMaxStates.entries) {
+        if (entry.key is! String || entry.key.toString().isEmpty) {
+          throw const FormatException('Training Max lift IDs must be strings.');
+        }
+        final rawState = entry.value;
+        final state = rawState is String
+            ? rawState
+            : rawState is Map
+            ? rawState['state']
+            : null;
+        if (state is! String || !_trainingMaxStates.contains(state)) {
+          throw FormatException('Unsupported Training Max state: $rawState.');
+        }
+        if (rawState is Map) {
+          for (final valueKey in const [
+            'trainingMax',
+            'confirmedTrainingMax',
+            'proposedTrainingMax',
+            'value',
+          ]) {
+            final candidate = rawState[valueKey];
+            if (candidate != null && (candidate is! num || candidate <= 0)) {
+              throw FormatException(
+                'Invalid Training Max value for ${entry.key}.',
+              );
+            }
+          }
+        }
+      }
+      if (macrocycle['recipeId'] == 'forever-2l1a-v2') {
+        _validateTwoLeadersOneAnchor(macrocycle);
+      }
     }
   }
+
+  static void _validateTwoLeadersOneAnchor(Map<String, Object?> macrocycle) {
+    final slots = macrocycle['slots']! as List;
+    const expectedSlots = [
+      ('leader-1', 'leader', 'forever-original-fsl-leader-v1'),
+      ('leader-2', 'leader', 'forever-original-fsl-leader-v1'),
+      ('anchor-1', 'anchor', 'forever-original-pr-set-anchor-v1'),
+    ];
+    if (slots.length != expectedSlots.length) {
+      throw const FormatException('The 2L/1A recipe requires three slots.');
+    }
+    for (var index = 0; index < expectedSlots.length; index++) {
+      final value = slots[index];
+      if (value is! Map) {
+        throw const FormatException('Every slot must be an object.');
+      }
+      final expected = expectedSlots[index];
+      if (value['slotId'] != expected.$1 ||
+          value['role'] != expected.$2 ||
+          value['cycleTemplateRevisionId'] != expected.$3) {
+        throw FormatException('Invalid 2L/1A slot at index $index.');
+      }
+    }
+
+    final protocols = macrocycle['protocols']! as List;
+    const expectedProtocols = {
+      'leaders-to-anchor': 'forever-seventh-week-deload-v1',
+      'macrocycle-end': 'forever-seventh-week-tm-test-v1',
+    };
+    if (protocols.length != expectedProtocols.length) {
+      throw const FormatException(
+        'The 2L/1A recipe requires both boundary protocols.',
+      );
+    }
+    final seenBoundaries = <String>{};
+    for (final value in protocols) {
+      if (value is! Map || value['required'] != true) {
+        throw const FormatException('Boundary protocols must be required.');
+      }
+      final boundaryId = value['boundaryId'];
+      if (boundaryId is! String ||
+          !seenBoundaries.add(boundaryId) ||
+          value['protocolTemplateRevisionId'] !=
+              expectedProtocols[boundaryId]) {
+        throw const FormatException('Invalid mandatory boundary protocol.');
+      }
+    }
+  }
+
+  static const _macrocycleStatuses = {
+    'planned',
+    'active',
+    'completed',
+    'cancelled',
+  };
+  static const _trainingMaxStates = {
+    'confirmed',
+    'projected',
+    'proposed',
+    'held',
+    'reset',
+  };
 
   static bool _containsNeedsReview(Object? value) => switch (value) {
     String text => text == 'needsReview' || text == 'NEEDS_REVIEW',

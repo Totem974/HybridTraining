@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/features/programs/domain/program_identity.dart';
 import 'package:hybrid_training/features/programs/domain/program_library.dart';
+import 'package:hybrid_training/features/poc_531/domain/planning/planning.dart';
 
 void main() {
   const repository = InMemoryProgramLibraryRepository();
@@ -176,6 +177,77 @@ void main() {
     expect(
       repository.findByPresetId('beyond-six-week-cycle-v1')?.isExecutable,
       isTrue,
+    );
+  });
+
+  test('productive Original plus FSL resolves to the reviewed v2 series', () {
+    final specification = repository.resolveForeverSeries(
+      'forever-original-531-fsl-2l1a-v2',
+    )!;
+
+    expect(specification.entry.id, 'preset-forever-original-fsl');
+    expect(specification.recipe.id, 'forever-2l1a-v2');
+    expect(specification.leaderRevision.id, 'forever-original-fsl-leader-v1');
+    expect(
+      specification.anchorRevision.id,
+      'forever-original-pr-set-anchor-v1',
+    );
+    expect(specification.boundaryProtocols.map((value) => value.id), [
+      'forever-seventh-week-deload-v1',
+      'forever-seventh-week-tm-test-v1',
+    ]);
+    expect(specification.isExecutable, isTrue);
+  });
+
+  test('historical Forever aliases resolve to the same v2 specification', () {
+    for (final alias in [
+      'preset-forever-original-fsl',
+      'forever-original-531-fsl-2l1a-v1',
+      'forever-original-fsl-v1',
+      'forever-2l1a',
+    ]) {
+      expect(
+        repository.resolveForeverSeries(alias)?.recipe.id,
+        'forever-2l1a-v2',
+        reason: alias,
+      );
+    }
+  });
+
+  test(
+    'library never exposes needs-review content as an executable series',
+    () {
+      for (final entry in canonicalProgramEntries) {
+        final specification = repository.resolveForeverSeries(entry.id);
+        if (entry.documentationStatus == ProgramValidationStatus.needsReview) {
+          expect(specification, isNull, reason: entry.id);
+        }
+        if (specification != null) {
+          expect(specification.isExecutable, isTrue, reason: entry.id);
+          expect(
+            specification.recipe.status,
+            isNot(CompatibilityStatus.needsReview),
+          );
+        }
+      }
+    },
+  );
+
+  test('Beginner Prep School remains a standalone executable preset', () {
+    final bps = repository.findByPresetId('forever-beginner-prep-school-v1')!;
+    expect(bps.isExecutable, isTrue);
+    expect(repository.resolveForeverSeries(bps.id), isNull);
+  });
+
+  test('category report still accounts for standalone and series entries', () {
+    final result = repository.query(const ProgramQuery());
+    expect(
+      result.kindFacets
+          .singleWhere((facet) => facet.value == ProgramEntryKind.preset)
+          .count,
+      canonicalProgramEntries
+          .where((entry) => entry.kind == ProgramEntryKind.preset)
+          .length,
     );
   });
 

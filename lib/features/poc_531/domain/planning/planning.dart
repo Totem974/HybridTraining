@@ -573,13 +573,18 @@ class ForeverMacrocycle {
     required this.status,
     required this.recipe,
     required Iterable<CycleSlotSelection> cycleSelections,
-  }) : cycleSelections = List.unmodifiable(cycleSelections);
+    this.outcome,
+    Map<String, double> trainingMaxChoices = const {},
+  }) : cycleSelections = List.unmodifiable(cycleSelections),
+       trainingMaxChoices = Map.unmodifiable(trainingMaxChoices);
 
   final String instanceId;
   final MacrocycleIntent intent;
   final MacrocycleStatus status;
   final MacrocycleRecipeRevision recipe;
   final List<CycleSlotSelection> cycleSelections;
+  final MacrocycleOutcome? outcome;
+  final Map<String, double> trainingMaxChoices;
 }
 
 class ForeverProgramSeries {
@@ -812,62 +817,115 @@ abstract interface class ForeverProgramCompiler {
   CompiledForeverSequence compileSeries(ForeverProgramSeries series);
 }
 
+class CycleStrategyRegistry {
+  const CycleStrategyRegistry();
+
+  CycleTemplateRevision? resolve(String revisionId) => switch (revisionId) {
+    'forever-original-fsl-leader-v1' => foreverOriginalFslLeaderRevision,
+    'forever-original-pr-set-anchor-v1' => foreverOriginalPrSetAnchorRevision,
+    _ => null,
+  };
+}
+
+class ProtocolStrategyRegistry {
+  const ProtocolStrategyRegistry();
+
+  ProtocolTemplateRevision? resolve(String revisionId) => switch (revisionId) {
+    'forever-seventh-week-deload-v1' => foreverSeventhWeekDeloadRevision,
+    'forever-seventh-week-tm-test-v1' =>
+      foreverSeventhWeekTrainingMaxTestRevision,
+    _ => null,
+  };
+}
+
+List<PlanningIssue> _validateTrainingProfile(CommonTrainingProfile profile) {
+  final issues = <PlanningIssue>[];
+  if (profile.trainingDaysPerWeek != 4) {
+    issues.add(
+      const PlanningIssue(
+        code: 'profile.frequency_not_supported',
+        path: 'profile.trainingDaysPerWeek',
+        message: 'The sourced Original + FSL recipe requires four days.',
+      ),
+    );
+  }
+  if (profile.trainingMaxes.isEmpty) {
+    issues.add(
+      const PlanningIssue(
+        code: 'profile.training_maxes_empty',
+        path: 'profile.trainingMaxes',
+        message: 'At least one Training Max is required.',
+      ),
+    );
+  }
+  for (final entry in profile.trainingMaxes.entries) {
+    if (entry.value <= 0) {
+      issues.add(
+        PlanningIssue(
+          code: 'profile.training_max_invalid',
+          path: 'profile.trainingMaxes.${entry.key}',
+          message: 'Training Maxes must be positive.',
+        ),
+      );
+    }
+    final increment = profile.progressionIncrements[entry.key];
+    if (increment == null || increment <= 0) {
+      issues.add(
+        PlanningIssue(
+          code: 'profile.progression_increment_invalid',
+          path: 'profile.progressionIncrements.${entry.key}',
+          message: 'Every Training Max needs a positive progression increment.',
+        ),
+      );
+    }
+  }
+  return issues;
+}
+
 class ForeverSequenceCompiler implements ForeverProgramCompiler {
-  const ForeverSequenceCompiler();
+  const ForeverSequenceCompiler({
+    this.cycleStrategies = const CycleStrategyRegistry(),
+    this.protocolStrategies = const ProtocolStrategyRegistry(),
+  });
+
+  final CycleStrategyRegistry cycleStrategies;
+  final ProtocolStrategyRegistry protocolStrategies;
 
   PlanningValidationResult validate(
     ForeverPlanningConfiguration configuration,
   ) {
+    final issues = <PlanningIssue>[
+      ..._validateTrainingProfile(configuration.profile),
+    ];
+    if (configuration.kind == ForeverPlanKind.macrocycle &&
+        configuration.series == null) {
+      issues.add(
+        const PlanningIssue(
+          code: 'forever.kind_requires_series',
+          path: 'kind',
+          message: 'Macrocycle planning requires a series.',
+        ),
+      );
+    }
+    if (configuration.kind == ForeverPlanKind.standaloneProgram &&
+        configuration.standaloneProgramId == null) {
+      issues.add(
+        const PlanningIssue(
+          code: 'forever.kind_requires_standalone',
+          path: 'kind',
+          message:
+              'Standalone planning requires a standalone program identifier.',
+        ),
+      );
+    }
     if (configuration.series != null) {
-      final issues = [
-        ...const MacrocycleSeriesValidator()
+      issues.addAll(
+        const MacrocycleSeriesValidator()
             .validate(configuration.series!)
             .issues,
-      ];
-      final profile = configuration.profile;
-      if (profile.trainingDaysPerWeek != 4) {
-        issues.add(
-          const PlanningIssue(
-            code: 'profile.frequency_not_supported',
-            path: 'profile.trainingDaysPerWeek',
-            message: 'The sourced Original + FSL recipe requires four days.',
-          ),
-        );
-      }
-      if (profile.trainingMaxes.isEmpty) {
-        issues.add(
-          const PlanningIssue(
-            code: 'profile.training_maxes_empty',
-            path: 'profile.trainingMaxes',
-            message: 'At least one Training Max is required.',
-          ),
-        );
-      }
-      for (final entry in profile.trainingMaxes.entries) {
-        if (entry.value <= 0) {
-          issues.add(
-            PlanningIssue(
-              code: 'profile.training_max_invalid',
-              path: 'profile.trainingMaxes.${entry.key}',
-              message: 'Training Maxes must be positive.',
-            ),
-          );
-        }
-        final increment = profile.progressionIncrements[entry.key];
-        if (increment == null || increment <= 0) {
-          issues.add(
-            PlanningIssue(
-              code: 'profile.progression_increment_invalid',
-              path: 'profile.progressionIncrements.${entry.key}',
-              message:
-                  'Every Training Max needs a positive progression increment.',
-            ),
-          );
-        }
-      }
-      return PlanningValidationResult(issues);
+      );
     }
-    return PlanningValidationResult(const []);
+    return PlanningValidationResult(issues);
   }
 
   CompiledForeverSequence compile(ForeverPlanningConfiguration configuration) {
@@ -914,33 +972,37 @@ class ForeverSequenceCompiler implements ForeverProgramCompiler {
         ),
       );
     } else {
-      if (profile.trainingMaxes.isEmpty) {
-        issues.add(
-          const PlanningIssue(
-            code: 'profile.training_maxes_empty',
-            path: 'profile.trainingMaxes',
-            message: 'At least one Training Max is required.',
-          ),
-        );
-      }
-      for (final entry in profile.trainingMaxes.entries) {
-        if (entry.value <= 0) {
+      issues.addAll(_validateTrainingProfile(profile));
+    }
+    for (
+      var macrocycleIndex = 0;
+      macrocycleIndex < series.macrocycles.length;
+      macrocycleIndex++
+    ) {
+      final macrocycle = series.macrocycles[macrocycleIndex];
+      for (final selection in macrocycle.cycleSelections) {
+        if (cycleStrategies.resolve(selection.revision.id) == null) {
           issues.add(
             PlanningIssue(
-              code: 'profile.training_max_invalid',
-              path: 'profile.trainingMaxes.${entry.key}',
-              message: 'Training Maxes must be positive.',
+              code: 'strategy.cycle_not_registered',
+              path:
+                  'macrocycles[$macrocycleIndex].cycleSelections.${selection.slotId}',
+              message: 'The cycle revision has no sourced executable strategy.',
             ),
           );
         }
-        final increment = profile.progressionIncrements[entry.key];
-        if (increment == null || increment <= 0) {
+      }
+      for (final boundary in macrocycle.recipe.boundaryProtocols.where(
+        (rule) => rule.required,
+      )) {
+        if (protocolStrategies.resolve(boundary.protocol.id) == null) {
           issues.add(
             PlanningIssue(
-              code: 'profile.progression_increment_invalid',
-              path: 'profile.progressionIncrements.${entry.key}',
+              code: 'strategy.protocol_not_registered',
+              path:
+                  'macrocycles[$macrocycleIndex].recipe.boundaryProtocols.${boundary.boundaryId}',
               message:
-                  'Every Training Max needs a positive progression increment.',
+                  'The protocol revision has no sourced executable strategy.',
             ),
           );
         }
@@ -954,39 +1016,26 @@ class ForeverSequenceCompiler implements ForeverProgramCompiler {
     final nodes = <ForeverPlanNode>[];
     final decisions = <TrainingMaxDecision>[];
     var current = profile!.trainingMaxes;
-    var nodeIndex = 0;
     for (final macrocycle in series.macrocycles) {
+      ForeverCycleNode? lastCycleNode;
+      var cycleIndex = 0;
       for (final slot in macrocycle.recipe.slots) {
         final selection = macrocycle.cycleSelections.singleWhere(
           (item) => item.slotId == slot.slotId,
         );
-        final nodeId = '${macrocycle.instanceId}-C${++nodeIndex}';
-        nodes.add(
-          ForeverCycleNode(
-            nodeId: nodeId,
-            source: macrocycle.recipe.source,
-            templateRevisionId: selection.revision.id,
-            cycleInstanceId: selection.cycleInstanceId,
-            role: slot.role,
-            revision: selection.revision,
-          ),
+        final nodeId = '${macrocycle.instanceId}-C${++cycleIndex}';
+        final resolvedRevision = cycleStrategies.resolve(
+          selection.revision.id,
+        )!;
+        lastCycleNode = ForeverCycleNode(
+          nodeId: nodeId,
+          source: macrocycle.recipe.source,
+          templateRevisionId: resolvedRevision.id,
+          cycleInstanceId: selection.cycleInstanceId,
+          role: slot.role,
+          revision: resolvedRevision,
         );
-        final proposed = {
-          for (final entry in current.entries)
-            entry.key: entry.value + profile.progressionIncrements[entry.key]!,
-        };
-        decisions.add(
-          TrainingMaxDecision(
-            nodeId: nodeId,
-            cycleInstanceId: selection.cycleInstanceId,
-            state: macrocycle.intent == MacrocycleIntent.projected
-                ? TrainingMaxDecisionState.projected
-                : TrainingMaxDecisionState.confirmed,
-            previousTrainingMaxes: current,
-            proposedTrainingMaxes: proposed,
-          ),
-        );
-        current = proposed;
+        nodes.add(lastCycleNode);
         for (final boundary in macrocycle.recipe.boundaryProtocols.where(
           (rule) => rule.afterSlotId == slot.slotId && rule.required,
         )) {
@@ -995,7 +1044,9 @@ class ForeverSequenceCompiler implements ForeverProgramCompiler {
               nodeId:
                   '${macrocycle.instanceId}-P${nodes.whereType<ForeverProtocolNode>().length + 1}',
               source: boundary.source,
-              templateRevisionId: boundary.protocol.id,
+              templateRevisionId: protocolStrategies
+                  .resolve(boundary.protocol.id)!
+                  .id,
               autoInserted: true,
               purpose: boundary.protocol.purpose,
               afterCycleInstanceId: selection.cycleInstanceId,
@@ -1003,6 +1054,33 @@ class ForeverSequenceCompiler implements ForeverProgramCompiler {
           );
         }
       }
+      final proposed = macrocycle.trainingMaxChoices.isNotEmpty
+          ? macrocycle.trainingMaxChoices
+          : macrocycle.intent == MacrocycleIntent.projected
+          ? {
+              for (final entry in current.entries)
+                entry.key:
+                    entry.value + profile.progressionIncrements[entry.key]!,
+            }
+          : current;
+      final states = macrocycle.outcome?.trainingMaxStates.values;
+      final state = states == null || states.isEmpty
+          ? (macrocycle.intent == MacrocycleIntent.projected
+                ? TrainingMaxDecisionState.projected
+                : TrainingMaxDecisionState.confirmed)
+          : states.every((value) => value == TrainingMaxDecisionState.confirmed)
+          ? TrainingMaxDecisionState.confirmed
+          : states.first;
+      decisions.add(
+        TrainingMaxDecision(
+          nodeId: lastCycleNode!.nodeId,
+          cycleInstanceId: macrocycle.instanceId,
+          state: state,
+          previousTrainingMaxes: current,
+          proposedTrainingMaxes: proposed,
+        ),
+      );
+      current = proposed;
     }
     return CompiledForeverSequence(
       nodes: nodes,
@@ -1095,6 +1173,48 @@ class ForeverSequenceCompiler implements ForeverProgramCompiler {
       throw ForeverCompilationException(candidateValidation);
     }
     return MacrocycleContinuationProposal(mode: mode, macrocycle: candidate);
+  }
+
+  ForeverProgramSeries regenerateFuture({
+    required ForeverProgramSeries series,
+    required Iterable<ForeverMacrocycle> future,
+  }) {
+    final history = series.macrocycles
+        .where(
+          (macrocycle) =>
+              macrocycle.intent == MacrocycleIntent.active ||
+              macrocycle.status == MacrocycleStatus.completed ||
+              macrocycle.status == MacrocycleStatus.cancelled,
+        )
+        .toList(growable: false);
+    final replacements = future.toList(growable: false);
+    if (replacements.any(
+      (macrocycle) =>
+          macrocycle.intent != MacrocycleIntent.projected ||
+          macrocycle.status != MacrocycleStatus.planned,
+    )) {
+      throw ForeverCompilationException(
+        PlanningValidationResult(const [
+          PlanningIssue(
+            code: 'series.regeneration_not_future',
+            path: 'macrocycles',
+            message:
+                'Regeneration may only create projected planned macrocycles.',
+          ),
+        ]),
+      );
+    }
+    final regenerated = ForeverProgramSeries(
+      id: series.id,
+      profile: series.profile,
+      macrocycles: [...history, ...replacements],
+      terminated: series.terminated,
+    );
+    final validation = const MacrocycleSeriesValidator().validate(regenerated);
+    if (!validation.isValid) {
+      throw ForeverCompilationException(validation);
+    }
+    return regenerated;
   }
 
   Map<String, double> confirmTrainingMaxes({

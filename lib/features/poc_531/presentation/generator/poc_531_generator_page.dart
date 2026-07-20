@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hybrid_training/app/localization/app_strings.dart';
 
 abstract interface class Poc531GeneratorCore {
   GeneratorOptions get options;
@@ -246,7 +247,9 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   PlateLoadingView? _loading;
   int _requestRevision = 0;
   int? _busyRevision;
-  int _foreverStep = 2;
+  int _foreverStep = 0;
+  String _continuationMode = 'repeatSame';
+  List<Map<String, Object?>> _seriesMacrocycles = const [];
 
   List<CalculatorTemplateChoice> get _classic {
     if (widget.core.options.classicTemplates.isNotEmpty) {
@@ -334,7 +337,7 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     super.dispose();
   }
 
-  Map<String, Object?> get _configuration => {
+  Map<String, Object?> get _legacyConfiguration => {
     'schemaVersion': 2,
     'mode': _mode,
     'unit': _unit,
@@ -392,6 +395,71 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     'repetitions': {
       for (final lift in _lifts) lift: int.tryParse(_reps[lift]!.text),
     },
+  };
+
+  Map<String, Object?> get _configuration {
+    final legacy = _legacyConfiguration;
+    if (_mode != 'forever') return legacy;
+    final common = Map<String, Object?>.from(legacy)
+      ..remove('schemaVersion')
+      ..remove('mode')
+      ..remove('foreverTemplateId');
+    return {
+      'schemaVersion': 4,
+      'mode': 'forever',
+      'common': common,
+      'forever': _foreverPlanKind == 'standaloneProgram'
+          ? {'standaloneProgramId': _foreverId}
+          : {
+              'series': {
+                'id': 'forever-series-v1',
+                'terminated': false,
+                'macrocycles': _effectiveMacrocycles,
+              },
+            },
+    };
+  }
+
+  List<Map<String, Object?>> get _effectiveMacrocycles =>
+      _seriesMacrocycles.isEmpty
+      ? [_newMacrocycle('M1', 'active')]
+      : _seriesMacrocycles;
+
+  Map<String, Object?> _newMacrocycle(String id, String status) => {
+    'instanceId': id,
+    'intent': id == 'M1' ? 'active' : _continuationMode,
+    'status': status,
+    'recipeId': 'forever-2l1a-v2',
+    'slots': const [
+      {
+        'slotId': 'leader-1',
+        'role': 'leader',
+        'cycleTemplateRevisionId': 'forever-original-fsl-leader-v1',
+      },
+      {
+        'slotId': 'leader-2',
+        'role': 'leader',
+        'cycleTemplateRevisionId': 'forever-original-fsl-leader-v1',
+      },
+      {
+        'slotId': 'anchor-1',
+        'role': 'anchor',
+        'cycleTemplateRevisionId': 'forever-original-pr-set-anchor-v1',
+      },
+    ],
+    'protocols': const [
+      {
+        'boundaryId': 'leaders-to-anchor',
+        'protocolTemplateRevisionId': 'forever-seventh-week-deload-v1',
+        'required': true,
+      },
+      {
+        'boundaryId': 'macrocycle-end',
+        'protocolTemplateRevisionId': 'forever-seventh-week-tm-test-v1',
+        'required': true,
+      },
+    ],
+    'trainingMaxStates': <String, Object?>{},
   };
 
   @override
@@ -534,7 +602,10 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     ),
   );
 
-  bool get _isFrench => Localizations.localeOf(context).languageCode == 'fr';
+  AppStrings get _strings =>
+      AppStrings.forLanguage(Localizations.localeOf(context).languageCode);
+
+  bool get _isFrench => _strings.languageCode == 'fr';
 
   List<String> get _foreverStepLabels => _isFrench
       ? const [
@@ -591,39 +662,75 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
           const SizedBox(height: 16),
           _foreverStepHelp(),
           const SizedBox(height: 16),
-          _templatePanel(),
-          const SizedBox(height: 16),
-          _foreverMacrocyclePreview(),
-          const SizedBox(height: 16),
-          LayoutBuilder(
-            builder: (context, box) => box.maxWidth >= 700
-                ? Row(
-                    children: [
-                      Expanded(child: _weight()),
-                      const SizedBox(width: 18),
-                      Expanded(child: _foreverActions()),
-                    ],
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _weight(),
-                      const SizedBox(height: 18),
-                      _foreverActions(),
-                    ],
-                  ),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 180),
+            child: KeyedSubtree(
+              key: ValueKey('forever-step-content-$_foreverStep'),
+              child: _foreverStepContent(),
+            ),
           ),
           if (_warnings.isNotEmpty) ...[
             const SizedBox(height: 16),
             for (final warning in _warnings) _notice(warning),
           ],
-          const SizedBox(height: 24),
-          _heading(_isFrench ? 'PROGRAMME' : 'PROGRAM'),
-          _program(),
         ],
       ),
     ),
   );
+
+  Widget _foreverStepContent() => switch (_foreverStep) {
+    0 => _templatePanel(),
+    1 => _foreverMacrocyclePreview(),
+    2 =>
+      _foreverTemplate == null
+          ? const SizedBox.shrink()
+          : _foreverTimeline(_foreverTemplate!.timeline),
+    3 => _foreverNodeDetails(protocol: false, anchor: false),
+    4 => _foreverNodeDetails(protocol: false, anchor: true),
+    5 => _foreverNodeDetails(protocol: true),
+    6 => LayoutBuilder(
+      builder: (context, box) => box.maxWidth >= 700
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: _weight()),
+                const SizedBox(width: 18),
+                Expanded(child: _scheduling()),
+              ],
+            )
+          : Column(
+              children: [_weight(), const SizedBox(height: 18), _scheduling()],
+            ),
+    ),
+    _ => Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _foreverMacrocyclePreview(),
+        const SizedBox(height: 16),
+        _foreverActions(),
+        const SizedBox(height: 24),
+        _heading(_isFrench ? 'PROGRAMME' : 'PROGRAM'),
+        _program(),
+      ],
+    ),
+  };
+
+  Widget _foreverNodeDetails({required bool protocol, bool? anchor}) {
+    final nodes =
+        _foreverTemplate?.timeline.where((node) {
+          if (node.protocol != protocol) return false;
+          if (protocol || anchor == null) return true;
+          return node.title.toLowerCase().contains('anchor') == anchor;
+        }).toList() ??
+        const <ForeverTimelineNodeChoice>[];
+    return nodes.isEmpty
+        ? _card(
+            Text(
+              _isFrench ? 'Aucun élément disponible.' : 'No item available.',
+            ),
+          )
+        : _foreverTimeline(nodes);
+  }
 
   Widget _foreverStepHelp() => _card(
     Row(
@@ -689,10 +796,20 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
     label: _isFrench ? 'Horizon des macrocycles' : 'Macrocycle horizon',
     child: LayoutBuilder(
       builder: (context, box) {
-        final cards = [
-          _macrocycleCard('M1', _isFrench ? 'Actif' : 'Active', true),
-          _macrocycleCard('M2', _isFrench ? 'Projeté' : 'Projected', false),
-          _macrocycleCard('M3', _isFrench ? 'Projeté' : 'Projected', false),
+        final actual = _effectiveMacrocycles;
+        final cards = <Widget>[
+          for (final macrocycle in actual)
+            _macrocycleCard(
+              '${macrocycle['instanceId']}',
+              _macrocycleStatus('${macrocycle['status']}'),
+              true,
+            ),
+          for (var index = actual.length; index < 3; index++)
+            _macrocycleCard(
+              'M${index + 1}',
+              _isFrench ? 'Projeté' : 'Projected',
+              false,
+            ),
         ];
         return box.maxWidth >= 620
             ? Row(
@@ -715,6 +832,12 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
       },
     ),
   );
+
+  String _macrocycleStatus(String status) => switch (status) {
+    'completed' => _isFrench ? 'Terminé' : 'Completed',
+    'cancelled' => _isFrench ? 'Annulé' : 'Cancelled',
+    _ => _isFrench ? 'Actif' : 'Active',
+  };
 
   Widget _macrocycleCard(String id, String status, bool active) => _card(
     Column(
@@ -748,9 +871,36 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
                   : 'After M1, choose an action for the future. The completed macrocycle stays unchanged.',
             ),
             const SizedBox(height: 10),
+            DropdownButtonFormField<String>(
+              key: const Key('continuation-mode'),
+              initialValue: _continuationMode,
+              style: _inputTextStyle,
+              dropdownColor: Colors.white,
+              decoration: InputDecoration(
+                labelText: _isFrench
+                    ? 'Mode de continuation'
+                    : 'Continuation mode',
+              ),
+              items: [
+                for (final mode in const [
+                  'manual',
+                  'repeatSame',
+                  'cloneAndEdit',
+                  'recommendNext',
+                ])
+                  DropdownMenuItem(
+                    value: mode,
+                    child: Text(_continuationLabel(mode)),
+                  ),
+              ],
+              onChanged: (value) {
+                if (value != null) setState(() => _continuationMode = value);
+              },
+            ),
+            const SizedBox(height: 10),
             OutlinedButton.icon(
               key: const Key('continue-next-macrocycle'),
-              onPressed: null,
+              onPressed: _canAppendMacrocycle ? _appendMacrocycle : null,
               icon: const Icon(Icons.add),
               label: Text(
                 _isFrench
@@ -760,8 +910,12 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
             ),
             Text(
               _isFrench
-                  ? 'Disponible une fois M1 terminé.'
-                  : 'Available once M1 is complete.',
+                  ? (_canAppendMacrocycle
+                        ? 'Le prochain macrocycle sera ajouté sans modifier l’historique.'
+                        : 'Disponible une fois le macrocycle actif terminé.')
+                  : (_canAppendMacrocycle
+                        ? 'The next macrocycle will be added without changing history.'
+                        : 'Available once the active macrocycle is complete.'),
               style: const TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 12),
@@ -771,6 +925,32 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
       ),
     ],
   );
+
+  bool get _canAppendMacrocycle =>
+      _effectiveMacrocycles.isNotEmpty &&
+      _effectiveMacrocycles.last['status'] == 'completed';
+
+  String _continuationLabel(String mode) => switch ((mode, _isFrench)) {
+    ('manual', true) => 'Manuel',
+    ('repeatSame', true) => 'Répéter à l’identique',
+    ('cloneAndEdit', true) => 'Cloner puis modifier',
+    ('recommendNext', true) => 'Recommander la suite',
+    ('manual', false) => 'Manual',
+    ('repeatSame', false) => 'Repeat same',
+    ('cloneAndEdit', false) => 'Clone and edit',
+    _ => 'Recommend next',
+  };
+
+  void _appendMacrocycle() {
+    if (!_canAppendMacrocycle) return;
+    final preserved = [
+      for (final macrocycle in _effectiveMacrocycles)
+        Map<String, Object?>.from(macrocycle),
+    ];
+    final next = _newMacrocycle('M${preserved.length + 1}', 'active');
+    setState(() => _seriesMacrocycles = [...preserved, next]);
+    _changed();
+  }
 
   Widget _header() => Row(
     children: [
@@ -2129,7 +2309,8 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   }
 
   Future<void> _generate({bool validateForm = true, int? revision}) async {
-    if (validateForm && !(_form.currentState?.validate() ?? false)) return;
+    final form = _form.currentState;
+    if (validateForm && form != null && !form.validate()) return;
     final activeRevision = revision ?? ++_requestRevision;
     setState(() {
       _busyRevision = activeRevision;
@@ -2173,6 +2354,41 @@ class _CalculatorState extends State<Poc531GeneratorPage> {
   }
 
   void _restore(Map<String, Object?> v) {
+    if (v['schemaVersion'] == 4 && v['common'] is Map) {
+      final common = Map<String, Object?>.from(v['common']! as Map);
+      final forever = v['forever'];
+      if (v['mode'] == 'forever' && forever is Map) {
+        final standalone = forever['standaloneProgramId'];
+        if (standalone is String) {
+          _foreverPlanKind = 'standaloneProgram';
+          _foreverId = _forever
+              .where((template) => template.planKind == 'standaloneProgram')
+              .firstOrNull
+              ?.id;
+        } else if (forever['series'] is Map) {
+          final series = forever['series']! as Map;
+          final rawMacrocycles = series['macrocycles'];
+          if (rawMacrocycles is List) {
+            _seriesMacrocycles = [
+              for (final value in rawMacrocycles.whereType<Map>())
+                Map<String, Object?>.from(value),
+            ];
+          }
+          _foreverPlanKind = 'macrocycle';
+          _foreverId = _forever
+              .where((template) => template.planKind == 'macrocycle')
+              .firstOrNull
+              ?.id;
+        }
+      }
+      _restore({
+        ...common,
+        'schemaVersion': 2,
+        'mode': v['mode'],
+        'foreverTemplateId': _foreverId,
+      });
+      return;
+    }
     if (v['schemaVersion'] == 3 && v['common'] is Map) {
       final common = Map<String, Object?>.from(v['common']! as Map);
       final branch = v[v['mode'] == 'forever' ? 'forever' : 'cycle'];

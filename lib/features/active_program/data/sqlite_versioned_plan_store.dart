@@ -115,6 +115,240 @@ class SqliteVersionedPlanStore
     });
   }
 
+  @override
+  Future<ForeverFutureAmendmentPreview> previewForeverFutureAmendment(
+    ForeverFutureAmendmentRequest request,
+  ) async {
+    _validateFutureAmendment(request);
+    final database = await localDatabase.open();
+    return database.transaction((tx) async {
+      final current = await _activePlan(tx, request.currentPlanId);
+      await _validateCompatibility(tx, current, request.futurePlan);
+      final sessions = await tx.rawQuery(
+        '''SELECT s.id, s.status FROM plan_training_sessions s
+           JOIN plan_training_cycles c ON c.id = s.cycle_id
+           JOIN training_blocks b ON b.id = c.block_id
+           WHERE b.plan_id = ? ORDER BY s.scheduled_for, s.id''',
+        [request.currentPlanId],
+      );
+      final preserved = sessions
+          .where((row) => row['status'] != 'planned')
+          .map((row) => row['id']! as String)
+          .toList(growable: false);
+      final replaced = sessions
+          .where((row) => row['status'] == 'planned')
+          .map((row) => row['id']! as String)
+          .toList(growable: false);
+      final addedSessions = request.futurePlan.blocks
+          .expand((block) => block.cycles)
+          .expand((cycle) => cycle.sessions)
+          .map((session) => session.id)
+          .toList(growable: false);
+      final version =
+          Sqflite.firstIntValue(
+            await tx.rawQuery(
+              'SELECT COALESCE(MAX(version), 0) + 1 FROM plan_amendments WHERE plan_id = ?',
+              [request.currentPlanId],
+            ),
+          ) ??
+          1;
+      final previewId = '${request.currentPlanId}:future-amendment:$version';
+      final after = _futureAmendmentSignature(request);
+      final diff = {
+        'preservedSessionIds': preserved,
+        'replacedPlannedSessionIds': replaced,
+        'addedPlannedSessionIds': addedSessions,
+        'addedBlockIds': request.futurePlan.blocks
+            .map((block) => block.id)
+            .toList(),
+      };
+      await tx.insert('plan_amendments', {
+        'id': previewId,
+        'plan_id': request.currentPlanId,
+        'version': version,
+        'state': 'previewed',
+        'reason': request.reason.trim(),
+        'rule_id': request.ruleId.trim(),
+        'before_snapshot_json': canonicalJson({'sessions': sessions}),
+        'after_snapshot_json': canonicalJson(after),
+        'diff_json': canonicalJson(diff),
+        'created_at': request.futurePlan.createdAt.toUtc().toIso8601String(),
+      });
+      return ForeverFutureAmendmentPreview(
+        previewId: previewId,
+        currentPlanId: request.currentPlanId,
+        preservedSessionIds: List.unmodifiable(preserved),
+        replacedPlannedSessionIds: List.unmodifiable(replaced),
+        addedPlannedSessionIds: List.unmodifiable(addedSessions),
+        addedBlockIds: List.unmodifiable(
+          request.futurePlan.blocks.map((block) => block.id),
+        ),
+      );
+    });
+  }
+
+  @override
+  Future<void> applyForeverFutureAmendment(
+    ForeverFutureAmendmentRequest request, {
+    required String previewId,
+    required bool confirmed,
+  }) async {
+    _validateFutureAmendment(request);
+    if (!confirmed) {
+      throw StateError('A future amendment requires explicit confirmation.');
+    }
+    final database = await localDatabase.open();
+    await database.transaction((tx) async {
+      final current = await _activePlan(tx, request.currentPlanId);
+      await _validateCompatibility(tx, current, request.futurePlan);
+      final previews = await tx.query(
+        'plan_amendments',
+        where: "id = ? AND plan_id = ? AND state = 'previewed'",
+        whereArgs: [previewId, request.currentPlanId],
+        limit: 1,
+      );
+      if (previews.length != 1 ||
+          previews.single['after_snapshot_json'] !=
+              canonicalJson(_futureAmendmentSignature(request))) {
+        throw StateError('A matching unapplied preview is required.');
+      }
+
+      // Cascades remove prescriptions only below planned sessions. Closed and
+      // active rows are deliberately outside every deletion predicate.
+      await tx.rawDelete(
+        '''DELETE FROM plan_training_sessions WHERE status = 'planned'
+           AND cycle_id IN (SELECT c.id FROM plan_training_cycles c
+             JOIN training_blocks b ON b.id = c.block_id WHERE b.plan_id = ?)''',
+        [request.currentPlanId],
+      );
+      await tx.rawDelete(
+        '''DELETE FROM plan_training_cycles WHERE status = 'planned'
+           AND block_id IN (SELECT id FROM training_blocks WHERE plan_id = ?)
+           AND NOT EXISTS (SELECT 1 FROM plan_training_sessions s
+             WHERE s.cycle_id = plan_training_cycles.id)''',
+        [request.currentPlanId],
+      );
+      await tx.rawDelete(
+        '''DELETE FROM training_blocks WHERE plan_id = ? AND status = 'planned'
+           AND NOT EXISTS (SELECT 1 FROM plan_training_cycles c
+             WHERE c.block_id = training_blocks.id)''',
+        [request.currentPlanId],
+      );
+      await _insertFuture(tx, request.currentPlanId, request.futurePlan);
+      final updated = await tx.update(
+        'plan_amendments',
+        {
+          'state': 'applied',
+          'applied_at': request.futurePlan.createdAt.toUtc().toIso8601String(),
+        },
+        where: "id = ? AND state = 'previewed'",
+        whereArgs: [previewId],
+      );
+      if (updated != 1) throw StateError('The amendment preview changed.');
+    });
+  }
+
+  Future<void> _insertFuture(
+    DatabaseExecutor tx,
+    String planId,
+    VersionedTrainingPlan future,
+  ) async {
+    final nextBlockSequence =
+        Sqflite.firstIntValue(
+          await tx.rawQuery(
+            'SELECT COALESCE(MAX(sequence), -1) + 1 FROM training_blocks WHERE plan_id = ?',
+            [planId],
+          ),
+        ) ??
+        0;
+    for (final blockEntry in future.blocks.indexed) {
+      final block = blockEntry.$2;
+      await tx.insert('training_blocks', {
+        'id': block.id,
+        'plan_id': planId,
+        'sequence': nextBlockSequence + blockEntry.$1,
+        'role': _legacyRole(block.role),
+        'block_type': block.type,
+        'ruleset_role': block.role,
+        'seventh_week_purpose': block.seventhWeekPurpose,
+        'programming_block_number': nextBlockSequence + blockEntry.$1 + 1,
+        'template_id': block.templateId,
+        'status': 'planned',
+      });
+      await _insertFutureCycles(tx, block);
+    }
+  }
+
+  Future<void> _insertFutureCycles(
+    DatabaseExecutor tx,
+    PlannedTrainingBlock block,
+  ) async {
+    for (final cycle in block.cycles) {
+      await tx.insert('plan_training_cycles', {
+        'id': cycle.id,
+        'block_id': block.id,
+        'sequence': cycle.sequence,
+        'starts_on': _date(cycle.startsOn),
+        'status': 'planned',
+        'programming_cycle_number': cycle.programmingCycleNumber,
+      });
+      for (final session in cycle.sessions) {
+        await tx.insert('plan_training_sessions', {
+          'id': session.id,
+          'cycle_id': cycle.id,
+          'sequence': session.sequence,
+          'scheduled_for': _date(session.scheduledFor),
+          'status': 'planned',
+          'programming_week_number': session.programmingWeekNumber,
+          'session_position': session.position,
+        });
+        for (final sessionBlock in session.blocks) {
+          await tx.insert('session_blocks', {
+            'id': sessionBlock.id,
+            'session_id': session.id,
+            'sequence': sessionBlock.sequence,
+            'kind': sessionBlock.kind,
+            'movement_id': sessionBlock.movementId,
+            'rule_provenance_json': canonicalJson(sessionBlock.ruleProvenance),
+          });
+          for (final set in sessionBlock.prescriptions) {
+            await tx.insert('set_prescriptions', {
+              'id': set.id,
+              'session_block_id': sessionBlock.id,
+              'sequence': set.sequence,
+              'training_max': set.trainingMax,
+              'percentage': set.percentage,
+              'unrounded_load': set.unroundedLoad,
+              'rounding_increment': set.roundingIncrement,
+              'prescribed_load': set.prescribedLoad,
+              'prescribed_reps': set.prescribedReps,
+              'prescription_json': canonicalJson(set.details),
+              'rule_provenance_json': canonicalJson(set.ruleProvenance),
+            });
+          }
+          for (final activity in sessionBlock.activities) {
+            await tx.insert('activity_prescriptions', {
+              'id': activity.id,
+              'session_block_id': sessionBlock.id,
+              'sequence': activity.sequence,
+              'movement_or_activity_id': activity.movementOrActivityId,
+              'target_type': _targetType(activity.targetType),
+              'target_json': canonicalJson(activity.target),
+              'prescription_kind': activity.kind,
+              'rule_id': activity.ruleId,
+              'source_edition': activity.sourceEdition,
+              'ruleset_generation': activity.generation,
+              'source_reference_json': canonicalJson(activity.source),
+              'calculated_load': activity.calculatedLoad,
+              'unrounded_load': activity.unroundedLoad,
+              'rounding_increment': activity.roundingIncrement,
+            });
+          }
+        }
+      }
+    }
+  }
+
   Future<void> _insertPlan(
     DatabaseExecutor tx,
     VersionedTrainingPlan plan,
@@ -691,6 +925,85 @@ class SqliteVersionedPlanStore
           ..remove('recorded_at'),
     ];
   }
+
+  void _validateFutureAmendment(ForeverFutureAmendmentRequest request) {
+    _validate(request.futurePlan);
+    if (request.currentPlanId.trim().isEmpty ||
+        request.reason.trim().isEmpty ||
+        request.ruleId.trim().isEmpty) {
+      throw ArgumentError('A sourced future amendment is required.');
+    }
+    _firstSessionDate(request.futurePlan);
+  }
+
+  Map<String, Object?> _futureAmendmentSignature(
+    ForeverFutureAmendmentRequest request,
+  ) => {
+    'futurePlanId': request.futurePlan.id,
+    'athleteId': request.futurePlan.athleteId,
+    'blueprintId': request.futurePlan.blueprintId,
+    'blueprintVersion': request.futurePlan.blueprintVersion,
+    'macrocycle': request.futurePlan.macrocycle,
+    'reason': request.reason.trim(),
+    'ruleId': request.ruleId.trim(),
+    'blocks': [
+      for (final block in request.futurePlan.blocks)
+        {
+          'id': block.id,
+          'sequence': block.sequence,
+          'role': block.role,
+          'type': block.type,
+          'templateId': block.templateId,
+          'cycles': [
+            for (final cycle in block.cycles)
+              {
+                'id': cycle.id,
+                'sequence': cycle.sequence,
+                'startsOn': _date(cycle.startsOn),
+                'sessions': [
+                  for (final session in cycle.sessions)
+                    {
+                      'id': session.id,
+                      'sequence': session.sequence,
+                      'scheduledFor': _date(session.scheduledFor),
+                      'blocks': [
+                        for (final sessionBlock in session.blocks)
+                          {
+                            'id': sessionBlock.id,
+                            'sequence': sessionBlock.sequence,
+                            'kind': sessionBlock.kind,
+                            'movementId': sessionBlock.movementId,
+                            'prescriptions': [
+                              for (final set in sessionBlock.prescriptions)
+                                {
+                                  'id': set.id,
+                                  'sequence': set.sequence,
+                                  'trainingMax': set.trainingMax,
+                                  'percentage': set.percentage,
+                                  'prescribedLoad': set.prescribedLoad,
+                                  'prescribedReps': set.prescribedReps,
+                                },
+                            ],
+                            'activities': [
+                              for (final activity in sessionBlock.activities)
+                                {
+                                  'id': activity.id,
+                                  'sequence': activity.sequence,
+                                  'movementOrActivityId':
+                                      activity.movementOrActivityId,
+                                  'target': activity.target,
+                                  'kind': activity.kind,
+                                },
+                            ],
+                          },
+                      ],
+                    },
+                ],
+              },
+          ],
+        },
+    ],
+  };
 
   void _validate(VersionedTrainingPlan plan) {
     final roles = BlockRole.values.map((role) => role.name).toSet();

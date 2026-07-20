@@ -105,6 +105,8 @@ void main() {
     await tester.tap(find.text('Forever'));
     await tester.pumpAndSettle();
     expect(find.text('Template Forever exécutable'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('forever-step-2')));
+    await tester.pumpAndSettle();
     expect(find.textContaining('Leader'), findsWidgets);
     expect(find.byKey(const Key('forever-timeline')), findsOneWidget);
     expect(find.text('7th Week Deload'), findsOneWidget);
@@ -141,18 +143,11 @@ void main() {
     }
     expect(find.text('3. Architecture'), findsOneWidget);
     expect(find.text('8. Résumé'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('forever-step-1')));
+    await tester.pumpAndSettle();
     expect(find.text('M1 · Actif'), findsOneWidget);
     expect(find.text('M2 · Projeté'), findsOneWidget);
     expect(find.text('M3 · Projeté'), findsOneWidget);
-    expect(find.byKey(const Key('continue-next-macrocycle')), findsOneWidget);
-    expect(
-      tester
-          .widget<OutlinedButton>(
-            find.byKey(const Key('continue-next-macrocycle')),
-          )
-          .onPressed,
-      isNull,
-    );
     expect(tester.takeException(), isNull);
   });
 
@@ -181,20 +176,73 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('8. Summary'), findsOneWidget);
-    expect(
-      find.text('Review the complete sequence before generation.'),
-      findsOneWidget,
-    );
+    expect(find.text('Choose the plan type.'), findsOneWidget);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
     await tester.pump();
-    expect(find.text('C2 uses C1 by default.'), findsOneWidget);
+    expect(find.text('One macrocycle is generated at a time.'), findsOneWidget);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
     await tester.pump();
-    expect(
-      find.text('Review the complete sequence before generation.'),
-      findsOneWidget,
-    );
+    expect(find.text('Choose the plan type.'), findsOneWidget);
   });
+
+  testWidgets(
+    'completed M1 enables continuation and appends M2 to v4 payload',
+    (tester) async {
+      final core = _RecordingGeneratorCore();
+      const m1 = {
+        'instanceId': 'M1',
+        'intent': 'active',
+        'status': 'completed',
+        'recipeId': 'forever-2l1a-v2',
+        'slots': <Object?>[],
+        'protocols': <Object?>[],
+        'trainingMaxStates': <String, Object?>{},
+      };
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          home: Poc531GeneratorPage(
+            core: core,
+            initialConfiguration: const {
+              'schemaVersion': 4,
+              'mode': 'forever',
+              'common': {'unit': 'kg'},
+              'forever': {
+                'series': {
+                  'id': 'series-test',
+                  'terminated': false,
+                  'macrocycles': [m1],
+                },
+              },
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('forever-step-7')));
+      await tester.pumpAndSettle();
+
+      final add = find.byKey(const Key('continue-next-macrocycle'));
+      expect(tester.widget<OutlinedButton>(add).onPressed, isNotNull);
+      final continuationMode = find.byKey(const Key('continuation-mode'));
+      await tester.ensureVisible(continuationMode);
+      await tester.tap(continuationMode);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Clone and edit').last);
+      await tester.pumpAndSettle();
+      await tester.tap(add);
+      await tester.pumpAndSettle();
+
+      final forever = core.lastConfiguration!['forever']! as Map;
+      final series = forever['series']! as Map;
+      final macrocycles = series['macrocycles']! as List;
+      expect(macrocycles, hasLength(2));
+      expect(macrocycles.first, m1);
+      expect((macrocycles.last as Map)['instanceId'], 'M2');
+      expect((macrocycles.last as Map)['intent'], 'cloneAndEdit');
+      expect((macrocycles.last as Map)['status'], 'active');
+    },
+  );
 
   testWidgets('mode selector preserves common inputs and both mode drafts', (
     tester,
@@ -212,6 +260,8 @@ void main() {
     await tester.tap(find.text('Forever'));
     await tester.pumpAndSettle();
     expect(find.text('Leaders, Anchors et macrocycles'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('forever-step-2')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('forever-timeline')), findsOneWidget);
 
     await tester.tap(find.text('Cycle 5/3/1'));
@@ -226,6 +276,8 @@ void main() {
     );
 
     await tester.tap(find.text('Forever'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('forever-step-2')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('forever-timeline')), findsOneWidget);
   });
@@ -300,10 +352,27 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('forever-step-7')));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('generate-program')));
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('generate-program')))
+          .onPressed,
+      isNotNull,
+      reason: 'The migrated Forever configuration must remain executable.',
+    );
     await tester.tap(find.byKey(const Key('generate-program')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('export-json')), findsOneWidget);
+    expect(
+      find.byKey(const Key('export-json')),
+      findsOneWidget,
+      reason: tester
+          .widgetList<Text>(find.byType(Text))
+          .map((widget) => widget.data)
+          .whereType<String>()
+          .join(' | '),
+    );
     expect(find.textContaining('"prescriptions"'), findsNothing);
     expect(
       find.text('Prescription disponible dans l’export JSON.'),
@@ -366,4 +435,42 @@ void main() {
     expect(find.text('10 × 10 ratio'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+}
+
+class _RecordingGeneratorCore implements Poc531GeneratorCore {
+  Map<String, Object?>? lastConfiguration;
+
+  @override
+  GeneratorOptions get options => const DomainPoc531GeneratorCore().options;
+
+  @override
+  Future<GeneratorResult> generate(Map<String, Object?> configuration) async {
+    lastConfiguration = configuration;
+    return const GeneratorResult(title: 'Recorded', blocks: []);
+  }
+
+  @override
+  Future<List<GeneratorWarning>> validate(
+    Map<String, Object?> configuration,
+  ) async {
+    lastConfiguration = configuration;
+    return const [];
+  }
+
+  @override
+  Future<String> serializeConfiguration(
+    Map<String, Object?> configuration,
+  ) async {
+    lastConfiguration = configuration;
+    return 'recorded';
+  }
+
+  @override
+  Future<PlateLoadingView> calculatePlateLoading({
+    required double weight,
+    required double barWeight,
+    required List<double> inventory,
+    required String unit,
+  }) async =>
+      const PlateLoadingView(perSide: [], actualWeight: 0, roundingError: 0);
 }

@@ -45,6 +45,46 @@ abstract interface class ProgramSwitchRepository {
     ProgramSwitchRequest request,
   );
   Future<void> applyProgramSwitch(ProgramSwitchRequest request);
+  Future<ForeverFutureAmendmentPreview> previewForeverFutureAmendment(
+    ForeverFutureAmendmentRequest request,
+  );
+  Future<void> applyForeverFutureAmendment(
+    ForeverFutureAmendmentRequest request, {
+    required String previewId,
+    required bool confirmed,
+  });
+}
+
+class ForeverFutureAmendmentRequest {
+  const ForeverFutureAmendmentRequest({
+    required this.currentPlanId,
+    required this.futurePlan,
+    required this.reason,
+    required this.ruleId,
+  });
+
+  final String currentPlanId;
+  final VersionedTrainingPlan futurePlan;
+  final String reason;
+  final String ruleId;
+}
+
+class ForeverFutureAmendmentPreview {
+  const ForeverFutureAmendmentPreview({
+    required this.previewId,
+    required this.currentPlanId,
+    required this.preservedSessionIds,
+    required this.replacedPlannedSessionIds,
+    required this.addedPlannedSessionIds,
+    required this.addedBlockIds,
+  });
+
+  final String previewId;
+  final String currentPlanId;
+  final List<String> preservedSessionIds;
+  final List<String> replacedPlannedSessionIds;
+  final List<String> addedPlannedSessionIds;
+  final List<String> addedBlockIds;
 }
 
 class PreviewProgramSwitch {
@@ -59,4 +99,26 @@ class ApplyProgramSwitch {
   final ProgramSwitchRepository repository;
   Future<void> call(ProgramSwitchRequest request) =>
       repository.applyProgramSwitch(request);
+}
+
+class PreviewForeverFutureAmendment {
+  const PreviewForeverFutureAmendment(this.repository);
+  final ProgramSwitchRepository repository;
+  Future<ForeverFutureAmendmentPreview> call(
+    ForeverFutureAmendmentRequest request,
+  ) => repository.previewForeverFutureAmendment(request);
+}
+
+class ApplyForeverFutureAmendment {
+  const ApplyForeverFutureAmendment(this.repository);
+  final ProgramSwitchRepository repository;
+  Future<void> call(
+    ForeverFutureAmendmentRequest request, {
+    required String previewId,
+    required bool confirmed,
+  }) => repository.applyForeverFutureAmendment(
+    request,
+    previewId: previewId,
+    confirmed: confirmed,
+  );
 }

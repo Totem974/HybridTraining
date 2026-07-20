@@ -387,6 +387,143 @@ void main() {
       expect(event['rule_provenance_json'], contains('Owner requested'));
     },
   );
+
+  test(
+    'Forever future amendment preserves closed and active history atomically',
+    () async {
+      await store.createPlan(_plan());
+      final db = await local.open();
+      await db.insert('exercises', {
+        'id': 'squat',
+        'name_key': 'exercise.squat',
+        'category': 'mainLift',
+        'is_main_lift': 1,
+        'created_at': '2026-07-18T00:00:00Z',
+      });
+      await db.insert('training_max_history', {
+        'id': 'amendment-squat-tm',
+        'athlete_id': 'athlete',
+        'exercise_id': 'squat',
+        'one_rep_max': 175.0,
+        'training_max': 150.0,
+        'unit': 'kg',
+        'effective_at': '2026-07-18T00:00:00Z',
+      });
+      await db.update(
+        'plan_training_sessions',
+        {'status': 'complete', 'completed_at': '2026-07-21T10:00:00Z'},
+        where: 'id = ?',
+        whereArgs: ['session-1'],
+      );
+      await db.insert('plan_training_sessions', {
+        'id': 'cancelled-history',
+        'cycle_id': 'cycle-1',
+        'sequence': 9,
+        'scheduled_for': '2026-07-21',
+        'status': 'cancelled',
+        'completed_at': '2026-07-21T11:00:00Z',
+        'notes': 'Fictitious preserved cancellation',
+      });
+      await db.insert('set_performances', {
+        'id': 'immutable-performance',
+        'prescription_id': 'squat-block-set',
+        'result': 'success',
+        'completed_reps': 5,
+        'actual_load': 97.5,
+        'notes': 'Historical result',
+        'recorded_at': '2026-07-21T10:00:00Z',
+      });
+      final request = ForeverFutureAmendmentRequest(
+        currentPlanId: 'plan-1',
+        futurePlan: _replacementPlan(),
+        reason: 'Extend the verified Forever series',
+        ruleId: 'FOREVER-SERIES-V2',
+      );
+
+      final preview = await store.previewForeverFutureAmendment(request);
+      expect(
+        preview.preservedSessionIds,
+        containsAll(['session-1', 'cancelled-history']),
+      );
+      expect(preview.replacedPlannedSessionIds, ['session-2']);
+      expect(preview.addedPlannedSessionIds, ['replacement-session']);
+      expect(await db.query('training_plans'), hasLength(1));
+
+      await expectLater(
+        store.applyForeverFutureAmendment(
+          request,
+          previewId: preview.previewId,
+          confirmed: false,
+        ),
+        throwsStateError,
+      );
+      expect(
+        await db.query('plan_training_sessions', where: "id = 'session-2'"),
+        hasLength(1),
+      );
+
+      await store.applyForeverFutureAmendment(
+        request,
+        previewId: preview.previewId,
+        confirmed: true,
+      );
+      expect(
+        (await db.query(
+          'training_plans',
+          where: "id = 'plan-1'",
+        )).single['status'],
+        'active',
+      );
+      expect(
+        (await db.query(
+          'training_blocks',
+          where: "id = 'leader'",
+        )).single['status'],
+        'active',
+      );
+      expect(
+        (await db.query(
+          'plan_training_sessions',
+          where: "id = 'session-1'",
+        )).single['status'],
+        'complete',
+      );
+      expect(
+        (await db.query(
+          'plan_training_sessions',
+          where: "id = 'cancelled-history'",
+        )).single['notes'],
+        'Fictitious preserved cancellation',
+      );
+      expect(await db.query('set_performances'), hasLength(1));
+      expect(
+        await db.query('plan_training_sessions', where: "id = 'session-2'"),
+        isEmpty,
+      );
+      expect(
+        (await db.query(
+          'plan_training_sessions',
+          where: "id = 'replacement-session'",
+        )).single['status'],
+        'planned',
+      );
+      expect(
+        (await db.query(
+          'training_blocks',
+          where: "id = 'replacement-leader'",
+        )).single['plan_id'],
+        'plan-1',
+      );
+      expect(
+        (await db.query(
+          'plan_amendments',
+          where: 'id = ?',
+          whereArgs: [preview.previewId],
+        )).single['state'],
+        'applied',
+      );
+    },
+  );
 }
 
 VersionedTrainingPlan _plan({

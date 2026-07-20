@@ -73,12 +73,20 @@ Future<void> _pumpGeneratedProgram(
     ),
   );
   await tester.pumpAndSettle();
+  if (forever) {
+    await tester.tap(find.byKey(const ValueKey('forever-step-7')));
+    await tester.pumpAndSettle();
+  }
   final button = tester.widget<FilledButton>(
     find.byKey(const Key('generate-program')),
   );
   expect(button.onPressed, isNotNull);
   button.onPressed!();
   await tester.pumpAndSettle();
+  if (forever) {
+    await tester.tap(find.byKey(const ValueKey('forever-step-2')));
+    await tester.pumpAndSettle();
+  }
 }
 
 Future<void> _viewport(WidgetTester tester, Size size) async {

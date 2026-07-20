@@ -58,23 +58,13 @@ void main() {
     test('TM projections are tied to node and cycle instance identifiers', () {
       final result = const ForeverSequenceCompiler().compile(configuration());
 
-      expect(result.trainingMaxDecisions.map((item) => item.nodeId), [
-        'M1-C1',
-        'M1-C2',
-        'M1-C3',
-      ]);
+      expect(result.trainingMaxDecisions.map((item) => item.nodeId), ['M1-C3']);
       expect(result.trainingMaxDecisions.map((item) => item.cycleInstanceId), [
-        'M1-leader-1',
-        'M1-leader-2',
-        'M1-anchor-1',
+        'M1',
       ]);
       expect(result.trainingMaxDecisions[0].proposedTrainingMaxes, {
-        'press': 52.5,
-        'squat': 105,
-      });
-      expect(result.trainingMaxDecisions[2].proposedTrainingMaxes, {
-        'press': 57.5,
-        'squat': 115,
+        'press': 50,
+        'squat': 100,
       });
     });
 

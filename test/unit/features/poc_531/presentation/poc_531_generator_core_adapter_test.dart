@@ -44,9 +44,74 @@ void main() {
     final macrocycles = export['macrocycles']! as List;
     expect(macrocycles, hasLength(2));
     expect((macrocycles.first as Map)['instanceId'], 'M1');
-    expect((macrocycles.first as Map)['preserved'], isTrue);
     expect((macrocycles.first as Map).containsKey('generatedProgram'), isFalse);
     expect((macrocycles.last as Map)['instanceId'], 'M2');
+  });
+
+  test(
+    'completed macrocycle is exported without losing any nested field',
+    () async {
+      final completed = _macrocycle('M1', intent: 'active', status: 'completed')
+        ..['unknownFutureField'] = {
+          'snapshot': [
+            1,
+            {'opaque': true},
+          ],
+        }
+        ..['generatedProgram'] = {'immutable': 'snapshot'};
+      final result = await core.generate(
+        _seriesConfiguration([
+          completed,
+          _macrocycle('M2', intent: 'projected', status: 'planned'),
+        ]),
+      );
+      final export = jsonDecode(result.exportJson) as Map<String, Object?>;
+      expect((export['macrocycles'] as List).first, completed);
+    },
+  );
+
+  test('uses 2027 start date and macrocycle-specific Training Maxes', () async {
+    final second = _macrocycle('M2', intent: 'projected', status: 'planned');
+    second['trainingMaxStates'] = {
+      'squat': {'state': 'confirmed', 'trainingMax': 200},
+    };
+    final configuration = _seriesConfiguration([
+      _macrocycle('M1', intent: 'active', status: 'active'),
+      second,
+    ]);
+    (configuration['common'] as Map<String, Object?>)['startDate'] =
+        '2027-02-01T00:00:00.000Z';
+    final result = await core.generate(configuration);
+    final export = jsonDecode(result.exportJson) as Map<String, Object?>;
+    final encoded = jsonEncode(export['macrocycles']);
+    expect(encoded, contains('2027-02-01'));
+    expect(encoded, contains('200'));
+  });
+
+  test('refuses invalid intent, status, role, revision and protocol', () async {
+    Future<void> rejected(Map<String, Object?> macrocycle) async {
+      await expectLater(
+        core.generate(_seriesConfiguration([macrocycle])),
+        throwsA(anyOf(isA<FormatException>(), isA<Exception>())),
+      );
+    }
+
+    await rejected(_macrocycle('M1', intent: 'invalid', status: 'active'));
+    await rejected(_macrocycle('M1', intent: 'active', status: 'invalid'));
+    final wrongRole = _macrocycle('M1', intent: 'active', status: 'active');
+    ((wrongRole['slots'] as List).first as Map)['role'] = 'anchor';
+    await rejected(wrongRole);
+    final wrongRevision = _macrocycle('M1', intent: 'active', status: 'active');
+    ((wrongRevision['slots'] as List).first as Map)['cycleTemplateRevisionId'] =
+        'unknown-v1';
+    await rejected(wrongRevision);
+    final missingProtocol = _macrocycle(
+      'M1',
+      intent: 'active',
+      status: 'active',
+    );
+    (missingProtocol['protocols'] as List).removeLast();
+    await rejected(missingProtocol);
   });
 
   test('v4 generation refuses a non executable recipe', () async {
@@ -102,13 +167,33 @@ Map<String, Object?> _macrocycle(
   'status': status,
   'recipeId': recipeId,
   'slots': [
-    {'slotId': 'leader-1'},
-    {'slotId': 'leader-2'},
-    {'slotId': 'anchor-1'},
+    {
+      'slotId': 'leader-1',
+      'role': 'leader',
+      'cycleTemplateRevisionId': 'forever-original-fsl-leader-v1',
+    },
+    {
+      'slotId': 'leader-2',
+      'role': 'leader',
+      'cycleTemplateRevisionId': 'forever-original-fsl-leader-v1',
+    },
+    {
+      'slotId': 'anchor-1',
+      'role': 'anchor',
+      'cycleTemplateRevisionId': 'forever-original-pr-set-anchor-v1',
+    },
   ],
   'protocols': [
-    {'protocolTemplateRevisionId': 'forever-seventh-week-deload-v1'},
-    {'protocolTemplateRevisionId': 'forever-seventh-week-tm-test-v1'},
+    {
+      'boundaryId': 'leaders-to-anchor',
+      'protocolTemplateRevisionId': 'forever-seventh-week-deload-v1',
+      'required': true,
+    },
+    {
+      'boundaryId': 'macrocycle-end',
+      'protocolTemplateRevisionId': 'forever-seventh-week-tm-test-v1',
+      'required': true,
+    },
   ],
   'trainingMaxStates': <String, Object?>{},
 };

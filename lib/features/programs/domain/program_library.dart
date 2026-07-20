@@ -1,3 +1,4 @@
+import '../../poc_531/domain/planning/planning.dart' as forever;
 import 'program_identity.dart';
 import 'v2/program_domain.dart' as canonical;
 
@@ -225,11 +226,59 @@ class ProgramLibraryResult {
   final List<ProgramFacet<ProgramEntryKind>> kindFacets;
 }
 
+/// Executable Forever series definition exposed by the program catalogue.
+///
+/// The catalogue owns discovery and historical aliases while the planning
+/// domain remains the authority for the reviewed recipe and its revisions.
+class ForeverSeriesSpecification {
+  const ForeverSeriesSpecification({
+    required this.entry,
+    required this.recipe,
+    required this.leaderRevision,
+    required this.anchorRevision,
+    required this.boundaryProtocols,
+  });
+
+  final ProgramLibraryEntry entry;
+  final forever.MacrocycleRecipeRevision recipe;
+  final forever.CycleRevision leaderRevision;
+  final forever.CycleRevision anchorRevision;
+  final List<forever.ProtocolTemplateRevision> boundaryProtocols;
+
+  bool get isExecutable =>
+      entry.isExecutable &&
+      recipe.isExecutable &&
+      boundaryProtocols.isNotEmpty &&
+      boundaryProtocols.every(
+        (protocol) =>
+            protocol.source.document != 'NEEDS_REVIEW' &&
+            protocol.source.location != 'NEEDS_REVIEW',
+      );
+
+  forever.ForeverProgramSeries createSeries({
+    required forever.CommonTrainingProfile profile,
+    String seriesId = 'forever-original-fsl-series',
+    String macrocycleInstanceId = 'M1',
+  }) {
+    if (!isExecutable) {
+      throw StateError('An unreviewed Forever specification cannot execute.');
+    }
+    return forever.createForeverOriginalFslSeries(
+      profile: profile,
+      seriesId: seriesId,
+      macrocycleInstanceId: macrocycleInstanceId,
+      firstLeader: leaderRevision,
+      anchor: anchorRevision,
+    );
+  }
+}
+
 abstract interface class ProgramLibraryRepository {
   ProgramLibraryResult query(ProgramQuery query);
   ProgramLibraryEntry? findById(String id);
   List<ProgramLibraryEntry> presetsForConcept(String conceptId);
   ProgramLibraryEntry? findByPresetId(String presetId);
+  ForeverSeriesSpecification? resolveForeverSeries(String idOrAlias);
   ProgramLibraryValidation validate({Set<String> registeredGenerators});
 }
 
@@ -305,6 +354,22 @@ class InMemoryProgramLibraryRepository implements ProgramLibraryRepository {
       }
     }
     return null;
+  }
+
+  @override
+  ForeverSeriesSpecification? resolveForeverSeries(String idOrAlias) {
+    final entry = findById(idOrAlias) ?? findByPresetId(idOrAlias);
+    if (entry?.id != 'preset-forever-original-fsl') return null;
+    return ForeverSeriesSpecification(
+      entry: entry!,
+      recipe: forever.foreverTwoLeadersOneAnchorRecipe,
+      leaderRevision: forever.foreverOriginalFslLeaderRevision,
+      anchorRevision: forever.foreverOriginalPrSetAnchorRevision,
+      boundaryProtocols: const [
+        forever.foreverSeventhWeekDeloadRevision,
+        forever.foreverSeventhWeekTrainingMaxTestRevision,
+      ],
+    );
   }
 
   @override
@@ -515,7 +580,7 @@ const canonicalProgramEntries = <ProgramLibraryEntry>[
     documentationStatus: ProgramValidationStatus.rulesReviewed,
     implementationStatus: ProgramImplementationStatus.productionReady,
     complexity: 1,
-    presetId: 'forever-original-531-fsl-2l1a-v1',
+    presetId: 'forever-original-531-fsl-2l1a-v2',
     revisionId: 'forever-original-531-fsl-v1',
     recommended: false,
     sourceEdition: canonical.SourceEdition.forever,
@@ -526,8 +591,12 @@ const canonicalProgramEntries = <ProgramLibraryEntry>[
       ),
     ],
     generatorId: 'canonical-forever-original-fsl',
-    blueprintVersion: 1,
-    aliases: {'forever-original-fsl-v1'},
+    blueprintVersion: 2,
+    aliases: {
+      'forever-original-531-fsl-2l1a-v1',
+      'forever-original-fsl-v1',
+      'forever-2l1a',
+    },
     capabilities: {
       canonical.ProgramCapability.mainWork,
       canonical.ProgramCapability.supplementalWork,

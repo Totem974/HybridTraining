@@ -191,15 +191,7 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
                 'schemaVersion': 4,
                 'seriesId': request.seriesId,
                 'terminated': request.terminated,
-                'macrocycles': [
-                  for (final metadata in request.preservedMacrocycles)
-                    {...metadata, 'preserved': true},
-                  for (var index = 0; index < plans.length; index++)
-                    {
-                      ...request.macrocycles[index].metadata,
-                      'generatedProgram': plans[index].toJson(),
-                    },
-                ],
+                'macrocycles': request.exportMacrocycles(plans),
               })
             : forever.serializeForeverCalculatorProgram(plans.single),
       );
@@ -382,6 +374,9 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
     final macrocycles = <_GeneratedMacrocycle>[];
     final preservedMacrocycles = <Map<String, Object?>>[];
     final configurations = <core.ProgramConfiguration>[];
+    final sourceOrder = <String>[];
+    final domainMacrocycles = <planning.ForeverMacrocycle>[];
+    final futureDomainMacrocycles = <planning.ForeverMacrocycle>[];
     final allIds = <String>{};
     for (final raw in rawMacrocycles) {
       if (raw is! Map) throw const FormatException('Macrocycle invalide.');
@@ -395,15 +390,13 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
         throw const FormatException('Identifiant de macrocycle invalide.');
       }
       final status = '${macrocycle['status']}';
+      sourceOrder.add(instanceId);
+      final domainMacrocycle = _domainMacrocycle(macrocycle);
+      domainMacrocycles.add(domainMacrocycle);
       if (status == 'completed' || status == 'cancelled') {
         // Historical macrocycles are intentionally absent from generation:
         // their immutable snapshots remain owned by persistence.
-        preservedMacrocycles.add({
-          'instanceId': instanceId,
-          'intent': macrocycle['intent'],
-          'status': macrocycle['status'],
-          'recipeId': macrocycle['recipeId'],
-        });
+        preservedMacrocycles.add(_deepCopyMap(macrocycle));
         continue;
       }
       if (macrocycle['recipeId'] != 'forever-2l1a-v2') {
@@ -412,14 +405,18 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
         );
       }
       _validateExecutableMacrocycle(macrocycle);
+      futureDomainMacrocycles.add(domainMacrocycle);
+      final macrocycleCommon = _commonWithTrainingMaxStates(
+        decoded.common,
+        macrocycle['trainingMaxStates'],
+      );
+      final firstStart = _startDate(decoded.common);
       final configuration = _foreverConfiguration({
-        ...decoded.common,
+        ...macrocycleCommon,
         'foreverTemplateId': 'FV-236',
-        'startDate': DateTime.utc(
-          2026,
-          1,
-          5,
-        ).add(Duration(days: configurations.length * 11 * 7)),
+        'startDate': firstStart.add(
+          Duration(days: configurations.length * 11 * 7),
+        ),
       });
       if (configuration == null) return null;
       macrocycles.add(
@@ -435,6 +432,28 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
       );
       configurations.add(configuration);
     }
+    final profile = _planningProfile(decoded.common);
+    final domainSeries = planning.ForeverProgramSeries(
+      id: '${seriesValue['id'] ?? 'forever-series-v1'}',
+      profile: profile,
+      macrocycles: domainMacrocycles,
+      terminated: seriesValue['terminated'] == true,
+    );
+    final validation = const planning.MacrocycleSeriesValidator().validate(
+      domainSeries,
+    );
+    if (!validation.isValid) {
+      throw planning.ForeverCompilationException(validation);
+    }
+    if (futureDomainMacrocycles.isNotEmpty) {
+      const planning.ForeverSequenceCompiler().compileSeries(
+        planning.ForeverProgramSeries(
+          id: domainSeries.id,
+          profile: profile,
+          macrocycles: futureDomainMacrocycles,
+        ),
+      );
+    }
     if (configurations.isEmpty) {
       throw const FormatException(
         'Une série doit contenir un macrocycle futur à générer.',
@@ -444,6 +463,7 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
       seriesId: '${seriesValue['id'] ?? 'forever-series-v1'}',
       terminated: seriesValue['terminated'] == true,
       preservedMacrocycles: preservedMacrocycles,
+      sourceOrder: sourceOrder,
       macrocycles: macrocycles,
       configurations: configurations,
     );
@@ -455,6 +475,10 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
     if (slots is! List || protocols is! List) {
       throw const FormatException('Slots ou protocoles manquants.');
     }
+    if (slots.length != slots.whereType<Map>().length ||
+        protocols.length != protocols.whereType<Map>().length) {
+      throw const FormatException('Slot ou protocole invalide.');
+    }
     final slotIds = slots
         .whereType<Map>()
         .map((slot) => slot['slotId'])
@@ -465,17 +489,189 @@ class DomainPoc531GeneratorCore implements Poc531GeneratorCore {
         slotIds[2] != 'anchor-1') {
       throw const FormatException('La recette 2L/1A exige ses trois slots.');
     }
+    const expectedRoles = ['leader', 'leader', 'anchor'];
+    const expectedRevisions = [
+      'forever-original-fsl-leader-v1',
+      'forever-original-fsl-leader-v1',
+      'forever-original-pr-set-anchor-v1',
+    ];
+    for (var index = 0; index < slots.length; index++) {
+      final slot = slots[index] as Map;
+      if (slot['role'] != expectedRoles[index] ||
+          slot['cycleTemplateRevisionId'] != expectedRevisions[index]) {
+        throw const FormatException('Rôle ou révision de cycle invalide.');
+      }
+    }
     final protocolIds = protocols
         .whereType<Map>()
         .map((protocol) => protocol['protocolTemplateRevisionId'])
         .toSet();
+    final protocolByBoundary = {
+      for (final protocol in protocols.whereType<Map>())
+        protocol['boundaryId']: protocol['protocolTemplateRevisionId'],
+    };
     if (!protocolIds.contains('forever-seventh-week-deload-v1') ||
-        !protocolIds.contains('forever-seventh-week-tm-test-v1')) {
+        !protocolIds.contains('forever-seventh-week-tm-test-v1') ||
+        protocols.length != 2 ||
+        protocolByBoundary['leaders-to-anchor'] !=
+            'forever-seventh-week-deload-v1' ||
+        protocolByBoundary['macrocycle-end'] !=
+            'forever-seventh-week-tm-test-v1' ||
+        protocols.whereType<Map>().any(
+          (protocol) => protocol['required'] != true,
+        )) {
       throw const FormatException(
         'Les protocoles obligatoires de la recette sont absents.',
       );
     }
   }
+
+  static planning.ForeverMacrocycle _domainMacrocycle(
+    Map<String, Object?> value,
+  ) {
+    final recipe = switch (value['recipeId']) {
+      'forever-2l1a-v2' => planning.foreverTwoLeadersOneAnchorRecipe,
+      'forever-2l2a-v1' => planning.foreverTwoLeadersTwoAnchorsRecipe,
+      'forever-3l2a-v1' => planning.foreverThreeLeadersTwoAnchorsRecipe,
+      _ => throw FormatException(
+        'Recette Forever inconnue: ${value['recipeId']}.',
+      ),
+    };
+    final intent = switch (value['intent']) {
+      'active' => planning.MacrocycleIntent.active,
+      'projected' => planning.MacrocycleIntent.projected,
+      _ => throw FormatException(
+        'Intent Forever invalide: ${value['intent']}.',
+      ),
+    };
+    final status = switch (value['status']) {
+      'planned' => planning.MacrocycleStatus.planned,
+      'active' => planning.MacrocycleStatus.active,
+      'completed' => planning.MacrocycleStatus.completed,
+      'cancelled' => planning.MacrocycleStatus.cancelled,
+      _ => throw FormatException(
+        'Statut Forever invalide: ${value['status']}.',
+      ),
+    };
+    final slots = value['slots'];
+    if (slots is! List) throw const FormatException('Slots manquants.');
+    return planning.ForeverMacrocycle(
+      instanceId: value['instanceId']! as String,
+      intent: intent,
+      status: status,
+      recipe: recipe,
+      cycleSelections: [
+        for (final raw in slots.whereType<Map>())
+          planning.CycleSlotSelection(
+            slotId: '${raw['slotId']}',
+            cycleInstanceId: '${value['instanceId']}-${raw['slotId']}',
+            revision: raw['role'] == 'anchor'
+                ? planning.foreverOriginalPrSetAnchorRevision
+                : planning.foreverOriginalFslLeaderRevision,
+          ),
+      ],
+    );
+  }
+
+  planning.CommonTrainingProfile _planningProfile(Map<String, Object?> common) {
+    final maxes = _trainingMaxes(common);
+    if (maxes == null) {
+      throw const FormatException('Training Maxes Forever incomplets.');
+    }
+    return planning.CommonTrainingProfile(
+      unit: common['unit'] == 'lb'
+          ? planning.TrainingUnit.pounds
+          : planning.TrainingUnit.kilograms,
+      trainingDaysPerWeek: common['days'] as int? ?? 4,
+      trainingWeekdays:
+          (common['trainingWeekdays'] as List?)?.whereType<int>().toList() ??
+          const [1, 2, 4, 5],
+      trainingMaxRatio:
+          ((common['trainingMaxRatio'] as num?)?.toDouble() ?? 90) / 100,
+      roundingIncrement:
+          (common['roundingIncrement'] as num?)?.toDouble() ?? 2.5,
+      trainingMaxes: maxes,
+      progressionIncrements: {
+        for (final lift in maxes.keys)
+          lift: lift == 'press' || lift == 'bench' ? 2.5 : 5,
+      },
+    );
+  }
+
+  Map<String, Object?> _commonWithTrainingMaxStates(
+    Map<String, Object?> common,
+    Object? rawStates,
+  ) {
+    if (rawStates is! Map || rawStates.isEmpty) return common;
+    final base = _trainingMaxes(common);
+    if (base == null) {
+      throw const FormatException('Training Maxes Forever incomplets.');
+    }
+    const aliases = {
+      'press': 'Press',
+      'overheadPress': 'Press',
+      'barbell.overhead-press': 'Press',
+      'bench': 'Bench Press',
+      'benchPress': 'Bench Press',
+      'barbell.bench-press': 'Bench Press',
+      'squat': 'Squat',
+      'barbell.back-squat': 'Squat',
+      'deadlift': 'Deadlift',
+      'barbell.deadlift': 'Deadlift',
+    };
+    final lifts = <String, double>{
+      'Press': base['press']!,
+      'Bench Press': base['bench']!,
+      'Squat': base['squat']!,
+      'Deadlift': base['deadlift']!,
+    };
+    for (final entry in rawStates.entries) {
+      final lift = aliases['${entry.key}'];
+      if (lift == null) {
+        throw FormatException('Training Max inconnu: ${entry.key}.');
+      }
+      final raw = entry.value;
+      final candidate = raw is num
+          ? raw
+          : raw is Map
+          ? raw['trainingMax'] ??
+                raw['confirmedTrainingMax'] ??
+                raw['proposedTrainingMax'] ??
+                raw['value']
+          : null;
+      if (candidate == null && raw is String) continue;
+      if (candidate is! num || candidate <= 0) {
+        throw FormatException('Training Max invalide pour ${entry.key}.');
+      }
+      lifts[lift] = candidate.toDouble();
+    }
+    return {
+      ...common,
+      'lifts': lifts,
+      'inputMode': 'tm',
+      'trainingMaxRatio': 100,
+    };
+  }
+
+  static DateTime _startDate(Map<String, Object?> common) =>
+      switch (common['startDate']) {
+        final DateTime value => value.toUtc(),
+        final String value when DateTime.tryParse(value) != null =>
+          DateTime.parse(value).toUtc(),
+        _ => DateTime.utc(2026, 1, 5),
+      };
+
+  static Map<String, Object?> _deepCopyMap(Map<String, Object?> source) => {
+    for (final entry in source.entries) entry.key: _deepCopy(entry.value),
+  };
+
+  static Object? _deepCopy(Object? value) => switch (value) {
+    Map map => {
+      for (final entry in map.entries) '${entry.key}': _deepCopy(entry.value),
+    },
+    List list => [for (final item in list) _deepCopy(item)],
+    _ => value,
+  };
 
   core.ProgramConfiguration? _foreverConfiguration(Map<String, Object?> value) {
     final id = value['foreverTemplateId'] as String?;
@@ -726,6 +922,7 @@ class _ForeverGenerationRequest {
     required this.seriesId,
     required this.terminated,
     required this.preservedMacrocycles,
+    required this.sourceOrder,
     required this.macrocycles,
     required this.configurations,
     required this.isSeries,
@@ -737,6 +934,7 @@ class _ForeverGenerationRequest {
     seriesId: '',
     terminated: false,
     preservedMacrocycles: const [],
+    sourceOrder: const ['M1'],
     macrocycles: const [_GeneratedMacrocycle(instanceId: 'M1', metadata: {})],
     configurations: [configuration],
     isSeries: false,
@@ -746,12 +944,14 @@ class _ForeverGenerationRequest {
     required String seriesId,
     required bool terminated,
     required List<Map<String, Object?>> preservedMacrocycles,
+    required List<String> sourceOrder,
     required List<_GeneratedMacrocycle> macrocycles,
     required List<core.ProgramConfiguration> configurations,
   }) => _ForeverGenerationRequest._(
     seriesId: seriesId,
     terminated: terminated,
     preservedMacrocycles: List.unmodifiable(preservedMacrocycles),
+    sourceOrder: List.unmodifiable(sourceOrder),
     macrocycles: List.unmodifiable(macrocycles),
     configurations: List.unmodifiable(configurations),
     isSeries: true,
@@ -760,9 +960,27 @@ class _ForeverGenerationRequest {
   final String seriesId;
   final bool terminated;
   final List<Map<String, Object?>> preservedMacrocycles;
+  final List<String> sourceOrder;
   final List<_GeneratedMacrocycle> macrocycles;
   final List<core.ProgramConfiguration> configurations;
   final bool isSeries;
+
+  List<Map<String, Object?>> exportMacrocycles(
+    List<core.GeneratedProgram> plans,
+  ) {
+    final preserved = {
+      for (final value in preservedMacrocycles)
+        value['instanceId']! as String: value,
+    };
+    final generated = <String, Map<String, Object?>>{
+      for (var index = 0; index < macrocycles.length; index++)
+        macrocycles[index].instanceId: {
+          ...macrocycles[index].metadata,
+          'generatedProgram': plans[index].toJson(),
+        },
+    };
+    return [for (final id in sourceOrder) preserved[id] ?? generated[id]!];
+  }
 }
 
 class _GeneratedMacrocycle {

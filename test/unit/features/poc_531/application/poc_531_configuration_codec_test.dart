@@ -104,36 +104,7 @@ void main() {
   test('round-trips finite series and per-lift TM states', () {
     final configuration = Poc531Configuration.forever(
       common: const {'unit': 'kg'},
-      forever: const {
-        'series': {
-          'id': 'series-42',
-          'terminated': false,
-          'macrocycles': [
-            {
-              'instanceId': 'M1',
-              'intent': 'active',
-              'status': 'active',
-              'recipeId': 'forever-2l1a-v2',
-              'slots': [
-                {
-                  'slotId': 'leader-1',
-                  'role': 'leader',
-                  'cycleTemplateRevisionId': 'forever-original-fsl-leader-v1',
-                },
-              ],
-              'protocols': [
-                {
-                  'boundaryId': 'leaders-to-anchor',
-                  'protocolTemplateRevisionId':
-                      'forever-seventh-week-deload-v1',
-                  'required': true,
-                },
-              ],
-              'trainingMaxStates': {'squat': 'confirmed'},
-            },
-          ],
-        },
-      },
+      forever: _validForever(),
     );
     final encoded = codec.encode(configuration);
     expect(codec.encode(codec.decode(encoded)), encoded);
@@ -162,21 +133,141 @@ void main() {
           'schemaVersion': 4,
           'mode': 'forever',
           'common': {},
-          'forever': {
-            'series': {
-              'macrocycles': [
-                {
-                  'recipeId': recipeId,
-                  'slots': [],
-                  'protocols': [],
-                  'trainingMaxStates': {},
-                },
-              ],
-            },
-          },
+          'forever': _validForever(recipeId: recipeId),
         }),
         throwsFormatException,
       );
+    }
+  });
+
+  test('preserves unknown historical fields through canonical round-trip', () {
+    final forever = _validForever();
+    forever['legacyEnvelope'] = {'z': 1, 'a': true};
+    final series = forever['series']! as Map<String, Object?>;
+    series['legacySeriesFlag'] = 'kept';
+    final macrocycle =
+        (series['macrocycles']! as List).single as Map<String, Object?>;
+    macrocycle['legacyNodeSnapshot'] = [
+      {'nodeId': 'C1'},
+    ];
+
+    final decoded = codec.decodeMap({
+      'schemaVersion': 4,
+      'mode': 'forever',
+      'common': {'legacyCommon': 7},
+      'forever': forever,
+    });
+    final encoded = codec.encode(decoded);
+    final restored = codec.decode(encoded);
+    expect(restored.common['legacyCommon'], 7);
+    expect(restored.forever?['legacyEnvelope'], {'z': 1, 'a': true});
+    final restoredSeries = restored.forever?['series'] as Map;
+    expect(restoredSeries['legacySeriesFlag'], 'kept');
+    expect(
+      ((restoredSeries['macrocycles'] as List).single
+          as Map)['legacyNodeSnapshot'],
+      [
+        {'nodeId': 'C1'},
+      ],
+    );
+  });
+
+  test('rejects invalid intents, statuses and Training Max states', () {
+    for (final mutation in <void Function(Map<String, Object?>)>[
+      (macrocycle) => macrocycle['intent'] = 'infinite',
+      (macrocycle) => macrocycle['status'] = 'running',
+      (macrocycle) => macrocycle['trainingMaxStates'] = {'squat': 'raised'},
+      (macrocycle) =>
+          macrocycle['trainingMaxStates'] = <String, Object?>{'squat': 1},
+    ]) {
+      final payload = _validPayload();
+      mutation(_firstMacrocycle(payload));
+      expect(() => codec.decodeMap(payload), throwsFormatException);
+    }
+  });
+
+  test('rejects duplicate IDs and active macrocycles after projected ones', () {
+    final duplicate = _validPayload();
+    final duplicateSeries = _series(duplicate);
+    duplicateSeries['macrocycles'] = [
+      _validMacrocycle(),
+      _validMacrocycle(intent: 'projected', status: 'planned'),
+    ];
+    expect(() => codec.decodeMap(duplicate), throwsFormatException);
+
+    final wrongOrder = _validPayload();
+    _series(wrongOrder)['macrocycles'] = [
+      _validMacrocycle(
+        instanceId: 'M1',
+        intent: 'projected',
+        status: 'planned',
+      ),
+      _validMacrocycle(instanceId: 'M2'),
+    ];
+    expect(() => codec.decodeMap(wrongOrder), throwsFormatException);
+  });
+
+  test('a terminated series cannot retain active or projected future work', () {
+    for (final macrocycle in [
+      _validMacrocycle(),
+      _validMacrocycle(intent: 'projected', status: 'planned'),
+    ]) {
+      final payload = _validPayload();
+      final series = _series(payload);
+      series['terminated'] = true;
+      series['macrocycles'] = [macrocycle];
+      expect(() => codec.decodeMap(payload), throwsFormatException);
+    }
+  });
+
+  test('enforces the exact sourced slots for the 2L/1A recipe', () {
+    for (final mutation in <void Function(List)>[
+      (slots) => slots.removeLast(),
+      (slots) => (slots[0] as Map)['slotId'] = 'leader-x',
+      (slots) => (slots[1] as Map)['role'] = 'anchor',
+      (slots) => (slots[2] as Map)['cycleTemplateRevisionId'] =
+          'forever-original-fsl-leader-v1',
+      (slots) => slots[0] = <Object?, Object?>{
+        ...(slots[0] as Map),
+        'cycleTemplateRevisionId': 42,
+      },
+    ]) {
+      final payload = _validPayload();
+      mutation(_firstMacrocycle(payload)['slots'] as List);
+      expect(() => codec.decodeMap(payload), throwsFormatException);
+    }
+  });
+
+  test('mandatory protocols cannot be removed, replaced or made optional', () {
+    for (final mutation in <void Function(List)>[
+      (protocols) => protocols.removeLast(),
+      (protocols) => (protocols[0] as Map)['required'] = false,
+      (protocols) => (protocols[0] as Map)['boundaryId'] = 'other',
+      (protocols) => (protocols[1] as Map)['protocolTemplateRevisionId'] =
+          'forever-seventh-week-deload-v1',
+    ]) {
+      final payload = _validPayload();
+      mutation(_firstMacrocycle(payload)['protocols'] as List);
+      expect(() => codec.decodeMap(payload), throwsFormatException);
+    }
+  });
+
+  test('rejects malformed v4 collection and scalar types', () {
+    final cases = <Map<String, Object?>>[];
+    final badTerminated = _validPayload();
+    _series(badTerminated)['terminated'] = 'false';
+    cases.add(badTerminated);
+    final badMacrocycles = _validPayload();
+    _series(badMacrocycles)['macrocycles'] = <String, Object?>{};
+    cases.add(badMacrocycles);
+    final badSlots = _validPayload();
+    _firstMacrocycle(badSlots)['slots'] = 'slots';
+    cases.add(badSlots);
+    final badTm = _validPayload();
+    _firstMacrocycle(badTm)['trainingMaxStates'] = [];
+    cases.add(badTm);
+    for (final payload in cases) {
+      expect(() => codec.decodeMap(payload), throwsFormatException);
     }
   });
 
@@ -187,3 +278,67 @@ void main() {
     );
   });
 }
+
+Map<String, Object?> _validPayload() => {
+  'schemaVersion': 4,
+  'mode': 'forever',
+  'common': <String, Object?>{},
+  'forever': _validForever(),
+};
+
+Map<String, Object?> _validForever({String recipeId = 'forever-2l1a-v2'}) => {
+  'series': <String, Object?>{
+    'id': 'series-42',
+    'terminated': false,
+    'macrocycles': <Object?>[_validMacrocycle(recipeId: recipeId)],
+  },
+};
+
+Map<String, Object?> _validMacrocycle({
+  String instanceId = 'M1',
+  String intent = 'active',
+  String status = 'active',
+  String recipeId = 'forever-2l1a-v2',
+}) => {
+  'instanceId': instanceId,
+  'intent': intent,
+  'status': status,
+  'recipeId': recipeId,
+  'slots': <Object?>[
+    {
+      'slotId': 'leader-1',
+      'role': 'leader',
+      'cycleTemplateRevisionId': 'forever-original-fsl-leader-v1',
+    },
+    {
+      'slotId': 'leader-2',
+      'role': 'leader',
+      'cycleTemplateRevisionId': 'forever-original-fsl-leader-v1',
+    },
+    {
+      'slotId': 'anchor-1',
+      'role': 'anchor',
+      'cycleTemplateRevisionId': 'forever-original-pr-set-anchor-v1',
+    },
+  ],
+  'protocols': <Object?>[
+    {
+      'boundaryId': 'leaders-to-anchor',
+      'protocolTemplateRevisionId': 'forever-seventh-week-deload-v1',
+      'required': true,
+    },
+    {
+      'boundaryId': 'macrocycle-end',
+      'protocolTemplateRevisionId': 'forever-seventh-week-tm-test-v1',
+      'required': true,
+    },
+  ],
+  'trainingMaxStates': <String, Object?>{'squat': 'confirmed'},
+};
+
+Map<String, Object?> _series(Map<String, Object?> payload) =>
+    ((payload['forever'] as Map)['series'] as Map).cast<String, Object?>();
+
+Map<String, Object?> _firstMacrocycle(Map<String, Object?> payload) =>
+    ((_series(payload)['macrocycles'] as List).first as Map)
+        .cast<String, Object?>();

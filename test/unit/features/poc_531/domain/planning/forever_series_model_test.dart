@@ -7,11 +7,15 @@ void main() {
     MacrocycleIntent intent = MacrocycleIntent.active,
     MacrocycleStatus status = MacrocycleStatus.completed,
     MacrocycleRecipeRevision recipe = foreverTwoLeadersOneAnchorRecipe,
+    MacrocycleOutcome? outcome,
+    Map<String, double> trainingMaxChoices = const {},
   }) => ForeverMacrocycle(
     instanceId: id,
     intent: intent,
     status: status,
     recipe: recipe,
+    outcome: outcome,
+    trainingMaxChoices: trainingMaxChoices,
     cycleSelections: [
       for (final slot in recipe.slots)
         CycleSlotSelection(
@@ -146,7 +150,17 @@ void main() {
           id: 'series',
           profile: profile(),
           macrocycles: [
-            macrocycle(id: 'M1'),
+            macrocycle(
+              id: 'M1',
+              outcome: MacrocycleOutcome(
+                macrocycleInstanceId: 'M1',
+                trainingMaxStates: const {
+                  'press': TrainingMaxDecisionState.confirmed,
+                  'squat': TrainingMaxDecisionState.confirmed,
+                },
+              ),
+              trainingMaxChoices: const {'press': 52.5, 'squat': 105},
+            ),
             macrocycle(
               id: 'M2',
               intent: MacrocycleIntent.projected,
@@ -162,14 +176,97 @@ void main() {
           result.trainingMaxDecisions.where(
             (item) => item.state == TrainingMaxDecisionState.projected,
           ),
-          hasLength(3),
+          hasLength(1),
         );
-        expect(result.trainingMaxDecisions[3].previousTrainingMaxes, {
-          'press': 57.5,
-          'squat': 115,
+        expect(result.trainingMaxDecisions, hasLength(2));
+        expect(
+          result.trainingMaxDecisions[0].state,
+          TrainingMaxDecisionState.confirmed,
+        );
+        expect(result.trainingMaxDecisions[1].previousTrainingMaxes, {
+          'press': 52.5,
+          'squat': 105,
+        });
+        expect(result.trainingMaxDecisions[1].proposedTrainingMaxes, {
+          'press': 55,
+          'squat': 110,
         });
       },
     );
+
+    test('only sourced cycle and protocol revisions resolve', () {
+      const cycles = CycleStrategyRegistry();
+      const protocols = ProtocolStrategyRegistry();
+      expect(
+        cycles.resolve(foreverOriginalFslLeaderRevision.id),
+        same(foreverOriginalFslLeaderRevision),
+      );
+      expect(
+        cycles.resolve(foreverOriginalPrSetAnchorRevision.id),
+        same(foreverOriginalPrSetAnchorRevision),
+      );
+      expect(cycles.resolve('NEEDS_REVIEW'), isNull);
+      expect(
+        protocols.resolve(foreverSeventhWeekDeloadRevision.id),
+        same(foreverSeventhWeekDeloadRevision),
+      );
+      expect(protocols.resolve('forbidden'), isNull);
+    });
+
+    test(
+      'future regeneration preserves completed and cancelled instances exactly',
+      () {
+        final completed = macrocycle(id: 'M1');
+        final cancelled = macrocycle(
+          id: 'M-cancelled',
+          status: MacrocycleStatus.cancelled,
+        );
+        final oldFuture = macrocycle(
+          id: 'M2-old',
+          intent: MacrocycleIntent.projected,
+          status: MacrocycleStatus.planned,
+        );
+        final replacement = macrocycle(
+          id: 'M2',
+          intent: MacrocycleIntent.projected,
+          status: MacrocycleStatus.planned,
+        );
+        final series = ForeverProgramSeries(
+          id: 'series',
+          profile: profile(),
+          macrocycles: [completed, cancelled, oldFuture],
+        );
+
+        final regenerated = const ForeverSequenceCompiler().regenerateFuture(
+          series: series,
+          future: [replacement],
+        );
+        expect(regenerated.macrocycles, hasLength(3));
+        expect(regenerated.macrocycles[0], same(completed));
+        expect(regenerated.macrocycles[1], same(cancelled));
+        expect(regenerated.macrocycles[2], same(replacement));
+        expect(regenerated.macrocycles, isNot(contains(same(oldFuture))));
+      },
+    );
+
+    test('configuration kind must agree with its xor payload', () {
+      final series = ForeverProgramSeries(
+        id: 'series',
+        profile: profile(),
+        macrocycles: [macrocycle(id: 'M1')],
+      );
+      final invalid = ForeverPlanningConfiguration(
+        profile: profile(),
+        kind: ForeverPlanKind.standaloneProgram,
+        series: series,
+      );
+      final result = const ForeverSequenceCompiler().validate(invalid);
+      expect(result.isValid, isFalse);
+      expect(
+        result.issues.map((issue) => issue.code),
+        contains('forever.kind_requires_standalone'),
+      );
+    });
 
     test(
       'continuation is explicit, finite and leaves completed history unchanged',
