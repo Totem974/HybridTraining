@@ -1,5 +1,18 @@
 # POC progress
 
+## Forever mode composer — checkpoint 1 complete
+
+- Three required read-only audits completed: repository, Forever domain, and UI.
+- Dirty user worktree preserved; isolated branch and worktree created from the
+  refreshed POC reference.
+- Current Classic and Forever flows, competing engines, hard-coded week
+  checkpoints, serialization gaps, routing risks, and accessibility gaps are
+  recorded in `forever-mode-audit.md`.
+- Architecture direction fixed: typed mode boundary, shared common profile,
+  independent drafts, schema v3 migration, explicit compatibility, and one
+  Forever sequence compiler.
+- No product implementation started before completion of the audit.
+
 ## Checkpoint 1 — complete
 
 - Three read-only audits completed: repository, domain, and catalogue.
