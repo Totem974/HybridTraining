@@ -3,11 +3,14 @@ import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 
 import '../../cycle_generation/domain/cycle_contract.dart';
+import '../../cycle_generation/domain/cycle_option_schema.dart';
 import '../application/catalog_repository.dart';
 import '../domain/catalog_codec.dart';
+import '../domain/catalog_index.dart';
 import '../domain/catalog_models.dart';
 
-final class SqliteTrainingCatalog implements TrainingCatalogRepository {
+final class SqliteTrainingCatalog
+    implements TrainingCatalogRepository, CycleCatalogQuery {
   SqliteTrainingCatalog(this.database);
 
   static const schemaVersion = 1;
@@ -362,6 +365,109 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
     });
   }
 
+  @override
+  Future<CycleCatalogIndex> loadIndex({required int catalogVersion}) async {
+    await _requirePublished(catalogVersion);
+    final templates = await database.query(
+      'catalog_templates',
+      where: 'version=?',
+      whereArgs: [catalogVersion],
+      orderBy: 'id',
+    );
+    final summaries = <CycleTemplateSummary>[];
+    for (final template in templates) {
+      final templateId = template['id']! as String;
+      final variants = await database.query(
+        'catalog_variants',
+        where: 'version=? AND template_id=?',
+        whereArgs: [catalogVersion, templateId],
+        orderBy: 'id',
+      );
+      var labelEn = template['name']! as String;
+      var labelFr = labelEn;
+      var revision = 1;
+      if (variants.isNotEmpty) {
+        final metadata = await database.query(
+          'catalog_variant_metadata',
+          where: 'version=? AND template_id=?',
+          whereArgs: [catalogVersion, templateId],
+          limit: 1,
+        );
+        if (metadata.isNotEmpty) {
+          revision = metadata.single['revision']! as int;
+          final labels = _jsonMap(
+            metadata.single['labels_json']! as String,
+            'template labels',
+          );
+          labelEn = labels['en'] as String? ?? labelEn;
+          labelFr = labels['fr'] as String? ?? labelEn;
+        }
+      }
+      summaries.add(
+        CycleTemplateSummary(
+          id: templateId,
+          revision: revision,
+          labelEn: labelEn,
+          labelFr: labelFr,
+          variantIds: variants
+              .map((row) => row['id']! as String)
+              .toList(growable: false),
+        ),
+      );
+    }
+    return CycleCatalogIndex(
+      catalogVersion: catalogVersion,
+      templates: summaries,
+    );
+  }
+
+  @override
+  Future<CycleEditorSchema> loadEditorSchema({
+    required int catalogVersion,
+    required String templateId,
+    required String variantId,
+  }) async {
+    await _requirePublished(catalogVersion);
+    final metadata = await database.query(
+      'catalog_variant_metadata',
+      where: 'version=? AND template_id=? AND variant_id=?',
+      whereArgs: [catalogVersion, templateId, variantId],
+      limit: 1,
+    );
+    if (metadata.isEmpty) {
+      throw CatalogNotFoundException(
+        'Missing editor metadata for $templateId/$variantId',
+      );
+    }
+    final schemaId = metadata.single['option_schema_id']! as String;
+    final rows = await database.query(
+      'catalog_option_schemas',
+      columns: ['payload_json'],
+      where: 'version=? AND id=?',
+      whereArgs: [catalogVersion, schemaId],
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      throw CatalogNotFoundException('Missing option schema $schemaId');
+    }
+    final payload = _jsonMap(
+      rows.single['payload_json']! as String,
+      'option schema',
+    );
+    final parameters = payload['parameters'];
+    if (parameters is! List<Object?>) {
+      throw const CatalogFormatException('parameters must be a list');
+    }
+    return CycleEditorSchema(
+      id: schemaId,
+      templateId: templateId,
+      variantId: variantId,
+      options: parameters
+          .map((value) => _decodeOption(_objectMap(value, 'parameter')))
+          .toList(growable: false),
+    );
+  }
+
   Future<void> createDraftFromPublished({
     required int sourceVersion,
     required int draftVersion,
@@ -499,6 +605,137 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
       throw CatalogNotFoundException(
         'Unknown movement reference ${missing.first.value} in catalog version $catalogVersion',
       );
+    }
+  }
+
+  Future<void> _requirePublished(int version) async {
+    final rows = await database.query(
+      'catalog_versions',
+      columns: ['status'],
+      where: 'version=?',
+      whereArgs: [version],
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      throw CatalogNotFoundException('Unknown catalog version $version');
+    }
+    if (rows.single['status'] != 'published') {
+      throw CatalogNotPublishedException(version);
+    }
+  }
+
+  static CycleOptionDefinition _decodeOption(Map<String, Object?> map) {
+    _exactKeys(map, const {
+      'id',
+      'type',
+      'scope',
+      'default',
+      'minimum',
+      'maximum',
+      'step',
+      'allowedValues',
+      'visibleWhen',
+      'enabledWhen',
+      'requiredWhen',
+    });
+    final allowed = map['allowedValues'];
+    if (allowed is! List<Object?>) {
+      throw const CatalogFormatException('allowedValues must be a list');
+    }
+    return CycleOptionDefinition(
+      id: map['id']! as String,
+      type: CycleOptionType.values.byName(map['type']! as String),
+      scope: CycleOptionScope.values.byName(map['scope']! as String),
+      defaultValue: map['default']!,
+      minimum: map['minimum'] as num?,
+      maximum: map['maximum'] as num?,
+      step: map['step'] as num?,
+      allowedValues: List<Object>.unmodifiable(allowed.whereType<Object>()),
+      visibleWhen: _decodeCondition(
+        _objectMap(map['visibleWhen'], 'visibleWhen'),
+      ),
+      enabledWhen: _decodeCondition(
+        _objectMap(map['enabledWhen'], 'enabledWhen'),
+      ),
+      requiredWhen: _decodeCondition(
+        _objectMap(map['requiredWhen'], 'requiredWhen'),
+      ),
+    );
+  }
+
+  static CycleOptionCondition _decodeCondition(Map<String, Object?> map) {
+    final type = map['type'];
+    if (type is! String) {
+      throw const CatalogFormatException('Condition type must be a string');
+    }
+    switch (type) {
+      case 'always':
+        _allowedKeys(map, const {'type', 'value'});
+        return AlwaysCondition(map['value'] as bool? ?? true);
+      case 'present':
+        _exactKeys(map, const {'type', 'optionId'});
+        return PresentCondition(map['optionId']! as String);
+      case 'equals':
+        _exactKeys(map, const {'type', 'optionId', 'value'});
+        return EqualsCondition(map['optionId']! as String, map['value']!);
+      case 'not':
+        _exactKeys(map, const {'type', 'condition'});
+        return NotCondition(
+          _decodeCondition(_objectMap(map['condition'], 'condition')),
+        );
+      case 'all':
+      case 'any':
+        _exactKeys(map, const {'type', 'conditions'});
+        final values = map['conditions'];
+        if (values is! List<Object?>) {
+          throw const CatalogFormatException('conditions must be a list');
+        }
+        final conditions = values
+            .map((value) => _decodeCondition(_objectMap(value, 'condition')))
+            .toList(growable: false);
+        return type == 'all'
+            ? AllCondition(conditions)
+            : AnyCondition(conditions);
+      case 'in':
+        _exactKeys(map, const {'type', 'optionId', 'values'});
+        final values = map['values'];
+        if (values is! List<Object?>) {
+          throw const CatalogFormatException('values must be a list');
+        }
+        return InCondition(
+          map['optionId']! as String,
+          List<Object>.unmodifiable(values.whereType<Object>()),
+        );
+      case 'range':
+        _exactKeys(map, const {'type', 'optionId', 'minimum', 'maximum'});
+        return RangeCondition(
+          map['optionId']! as String,
+          minimum: map['minimum']! as num,
+          maximum: map['maximum']! as num,
+        );
+      default:
+        throw CatalogFormatException('Unknown condition type $type');
+    }
+  }
+
+  static Map<String, Object?> _jsonMap(String source, String label) =>
+      _objectMap(jsonDecode(source), label);
+
+  static Map<String, Object?> _objectMap(Object? value, String label) =>
+      value is Map<String, Object?>
+      ? value
+      : throw CatalogFormatException('$label must be an object');
+
+  static void _exactKeys(Map<String, Object?> map, Set<String> expected) {
+    if (map.keys.toSet().difference(expected).isNotEmpty ||
+        expected.difference(map.keys.toSet()).isNotEmpty) {
+      throw const CatalogFormatException('Unexpected object keys');
+    }
+  }
+
+  static void _allowedKeys(Map<String, Object?> map, Set<String> allowed) {
+    if (map.keys.toSet().difference(allowed).isNotEmpty) {
+      throw const CatalogFormatException('Unexpected object keys');
     }
   }
 

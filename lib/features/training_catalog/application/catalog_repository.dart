@@ -1,4 +1,6 @@
 import '../../cycle_generation/domain/cycle_contract.dart';
+import '../../cycle_generation/domain/cycle_option_schema.dart';
+import '../domain/catalog_index.dart';
 
 abstract interface class CatalogMovementReferenceValidator {
   Future<void> validateMovementReferences({
@@ -10,6 +12,15 @@ abstract interface class CatalogMovementReferenceValidator {
 abstract interface class TrainingCatalogRepository
     implements CatalogMovementReferenceValidator {
   Future<ResolvedCycleDefinition> resolve({
+    required int catalogVersion,
+    required String templateId,
+    required String variantId,
+  });
+}
+
+abstract interface class CycleCatalogQuery {
+  Future<CycleCatalogIndex> loadIndex({required int catalogVersion});
+  Future<CycleEditorSchema> loadEditorSchema({
     required int catalogVersion,
     required String templateId,
     required String variantId,

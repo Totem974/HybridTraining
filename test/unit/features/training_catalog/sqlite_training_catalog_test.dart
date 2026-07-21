@@ -76,6 +76,58 @@ void main() {
     );
   });
 
+  test('published catalog exposes a dynamic index and editor schema', () async {
+    await repository.installSeed(seed.replaceFirst('"published"', '"draft"'));
+    await database.insert('catalog_option_schemas', {
+      'version': 1,
+      'id': 'standard_options',
+      'revision': 1,
+      'payload_json': jsonEncode({
+        'parameters': [
+          {
+            'id': 'include_deload',
+            'type': 'boolean',
+            'scope': 'global',
+            'default': true,
+            'minimum': null,
+            'maximum': null,
+            'step': null,
+            'allowedValues': [true, false],
+            'visibleWhen': {'type': 'always'},
+            'enabledWhen': {'type': 'always'},
+            'requiredWhen': {'type': 'always'},
+          },
+        ],
+      }),
+    });
+    await database.insert('catalog_variant_metadata', {
+      'version': 1,
+      'template_id': 'standard_531',
+      'variant_id': 'four_day',
+      'revision': 1,
+      'labels_json': jsonEncode({
+        'en': 'Standard 5/3/1',
+        'fr': '5/3/1 standard',
+      }),
+      'source_rule_ids_json': '[]',
+      'option_schema_id': 'standard_options',
+      'schedule_ids_json': '[]',
+      'compatibility_json': '{}',
+      'valid_example_json': '{}',
+    });
+    await repository.publishDraft(1);
+    final index = await repository.loadIndex(catalogVersion: 1);
+    expect(index.templates.single.id, 'standard_531');
+    expect(index.templates.single.labelFr, '5/3/1 standard');
+    final editor = await repository.loadEditorSchema(
+      catalogVersion: 1,
+      templateId: 'standard_531',
+      variantId: 'four_day',
+    );
+    expect(editor.options.single.id, 'include_deload');
+    expect(editor.options.single.defaultValue, isTrue);
+  });
+
   test('opens and seeds a real catalog.db file', () async {
     final directory = await Directory.systemTemp.createTemp(
       'hybrid_catalog_test_',
