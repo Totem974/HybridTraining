@@ -21,24 +21,19 @@ void main() {
         'classic_extended_two_day_option_two',
       ]),
     );
-    expect(
-      (schedules.first['sessions']! as List<Object?>),
-      hasLength(3),
-    );
+    expect((schedules.first['sessions']! as List<Object?>), hasLength(3));
   });
 
   test('extended options are closed and have complete conditions', () {
     final document = load('catalog_src/classic/extended/option_schemas.json');
-    expect(
-      document.keys.toSet(),
-      {'schemaVersion', 'kind', 'optionSchemas'},
-    );
+    expect(document.keys.toSet(), {'schemaVersion', 'kind', 'optionSchemas'});
     final schemas = (document['optionSchemas']! as List<Object?>)
         .cast<Map<String, Object?>>();
     expect(schemas, hasLength(3));
     for (final schema in schemas) {
-      for (final parameter in (schema['parameters']! as List<Object?>)
-          .cast<Map<String, Object?>>()) {
+      for (final parameter
+          in (schema['parameters']! as List<Object?>)
+              .cast<Map<String, Object?>>()) {
         expect(parameter.keys.toSet(), {
           'id',
           'type',
@@ -60,8 +55,9 @@ void main() {
   });
 
   test('For Beginners routes every block to its documented session', () {
-    final componentsDocument =
-        load('catalog_src/classic/extended/components.json');
+    final componentsDocument = load(
+      'catalog_src/classic/extended/components.json',
+    );
     final components = (componentsDocument['components']! as List<Object?>)
         .cast<Map<String, Object?>>();
     expect(components, hasLength(32));
@@ -72,21 +68,23 @@ void main() {
       expect(compatibility['movementIds'], isNotEmpty);
     }
 
-    final templatesDocument =
-        load('catalog_src/classic/extended/templates.json');
+    final templatesDocument = load(
+      'catalog_src/classic/extended/templates.json',
+    );
     final templates = (templatesDocument['templates']! as List<Object?>)
         .cast<Map<String, Object?>>();
-    final template = templates
-        .singleWhere((value) => value['id'] == 'classic_for_beginners');
+    final template = templates.singleWhere(
+      (value) => value['id'] == 'classic_for_beginners',
+    );
     expect(template['id'], 'classic_for_beginners');
     final variant = (template['variants']! as List<Object?>)
         .cast<Map<String, Object?>>()
         .single;
     expect(variant['weekPlans'], hasLength(4));
-    expect(
-      (variant['scheduleIds']! as List<Object?>).single,
-      {'id': 'classic_extended_three_day_full_body', 'revision': 1},
-    );
+    expect((variant['scheduleIds']! as List<Object?>).single, {
+      'id': 'classic_extended_three_day_full_body',
+      'revision': 1,
+    });
   });
 
   test('Full Body phases one to three preserve two four-week cycles', () {

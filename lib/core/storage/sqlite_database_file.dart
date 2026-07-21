@@ -1,4 +1,4 @@
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common/sqlite_api.dart';
 
 final class SqliteDatabaseFile {
   SqliteDatabaseFile({
@@ -6,7 +6,7 @@ final class SqliteDatabaseFile {
     required this.version,
     required this.onCreate,
     this.onUpgrade,
-    this.factory,
+    required this.factory,
     this.databasePath,
   });
 
@@ -19,13 +19,13 @@ final class SqliteDatabaseFile {
     int newVersion,
   )?
   onUpgrade;
-  final DatabaseFactory? factory;
+  final DatabaseFactory factory;
   final String? databasePath;
   Database? _database;
 
   Future<Database> open() async {
     if (_database case final database? when database.isOpen) return database;
-    final selectedFactory = factory ?? databaseFactory;
+    final selectedFactory = factory;
     final root = databasePath ?? await selectedFactory.getDatabasesPath();
     _database = await selectedFactory.openDatabase(
       databasePath ?? '$root/$fileName',

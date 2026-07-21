@@ -1,7 +1,7 @@
 {
     "name": "Hybrid 5/3/1 — POC",
     "short_name": "Hybrid 5/3/1",
-    "start_url": "/poc/531",
+    "start_url": "/cycle",
     "display": "standalone",
     "background_color": "#12110f",
     "theme_color": "#e87820",

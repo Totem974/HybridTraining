@@ -42,6 +42,12 @@ final class _IntegrationApplication implements CycleWebApplication {
     required String variantId,
   }) async => const [];
 
+  @override
+  Future<List<String>> loadSessionIds({
+    required String templateId,
+    required String variantId,
+  }) async => const ['squat'];
+
   (String, String)? requestedSelection;
   bool saved = false;
   bool generated = false;

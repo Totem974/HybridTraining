@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common/sqlite_api.dart';
 
 import '../../cycle_generation/application/catalog_plan_resolver.dart';
 import '../../cycle_generation/domain/cycle_contract.dart';
@@ -754,7 +754,7 @@ final class SqliteTrainingCatalog
     if (rows.single['status'] != 'draft') {
       throw CatalogVersionImmutableException(version);
     }
-    final orphan = Sqflite.firstIntValue(
+    final orphan = _firstIntValue(
       await db.rawQuery(
         '''SELECT COUNT(*) FROM catalog_variant_week_components r
       LEFT JOIN catalog_components c ON c.version=r.version AND c.id=r.component_id
@@ -767,7 +767,7 @@ final class SqliteTrainingCatalog
         'Catalog version $version has missing component dependencies',
       );
     }
-    final missingOptionSchema = Sqflite.firstIntValue(
+    final missingOptionSchema = _firstIntValue(
       await db.rawQuery(
         '''SELECT COUNT(*) FROM catalog_variant_metadata m
         LEFT JOIN catalog_option_schemas o
@@ -1106,10 +1106,15 @@ Future<SqliteTrainingCatalog> openCatalogDatabase({
   );
   final repository = SqliteTrainingCatalog(database);
   if (seedJson != null) {
-    final existing = Sqflite.firstIntValue(
+    final existing = _firstIntValue(
       await database.rawQuery('SELECT COUNT(*) FROM catalog_versions'),
     );
     if (existing == 0) await repository.installSeed(seedJson);
   }
   return repository;
+}
+
+int? _firstIntValue(List<Map<String, Object?>> rows) {
+  if (rows.isEmpty || rows.first.isEmpty) return null;
+  return rows.first.values.first as int?;
 }

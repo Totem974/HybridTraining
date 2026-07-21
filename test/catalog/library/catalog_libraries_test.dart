@@ -36,21 +36,27 @@ void expectStableRecords(List<Map<String, Object?>> values) {
     }
     expect(
       jsonEncode(record).toLowerCase(),
-      isNot(anyOf(contains('todo'), contains('placeholder'), contains('review'))),
+      isNot(
+        anyOf(contains('todo'), contains('placeholder'), contains('review')),
+      ),
     );
   }
 }
 
 void main() {
   group('catalogue libraries', () {
-    final movementsDocument =
-        readDocument('catalog_src/exercises/movements.v1.json');
-    final exercisesDocument =
-        readDocument('catalog_src/exercises/exercises.v1.json');
-    final assistanceDocument =
-        readDocument('catalog_src/assistance/plans.v1.json');
-    final conditioningDocument =
-        readDocument('catalog_src/conditioning/definitions.v1.json');
+    final movementsDocument = readDocument(
+      'catalog_src/exercises/movements.v1.json',
+    );
+    final exercisesDocument = readDocument(
+      'catalog_src/exercises/exercises.v1.json',
+    );
+    final assistanceDocument = readDocument(
+      'catalog_src/assistance/plans.v1.json',
+    );
+    final conditioningDocument = readDocument(
+      'catalog_src/conditioning/definitions.v1.json',
+    );
 
     test('documents and stable records follow the frozen envelope', () {
       for (final pair in <(Map<String, Object?>, String)>[
@@ -68,7 +74,12 @@ void main() {
       final movements = records(movementsDocument, 'movements');
       expect(
         movements.map((movement) => movement['id']),
-        containsAll(['back_squat', 'bench_press', 'deadlift', 'overhead_press']),
+        containsAll([
+          'back_squat',
+          'bench_press',
+          'deadlift',
+          'overhead_press',
+        ]),
       );
       for (final movement in movements) {
         expect(movement.keys.toSet(), {
@@ -92,7 +103,10 @@ void main() {
       final units = exercises
           .expand((exercise) => exercise['measurementModes']! as List<Object?>)
           .toSet();
-      expect(categories, containsAll(['push', 'pull', 'singleLegCore', 'neck']));
+      expect(
+        categories,
+        containsAll(['push', 'pull', 'singleLegCore', 'neck']),
+      );
       expect(units, containsAll(['repetitions', 'duration', 'distance']));
       for (final exercise in exercises) {
         expect(exercise.keys.toSet(), {
@@ -109,9 +123,10 @@ void main() {
     });
 
     test('assistance slots only refer to covered exercise categories', () {
-      final coveredCategories = records(exercisesDocument, 'exercises')
-          .expand((exercise) => exercise['categories']! as List<Object?>)
-          .toSet();
+      final coveredCategories = records(
+        exercisesDocument,
+        'exercises',
+      ).expand((exercise) => exercise['categories']! as List<Object?>).toSet();
       for (final plan in records(assistanceDocument, 'assistancePlans')) {
         expect(plan.keys.toSet(), {
           'id',
@@ -122,52 +137,62 @@ void main() {
           'constraints',
           'compatibleExerciseCategories',
         });
-        for (final slot in (plan['slots']! as List<Object?>)
-            .cast<Map<String, Object?>>()) {
+        for (final slot
+            in (plan['slots']! as List<Object?>).cast<Map<String, Object?>>()) {
           expect(coveredCategories, contains(slot['category']));
-          expect(slot['minimumTotal']! as num,
-              lessThanOrEqualTo(slot['maximumTotal']! as num));
-          expect(slot['minimumExercises']! as num,
-              lessThanOrEqualTo(slot['maximumExercises']! as num));
+          expect(
+            slot['minimumTotal']! as num,
+            lessThanOrEqualTo(slot['maximumTotal']! as num),
+          );
+          expect(
+            slot['minimumExercises']! as num,
+            lessThanOrEqualTo(slot['maximumExercises']! as num),
+          );
         }
       }
     });
 
-    test('conditioning keeps repetition, distance and duration semantics apart',
-        () {
-      final definitions = records(
-        conditioningDocument,
-        'conditioningDefinitions',
-      );
-      expect(
-        definitions.map((definition) => definition['intensity']).toSet(),
-        {'easy', 'hard', 'test'},
-      );
-      for (final definition in definitions) {
-        expect(definition.keys.toSet(), {
-          'id',
-          'revision',
-          'labels',
-          'sourceRuleIds',
-          'intensity',
-          'modality',
-          'measurementModes',
-          'frequency',
-          'prescription',
-          'placement',
-          'requiredCapabilities',
-        });
-        final frequency = definition['frequency']! as Map<String, Object?>;
-        expect(frequency['minimumPerWeek']! as num,
-            lessThanOrEqualTo(frequency['maximumPerWeek']! as num));
-      }
-      final farmerPlan = records(assistanceDocument, 'assistancePlans')
-          .singleWhere((plan) => plan['id'] == 'forever_farmer_walk_distance');
-      expect(
-        ((farmerPlan['slots']! as List<Object?>).single
-            as Map<String, Object?>)['unit'],
-        'yards',
-      );
-    });
+    test(
+      'conditioning keeps repetition, distance and duration semantics apart',
+      () {
+        final definitions = records(
+          conditioningDocument,
+          'conditioningDefinitions',
+        );
+        expect(
+          definitions.map((definition) => definition['intensity']).toSet(),
+          {'easy', 'hard', 'test'},
+        );
+        for (final definition in definitions) {
+          expect(definition.keys.toSet(), {
+            'id',
+            'revision',
+            'labels',
+            'sourceRuleIds',
+            'intensity',
+            'modality',
+            'measurementModes',
+            'frequency',
+            'prescription',
+            'placement',
+            'requiredCapabilities',
+          });
+          final frequency = definition['frequency']! as Map<String, Object?>;
+          expect(
+            frequency['minimumPerWeek']! as num,
+            lessThanOrEqualTo(frequency['maximumPerWeek']! as num),
+          );
+        }
+        final farmerPlan = records(
+          assistanceDocument,
+          'assistancePlans',
+        ).singleWhere((plan) => plan['id'] == 'forever_farmer_walk_distance');
+        expect(
+          ((farmerPlan['slots']! as List<Object?>).single
+              as Map<String, Object?>)['unit'],
+          'yards',
+        );
+      },
+    );
   });
 }

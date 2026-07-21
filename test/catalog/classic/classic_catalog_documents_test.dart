@@ -28,10 +28,10 @@ void main() {
     final entries = (inventory['entries']! as List).cast<Map>();
     expect(entries, hasLength(40));
     expect(entries.map((entry) => entry['id']).toSet(), hasLength(40));
-    expect(entries.map((entry) => entry['id']), containsAll([
-      'OR-001',
-      'OR-040',
-    ]));
+    expect(
+      entries.map((entry) => entry['id']),
+      containsAll(['OR-001', 'OR-040']),
+    );
 
     final ruleIds = (sources['sources']! as List)
         .cast<Map>()
@@ -49,27 +49,27 @@ void main() {
         .cast<Map>()
         .map((template) => template['id'])
         .followedBy(
-          (extendedTemplates['templates']! as List)
-              .cast<Map>()
-              .map((template) => template['id']),
+          (extendedTemplates['templates']! as List).cast<Map>().map(
+            (template) => template['id'],
+          ),
         )
         .toSet();
     final assistancePlanIds = (assistance['assistancePlans']! as List)
         .cast<Map>()
         .map((plan) => plan['id'])
         .followedBy(
-          (classicAssistance['assistancePlans']! as List)
-              .cast<Map>()
-              .map((plan) => plan['id']),
+          (classicAssistance['assistancePlans']! as List).cast<Map>().map(
+            (plan) => plan['id'],
+          ),
         )
         .toSet();
     final componentIds = (sharedComponents['components']! as List)
         .cast<Map>()
         .map((component) => component['id'])
         .followedBy(
-          (classicComponents['components']! as List)
-              .cast<Map>()
-              .map((component) => component['id']),
+          (classicComponents['components']! as List).cast<Map>().map(
+            (component) => component['id'],
+          ),
         )
         .toSet();
     final cycleEntries = entries.where(
@@ -88,14 +88,13 @@ void main() {
         for (final week in (variant['weekPlans']! as List).cast<Map>()) {
           expect(week.keys.toSet(), {'weekNumber', 'componentIds'});
           expect(week['componentIds'], isNotEmpty);
-          for (final reference
-              in (week['componentIds']! as List).cast<Map>()) {
+          for (final reference in (week['componentIds']! as List).cast<Map>()) {
             expect(componentIds, contains(reference['id']));
           }
           expect(
-            (week['componentIds']! as List)
-                .cast<Map>()
-                .map((reference) => reference['id']),
+            (week['componentIds']! as List).cast<Map>().map(
+              (reference) => reference['id'],
+            ),
             everyElement(isNot(startsWith('assistance_'))),
           );
         }

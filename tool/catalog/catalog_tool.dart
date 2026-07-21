@@ -52,7 +52,9 @@ Future<void> main(List<String> arguments) async {
   final catalog = _Catalog.load(Directory('catalog_src'));
   final errors = catalog.lint();
   if (errors.isNotEmpty) {
-    for (final error in errors) stderr.writeln(error);
+    for (final error in errors) {
+      stderr.writeln(error);
+    }
     exitCode = 1;
     return;
   }
@@ -86,12 +88,17 @@ Future<void> main(List<String> arguments) async {
         'placeholderEntries',
         'compileFailures',
       ]) {
-        if (coverage[key] != 0)
+        if (coverage[key] != 0) {
           errors.add('$key must be zero, got ${coverage[key]}');
+        }
       }
       if (errors.isNotEmpty) {
-        for (final failure in runtime.failures) stderr.writeln(failure);
-        for (final error in errors) stderr.writeln(error);
+        for (final failure in runtime.failures) {
+          stderr.writeln(failure);
+        }
+        for (final error in errors) {
+          stderr.writeln(error);
+        }
         exitCode = 1;
       } else {
         stdout.writeln('catalog verification passed');
@@ -370,8 +377,9 @@ final class _Catalog {
     for (final file in files) {
       try {
         final value = jsonDecode(file.readAsStringSync());
-        if (value is! Map<String, Object?>)
+        if (value is! Map<String, Object?>) {
           throw const FormatException('root must be an object');
+        }
         final kindValue = value['kind'];
         final arrayName = kindValue is String ? _arrayName(kindValue) : '';
         _exact(value, {
@@ -379,15 +387,17 @@ final class _Catalog {
           'kind',
           arrayName,
         }, '${file.path}:root');
-        if (value['schemaVersion'] != 1)
+        if (value['schemaVersion'] != 1) {
           throw const FormatException('schemaVersion must be 1');
+        }
         final kind = value['kind'];
         if (kind is! String || !_documentArrays.contains(kind)) {
           throw FormatException('unknown kind $kind');
         }
         final list = value[arrayName];
-        if (list is! List<Object?>)
+        if (list is! List<Object?>) {
           throw FormatException('$kind must be an array');
+        }
         documents.add(
           _Document(
             file.path.startsWith(rootPrefix)
@@ -396,8 +406,9 @@ final class _Catalog {
             kind,
             list
                 .map((item) {
-                  if (item is! Map<String, Object?>)
+                  if (item is! Map<String, Object?>) {
                     throw FormatException('$kind record must be an object');
+                  }
                   return item;
                 })
                 .toList(growable: false),
@@ -474,16 +485,18 @@ final class _Catalog {
       for (final raw in list) {
         final variant = raw! as Map<String, Object?>;
         final option = variant['optionSchemaId']! as Map<String, Object?>;
-        if (!options.contains('${option['id']}@${option['revision']}'))
+        if (!options.contains('${option['id']}@${option['revision']}')) {
           missingOptions++;
+        }
         final scheduleRefs = variant['scheduleIds']! as List<Object?>;
         if (scheduleRefs.isEmpty) missingSchedules++;
         final allowedScheduleIds = <String>{};
         for (final rawRef in scheduleRefs) {
           final ref = rawRef! as Map<String, Object?>;
           allowedScheduleIds.add(ref['id']! as String);
-          if (!schedules.contains('${ref['id']}@${ref['revision']}'))
+          if (!schedules.contains('${ref['id']}@${ref['revision']}')) {
             missingSchedules++;
+          }
         }
         final componentRefs = <Object?>[];
         void collectPlans(List<Object?> plans) {
@@ -494,8 +507,9 @@ final class _Catalog {
           }
         }
 
-        if (variant['weekPlans'] case final List<Object?> plans)
+        if (variant['weekPlans'] case final List<Object?> plans) {
           collectPlans(plans);
+        }
         if (variant['phases'] case final List<Object?> phases) {
           for (final rawPhase in phases) {
             collectPlans(
@@ -505,8 +519,9 @@ final class _Catalog {
         }
         for (final rawRef in componentRefs) {
           final ref = rawRef! as Map<String, Object?>;
-          if (!components.contains('${ref['id']}@${ref['revision']}'))
+          if (!components.contains('${ref['id']}@${ref['revision']}')) {
             missingReferences++;
+          }
         }
         for (final pair in [
           ('assistancePlanIds', assistancePlans),
@@ -525,8 +540,9 @@ final class _Catalog {
         final example = variant['validExample']! as Map<String, Object?>;
         if (example.isEmpty ||
             example['scheduleId'] is! String ||
-            !allowedScheduleIds.contains(example['scheduleId']))
+            !allowedScheduleIds.contains(example['scheduleId'])) {
           compileFailures++;
+        }
       }
     }
     for (final document in documents) {
@@ -646,8 +662,9 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
       if (!const {
         'reviewed',
         'referenceAppObserved',
-      }.contains(value['reviewStatus']))
+      }.contains(value['reviewStatus'])) {
         throw FormatException('unknown reviewStatus ${value['reviewStatus']}');
+      }
       final section = value['section'];
       if (section is! String ||
           section.trim().isEmpty ||
@@ -688,8 +705,9 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
         'rotating',
         'multiMovement',
         'finite',
-      }.contains(value['type']))
+      }.contains(value['type'])) {
         throw FormatException('unknown schedule type ${value['type']}');
+      }
       final sessions = _objects(value['sessions'], '$at.sessions');
       for (var i = 0; i < sessions.length; i++) {
         _exact(sessions[i], {'id', 'role', 'movementIds'}, '$at.sessions[$i]');
@@ -769,8 +787,9 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
       _identity(value, at);
       _strings(value['sourceRuleIds'], '$at.sourceRuleIds');
       final parameters = _objects(value['parameters'], '$at.parameters');
-      for (var i = 0; i < parameters.length; i++)
+      for (var i = 0; i < parameters.length; i++) {
         _parameter(parameters[i], '$at.parameters[$i]');
+      }
     case 'movements':
       _exact(value, {
         'id',
@@ -800,8 +819,9 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
         'measurementModes',
         'requiredCapabilities',
         'loadingModes',
-      ])
+      ]) {
         _strings(value[key], '$at.$key');
+      }
     case 'assistancePlans':
       _exact(
         value,
@@ -884,8 +904,9 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
         'measurementModes',
         'placement',
         'requiredCapabilities',
-      ])
+      ]) {
         _strings(value[key], '$at.$key');
+      }
       _exact(_object(value['frequency'], '$at.frequency'), {
         'minimumPerWeek',
         'maximumPerWeek',
@@ -917,14 +938,18 @@ void _parameter(Map<String, Object?> value, String at) {
     'movement',
     'exercise',
     'prescription',
-  }.contains(value['type']))
+  }.contains(value['type'])) {
     throw FormatException('unknown parameter type ${value['type']}');
-  if (!const {'global', 'perMovement', 'perSession'}.contains(value['scope']))
+  }
+  if (!const {'global', 'perMovement', 'perSession'}.contains(value['scope'])) {
     throw FormatException('unknown parameter scope ${value['scope']}');
-  if (value['allowedValues'] is! List<Object?>)
+  }
+  if (value['allowedValues'] is! List<Object?>) {
     throw const FormatException('allowedValues must be an array');
-  for (final key in const ['visibleWhen', 'enabledWhen', 'requiredWhen'])
+  }
+  for (final key in const ['visibleWhen', 'enabledWhen', 'requiredWhen']) {
     _condition(value[key], '$at.$key');
+  }
 }
 
 void _weekPlans(List<Object?> raw, String at) {
@@ -953,10 +978,14 @@ void _condition(Object? raw, String at) {
     _ => throw FormatException('unknown condition type $type'),
   };
   _exact(value, keys, at);
-  if (type == 'not') _condition(value['condition'], '$at.condition');
-  if (type == 'all' || type == 'any')
-    for (final condition in (value['conditions']! as List<Object?>))
+  if (type == 'not') {
+    _condition(value['condition'], '$at.condition');
+  }
+  if (type == 'all' || type == 'any') {
+    for (final condition in (value['conditions']! as List<Object?>)) {
       _condition(condition, '$at.conditions');
+    }
+  }
 }
 
 void _block(Object? raw, String at) {
@@ -1035,15 +1064,17 @@ void _common(Map<String, Object?> value, String at) {
 void _identity(Map<String, Object?> value, String at) {
   if (value['id'] is! String ||
       value['revision'] is! int ||
-      (value['revision']! as int) < 1)
+      (value['revision']! as int) < 1) {
     throw FormatException('$at invalid identity');
+  }
 }
 
 void _labels(Object? raw, String at) {
   final value = _object(raw, at);
   _exact(value, {'en', 'fr'}, at);
-  if (value.values.any((v) => v is! String || (v).trim().isEmpty))
+  if (value.values.any((v) => v is! String || (v).trim().isEmpty)) {
     throw FormatException('$at labels must be non-empty strings');
+  }
 }
 
 void _ref(Object? raw, String at) {
@@ -1055,7 +1086,9 @@ void _ref(Object? raw, String at) {
 void _refs(Object? raw, String at) {
   final list = raw;
   if (list is! List<Object?>) throw FormatException('$at must be an array');
-  for (final value in list) _ref(value, at);
+  for (final value in list) {
+    _ref(value, at);
+  }
 }
 
 List<Map<String, Object?>> _objects(Object? raw, String at) {
@@ -1068,8 +1101,9 @@ Map<String, Object?> _object(Object? raw, String at) =>
     ? raw
     : throw FormatException('$at must be an object');
 void _strings(Object? raw, String at) {
-  if (raw is! List<Object?> || raw.any((v) => v is! String))
+  if (raw is! List<Object?> || raw.any((v) => v is! String)) {
     throw FormatException('$at must be a string array');
+  }
 }
 
 void _exact(
@@ -1080,13 +1114,15 @@ void _exact(
 }) {
   final allowed = keys.whereType<String>().toSet();
   final unknown = value.keys.where((k) => !allowed.contains(k));
-  if (unknown.isNotEmpty)
+  if (unknown.isNotEmpty) {
     throw FormatException('$at unknown key ${unknown.first}');
+  }
   final missing = allowed.where(
     (k) => !optional.contains(k) && !value.containsKey(k),
   );
-  if (missing.isNotEmpty)
+  if (missing.isNotEmpty) {
     throw FormatException('$at missing key ${missing.first}');
+  }
 }
 
 bool _containsPlaceholder(Object? value) {
@@ -1095,14 +1131,16 @@ bool _containsPlaceholder(Object? value) {
     return _placeholders.any(normalized.contains);
   }
   if (value is List<Object?>) return value.any(_containsPlaceholder);
-  if (value is Map<String, Object?>)
+  if (value is Map<String, Object?>) {
     return value.entries.any(
       (e) => _containsPlaceholder(e.key) || _containsPlaceholder(e.value),
     );
+  }
   return false;
 }
 
 void _rejectPlaceholder(Object? value, String at) {
-  if (_containsPlaceholder(value))
+  if (_containsPlaceholder(value)) {
     throw FormatException('$at contains a forbidden placeholder marker');
+  }
 }

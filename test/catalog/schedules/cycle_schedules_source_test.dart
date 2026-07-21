@@ -5,9 +5,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('Cycle schedules are strict, sourced and cover fixed rotations', () {
-    final root = jsonDecode(
-      File('catalog_src/schedules/cycle_schedules_v1.json').readAsStringSync(),
-    )! as Map<String, Object?>;
+    final root =
+        jsonDecode(
+              File(
+                'catalog_src/schedules/cycle_schedules_v1.json',
+              ).readAsStringSync(),
+            )!
+            as Map<String, Object?>;
     expect(root.keys.toSet(), {'schemaVersion', 'kind', 'schedules'});
     expect(root['schemaVersion'], 1);
     expect(root['kind'], 'schedules');
@@ -42,27 +46,38 @@ void main() {
     }
   });
 
-  test('standard fixed and reduced-frequency schedules preserve lift order', () {
-    final schedules = _schedulesById();
-    expect(
-      _flatten(schedules['schedule_four_day_fixed']!),
-      ['overhead_press', 'deadlift', 'bench_press', 'squat'],
-    );
-    expect(
-      _flatten(schedules['schedule_three_day_rotating']!),
-      ['overhead_press', 'deadlift', 'bench_press', 'squat'],
-    );
-    expect(
-      _flatten(schedules['schedule_two_day_multi_movement_option_one']!),
-      ['squat', 'bench_press', 'deadlift', 'overhead_press'],
-    );
-  });
+  test(
+    'standard fixed and reduced-frequency schedules preserve lift order',
+    () {
+      final schedules = _schedulesById();
+      expect(_flatten(schedules['schedule_four_day_fixed']!), [
+        'overhead_press',
+        'deadlift',
+        'bench_press',
+        'squat',
+      ]);
+      expect(_flatten(schedules['schedule_three_day_rotating']!), [
+        'overhead_press',
+        'deadlift',
+        'bench_press',
+        'squat',
+      ]);
+      expect(
+        _flatten(schedules['schedule_two_day_multi_movement_option_one']!),
+        ['squat', 'bench_press', 'deadlift', 'overhead_press'],
+      );
+    },
+  );
 }
 
 Map<String, Map> _schedulesById() {
-  final root = jsonDecode(
-    File('catalog_src/schedules/cycle_schedules_v1.json').readAsStringSync(),
-  )! as Map<String, Object?>;
+  final root =
+      jsonDecode(
+            File(
+              'catalog_src/schedules/cycle_schedules_v1.json',
+            ).readAsStringSync(),
+          )!
+          as Map<String, Object?>;
   return {
     for (final schedule in (root['schedules']! as List).cast<Map>())
       schedule['id']! as String: schedule,

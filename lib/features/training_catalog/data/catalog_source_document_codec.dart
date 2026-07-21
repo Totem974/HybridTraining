@@ -190,10 +190,11 @@ final class CatalogSourceDocumentCodec {
         'conditioningDefinitionIds',
       },
     );
-    if (map.containsKey('weekPlans') == map.containsKey('phases'))
+    if (map.containsKey('weekPlans') == map.containsKey('phases')) {
       throw const FormatException(
         'Variant requires exactly one of weekPlans or phases.',
       );
+    }
     return SourceVariant(
       id: _string(map, 'id'),
       revision: _int(map, 'revision'),
@@ -309,8 +310,9 @@ final class CatalogSourceDocumentCodec {
   Map<String, Object?> _root(String source, String kind) {
     final root = _map(jsonDecode(source), 'root');
     _keys(root, {'schemaVersion', 'kind', kind});
-    if (_int(root, 'schemaVersion') != 1 || _string(root, 'kind') != kind)
+    if (_int(root, 'schemaVersion') != 1 || _string(root, 'kind') != kind) {
       throw FormatException('Expected schemaVersion 1 $kind document.');
+    }
     return root;
   }
 
@@ -351,10 +353,12 @@ final class CatalogSourceDocumentCodec {
     Set<String> optional = const {},
   }) {
     final unknown = map.keys.toSet().difference(allowed);
-    if (unknown.isNotEmpty)
+    if (unknown.isNotEmpty) {
       throw FormatException('Unknown key ${unknown.first}.');
+    }
     final missing = allowed.difference(map.keys.toSet()).difference(optional);
-    if (missing.isNotEmpty)
+    if (missing.isNotEmpty) {
       throw FormatException('Missing key ${missing.first}.');
+    }
   }
 }

@@ -53,9 +53,17 @@ class _CycleWebPageState extends State<CycleWebPage> {
         templateId: selection.templateId,
         variantId: selection.variantId,
       );
+      final sessionIds = await widget.application.loadSessionIds(
+        templateId: selection.templateId,
+        variantId: selection.variantId,
+      );
       final values = {
         for (final option in schema.options)
-          option.id: draft?.values[option.id] ?? option.defaultValue,
+          option.id: _initialOptionValue(
+            option,
+            movementIds,
+            draft?.values[option.id],
+          ),
       };
       if (!mounted) return;
       setState(() {
@@ -67,8 +75,12 @@ class _CycleWebPageState extends State<CycleWebPage> {
           variantId: selection.variantId,
           values: values,
           startDate: draft?.startDate ?? DateTime.now(),
-          trainingDays: draft?.trainingDays ?? const [1, 3, 5],
-          sessionOrder: draft?.sessionOrder ?? movementIds,
+          trainingDays: _validSchedule(draft, sessionIds)
+              ? draft!.trainingDays
+              : _defaultTrainingDays(sessionIds.length),
+          sessionOrder: _validSchedule(draft, sessionIds)
+              ? draft!.sessionOrder
+              : sessionIds,
           maxInputs: draft?.maxInputs ?? const {},
           globalTrainingMaxRatioBasisPoints:
               draft?.globalTrainingMaxRatioBasisPoints ?? 9000,
@@ -142,15 +154,20 @@ class _CycleWebPageState extends State<CycleWebPage> {
         templateId: templateId,
         variantId: variantId,
       );
+      final sessionIds = await widget.application.loadSessionIds(
+        templateId: templateId,
+        variantId: variantId,
+      );
       final state = CycleEditorState(
         templateId: templateId,
         variantId: variantId,
         values: {
-          for (final option in schema.options) option.id: option.defaultValue,
+          for (final option in schema.options)
+            option.id: _initialOptionValue(option, movementIds, null),
         },
         startDate: _state?.startDate ?? DateTime.now(),
-        trainingDays: _state?.trainingDays ?? const [1, 3, 5],
-        sessionOrder: movementIds,
+        trainingDays: _defaultTrainingDays(sessionIds.length),
+        sessionOrder: sessionIds,
         unit: _state?.unit ?? WeightUnit.kg,
         globalTrainingMaxRatioBasisPoints:
             _state?.globalTrainingMaxRatioBasisPoints ?? 9000,
@@ -175,6 +192,41 @@ class _CycleWebPageState extends State<CycleWebPage> {
         });
       }
     }
+  }
+
+  bool _validSchedule(CycleEditorState? draft, List<String> sessionIds) {
+    if (draft == null || draft.trainingDays.length != sessionIds.length) {
+      return false;
+    }
+    return draft.trainingDays.toSet().length == sessionIds.length &&
+        draft.trainingDays.every((day) => day >= 1 && day <= 7) &&
+        draft.sessionOrder.length == sessionIds.length &&
+        draft.sessionOrder.toSet().containsAll(sessionIds);
+  }
+
+  List<int> _defaultTrainingDays(int count) {
+    const schedules = <int, List<int>>{
+      1: [1],
+      2: [1, 4],
+      3: [1, 3, 5],
+      4: [1, 2, 4, 5],
+      5: [1, 2, 3, 5, 6],
+      6: [1, 2, 3, 4, 5, 6],
+      7: [1, 2, 3, 4, 5, 6, 7],
+    };
+    return schedules[count] ??
+        (throw StateError('A Cycle cannot contain $count weekly sessions.'));
+  }
+
+  Object _initialOptionValue(
+    CycleOptionDefinition option,
+    List<String> movementIds,
+    Object? savedValue,
+  ) {
+    final value = savedValue ?? option.defaultValue;
+    if (option.scope != CycleOptionScope.perMovement) return value;
+    if (value is Map<Object?, Object?>) return value;
+    return {for (final movementId in movementIds) movementId: value};
   }
 
   Future<void> _setOption(String id, Object value) async {
@@ -402,7 +454,10 @@ class _CycleWebPageState extends State<CycleWebPage> {
         return true;
       }) &&
       _state!.startDate != null &&
-      _state!.trainingDays.isNotEmpty &&
+      _state!.trainingDays.length == _state!.sessionOrder.length &&
+      _state!.trainingDays.toSet().length == _state!.trainingDays.length &&
+      _state!.trainingDays.every((day) => day >= 1 && day <= 7) &&
+      _state!.sessionOrder.toSet().length == _state!.sessionOrder.length &&
       _movementIds.every(
         (id) => (_state!.maxInputs[id]?.weightCentiUnits ?? 0) > 0,
       );
@@ -759,17 +814,45 @@ class _CyclePreview extends StatelessWidget {
             title: Text('${isFrench ? 'Semaine' : 'Week'} ${week.number}'),
             children: [
               for (final session in week.sessions)
-                ListTile(
+                ExpansionTile(
+                  key: ValueKey('cycle-preview-session-${session.id}'),
                   title: Text(session.movementId.value.replaceAll('_', ' ')),
                   subtitle: Text(
                     '${session.date.toIso8601String().substring(0, 10)} · ${session.blocks.length} ${isFrench ? 'blocs' : 'blocks'}',
                   ),
+                  children: [
+                    for (final block in session.blocks)
+                      ListTile(
+                        key: ValueKey('cycle-preview-block-${block.id}'),
+                        title: Text(
+                          '${block.role} · ${block.movementId.value.replaceAll('_', ' ')}',
+                        ),
+                        subtitle: Text(
+                          block.sets.map(_setDescription).join('\n'),
+                        ),
+                      ),
+                  ],
                 ),
             ],
           ),
       ],
     ),
   );
+
+  String _setDescription(GeneratedSet set) {
+    final load = set.plannedLoad;
+    final loadText = load == null
+        ? '—'
+        : '${load.value.toStringAsFixed(2)} ${load.unit.name}';
+    final plates = set.platesPerSide.isEmpty
+        ? '—'
+        : set.platesPerSide
+              .map((plate) => plate.value.toStringAsFixed(2))
+              .join(' + ');
+    return '${isFrench ? 'Série' : 'Set'} ${set.index}: '
+        '${set.repetitions} · $loadText · '
+        '${isFrench ? 'plaques/côté' : 'plates/side'} $plates';
+  }
 }
 
 class _ErrorPanel extends StatelessWidget {

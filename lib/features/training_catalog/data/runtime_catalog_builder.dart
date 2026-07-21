@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common/sqlite_api.dart';
 
 /// Materializes the canonical declarative aggregate into a published SQLite
 /// catalogue. Records are inserted in the aggregate's already-sorted order.
@@ -43,7 +43,8 @@ final class RuntimeCatalogPublisher {
 
     await db.transaction((txn) async {
       const version = 1;
-      await txn.insert('catalog_versions', {
+      final batch = txn.batch();
+      batch.insert('catalog_versions', {
         'version': version,
         'status': 'draft',
         'source_reference': 'catalog_src/v1',
@@ -52,7 +53,7 @@ final class RuntimeCatalogPublisher {
       final movementLabels = <String, String>{};
       for (final movement in records['movements'] ?? const []) {
         movementLabels[movement['id']! as String] = _englishLabel(movement);
-        await txn.insert('catalog_library_entries', {
+        batch.insert('catalog_library_entries', {
           'version': version,
           'kind': 'movement',
           'id': movement['id'],
@@ -72,7 +73,7 @@ final class RuntimeCatalogPublisher {
       for (final entry
           in movementLabels.entries.toList()
             ..sort((a, b) => a.key.compareTo(b.key))) {
-        await txn.insert('catalog_movements', {
+        batch.insert('catalog_movements', {
           'version': version,
           'id': entry.key,
           'name': entry.value,
@@ -80,7 +81,7 @@ final class RuntimeCatalogPublisher {
       }
 
       for (final source in records['sources'] ?? const []) {
-        await txn.insert('catalog_rules', {
+        batch.insert('catalog_rules', {
           'version': version,
           'rule_id': source['ruleId'],
           'work': source['work'],
@@ -92,7 +93,7 @@ final class RuntimeCatalogPublisher {
         });
       }
       for (final entry in records['inventory'] ?? const []) {
-        await txn.insert('catalog_inventory', {
+        batch.insert('catalog_inventory', {
           'version': version,
           'id': entry['id'],
           'generation': entry['generation'],
@@ -105,7 +106,7 @@ final class RuntimeCatalogPublisher {
         });
       }
       for (final schema in records['optionSchemas'] ?? const []) {
-        await txn.insert('catalog_option_schemas', {
+        batch.insert('catalog_option_schemas', {
           'version': version,
           'id': schema['id'],
           'revision': schema['revision'],
@@ -113,7 +114,7 @@ final class RuntimeCatalogPublisher {
         });
       }
       for (final schedule in records['schedules'] ?? const []) {
-        await txn.insert('catalog_schedules_v2', {
+        batch.insert('catalog_schedules_v2', {
           'version': version,
           'id': schedule['id'],
           'revision': schedule['revision'],
@@ -126,7 +127,7 @@ final class RuntimeCatalogPublisher {
         'conditioningDefinitions',
       ]) {
         for (final entry in records[kind] ?? const []) {
-          await txn.insert('catalog_library_entries', {
+          batch.insert('catalog_library_entries', {
             'version': version,
             'kind': kind,
             'id': entry['id'],
@@ -139,14 +140,14 @@ final class RuntimeCatalogPublisher {
       final components = <String, Map<String, Object?>>{};
       for (final component in records['components'] ?? const []) {
         components['${component['id']}@${component['revision']}'] = component;
-        await txn.insert('catalog_library_entries', {
+        batch.insert('catalog_library_entries', {
           'version': version,
           'kind': 'component_definition',
           'id': component['id'],
           'revision': component['revision'],
           'payload_json': jsonEncode(component),
         });
-        await txn.insert('catalog_components', {
+        batch.insert('catalog_components', {
           'version': version,
           'id': component['id'],
           'block_json': jsonEncode(component['block']),
@@ -159,14 +160,14 @@ final class RuntimeCatalogPublisher {
       };
       for (final template in records['templates'] ?? const []) {
         final templateId = template['id']! as String;
-        await txn.insert('catalog_library_entries', {
+        batch.insert('catalog_library_entries', {
           'version': version,
           'kind': 'template_definition',
           'id': templateId,
           'revision': template['revision'],
           'payload_json': jsonEncode(template),
         });
-        await txn.insert('catalog_templates', {
+        batch.insert('catalog_templates', {
           'version': version,
           'id': templateId,
           'name': _englishLabel(template),
@@ -174,7 +175,7 @@ final class RuntimeCatalogPublisher {
         for (final variantValue in template['variants']! as List<Object?>) {
           final variant = _map(variantValue, 'variant');
           final variantId = variant['id']! as String;
-          await txn.insert('catalog_variants', {
+          batch.insert('catalog_variants', {
             'version': version,
             'template_id': templateId,
             'id': variantId,
@@ -196,7 +197,7 @@ final class RuntimeCatalogPublisher {
             final session = _map(sessionValue, 'session');
             for (final movementId
                 in (session['movementIds']! as List<Object?>).cast<String>()) {
-              await txn.insert('catalog_sessions', {
+              batch.insert('catalog_sessions', {
                 'version': version,
                 'template_id': templateId,
                 'variant_id': variantId,
@@ -208,7 +209,7 @@ final class RuntimeCatalogPublisher {
           final weekPlans = _expandedWeekPlans(variant);
           for (final week in weekPlans) {
             final weekNumber = week['weekNumber']! as int;
-            await txn.insert('catalog_weeks', {
+            batch.insert('catalog_weeks', {
               'version': version,
               'template_id': templateId,
               'variant_id': variantId,
@@ -224,7 +225,7 @@ final class RuntimeCatalogPublisher {
                 throw FormatException('Missing component ${reference['id']}.');
               }
               final block = _map(component['block'], 'component block');
-              await txn.insert('catalog_variant_week_components', {
+              batch.insert('catalog_variant_week_components', {
                 'version': version,
                 'template_id': templateId,
                 'variant_id': variantId,
@@ -232,7 +233,7 @@ final class RuntimeCatalogPublisher {
                 'position': blockPosition,
                 'component_id': component['id'],
               });
-              await txn.insert('catalog_blocks', {
+              batch.insert('catalog_blocks', {
                 'version': version,
                 'template_id': templateId,
                 'variant_id': variantId,
@@ -244,7 +245,7 @@ final class RuntimeCatalogPublisher {
               var setPosition = 0;
               for (final setValue in block['sets']! as List<Object?>) {
                 final set = _map(setValue, 'set');
-                await txn.insert('catalog_sets', {
+                batch.insert('catalog_sets', {
                   'version': version,
                   'template_id': templateId,
                   'variant_id': variantId,
@@ -259,7 +260,7 @@ final class RuntimeCatalogPublisher {
             }
           }
           final optionRef = _map(variant['optionSchemaId'], 'option schema');
-          await txn.insert('catalog_variant_metadata', {
+          batch.insert('catalog_variant_metadata', {
             'version': version,
             'template_id': templateId,
             'variant_id': variantId,
@@ -275,12 +276,13 @@ final class RuntimeCatalogPublisher {
           });
         }
       }
-      await txn.update(
+      batch.update(
         'catalog_versions',
         {'status': 'published'},
         where: 'version=?',
         whereArgs: [version],
       );
+      await batch.commit(noResult: true);
     });
   }
 

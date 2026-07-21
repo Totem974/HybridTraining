@@ -4,23 +4,25 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final inventory = jsonDecode(
-    File('catalog_src/forever_cycle/inventory.json').readAsStringSync(),
-  ) as Map<String, Object?>;
-  final sourceDocument = jsonDecode(
-    File('catalog_src/forever_cycle/inventory_sources.json')
-        .readAsStringSync(),
-  ) as Map<String, Object?>;
+  final inventory =
+      jsonDecode(
+            File('catalog_src/forever_cycle/inventory.json').readAsStringSync(),
+          )
+          as Map<String, Object?>;
+  final sourceDocument =
+      jsonDecode(
+            File(
+              'catalog_src/forever_cycle/inventory_sources.json',
+            ).readAsStringSync(),
+          )
+          as Map<String, Object?>;
   final entries = (inventory['entries']! as List<Object?>)
       .cast<Map<String, Object?>>();
   final sources = (sourceDocument['sources']! as List<Object?>)
       .cast<Map<String, Object?>>();
 
   test('historical Forever inventory has one precise source per entry', () {
-    expect(
-      sourceDocument.keys.toSet(),
-      {'schemaVersion', 'kind', 'sources'},
-    );
+    expect(sourceDocument.keys.toSet(), {'schemaVersion', 'kind', 'sources'});
     expect(sourceDocument['schemaVersion'], 1);
     expect(sourceDocument['kind'], 'sources');
     expect(sources, hasLength(182));

@@ -71,6 +71,12 @@ final class _DeepLinkedCycleWebApplication implements CycleWebApplication {
   }) => delegate.loadMovementIds(templateId: templateId, variantId: variantId);
 
   @override
+  Future<List<String>> loadSessionIds({
+    required String templateId,
+    required String variantId,
+  }) => delegate.loadSessionIds(templateId: templateId, variantId: variantId);
+
+  @override
   Future<CycleCatalogIndex> loadIndex() => delegate.loadIndex();
 
   @override

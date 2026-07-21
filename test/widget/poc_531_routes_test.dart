@@ -3,19 +3,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/features/poc_531/presentation/poc_531_routes.dart';
 import 'package:hybrid_training/app/bootstrap/app_environment.dart';
 import 'package:hybrid_training/app/hybrid_training_app.dart';
+import 'package:hybrid_training/features/cycle_generation/domain/cycle_contract.dart';
+import 'package:hybrid_training/features/cycle_generation/domain/cycle_option_schema.dart';
+import 'package:hybrid_training/features/cycle_web/application/cycle_web_contract.dart';
+import 'package:hybrid_training/features/training_catalog/domain/catalog_index.dart';
 
 void main() {
-  testWidgets('web POC mode starts without constructing SQLite', (
+  testWidgets('web POC mode starts on the injected Cycle catalogue', (
     tester,
   ) async {
     await tester.pumpWidget(
       const HybridTrainingApp(
         environment: AppEnvironment.dev,
         pocOnlyMode: true,
+        cycleApplication: _CycleApplication(),
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('poc-531-generator')), findsOneWidget);
+    expect(find.byKey(const Key('cycle-web-page')), findsOneWidget);
   });
 
   testWidgets('root POC route opens the single calculator page', (
@@ -61,4 +66,64 @@ void main() {
     expect(find.byKey(const Key('forever-timeline')), findsOneWidget);
     expect(find.text('Leaders, Anchors et macrocycles'), findsOneWidget);
   });
+}
+
+final class _CycleApplication implements CycleWebApplication {
+  const _CycleApplication();
+
+  @override
+  Future<CycleCatalogIndex> loadIndex() async => const CycleCatalogIndex(
+    catalogVersion: 1,
+    templates: [
+      CycleTemplateSummary(
+        id: 'cycle',
+        revision: 1,
+        labelEn: 'Cycle',
+        labelFr: 'Cycle',
+        variantIds: ['variant'],
+      ),
+    ],
+  );
+
+  @override
+  Future<CycleEditorSchema> loadEditorSchema({
+    required String templateId,
+    required String variantId,
+  }) async => CycleEditorSchema(
+    id: 'schema',
+    templateId: templateId,
+    variantId: variantId,
+    options: const <CycleOptionDefinition>[],
+  );
+
+  @override
+  Future<List<String>> loadMovementIds({
+    required String templateId,
+    required String variantId,
+  }) async => const [];
+
+  @override
+  Future<List<String>> loadSessionIds({
+    required String templateId,
+    required String variantId,
+  }) async => const ['squat'];
+
+  @override
+  Future<CycleEditorState?> loadDraft() async => null;
+
+  @override
+  Future<void> saveDraft(CycleEditorState state) async {}
+
+  @override
+  Future<GeneratedCycleView> generate(CycleEditorState state) async =>
+      GeneratedCycleView(
+        GeneratedCycle(
+          id: 'cycle',
+          catalogVersion: 1,
+          templateId: state.templateId,
+          variantId: state.variantId,
+          effectiveTrainingMaxes: const {},
+          weeks: const [],
+        ),
+      );
 }

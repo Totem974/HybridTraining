@@ -23,10 +23,11 @@ final class CatalogPlanDataResolver {
     final schedule = schedules
         .where((item) => _same(item.reference, scheduleReference))
         .toList();
-    if (schedule.length != 1)
+    if (schedule.length != 1) {
       throw const FormatException(
         'Schedule reference must resolve exactly once.',
       );
+    }
     final scheduledMovementIds = schedule.single.sessions
         .expand((session) => session.movementIds)
         .toSet()
@@ -76,8 +77,9 @@ final class CatalogPlanDataResolver {
   List<String> _targetIds(Map<String, Object?> map, String key) {
     final value = map[key];
     if (value == null) return const [];
-    if (value is! List<Object?> || value.any((item) => item is! String))
+    if (value is! List<Object?> || value.any((item) => item is! String)) {
       throw FormatException('$key must contain strings.');
+    }
     return value.cast<String>();
   }
 

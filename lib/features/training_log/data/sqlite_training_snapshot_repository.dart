@@ -26,6 +26,14 @@ final class SqliteTrainingSnapshotRepository
           sessionIndex++
         ) {
           final session = week.sessions[sessionIndex];
+          final blockIdCounts = <String, int>{};
+          for (final block in session.blocks) {
+            blockIdCounts.update(
+              block.id,
+              (count) => count + 1,
+              ifAbsent: () => 1,
+            );
+          }
           await tx.insert('sessions', {
             'id': session.id,
             'cycle_id': cycle.id,
@@ -41,8 +49,9 @@ final class SqliteTrainingSnapshotRepository
             blockIndex++
           ) {
             final block = session.blocks[blockIndex];
-            final blockId =
-                '${session.id}:$blockIndex:${block.movementId.value}:${block.id}';
+            final blockId = blockIdCounts[block.id] == 1
+                ? '${session.id}:${block.id}'
+                : '${session.id}:$blockIndex:${block.movementId.value}:${block.id}';
             await tx.insert('blocks', {
               'id': blockId,
               'session_id': session.id,

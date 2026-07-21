@@ -4,9 +4,11 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final document = jsonDecode(
-    File('catalog_src/forever_cycle/inventory.json').readAsStringSync(),
-  ) as Map<String, Object?>;
+  final document =
+      jsonDecode(
+            File('catalog_src/forever_cycle/inventory.json').readAsStringSync(),
+          )
+          as Map<String, Object?>;
   final entries = (document['entries']! as List<Object?>)
       .cast<Map<String, Object?>>();
 
@@ -64,12 +66,7 @@ void main() {
   });
 
   test('records have source rules and contain no placeholder status', () {
-    const classifications = {
-      'documentation',
-      'rule',
-      'protocol',
-      'transition',
-    };
+    const classifications = {'documentation', 'rule', 'protocol', 'transition'};
     for (final entry in entries) {
       expect(entry['generation'], 'forever');
       expect(classifications, contains(entry['classification']));

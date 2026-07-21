@@ -1,4 +1,4 @@
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common/sqlite_api.dart';
 
 abstract final class TrainingDatabaseSchema {
   static const version = 2;

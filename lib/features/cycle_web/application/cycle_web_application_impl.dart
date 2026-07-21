@@ -68,11 +68,37 @@ final class CycleWebApplicationImpl implements CycleWebApplication {
   Future<List<String>> loadMovementIds({
     required String templateId,
     required String variantId,
-  }) async => (await catalogRepository.resolve(
-    catalogVersion: catalogVersion,
-    templateId: templateId,
-    variantId: variantId,
-  )).sessionMovementIds.map((id) => id.value).toList(growable: false);
+  }) async {
+    final definition = await catalogRepository.resolve(
+      catalogVersion: catalogVersion,
+      templateId: templateId,
+      variantId: variantId,
+    );
+    final movements = <String>{};
+    for (final week in definition.weeks) {
+      for (final session in week.sessions) {
+        for (final block in session.blocks) {
+          movements.add((block.movementId ?? session.id).value);
+        }
+      }
+    }
+    return movements.toList(growable: false)..sort();
+  }
+
+  @override
+  Future<List<String>> loadSessionIds({
+    required String templateId,
+    required String variantId,
+  }) async {
+    final definition = await catalogRepository.resolve(
+      catalogVersion: catalogVersion,
+      templateId: templateId,
+      variantId: variantId,
+    );
+    return definition.sessionMovementIds
+        .map((movement) => movement.value)
+        .toList(growable: false);
+  }
 
   @override
   Future<CycleEditorState?> loadDraft() => draftRepository.load();

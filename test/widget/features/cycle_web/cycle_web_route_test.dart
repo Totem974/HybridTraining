@@ -98,6 +98,12 @@ final class _RouteApplication implements CycleWebApplication {
   }) async => const [];
 
   @override
+  Future<List<String>> loadSessionIds({
+    required String templateId,
+    required String variantId,
+  }) async => const ['squat'];
+
+  @override
   Future<CycleEditorSchema> loadEditorSchema({
     required String templateId,
     required String variantId,

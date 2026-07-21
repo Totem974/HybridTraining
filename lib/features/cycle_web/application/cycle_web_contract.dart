@@ -125,6 +125,10 @@ abstract interface class CycleWebApplication {
     required String templateId,
     required String variantId,
   });
+  Future<List<String>> loadSessionIds({
+    required String templateId,
+    required String variantId,
+  });
   Future<CycleEditorState?> loadDraft();
   Future<void> saveDraft(CycleEditorState state);
   Future<GeneratedCycleView> generate(CycleEditorState state);

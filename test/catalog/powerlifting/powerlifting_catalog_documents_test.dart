@@ -51,9 +51,9 @@ void main() {
     final fourDay = variant.single as Map;
     expect(fourDay, isNot(contains('componentIds')));
     expect(
-      (fourDay['weekPlans']! as List)
-          .cast<Map>()
-          .map((week) => week['weekNumber']),
+      (fourDay['weekPlans']! as List).cast<Map>().map(
+        (week) => week['weekNumber'],
+      ),
       [1, 2, 3, 4],
     );
     expect(

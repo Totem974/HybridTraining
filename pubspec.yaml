@@ -37,6 +37,8 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   sqflite: ^2.4.3
+  sqflite_common: ^2.5.6
+  sqflite_common_ffi_web: ^1.1.2
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +68,7 @@ flutter:
   assets:
     - assets/catalog/standard_531_v1.json
     - assets/catalog/standard_531_bbb_v2.json
+    - assets/catalog/catalog_seed.v1.json
 
   # To add assets to your application, add an assets section, like this:
   # assets:
