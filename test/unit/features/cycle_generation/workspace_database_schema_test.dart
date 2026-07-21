@@ -15,6 +15,7 @@ void main() {
       fileName: 'workspace.db',
       version: WorkspaceDatabaseSchema.version,
       onCreate: WorkspaceDatabaseSchema.create,
+      onUpgrade: WorkspaceDatabaseSchema.upgrade,
       factory: databaseFactoryFfi,
       databasePath: '${directory.path}/workspace.db',
     );

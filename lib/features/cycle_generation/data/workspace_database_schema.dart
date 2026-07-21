@@ -1,7 +1,9 @@
 import 'package:sqflite/sqflite.dart';
 
+import 'sqlite_workspace_program_repository.dart';
+
 abstract final class WorkspaceDatabaseSchema {
-  static const version = 1;
+  static const version = 2;
   static Future<void> create(Database db, int _) async {
     await db.execute(
       '''CREATE TABLE profiles(
@@ -26,5 +28,16 @@ abstract final class WorkspaceDatabaseSchema {
     await db.execute('''CREATE TABLE generation_drafts(
       id TEXT PRIMARY KEY, profile_id TEXT NOT NULL REFERENCES profiles(id),
       request_json TEXT NOT NULL, updated_at TEXT NOT NULL)''');
+    await SqliteWorkspaceProgramRepository.createTables(db);
+  }
+
+  static Future<void> upgrade(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    if (oldVersion < 2 && newVersion >= 2) {
+      await SqliteWorkspaceProgramRepository.createTables(db);
+    }
   }
 }
