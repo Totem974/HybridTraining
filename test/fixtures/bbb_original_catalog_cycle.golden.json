@@ -1,0 +1,63 @@
+{
+  "catalogVersion": 2,
+  "templateId": "bbb_original",
+  "variantId": "four_day_same_lift_50",
+  "cycleId": "bbb-original-golden",
+  "movementOrder": ["overhead_press", "deadlift", "bench_press", "squat"],
+  "effectiveTrainingMaxCentiUnits": {
+    "overhead_press": 7200,
+    "deadlift": 16200,
+    "bench_press": 10000,
+    "squat": 17000
+  },
+  "dates": [
+    ["2026-07-20", "2026-07-21", "2026-07-23", "2026-07-24"],
+    ["2026-07-27", "2026-07-28", "2026-07-30", "2026-07-31"],
+    ["2026-08-03", "2026-08-04", "2026-08-06", "2026-08-07"],
+    ["2026-08-10", "2026-08-11", "2026-08-13", "2026-08-14"]
+  ],
+  "weeks": [
+    {
+      "number": 1,
+      "blocks": [
+        {"role": "warm_up", "percentages": [4000, 5000, 6000], "repetitions": [5, 5, 3]},
+        {"role": "main_work", "percentages": [6500, 7500, 8500], "repetitions": [5, 5, "5+"]},
+        {"role": "supplemental", "percentages": [5000, 5000, 5000, 5000, 5000], "repetitions": [10, 10, 10, 10, 10]}
+      ]
+    },
+    {
+      "number": 2,
+      "blocks": [
+        {"role": "warm_up", "percentages": [4000, 5000, 6000], "repetitions": [5, 5, 3]},
+        {"role": "main_work", "percentages": [7000, 8000, 9000], "repetitions": [3, 3, "3+"]},
+        {"role": "supplemental", "percentages": [5000, 5000, 5000, 5000, 5000], "repetitions": [10, 10, 10, 10, 10]}
+      ]
+    },
+    {
+      "number": 3,
+      "blocks": [
+        {"role": "warm_up", "percentages": [4000, 5000, 6000], "repetitions": [5, 5, 3]},
+        {"role": "main_work", "percentages": [7500, 8500, 9500], "repetitions": [5, 3, "1+"]},
+        {"role": "supplemental", "percentages": [5000, 5000, 5000, 5000, 5000], "repetitions": [10, 10, 10, 10, 10]}
+      ]
+    },
+    {
+      "number": 4,
+      "blocks": [
+        {"role": "deload", "percentages": [4000, 5000, 6000], "repetitions": [5, 5, 5]}
+      ]
+    }
+  ],
+  "supplementalLoadsCentiUnits": {
+    "overhead_press": 3500,
+    "deadlift": 8000,
+    "bench_press": 5000,
+    "squat": 8500
+  },
+  "snapshot": {
+    "schemaVersion": 1,
+    "catalogVersion": 2,
+    "weekCount": 4,
+    "sessionsPerWeek": 4
+  }
+}

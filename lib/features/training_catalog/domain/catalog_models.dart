@@ -36,6 +36,9 @@ final class CatalogSeed {
     required this.sourceReference,
     required this.movements,
     required this.templates,
+    this.components = const [],
+    this.schedules = const [],
+    this.rules = const [],
   });
 
   final int schemaVersion;
@@ -44,6 +47,41 @@ final class CatalogSeed {
   final String sourceReference;
   final List<CatalogMovement> movements;
   final List<CatalogTemplate> templates;
+  final List<CatalogComponent> components;
+  final List<CatalogSchedule> schedules;
+  final List<CanonicalRuleReference> rules;
+}
+
+final class CanonicalRuleReference {
+  const CanonicalRuleReference({
+    required this.ruleId,
+    required this.work,
+    required this.edition,
+    required this.section,
+    required this.reviewStatus,
+  });
+  final String ruleId;
+  final String work;
+  final String edition;
+  final String section;
+  final String reviewStatus;
+}
+
+final class CatalogComponent {
+  const CatalogComponent({
+    required this.id,
+    required this.block,
+    this.ruleIds = const [],
+  });
+  final String id;
+  final BlockDefinition block;
+  final List<String> ruleIds;
+}
+
+final class CatalogSchedule {
+  const CatalogSchedule({required this.id, required this.movementIds});
+  final String id;
+  final List<String> movementIds;
 }
 
 final class CatalogMovement {
@@ -69,9 +107,11 @@ final class CatalogVariant {
     required this.name,
     required this.sessionMovementIds,
     required this.weeks,
+    this.componentIdsByWeek = const {},
   });
   final String id;
   final String name;
   final List<String> sessionMovementIds;
   final List<WeekDefinition> weeks;
+  final Map<int, List<String>> componentIdsByWeek;
 }

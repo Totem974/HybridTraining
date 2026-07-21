@@ -203,4 +203,84 @@ void main() {
       throwsA(isA<CatalogFormatException>()),
     );
   });
+
+  test('publishes v2 while keeping published v1 intact and readable', () async {
+    await repository.installSeed(seed);
+    final v2Json =
+        jsonDecode(
+              File(
+                'assets/catalog/standard_531_bbb_v2.json',
+              ).readAsStringSync(),
+            )
+            as Map<String, Object?>;
+    v2Json['status'] = 'draft';
+    await repository.installSeed(jsonEncode(v2Json));
+
+    expect(
+      repository.resolve(
+        catalogVersion: 2,
+        templateId: 'bbb_original',
+        variantId: 'four_day_same_lift_50',
+      ),
+      throwsA(isA<CatalogNotPublishedException>()),
+    );
+    await repository.validateDraft(2);
+    await repository.publishDraft(2);
+
+    final v1 = await repository.resolve(
+      catalogVersion: 1,
+      templateId: 'standard_531',
+      variantId: 'four_day',
+    );
+    final bbb = await repository.resolve(
+      catalogVersion: 2,
+      templateId: 'bbb_original',
+      variantId: 'four_day_same_lift_50',
+    );
+    expect(v1.weeks, hasLength(4));
+    expect(bbb.weeks.first.blocks.last.role, 'supplemental');
+    expect(bbb.weeks.first.blocks.last.sets, hasLength(5));
+    expect(
+      () => database.update(
+        'catalog_components',
+        {'block_json': '{}'},
+        where: 'version=?',
+        whereArgs: [2],
+      ),
+      throwsA(isA<DatabaseException>()),
+    );
+  });
+
+  test(
+    'clones a published version as an independently publishable draft',
+    () async {
+      await repository.installSeed(seed);
+      await repository.createDraftFromPublished(
+        sourceVersion: 1,
+        draftVersion: 2,
+      );
+      expect(
+        repository.resolve(
+          catalogVersion: 2,
+          templateId: 'standard_531',
+          variantId: 'four_day',
+        ),
+        throwsA(isA<CatalogNotPublishedException>()),
+      );
+      await database.update(
+        'catalog_templates',
+        {'name': 'Standard copied draft'},
+        where: 'version=? AND id=?',
+        whereArgs: [2, 'standard_531'],
+      );
+      await repository.publishDraft(2);
+      final original = await database.query(
+        'catalog_templates',
+        columns: ['name'],
+        where: 'version=? AND id=?',
+        whereArgs: [1, 'standard_531'],
+      );
+      expect(original.single['name'], 'Standard 5/3/1');
+    },
+  );
 }

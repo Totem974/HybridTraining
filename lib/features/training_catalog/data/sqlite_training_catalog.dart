@@ -68,6 +68,25 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
       FOREIGN KEY(version,template_id,variant_id,week_number,block_position)
         REFERENCES catalog_blocks(version,template_id,variant_id,week_number,position))''',
     );
+    await db.execute(
+      '''CREATE TABLE catalog_components(
+      version INTEGER NOT NULL, id TEXT NOT NULL, block_json TEXT NOT NULL, rule_ids_json TEXT NOT NULL,
+      PRIMARY KEY(version,id), FOREIGN KEY(version) REFERENCES catalog_versions(version))''',
+    );
+    await db.execute(
+      '''CREATE TABLE catalog_rules(
+      version INTEGER NOT NULL, rule_id TEXT NOT NULL, work TEXT NOT NULL,
+      edition TEXT NOT NULL, section TEXT NOT NULL, review_status TEXT NOT NULL
+        CHECK(review_status IN ('reviewed','pending')),
+      PRIMARY KEY(version,rule_id), FOREIGN KEY(version) REFERENCES catalog_versions(version))''',
+    );
+    await db.execute(
+      '''CREATE TABLE catalog_variant_week_components(
+      version INTEGER NOT NULL, template_id TEXT NOT NULL, variant_id TEXT NOT NULL,
+      week_number INTEGER NOT NULL, position INTEGER NOT NULL, component_id TEXT NOT NULL,
+      PRIMARY KEY(version,template_id,variant_id,week_number,position),
+      FOREIGN KEY(version,component_id) REFERENCES catalog_components(version,id))''',
+    );
     // Stable catalog vocabulary. Tables outside the first vertical slice are
     // intentionally empty until a concrete feature needs their columns.
     await db.execute(
@@ -115,6 +134,9 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
       'catalog_weeks',
       'catalog_blocks',
       'catalog_sets',
+      'catalog_components',
+      'catalog_rules',
+      'catalog_variant_week_components',
     ]) {
       await db.execute(
         '''CREATE TRIGGER ${table}_published_update BEFORE UPDATE ON $table
@@ -135,6 +157,9 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
       'catalog_weeks',
       'catalog_blocks',
       'catalog_sets',
+      'catalog_components',
+      'catalog_rules',
+      'catalog_variant_week_components',
     ]) {
       await db.execute(
         '''CREATE TRIGGER ${table}_published_insert BEFORE INSERT ON $table
@@ -169,6 +194,24 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
         'status': 'draft',
         'source_reference': seed.sourceReference,
       });
+      for (final component in seed.components) {
+        await txn.insert('catalog_components', {
+          'version': seed.catalogVersion,
+          'id': component.id,
+          'block_json': jsonEncode(_blockJson(component.block)),
+          'rule_ids_json': jsonEncode(component.ruleIds),
+        });
+      }
+      for (final rule in seed.rules) {
+        await txn.insert('catalog_rules', {
+          'version': seed.catalogVersion,
+          'rule_id': rule.ruleId,
+          'work': rule.work,
+          'edition': rule.edition,
+          'section': rule.section,
+          'review_status': rule.reviewStatus,
+        });
+      }
       for (final movement in seed.movements) {
         await txn.insert('catalog_movements', {
           'version': seed.catalogVersion,
@@ -205,6 +248,18 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
               'variant_id': variant.id,
               'week_number': week.number,
             });
+            final sourceWeek =
+                variant.componentIdsByWeek[week.number] ?? const <String>[];
+            for (var c = 0; c < sourceWeek.length; c++) {
+              await txn.insert('catalog_variant_week_components', {
+                'version': seed.catalogVersion,
+                'template_id': template.id,
+                'variant_id': variant.id,
+                'week_number': week.number,
+                'position': c,
+                'component_id': sourceWeek[c],
+              });
+            }
             for (var b = 0; b < week.blocks.length; b++) {
               final block = week.blocks[b];
               await txn.insert('catalog_blocks', {
@@ -245,6 +300,172 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
         throw CatalogFormatException('Unknown catalog status ${seed.status}');
       }
     });
+  }
+
+  Future<void> createDraftFromPublished({
+    required int sourceVersion,
+    required int draftVersion,
+  }) async {
+    await database.transaction((txn) async {
+      final source = await txn.query(
+        'catalog_versions',
+        where: 'version=? AND status=?',
+        whereArgs: [sourceVersion, 'published'],
+      );
+      if (source.isEmpty) throw CatalogNotPublishedException(sourceVersion);
+      await txn.insert('catalog_versions', {
+        'version': draftVersion,
+        'status': 'draft',
+        'source_reference': source.single['source_reference'],
+      });
+      for (final table in const {
+        'catalog_movements': ['id', 'name'],
+        'catalog_templates': ['id', 'name'],
+        'catalog_variants': ['template_id', 'id', 'name'],
+        'catalog_sessions': [
+          'template_id',
+          'variant_id',
+          'position',
+          'movement_id',
+        ],
+        'catalog_weeks': ['template_id', 'variant_id', 'week_number'],
+        'catalog_blocks': [
+          'template_id',
+          'variant_id',
+          'week_number',
+          'position',
+          'id',
+          'role',
+        ],
+        'catalog_sets': [
+          'template_id',
+          'variant_id',
+          'week_number',
+          'block_position',
+          'position',
+          'repetitions_json',
+          'load_json',
+        ],
+        'catalog_components': ['id', 'block_json', 'rule_ids_json'],
+        'catalog_rules': [
+          'rule_id',
+          'work',
+          'edition',
+          'section',
+          'review_status',
+        ],
+        'catalog_variant_week_components': [
+          'template_id',
+          'variant_id',
+          'week_number',
+          'position',
+          'component_id',
+        ],
+      }.entries) {
+        final columns = table.value.join(',');
+        await txn.execute(
+          'INSERT INTO ${table.key}(version,$columns) SELECT ?,$columns FROM ${table.key} WHERE version=?',
+          [draftVersion, sourceVersion],
+        );
+      }
+    });
+  }
+
+  Future<void> validateDraft(int version) async {
+    await database.transaction((txn) => _validateDraft(txn, version));
+  }
+
+  Future<void> publishDraft(int version) async {
+    await database.transaction((txn) async {
+      await _validateDraft(txn, version);
+      await txn.update(
+        'catalog_versions',
+        {'status': 'published'},
+        where: 'version=? AND status=?',
+        whereArgs: [version, 'draft'],
+      );
+    });
+  }
+
+  @override
+  Future<void> validateMovementReferences({
+    required int catalogVersion,
+    required Set<MovementId> movementIds,
+  }) async {
+    final versions = await database.query(
+      'catalog_versions',
+      columns: ['status'],
+      where: 'version=?',
+      whereArgs: [catalogVersion],
+    );
+    if (versions.isEmpty) {
+      throw CatalogNotFoundException('Unknown catalog version $catalogVersion');
+    }
+    if (versions.single['status'] != 'published') {
+      throw CatalogNotPublishedException(catalogVersion);
+    }
+    if (movementIds.isEmpty) return;
+    final rows = await database.query(
+      'catalog_movements',
+      columns: ['id'],
+      where: 'version=?',
+      whereArgs: [catalogVersion],
+    );
+    final existing = rows.map((row) => row['id']! as String).toSet();
+    final missing = movementIds.where((id) => !existing.contains(id.value));
+    if (missing.isNotEmpty) {
+      throw CatalogNotFoundException(
+        'Unknown movement reference ${missing.first.value} in catalog version $catalogVersion',
+      );
+    }
+  }
+
+  static Future<void> _validateDraft(DatabaseExecutor db, int version) async {
+    final rows = await db.query(
+      'catalog_versions',
+      where: 'version=?',
+      whereArgs: [version],
+    );
+    if (rows.isEmpty) {
+      throw CatalogNotFoundException('Unknown catalog version $version');
+    }
+    if (rows.single['status'] != 'draft') {
+      throw CatalogVersionImmutableException(version);
+    }
+    final orphan = Sqflite.firstIntValue(
+      await db.rawQuery(
+        '''SELECT COUNT(*) FROM catalog_variant_week_components r
+      LEFT JOIN catalog_components c ON c.version=r.version AND c.id=r.component_id
+      WHERE r.version=? AND c.id IS NULL''',
+        [version],
+      ),
+    );
+    if (orphan != 0) {
+      throw CatalogFormatException(
+        'Catalog version $version has missing component dependencies',
+      );
+    }
+    final knownRules = (await db.query(
+      'catalog_rules',
+      columns: ['rule_id'],
+      where: 'version=?',
+      whereArgs: [version],
+    )).map((row) => row['rule_id']! as String).toSet();
+    final components = await db.query(
+      'catalog_components',
+      columns: ['rule_ids_json'],
+      where: 'version=?',
+      whereArgs: [version],
+    );
+    for (final component in components) {
+      final ids = jsonDecode(component['rule_ids_json']! as String);
+      if (ids is! List<Object?> ||
+          ids.any((id) => id is! String || !knownRules.contains(id))) {
+        throw CatalogFormatException(
+          'Catalog version $version has missing rule dependencies',
+        );
+      }
+    }
   }
 
   @override
@@ -393,6 +614,19 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
       'type': 'training_max_percentage',
       'basisPoints': percentage.basisPoints,
     },
+    ParameterizedTrainingMaxPercentageLoad(
+      :final parameterId,
+      :final defaultValue,
+      :final minimum,
+      :final maximum,
+    ) =>
+      {
+        'type': 'parameterized_training_max_percentage',
+        'parameterId': parameterId,
+        'defaultBasisPoints': defaultValue.basisPoints,
+        'minimumBasisPoints': minimum.basisPoints,
+        'maximumBasisPoints': maximum.basisPoints,
+      },
     OneRepMaxPercentageLoad(:final percentage) => {
       'type': 'one_rep_max_percentage',
       'basisPoints': percentage.basisPoints,
@@ -404,6 +638,20 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
     },
     BodyweightLoad() => {'type': 'bodyweight'},
     Unloaded() => {'type': 'unloaded'},
+  };
+
+  static Map<String, Object?> _blockJson(BlockDefinition block) => {
+    'id': block.id,
+    'role': block.role,
+    'movementId': block.movementId?.value,
+    'sets': block.sets
+        .map(
+          (set) => {
+            'repetitions': set.repetitions.toJson(),
+            'load': _loadJson(set.load),
+          },
+        )
+        .toList(),
   };
 }
 

@@ -76,4 +76,45 @@ void main() {
       throwsA(isA<CatalogFormatException>()),
     );
   });
+
+  test('resolves reusable component and schedule references in catalog v2', () {
+    final catalog = const CatalogCodec().decode(
+      File('assets/catalog/standard_531_bbb_v2.json').readAsStringSync(),
+    );
+    final standard = catalog.templates.first.variants.single;
+    final bbb = catalog.templates.last.variants.single;
+    expect(catalog.catalogVersion, 2);
+    expect(catalog.components, hasLength(6));
+    expect(standard.weeks.first.blocks.map((block) => block.role), [
+      'warm_up',
+      'main_work',
+    ]);
+    expect(bbb.weeks.first.blocks.map((block) => block.role), [
+      'warm_up',
+      'main_work',
+      'supplemental',
+    ]);
+    expect(bbb.weeks.first.blocks.last.sets, hasLength(5));
+  });
+
+  test('rejects a missing reusable component dependency', () {
+    final value =
+        jsonDecode(
+              File(
+                'assets/catalog/standard_531_bbb_v2.json',
+              ).readAsStringSync(),
+            )
+            as Map<String, Object?>;
+    final template =
+        (value['templates']! as List<Object?>).first as Map<String, Object?>;
+    final variant =
+        (template['variants']! as List<Object?>).single as Map<String, Object?>;
+    final week =
+        (variant['weeks']! as List<Object?>).first as Map<String, Object?>;
+    week['componentIds'] = ['missing'];
+    expect(
+      () => const CatalogCodec().decode(jsonEncode(value)),
+      throwsA(isA<CatalogFormatException>()),
+    );
+  });
 }

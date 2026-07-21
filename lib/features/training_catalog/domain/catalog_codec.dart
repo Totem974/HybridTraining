@@ -11,14 +11,21 @@ final class CatalogCodec {
     if (value is! Map<String, Object?>) {
       throw const CatalogFormatException('Root must be an object');
     }
-    _keys(value, const {
-      'schemaVersion',
-      'catalogVersion',
-      'status',
-      'sourceReference',
-      'movements',
-      'templates',
-    });
+    _keys(
+      value,
+      const {
+        'schemaVersion',
+        'catalogVersion',
+        'status',
+        'sourceReference',
+        'movements',
+        'templates',
+        'components',
+        'schedules',
+        'rules',
+      },
+      optional: const {'components', 'schedules', 'rules'},
+    );
     final schema = _int(value, 'schemaVersion');
     if (schema != 1) {
       throw CatalogFormatException('Unsupported schemaVersion $schema');
@@ -33,6 +40,76 @@ final class CatalogCodec {
           );
         })
         .toList(growable: false);
+    final components = value.containsKey('components')
+        ? _list(value, 'components')
+              .map((item) {
+                final map = _map(item, 'component');
+                _keys(
+                  map,
+                  const {'id', 'block', 'ruleIds'},
+                  optional: const {'ruleIds'},
+                );
+                return CatalogComponent(
+                  id: _string(map, 'id'),
+                  block: _block(map['block']),
+                  ruleIds: map['ruleIds'] == null
+                      ? const []
+                      : _stringList(map, 'ruleIds'),
+                );
+              })
+              .toList(growable: false)
+        : const <CatalogComponent>[];
+    final schedules = value.containsKey('schedules')
+        ? _list(value, 'schedules')
+              .map((item) {
+                final map = _map(item, 'schedule');
+                _keys(map, const {'id', 'type', 'movementIds'});
+                if (_string(map, 'type') != 'ordered_sessions') {
+                  throw CatalogFormatException(
+                    'Unknown schedule type ${map['type']}',
+                  );
+                }
+                return CatalogSchedule(
+                  id: _string(map, 'id'),
+                  movementIds: _stringList(map, 'movementIds'),
+                );
+              })
+              .toList(growable: false)
+        : const <CatalogSchedule>[];
+    final componentById = {for (final item in components) item.id: item};
+    final scheduleById = {for (final item in schedules) item.id: item};
+    final rules = value.containsKey('rules')
+        ? _list(value, 'rules')
+              .map((item) {
+                final map = _map(item, 'rule');
+                _keys(map, const {
+                  'ruleId',
+                  'work',
+                  'edition',
+                  'section',
+                  'reviewStatus',
+                });
+                final status = _string(map, 'reviewStatus');
+                if (!const {'reviewed', 'pending'}.contains(status)) {
+                  throw CatalogFormatException('Unknown review status $status');
+                }
+                return CanonicalRuleReference(
+                  ruleId: _string(map, 'ruleId'),
+                  work: _string(map, 'work'),
+                  edition: _string(map, 'edition'),
+                  section: _string(map, 'section'),
+                  reviewStatus: status,
+                );
+              })
+              .toList(growable: false)
+        : const <CanonicalRuleReference>[];
+    final ruleIds = rules.map((rule) => rule.ruleId).toSet();
+    for (final component in components) {
+      final missing = component.ruleIds.where((id) => !ruleIds.contains(id));
+      if (missing.isNotEmpty) {
+        throw CatalogFormatException('Unknown rule reference ${missing.first}');
+      }
+    }
     final templates = _list(value, 'templates')
         .map((item) {
           final map = _map(item, 'template');
@@ -40,10 +117,9 @@ final class CatalogCodec {
           return CatalogTemplate(
             id: _string(map, 'id'),
             name: _string(map, 'name'),
-            variants: _list(
-              map,
-              'variants',
-            ).map(_variant).toList(growable: false),
+            variants: _list(map, 'variants')
+                .map((item) => _variant(item, componentById, scheduleById))
+                .toList(growable: false),
           );
         })
         .toList(growable: false);
@@ -54,45 +130,96 @@ final class CatalogCodec {
       sourceReference: _string(value, 'sourceReference'),
       movements: movements,
       templates: templates,
+      components: components,
+      schedules: schedules,
+      rules: rules,
     );
   }
 
-  CatalogVariant _variant(Object? item) {
+  CatalogVariant _variant(
+    Object? item,
+    Map<String, CatalogComponent> components,
+    Map<String, CatalogSchedule> schedules,
+  ) {
     final map = _map(item, 'variant');
-    _keys(map, const {'id', 'name', 'schedule', 'weeks'});
-    final schedule = _map(map['schedule'], 'schedule');
+    _keys(
+      map,
+      const {'id', 'name', 'schedule', 'scheduleId', 'weeks'},
+      optional: const {'schedule', 'scheduleId'},
+    );
+    if (map.containsKey('schedule') == map.containsKey('scheduleId')) {
+      throw const CatalogFormatException(
+        'Variant requires exactly one schedule or scheduleId',
+      );
+    }
+    final movementIds = map.containsKey('scheduleId')
+        ? (schedules[_string(map, 'scheduleId')] ??
+                  (throw CatalogFormatException(
+                    'Unknown schedule reference ${map['scheduleId']}',
+                  )))
+              .movementIds
+        : _inlineSchedule(map['schedule']);
+    return CatalogVariant(
+      id: _string(map, 'id'),
+      name: _string(map, 'name'),
+      sessionMovementIds: movementIds,
+      weeks: _list(
+        map,
+        'weeks',
+      ).map((item) => _week(item, components)).toList(growable: false),
+      componentIdsByWeek: {
+        for (final item in _list(map, 'weeks'))
+          if ((_map(item, 'week')).containsKey('componentIds'))
+            _int(_map(item, 'week'), 'number'): _stringList(
+              _map(item, 'week'),
+              'componentIds',
+            ),
+      },
+    );
+  }
+
+  List<String> _inlineSchedule(Object? value) {
+    final schedule = _map(value, 'schedule');
     _keys(schedule, const {'type', 'movementIds'});
     if (_string(schedule, 'type') != 'ordered_sessions') {
       throw CatalogFormatException('Unknown schedule type ${schedule['type']}');
     }
-    return CatalogVariant(
-      id: _string(map, 'id'),
-      name: _string(map, 'name'),
-      sessionMovementIds: _list(schedule, 'movementIds')
-          .map(
-            (id) => id is String
-                ? id
-                : throw const CatalogFormatException(
-                    'Movement id must be a string',
-                  ),
-          )
-          .toList(growable: false),
-      weeks: _list(map, 'weeks').map(_week).toList(growable: false),
-    );
+    return _stringList(schedule, 'movementIds');
   }
 
-  WeekDefinition _week(Object? item) {
+  WeekDefinition _week(Object? item, Map<String, CatalogComponent> components) {
     final map = _map(item, 'week');
-    _keys(map, const {'number', 'blocks'});
-    return WeekDefinition(
-      number: _int(map, 'number'),
-      blocks: _list(map, 'blocks').map(_block).toList(growable: false),
+    _keys(
+      map,
+      const {'number', 'blocks', 'componentIds'},
+      optional: const {'blocks', 'componentIds'},
     );
+    if (map.containsKey('blocks') == map.containsKey('componentIds')) {
+      throw const CatalogFormatException(
+        'Week requires exactly one blocks or componentIds',
+      );
+    }
+    final blocks = map.containsKey('blocks')
+        ? _list(map, 'blocks').map(_block).toList(growable: false)
+        : _stringList(map, 'componentIds')
+              .map(
+                (id) =>
+                    components[id]?.block ??
+                    (throw CatalogFormatException(
+                      'Unknown component reference $id',
+                    )),
+              )
+              .toList(growable: false);
+    return WeekDefinition(number: _int(map, 'number'), blocks: blocks);
   }
 
   BlockDefinition _block(Object? item) {
     final map = _map(item, 'block');
-    _keys(map, const {'id', 'role', 'sets'});
+    _keys(
+      map,
+      const {'id', 'role', 'sets', 'movementId'},
+      optional: const {'movementId'},
+    );
     const roles = {
       'warm_up',
       'main_work',
@@ -108,6 +235,9 @@ final class CatalogCodec {
       id: _string(map, 'id'),
       role: role,
       sets: _list(map, 'sets').map(_set).toList(growable: false),
+      movementId: map['movementId'] == null
+          ? null
+          : MovementId(_string(map, 'movementId')),
     );
   }
 
@@ -148,6 +278,30 @@ final class CatalogCodec {
       case 'training_max_percentage':
         _keys(map, const {'type', 'basisPoints'});
         return TrainingMaxPercentageLoad(Percentage(_int(map, 'basisPoints')));
+      case 'parameterized_training_max_percentage':
+        _keys(map, const {
+          'type',
+          'parameterId',
+          'defaultBasisPoints',
+          'minimumBasisPoints',
+          'maximumBasisPoints',
+        });
+        final minimum = _int(map, 'minimumBasisPoints');
+        final maximum = _int(map, 'maximumBasisPoints');
+        final defaultValue = _int(map, 'defaultBasisPoints');
+        if (minimum > maximum ||
+            defaultValue < minimum ||
+            defaultValue > maximum) {
+          throw const CatalogFormatException(
+            'Invalid parameterized percentage bounds',
+          );
+        }
+        return ParameterizedTrainingMaxPercentageLoad(
+          parameterId: _string(map, 'parameterId'),
+          defaultValue: Percentage(defaultValue),
+          minimum: Percentage(minimum),
+          maximum: Percentage(maximum),
+        );
       case 'one_rep_max_percentage':
         _keys(map, const {'type', 'basisPoints'});
         return OneRepMaxPercentageLoad(Percentage(_int(map, 'basisPoints')));
@@ -183,14 +337,28 @@ final class CatalogCodec {
   static int _int(Map<String, Object?> map, String key) => map[key] is int
       ? map[key]! as int
       : throw CatalogFormatException('$key must be an integer');
-  static void _keys(Map<String, Object?> map, Set<String> allowed) {
+  static List<String> _stringList(Map<String, Object?> map, String key) =>
+      _list(map, key)
+          .map(
+            (value) => value is String
+                ? value
+                : throw CatalogFormatException('$key values must be strings'),
+          )
+          .toList(growable: false);
+  static void _keys(
+    Map<String, Object?> map,
+    Set<String> allowed, {
+    Set<String> optional = const {},
+  }) {
     final unknown = map.keys.where((key) => !allowed.contains(key));
     if (unknown.isNotEmpty) {
       throw CatalogFormatException('Unknown key ${unknown.first}');
     }
     final missing = allowed.where((key) => !map.containsKey(key));
     // minimum is the sole optional field in the closed vocabulary.
-    final requiredMissing = missing.where((key) => key != 'minimum');
+    final requiredMissing = missing.where(
+      (key) => key != 'minimum' && !optional.contains(key),
+    );
     if (requiredMissing.isNotEmpty) {
       throw CatalogFormatException('Missing key ${requiredMissing.first}');
     }

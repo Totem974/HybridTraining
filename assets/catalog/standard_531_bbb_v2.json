@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": 2,
+  "status": "published",
+  "sourceReference": "Jim Wendler, 5/3/1, 2nd edition (2011), Standard pp. 21-40 and BBB same-lift 5x10 pp. 62-63; 5/3/1 Forever (2017), BBB Original 50% pp. 61-62.",
+  "rules": [
+    {"ruleId":"wendler.standard.main","work":"5/3/1: The Simplest and Most Effective Training System to Increase Raw Strength","edition":"2nd edition (2011)","section":"The 5/3/1 Program, pp. 21-40","reviewStatus":"reviewed"},
+    {"ruleId":"wendler.bbb.same_lift_5x10","work":"5/3/1: The Simplest and Most Effective Training System to Increase Raw Strength","edition":"2nd edition (2011)","section":"Boring But Big, pp. 62-63","reviewStatus":"reviewed"},
+    {"ruleId":"wendler.bbb.original.50tm","work":"5/3/1 Forever","edition":"2017","section":"Boring But Big Original, pp. 61-62","reviewStatus":"reviewed"}
+  ],
+  "movements": [
+    {"id":"overhead_press","name":"Overhead Press"}, {"id":"deadlift","name":"Deadlift"},
+    {"id":"bench_press","name":"Bench Press"}, {"id":"squat","name":"Squat"}
+  ],
+  "schedules": [{"id":"four_day","type":"ordered_sessions","movementIds":["overhead_press","deadlift","bench_press","squat"]}],
+  "components": [
+    {"id":"warm_up","ruleIds":["wendler.standard.main"],"block":{"id":"warm_up","role":"warm_up","sets":[
+      {"repetitions":{"type":"fixed","count":5},"load":{"type":"training_max_percentage","basisPoints":4000}},
+      {"repetitions":{"type":"fixed","count":5},"load":{"type":"training_max_percentage","basisPoints":5000}},
+      {"repetitions":{"type":"fixed","count":3},"load":{"type":"training_max_percentage","basisPoints":6000}}]}},
+    {"id":"main_5","ruleIds":["wendler.standard.main"],"block":{"id":"main","role":"main_work","sets":[
+      {"repetitions":{"type":"fixed","count":5},"load":{"type":"training_max_percentage","basisPoints":6500}},
+      {"repetitions":{"type":"fixed","count":5},"load":{"type":"training_max_percentage","basisPoints":7500}},
+      {"repetitions":{"type":"amrap","minimum":5},"load":{"type":"training_max_percentage","basisPoints":8500}}]}},
+    {"id":"main_3","ruleIds":["wendler.standard.main"],"block":{"id":"main","role":"main_work","sets":[
+      {"repetitions":{"type":"fixed","count":3},"load":{"type":"training_max_percentage","basisPoints":7000}},
+      {"repetitions":{"type":"fixed","count":3},"load":{"type":"training_max_percentage","basisPoints":8000}},
+      {"repetitions":{"type":"amrap","minimum":3},"load":{"type":"training_max_percentage","basisPoints":9000}}]}},
+    {"id":"main_531","ruleIds":["wendler.standard.main"],"block":{"id":"main","role":"main_work","sets":[
+      {"repetitions":{"type":"fixed","count":5},"load":{"type":"training_max_percentage","basisPoints":7500}},
+      {"repetitions":{"type":"fixed","count":3},"load":{"type":"training_max_percentage","basisPoints":8500}},
+      {"repetitions":{"type":"amrap","minimum":1},"load":{"type":"training_max_percentage","basisPoints":9500}}]}},
+    {"id":"deload","ruleIds":["wendler.standard.main"],"block":{"id":"deload","role":"deload","sets":[
+      {"repetitions":{"type":"fixed","count":5},"load":{"type":"training_max_percentage","basisPoints":4000}},
+      {"repetitions":{"type":"fixed","count":5},"load":{"type":"training_max_percentage","basisPoints":5000}},
+      {"repetitions":{"type":"fixed","count":5},"load":{"type":"training_max_percentage","basisPoints":6000}}]}},
+    {"id":"bbb_5x10_50","ruleIds":["wendler.bbb.same_lift_5x10","wendler.bbb.original.50tm"],"block":{"id":"bbb_supplemental","role":"supplemental","sets":[
+      {"repetitions":{"type":"fixed","count":10},"load":{"type":"parameterized_training_max_percentage","parameterId":"bbbSupplementalPercentage","defaultBasisPoints":5000,"minimumBasisPoints":5000,"maximumBasisPoints":5000}},
+      {"repetitions":{"type":"fixed","count":10},"load":{"type":"parameterized_training_max_percentage","parameterId":"bbbSupplementalPercentage","defaultBasisPoints":5000,"minimumBasisPoints":5000,"maximumBasisPoints":5000}},
+      {"repetitions":{"type":"fixed","count":10},"load":{"type":"parameterized_training_max_percentage","parameterId":"bbbSupplementalPercentage","defaultBasisPoints":5000,"minimumBasisPoints":5000,"maximumBasisPoints":5000}},
+      {"repetitions":{"type":"fixed","count":10},"load":{"type":"parameterized_training_max_percentage","parameterId":"bbbSupplementalPercentage","defaultBasisPoints":5000,"minimumBasisPoints":5000,"maximumBasisPoints":5000}},
+      {"repetitions":{"type":"fixed","count":10},"load":{"type":"parameterized_training_max_percentage","parameterId":"bbbSupplementalPercentage","defaultBasisPoints":5000,"minimumBasisPoints":5000,"maximumBasisPoints":5000}}]}}
+  ],
+  "templates": [
+    {"id":"standard_531","name":"Standard 5/3/1","variants":[{"id":"four_day","name":"Four day","scheduleId":"four_day","weeks":[
+      {"number":1,"componentIds":["warm_up","main_5"]}, {"number":2,"componentIds":["warm_up","main_3"]},
+      {"number":3,"componentIds":["warm_up","main_531"]}, {"number":4,"componentIds":["deload"]}]}]},
+    {"id":"bbb_original","name":"Boring But Big Original","variants":[{"id":"four_day_same_lift_50","name":"Four day, same lift, 50% TM","scheduleId":"four_day","weeks":[
+      {"number":1,"componentIds":["warm_up","main_5","bbb_5x10_50"]}, {"number":2,"componentIds":["warm_up","main_3","bbb_5x10_50"]},
+      {"number":3,"componentIds":["warm_up","main_531","bbb_5x10_50"]}, {"number":4,"componentIds":["deload"]}]}]}
+  ]
+}
