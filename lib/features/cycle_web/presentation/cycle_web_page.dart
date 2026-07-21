@@ -25,6 +25,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
   CycleEditorSchema? _schema;
   CycleEditorState? _state;
   GeneratedCycleView? _generated;
+  List<String> _movementIds = const [];
   Object? _error;
   bool _busy = true;
 
@@ -48,6 +49,10 @@ class _CycleWebPageState extends State<CycleWebPage> {
         templateId: selection.templateId,
         variantId: selection.variantId,
       );
+      final movementIds = await widget.application.loadMovementIds(
+        templateId: selection.templateId,
+        variantId: selection.variantId,
+      );
       final values = {
         for (final option in schema.options)
           option.id: draft?.values[option.id] ?? option.defaultValue,
@@ -56,19 +61,37 @@ class _CycleWebPageState extends State<CycleWebPage> {
       setState(() {
         _index = index;
         _schema = schema;
+        _movementIds = movementIds;
         _state = CycleEditorState(
           templateId: selection.templateId,
           variantId: selection.variantId,
           values: values,
+          startDate: draft?.startDate ?? DateTime.now(),
+          trainingDays: draft?.trainingDays ?? const [1, 3, 5],
+          sessionOrder: draft?.sessionOrder ?? movementIds,
+          maxInputs: draft?.maxInputs ?? const {},
+          globalTrainingMaxRatioBasisPoints:
+              draft?.globalTrainingMaxRatioBasisPoints ?? 9000,
+          trainingMaxRatioByMovementBasisPoints:
+              draft?.trainingMaxRatioByMovementBasisPoints ?? const {},
+          unit: draft?.unit ?? WeightUnit.kg,
+          roundingIncrementCentiUnits:
+              draft?.roundingIncrementCentiUnits ?? 250,
+          barWeightCentiUnits: draft?.barWeightCentiUnits ?? 2000,
+          platesPerSideCentiUnits: draft?.platesPerSideCentiUnits ?? const [],
+          cycleId:
+              draft?.cycleId ??
+              'cycle-${DateTime.now().toUtc().microsecondsSinceEpoch}',
         );
         _busy = false;
       });
     } on Object catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = error;
           _busy = false;
         });
+      }
     }
   }
 
@@ -115,35 +138,51 @@ class _CycleWebPageState extends State<CycleWebPage> {
         templateId: templateId,
         variantId: variantId,
       );
+      final movementIds = await widget.application.loadMovementIds(
+        templateId: templateId,
+        variantId: variantId,
+      );
       final state = CycleEditorState(
         templateId: templateId,
         variantId: variantId,
         values: {
           for (final option in schema.options) option.id: option.defaultValue,
         },
+        startDate: _state?.startDate ?? DateTime.now(),
+        trainingDays: _state?.trainingDays ?? const [1, 3, 5],
+        sessionOrder: movementIds,
+        unit: _state?.unit ?? WeightUnit.kg,
+        globalTrainingMaxRatioBasisPoints:
+            _state?.globalTrainingMaxRatioBasisPoints ?? 9000,
+        roundingIncrementCentiUnits: _state?.roundingIncrementCentiUnits ?? 250,
+        barWeightCentiUnits: _state?.barWeightCentiUnits ?? 2000,
+        platesPerSideCentiUnits: _state?.platesPerSideCentiUnits ?? const [],
+        cycleId: 'cycle-${DateTime.now().toUtc().microsecondsSinceEpoch}',
       );
       await widget.application.saveDraft(state);
       if (!mounted) return;
       setState(() {
         _schema = schema;
+        _movementIds = movementIds;
         _state = state;
         _busy = false;
       });
     } on Object catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = error;
           _busy = false;
         });
+      }
     }
   }
 
   Future<void> _setOption(String id, Object value) async {
-    final state = CycleEditorState(
-      templateId: _state!.templateId,
-      variantId: _state!.variantId,
-      values: {..._state!.values, id: value},
-    );
+    final state = _state!.copyWith(values: {..._state!.values, id: value});
+    await _setState(state);
+  }
+
+  Future<void> _setState(CycleEditorState state) async {
     setState(() {
       _state = state;
       _generated = null;
@@ -163,17 +202,19 @@ class _CycleWebPageState extends State<CycleWebPage> {
     try {
       await widget.application.saveDraft(_state!);
       final generated = await widget.application.generate(_state!);
-      if (mounted)
+      if (mounted) {
         setState(() {
           _generated = generated;
           _busy = false;
         });
+      }
     } on Object catch (error) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = error;
           _busy = false;
         });
+      }
     }
   }
 
@@ -247,7 +288,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               key: const Key('cycle-web-template'),
-              value: _state!.templateId,
+              initialValue: _state!.templateId,
               decoration: InputDecoration(
                 labelText: _isFrench ? 'Modèle' : 'Template',
               ),
@@ -267,7 +308,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               key: const Key('cycle-web-variant'),
-              value: _state!.variantId,
+              initialValue: _state!.variantId,
               decoration: InputDecoration(
                 labelText: _isFrench ? 'Variante' : 'Variant',
               ),
@@ -298,6 +339,8 @@ class _CycleWebPageState extends State<CycleWebPage> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 16),
+          _requestFields(),
+          const SizedBox(height: 20),
           for (final option in _schema!.options)
             if (CycleOptionConditionEvaluator.evaluate(
               option.visibleWhen,
@@ -336,26 +379,268 @@ class _CycleWebPageState extends State<CycleWebPage> {
     ),
   );
 
-  bool get _valuesValid => _schema!.options.every((option) {
-    if (!CycleOptionConditionEvaluator.evaluate(
-      option.visibleWhen,
-      _state!.values,
-    ))
-      return true;
-    final value = _state!.values[option.id];
-    final required = CycleOptionConditionEvaluator.evaluate(
-      option.requiredWhen,
-      _state!.values,
+  bool get _valuesValid =>
+      _schema!.options.every((option) {
+        if (!CycleOptionConditionEvaluator.evaluate(
+          option.visibleWhen,
+          _state!.values,
+        )) {
+          return true;
+        }
+        final value = _state!.values[option.id];
+        final required = CycleOptionConditionEvaluator.evaluate(
+          option.requiredWhen,
+          _state!.values,
+        );
+        if (value == null || (value is String && value.trim().isEmpty)) {
+          return !required;
+        }
+        if (value is num) {
+          if (option.minimum != null && value < option.minimum!) return false;
+          if (option.maximum != null && value > option.maximum!) return false;
+        }
+        return true;
+      }) &&
+      _state!.startDate != null &&
+      _state!.trainingDays.isNotEmpty &&
+      _movementIds.every(
+        (id) => (_state!.maxInputs[id]?.weightCentiUnits ?? 0) > 0,
+      );
+
+  Widget _requestFields() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text(
+        _isFrench ? 'Max et matériel' : 'Maxes and equipment',
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      const SizedBox(height: 12),
+      DropdownButtonFormField<WeightUnit>(
+        key: const Key('cycle-web-unit'),
+        initialValue: _state!.unit,
+        decoration: InputDecoration(labelText: _isFrench ? 'Unité' : 'Unit'),
+        items: WeightUnit.values
+            .map(
+              (unit) => DropdownMenuItem(value: unit, child: Text(unit.name)),
+            )
+            .toList(),
+        onChanged: (unit) {
+          if (unit != null) _setState(_state!.copyWith(unit: unit));
+        },
+      ),
+      const SizedBox(height: 12),
+      TextFormField(
+        key: const Key('cycle-web-start-date'),
+        initialValue: _state!.startDate?.toIso8601String().substring(0, 10),
+        decoration: InputDecoration(
+          labelText: _isFrench ? 'Date de début' : 'Start date',
+        ),
+        onChanged: (text) {
+          final date = DateTime.tryParse(text);
+          if (date != null) _setState(_state!.copyWith(startDate: date));
+        },
+      ),
+      const SizedBox(height: 12),
+      TextFormField(
+        key: const Key('cycle-web-training-days'),
+        initialValue: _state!.trainingDays.join(','),
+        decoration: InputDecoration(
+          labelText: _isFrench ? 'Jours (1–7)' : 'Days (1–7)',
+          helperText: _isFrench
+              ? 'Séparés par des virgules'
+              : 'Comma separated',
+        ),
+        onChanged: (text) {
+          final days = text
+              .split(',')
+              .map((v) => int.tryParse(v.trim()))
+              .whereType<int>()
+              .where((v) => v >= 1 && v <= 7)
+              .toList();
+          _setState(_state!.copyWith(trainingDays: days));
+        },
+      ),
+      const SizedBox(height: 12),
+      TextFormField(
+        key: const Key('cycle-web-session-order'),
+        initialValue: _state!.sessionOrder.join(','),
+        decoration: InputDecoration(
+          labelText: _isFrench ? 'Ordre des séances' : 'Session order',
+          helperText: _movementIds.join(', '),
+        ),
+        onChanged: (text) {
+          final order = text
+              .split(',')
+              .map((value) => value.trim())
+              .where(_movementIds.contains)
+              .toList();
+          _setState(_state!.copyWith(sessionOrder: order));
+        },
+      ),
+      const SizedBox(height: 12),
+      for (final movementId in _movementIds) ...[
+        _movementMaxFields(movementId),
+        const SizedBox(height: 12),
+      ],
+      _numberField(
+        key: 'cycle-web-global-ratio',
+        label: _isFrench ? 'Ratio TM global (%)' : 'Global TM ratio (%)',
+        value: _state!.globalTrainingMaxRatioBasisPoints / 100,
+        onValue: (value) => _setState(
+          _state!.copyWith(
+            globalTrainingMaxRatioBasisPoints: (value * 100).round(),
+          ),
+        ),
+      ),
+      const SizedBox(height: 12),
+      _numberField(
+        key: 'cycle-web-bar',
+        label: _isFrench ? 'Barre' : 'Bar',
+        value: _state!.barWeightCentiUnits / 100,
+        onValue: (value) => _setState(
+          _state!.copyWith(barWeightCentiUnits: (value * 100).round()),
+        ),
+      ),
+      const SizedBox(height: 12),
+      _numberField(
+        key: 'cycle-web-rounding',
+        label: _isFrench ? 'Arrondi' : 'Rounding',
+        value: _state!.roundingIncrementCentiUnits / 100,
+        onValue: (value) => _setState(
+          _state!.copyWith(roundingIncrementCentiUnits: (value * 100).round()),
+        ),
+      ),
+      const SizedBox(height: 12),
+      TextFormField(
+        key: const Key('cycle-web-plates'),
+        initialValue: _state!.platesPerSideCentiUnits
+            .map((v) => v / 100)
+            .join(','),
+        decoration: InputDecoration(
+          labelText: _isFrench ? 'Plaques par côté' : 'Plates per side',
+        ),
+        onChanged: (text) => _setState(
+          _state!.copyWith(
+            platesPerSideCentiUnits: text
+                .split(',')
+                .map((v) => double.tryParse(v.trim()))
+                .whereType<double>()
+                .map((v) => (v * 100).round())
+                .toList(),
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _movementMaxFields(String id) {
+    final input =
+        _state!.maxInputs[id] ??
+        const CycleMovementMaxInput(
+          kind: CycleMaxInputKind.oneRepMax,
+          weightCentiUnits: 0,
+        );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(_humanize(id), style: Theme.of(context).textTheme.titleSmall),
+        DropdownButtonFormField<CycleMaxInputKind>(
+          key: ValueKey('cycle-web-max-kind-$id'),
+          initialValue: input.kind,
+          items: CycleMaxInputKind.values
+              .map(
+                (kind) => DropdownMenuItem(
+                  value: kind,
+                  child: Text(_humanize(kind.name)),
+                ),
+              )
+              .toList(),
+          onChanged: (kind) {
+            if (kind != null) {
+              _setMovementInput(
+                id,
+                CycleMovementMaxInput(
+                  kind: kind,
+                  weightCentiUnits: input.weightCentiUnits,
+                  repetitions: kind == CycleMaxInputKind.repMax
+                      ? (input.repetitions ?? 1)
+                      : null,
+                ),
+              );
+            }
+          },
+        ),
+        const SizedBox(height: 8),
+        _numberField(
+          key: 'cycle-web-max-weight-$id',
+          label: _isFrench ? 'Charge' : 'Weight',
+          value: input.weightCentiUnits / 100,
+          onValue: (value) => _setMovementInput(
+            id,
+            CycleMovementMaxInput(
+              kind: input.kind,
+              weightCentiUnits: (value * 100).round(),
+              repetitions: input.repetitions,
+            ),
+          ),
+        ),
+        if (input.kind == CycleMaxInputKind.repMax) ...[
+          const SizedBox(height: 8),
+          _numberField(
+            key: 'cycle-web-max-reps-$id',
+            label: _isFrench ? 'Répétitions' : 'Repetitions',
+            value: (input.repetitions ?? 1).toDouble(),
+            onValue: (value) => _setMovementInput(
+              id,
+              CycleMovementMaxInput(
+                kind: input.kind,
+                weightCentiUnits: input.weightCentiUnits,
+                repetitions: value.round(),
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 8),
+        _numberField(
+          key: 'cycle-web-ratio-$id',
+          label: _isFrench
+              ? 'Ratio TM spécifique (%)'
+              : 'Movement TM ratio (%)',
+          value:
+              (_state!.trainingMaxRatioByMovementBasisPoints[id] ??
+                  _state!.globalTrainingMaxRatioBasisPoints) /
+              100,
+          onValue: (value) => _setState(
+            _state!.copyWith(
+              trainingMaxRatioByMovementBasisPoints: {
+                ..._state!.trainingMaxRatioByMovementBasisPoints,
+                id: (value * 100).round(),
+              },
+            ),
+          ),
+        ),
+      ],
     );
-    if (value == null || (value is String && value.trim().isEmpty)) {
-      return !required;
-    }
-    if (value is num) {
-      if (option.minimum != null && value < option.minimum!) return false;
-      if (option.maximum != null && value > option.maximum!) return false;
-    }
-    return true;
-  });
+  }
+
+  void _setMovementInput(String id, CycleMovementMaxInput input) =>
+      _setState(_state!.copyWith(maxInputs: {..._state!.maxInputs, id: input}));
+
+  Widget _numberField({
+    required String key,
+    required String label,
+    required double value,
+    required ValueChanged<double> onValue,
+  }) => TextFormField(
+    key: ValueKey(key),
+    initialValue: '$value',
+    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    decoration: InputDecoration(labelText: label),
+    onChanged: (text) {
+      final parsed = double.tryParse(text);
+      if (parsed != null && parsed >= 0) onValue(parsed);
+    },
+  );
 
   Widget _optionField(CycleOptionDefinition option) {
     final enabled = CycleOptionConditionEvaluator.evaluate(
@@ -364,6 +649,23 @@ class _CycleWebPageState extends State<CycleWebPage> {
     );
     final value = _state!.values[option.id] ?? option.defaultValue;
     final label = _humanize(option.id);
+    if (option.scope == CycleOptionScope.perMovement) {
+      final values = value as Map<Object?, Object?>;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(label),
+          for (final movementId in _movementIds)
+            _numberField(
+              key: 'cycle-option-${option.id}-$movementId',
+              label: _humanize(movementId),
+              value: (values[movementId] as num?)?.toDouble() ?? 0,
+              onValue: (next) =>
+                  _setOption(option.id, {...values, movementId: next}),
+            ),
+        ],
+      );
+    }
     if (option.type == CycleOptionType.boolean) {
       return SwitchListTile(
         key: ValueKey('cycle-option-${option.id}'),
@@ -380,7 +682,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
             option.type == CycleOptionType.prescription)) {
       return DropdownButtonFormField<Object>(
         key: ValueKey('cycle-option-${option.id}'),
-        value: value,
+        initialValue: value,
         decoration: InputDecoration(labelText: label),
         items: [
           for (final allowed in option.allowedValues)

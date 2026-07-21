@@ -18,11 +18,21 @@ void main() {
 
     expect(find.text('Catalogue Program'), findsOneWidget);
     expect(find.text('Advanced load'), findsNothing);
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('cycle-option-advanced')),
+    );
     await tester.tap(find.byKey(const ValueKey('cycle-option-advanced')));
     await tester.pumpAndSettle();
     expect(find.text('Advanced load'), findsOneWidget);
     expect(application.savedDrafts, isNotEmpty);
 
+    await tester.enterText(
+      find.byKey(const ValueKey('cycle-web-max-weight-squat')),
+      '100',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.byKey(const Key('cycle-web-generate')));
     await tester.tap(find.byKey(const Key('cycle-web-generate')));
     await tester.pumpAndSettle();
     expect(application.generatedStates, hasLength(1));
@@ -73,6 +83,12 @@ final class _FakeCycleWebApplication implements CycleWebApplication {
       ),
     ],
   );
+
+  @override
+  Future<List<String>> loadMovementIds({
+    required String templateId,
+    required String variantId,
+  }) async => const ['squat'];
 
   @override
   Future<CycleEditorSchema> loadEditorSchema({

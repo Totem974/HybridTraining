@@ -52,13 +52,10 @@ final class _DeepLinkedCycleWebApplication implements CycleWebApplication {
   @override
   Future<CycleEditorState?> loadDraft() async {
     final stored = await delegate.loadDraft();
-    return CycleEditorState(
-      templateId: templateId,
-      variantId: variantId,
-      values: stored?.templateId == templateId && stored?.variantId == variantId
-          ? stored!.values
-          : const {},
-    );
+    if (stored?.templateId == templateId && stored?.variantId == variantId) {
+      return stored;
+    }
+    return CycleEditorState(templateId: templateId, variantId: variantId);
   }
 
   @override
@@ -66,6 +63,12 @@ final class _DeepLinkedCycleWebApplication implements CycleWebApplication {
     required String templateId,
     required String variantId,
   }) => delegate.loadEditorSchema(templateId: templateId, variantId: variantId);
+
+  @override
+  Future<List<String>> loadMovementIds({
+    required String templateId,
+    required String variantId,
+  }) => delegate.loadMovementIds(templateId: templateId, variantId: variantId);
 
   @override
   Future<CycleCatalogIndex> loadIndex() => delegate.loadIndex();

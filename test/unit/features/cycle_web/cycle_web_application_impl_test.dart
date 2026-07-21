@@ -10,100 +10,147 @@ import 'package:hybrid_training/features/training_log/application/training_snaps
 import 'package:hybrid_training/features/training_log/domain/training_snapshot.dart';
 
 void main() {
-  test('delegates dynamic catalogue data, compiles and saves the snapshot', () async {
-    final catalog = _Catalog();
-    final compiler = _Compiler();
-    final snapshots = _Snapshots();
-    final drafts = _Drafts();
-    final application = CycleWebApplicationImpl(
-      catalogVersion: 7,
-      catalogQuery: catalog,
-      catalogRepository: catalog,
-      draftRepository: drafts,
-      snapshotRepository: snapshots,
-      compiler: compiler,
-      generationContext: CycleWebGenerationContext(
-        cycleId: 'web-cycle',
-        startDate: DateTime(2026, 7, 21),
-        trainingDays: const [2],
+  test(
+    'delegates dynamic catalogue data, compiles and saves the snapshot',
+    () async {
+      final catalog = _Catalog();
+      final compiler = _Compiler();
+      final snapshots = _Snapshots();
+      final drafts = _Drafts();
+      final application = CycleWebApplicationImpl(
+        catalogVersion: 7,
+        catalogQuery: catalog,
+        catalogRepository: catalog,
+        draftRepository: drafts,
+        snapshotRepository: snapshots,
+        compiler: compiler,
+        generationContext: CycleWebGenerationContext(
+          cycleId: 'web-cycle',
+          startDate: DateTime(2026, 7, 21),
+          trainingDays: const [2],
+          maxInputs: const {
+            MovementId('squat'): DirectTrainingMaxInput(
+              Weight(10000, WeightUnit.kg),
+            ),
+          },
+          globalTrainingMaxRatio: const Percentage(9000),
+          unit: WeightUnit.kg,
+          roundingIncrement: const Weight(250, WeightUnit.kg),
+          barProfile: const BarProfile(
+            weight: Weight(2000, WeightUnit.kg),
+            platesPerSide: [Weight(2000, WeightUnit.kg)],
+          ),
+        ),
+      );
+
+      expect((await application.loadIndex()).catalogVersion, 7);
+      final state = CycleEditorState(
+        templateId: 'data_driven',
+        variantId: 'only_variant',
+        values: const {
+          'training_max_ratio': 8500,
+          'supplemental_percentage': 5000,
+          'include_deload': false,
+        },
+        startDate: DateTime(2026, 8, 1),
+        trainingDays: const [1, 4],
+        sessionOrder: const ['squat'],
         maxInputs: const {
-          MovementId('squat'): DirectTrainingMaxInput(
-            Weight(10000, WeightUnit.kg),
+          'squat': CycleMovementMaxInput(
+            kind: CycleMaxInputKind.repMax,
+            weightCentiUnits: 12000,
+            repetitions: 5,
           ),
         },
-        globalTrainingMaxRatio: const Percentage(9000),
-        unit: WeightUnit.kg,
-        roundingIncrement: const Weight(250, WeightUnit.kg),
-        barProfile: const BarProfile(
-          weight: Weight(2000, WeightUnit.kg),
-          platesPerSide: [Weight(2000, WeightUnit.kg)],
+        globalTrainingMaxRatioBasisPoints: 8800,
+        trainingMaxRatioByMovementBasisPoints: const {'squat': 8700},
+        unit: WeightUnit.lb,
+        roundingIncrementCentiUnits: 500,
+        barWeightCentiUnits: 4500,
+        platesPerSideCentiUnits: const [4500, 2500],
+        cycleId: 'state-cycle',
+      );
+      await application.saveDraft(state);
+      expect(await application.loadDraft(), same(state));
+      final view = await application.generate(state);
+
+      expect(view.cycle.id, 'state-cycle');
+      expect(compiler.request!.startDate, DateTime(2026, 8, 1));
+      expect(compiler.request!.trainingDays, [1, 4]);
+      expect(compiler.request!.sessionOrder, const [MovementId('squat')]);
+      expect(compiler.request!.globalTrainingMaxRatio.basisPoints, 8800);
+      expect(
+        compiler
+            .request!
+            .percentageParameters['training_max_ratio']!
+            .basisPoints,
+        8500,
+      );
+      expect(
+        compiler
+            .request!
+            .trainingMaxRatioByMovement[const MovementId('squat')]!
+            .basisPoints,
+        8700,
+      );
+      expect(
+        compiler.request!.maxInputs[const MovementId('squat')],
+        isA<RepMaxInput>(),
+      );
+      expect(compiler.request!.unit, WeightUnit.lb);
+      expect(compiler.request!.barProfile.weight.centiUnits, 4500);
+      expect(
+        compiler
+            .request!
+            .percentageParameters['supplemental_percentage']!
+            .basisPoints,
+        5000,
+      );
+      expect(compiler.request!.includeDeload, isFalse);
+      expect(snapshots.saved, same(view.cycle));
+      expect(view.persistedSnapshot!.cycleId, 'state-cycle');
+    },
+  );
+
+  test(
+    'rejects unknown or out-of-range editor values before resolving',
+    () async {
+      final catalog = _Catalog();
+      final application = CycleWebApplicationImpl(
+        catalogVersion: 7,
+        catalogQuery: catalog,
+        catalogRepository: catalog,
+        draftRepository: _Drafts(),
+        snapshotRepository: _Snapshots(),
+        compiler: _Compiler(),
+        generationContext: CycleWebGenerationContext(
+          cycleId: 'invalid',
+          startDate: DateTime(2026, 7, 21),
+          trainingDays: const [2],
+          maxInputs: const {},
+          globalTrainingMaxRatio: const Percentage(9000),
+          unit: WeightUnit.kg,
+          roundingIncrement: const Weight(250, WeightUnit.kg),
+          barProfile: const BarProfile(
+            weight: Weight(2000, WeightUnit.kg),
+            platesPerSide: [],
+          ),
         ),
-      ),
-    );
+      );
 
-    expect((await application.loadIndex()).catalogVersion, 7);
-    final state = CycleEditorState(
-      templateId: 'data_driven',
-      variantId: 'only_variant',
-      values: const {
-        'training_max_ratio': 8500,
-        'supplemental_percentage': 5000,
-        'include_deload': false,
-      },
-    );
-    await application.saveDraft(state);
-    expect(await application.loadDraft(), same(state));
-    final view = await application.generate(state);
-
-    expect(view.cycle.id, 'web-cycle');
-    expect(compiler.request!.startDate, DateTime(2026, 7, 21));
-    expect(compiler.request!.sessionOrder, const [MovementId('squat')]);
-    expect(compiler.request!.globalTrainingMaxRatio.basisPoints, 8500);
-    expect(
-      compiler.request!.percentageParameters['supplemental_percentage']!
-          .basisPoints,
-      5000,
-    );
-    expect(compiler.request!.includeDeload, isFalse);
-    expect(snapshots.saved, same(view.cycle));
-  });
-
-  test('rejects unknown or out-of-range editor values before resolving', () async {
-    final catalog = _Catalog();
-    final application = CycleWebApplicationImpl(
-      catalogVersion: 7,
-      catalogQuery: catalog,
-      catalogRepository: catalog,
-      draftRepository: _Drafts(),
-      snapshotRepository: _Snapshots(),
-      compiler: _Compiler(),
-      generationContext: CycleWebGenerationContext(
-        cycleId: 'invalid',
-        startDate: DateTime(2026, 7, 21),
-        trainingDays: const [2],
-        maxInputs: const {},
-        globalTrainingMaxRatio: const Percentage(9000),
-        unit: WeightUnit.kg,
-        roundingIncrement: const Weight(250, WeightUnit.kg),
-        barProfile: const BarProfile(
-          weight: Weight(2000, WeightUnit.kg),
-          platesPerSide: [],
+      await expectLater(
+        application.generate(
+          const CycleEditorState(
+            templateId: 'data_driven',
+            variantId: 'only_variant',
+            values: {'supplemental_percentage': 7000},
+          ),
         ),
-      ),
-    );
-
-    await expectLater(
-      application.generate(
-        const CycleEditorState(
-          templateId: 'data_driven',
-          variantId: 'only_variant',
-          values: {'supplemental_percentage': 7000},
-        ),
-      ),
-      throwsFormatException,
-    );
-    expect(catalog.resolveCalls, 0);
-  });
+        throwsFormatException,
+      );
+      expect(catalog.resolveCalls, 0);
+    },
+  );
 }
 
 final class _Catalog implements CycleCatalogQuery, TrainingCatalogRepository {
@@ -216,9 +263,11 @@ final class _Snapshots implements TrainingSnapshotRepository {
   @override
   Future<void> save(GeneratedCycle cycle) async => saved = cycle;
   @override
-  Future<StoredTrainingSnapshot> load(String cycleId) => throw UnimplementedError();
+  Future<StoredTrainingSnapshot> load(String cycleId) async =>
+      StoredTrainingSnapshot(cycleId: cycleId, resolvedCycleJson: const {});
   @override
-  Future<ActualSetResult> loadSetResult(String setId) => throw UnimplementedError();
+  Future<ActualSetResult> loadSetResult(String setId) =>
+      throw UnimplementedError();
   @override
   Future<void> recordSetResult(String setId, ActualSetResult result) =>
       throw UnimplementedError();

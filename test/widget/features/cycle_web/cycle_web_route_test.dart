@@ -45,6 +45,7 @@ void main() {
       MaterialApp(home: Navigator(onGenerateRoute: (_) => route)),
     );
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('cycle-web-generate')));
     await tester.tap(find.byKey(const Key('cycle-web-generate')));
     await tester.pumpAndSettle();
 
@@ -89,6 +90,12 @@ final class _RouteApplication implements CycleWebApplication {
       ),
     ],
   );
+
+  @override
+  Future<List<String>> loadMovementIds({
+    required String templateId,
+    required String variantId,
+  }) async => const [];
 
   @override
   Future<CycleEditorSchema> loadEditorSchema({

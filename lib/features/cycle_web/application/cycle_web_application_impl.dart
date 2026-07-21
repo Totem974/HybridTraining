@@ -65,6 +65,16 @@ final class CycleWebApplicationImpl implements CycleWebApplication {
   );
 
   @override
+  Future<List<String>> loadMovementIds({
+    required String templateId,
+    required String variantId,
+  }) async => (await catalogRepository.resolve(
+    catalogVersion: catalogVersion,
+    templateId: templateId,
+    variantId: variantId,
+  )).sessionMovementIds.map((id) => id.value).toList(growable: false);
+
+  @override
   Future<CycleEditorState?> loadDraft() => draftRepository.load();
 
   @override
@@ -85,7 +95,11 @@ final class CycleWebApplicationImpl implements CycleWebApplication {
     final request = _request(state, schema, definition);
     final cycle = compiler.compile(definition, request);
     await snapshotRepository.save(cycle);
-    return GeneratedCycleView(cycle);
+    final persisted = await snapshotRepository.load(cycle.id);
+    if (persisted.cycleId != cycle.id) {
+      throw StateError('Persisted Cycle snapshot does not match generation.');
+    }
+    return GeneratedCycleView(cycle, persistedSnapshot: persisted);
   }
 
   CycleRequest _request(
@@ -93,15 +107,26 @@ final class CycleWebApplicationImpl implements CycleWebApplication {
     CycleEditorSchema schema,
     ResolvedCycleDefinition definition,
   ) {
-    var globalRatio = generationContext.globalTrainingMaxRatio;
+    final startDate = state.startDate ?? generationContext.startDate;
+    final trainingDays = state.trainingDays.isEmpty
+        ? generationContext.trainingDays
+        : state.trainingDays;
+    final sessionOrder = state.sessionOrder.isEmpty
+        ? definition.sessionMovementIds
+        : state.sessionOrder.map(MovementId.new).toList(growable: false);
+    final maxInputs = state.maxInputs.isEmpty
+        ? generationContext.maxInputs
+        : state.maxInputs.map(
+            (id, input) =>
+                MapEntry(MovementId(id), _maxInput(input, state.unit)),
+          );
+    final globalRatio = Percentage(state.globalTrainingMaxRatioBasisPoints);
     var includeDeload = true;
     final percentages = <String, Percentage>{};
     final percentagesByMovement = <MovementId, Map<String, Percentage>>{};
     for (final option in schema.options) {
       final value = state.values[option.id] ?? option.defaultValue;
-      if (option.id == 'training_max_ratio') {
-        globalRatio = Percentage(_integer(value, option.id));
-      } else if (option.id == 'include_deload') {
+      if (option.id == 'include_deload') {
         includeDeload = value as bool;
       } else if (option.type == CycleOptionType.percentage) {
         if (option.scope == CycleOptionScope.perMovement) {
@@ -117,20 +142,45 @@ final class CycleWebApplicationImpl implements CycleWebApplication {
       }
     }
     return CycleRequest(
-      cycleId: generationContext.cycleId,
-      startDate: generationContext.startDate,
-      trainingDays: generationContext.trainingDays,
-      sessionOrder: definition.sessionMovementIds,
-      maxInputs: generationContext.maxInputs,
+      cycleId: state.cycleId.isEmpty
+          ? generationContext.cycleId
+          : state.cycleId,
+      startDate: startDate,
+      trainingDays: trainingDays,
+      sessionOrder: sessionOrder,
+      maxInputs: maxInputs,
       globalTrainingMaxRatio: globalRatio,
-      trainingMaxRatioByMovement: generationContext.trainingMaxRatioByMovement,
+      trainingMaxRatioByMovement:
+          state.trainingMaxRatioByMovementBasisPoints.isEmpty
+          ? generationContext.trainingMaxRatioByMovement
+          : state.trainingMaxRatioByMovementBasisPoints.map(
+              (id, ratio) => MapEntry(MovementId(id), Percentage(ratio)),
+            ),
       percentageParameters: percentages,
       percentageParametersByMovement: percentagesByMovement,
-      unit: generationContext.unit,
-      roundingIncrement: generationContext.roundingIncrement,
-      barProfile: generationContext.barProfile,
+      unit: state.unit,
+      roundingIncrement: Weight(state.roundingIncrementCentiUnits, state.unit),
+      barProfile: BarProfile(
+        weight: Weight(state.barWeightCentiUnits, state.unit),
+        platesPerSide: state.platesPerSideCentiUnits
+            .map((weight) => Weight(weight, state.unit))
+            .toList(growable: false),
+      ),
       includeDeload: includeDeload,
     );
+  }
+
+  TrainingMaxInput _maxInput(CycleMovementMaxInput input, WeightUnit unit) {
+    final weight = Weight(input.weightCentiUnits, unit);
+    return switch (input.kind) {
+      CycleMaxInputKind.oneRepMax => OneRepMaxInput(weight),
+      CycleMaxInputKind.repMax => RepMaxInput(
+        weight,
+        input.repetitions ??
+            (throw const FormatException('Rep-max repetitions are required.')),
+      ),
+      CycleMaxInputKind.directTrainingMax => DirectTrainingMaxInput(weight),
+    };
   }
 
   void _validateState(CycleEditorState state, CycleEditorSchema schema) {
