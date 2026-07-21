@@ -41,7 +41,8 @@ final class SqliteTrainingSnapshotRepository
             blockIndex++
           ) {
             final block = session.blocks[blockIndex];
-            final blockId = '${session.id}:${block.id}';
+            final blockId =
+                '${session.id}:$blockIndex:${block.movementId.value}:${block.id}';
             await tx.insert('blocks', {
               'id': blockId,
               'session_id': session.id,

@@ -2,6 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:hybrid_training/features/training_catalog/data/runtime_catalog_builder.dart';
+import 'package:hybrid_training/core/storage/sqlite_database_file.dart';
+import 'package:hybrid_training/features/cycle_generation/domain/cycle_compiler_impl.dart';
+import 'package:hybrid_training/features/cycle_generation/domain/cycle_contract.dart';
+import 'package:hybrid_training/features/training_catalog/data/sqlite_training_catalog.dart';
+import 'package:hybrid_training/features/training_log/data/sqlite_training_snapshot_repository.dart';
+import 'package:hybrid_training/features/training_log/data/training_database_schema.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 const _documentArrays = <String>{
@@ -30,9 +36,15 @@ const _placeholders = <String>{
 
 Future<void> main(List<String> arguments) async {
   if (arguments.isEmpty ||
-      !{'lint', 'coverage', 'verify', 'build'}.contains(arguments.first)) {
+      !{
+        'lint',
+        'coverage',
+        'verify',
+        'build',
+        'seed',
+      }.contains(arguments.first)) {
     stderr.writeln(
-      'Usage: dart run tool/catalog/catalog_tool.dart <lint|coverage|verify|build> [output]',
+      'Usage: dart run tool/catalog/catalog_tool.dart <lint|coverage|verify|build|seed> [output]',
     );
     exitCode = 64;
     return;
@@ -50,11 +62,14 @@ Future<void> main(List<String> arguments) async {
         'catalog lint passed (${catalog.documents.length} documents)',
       );
     case 'coverage':
-      stdout.writeln(
-        const JsonEncoder.withIndent('  ').convert(catalog.coverage()),
-      );
+      final runtime = await verifyCatalogCompilation();
+      final coverage = catalog.coverage()
+        ..['compileFailures'] = runtime.failures.length;
+      stdout.writeln(const JsonEncoder.withIndent(' ').convert(coverage));
     case 'verify':
-      final coverage = catalog.coverage();
+      final runtime = await verifyCatalogCompilation();
+      final coverage = catalog.coverage()
+        ..['compileFailures'] = runtime.failures.length;
       final errors = <String>[];
       if (coverage['inventoryEntries'] != 354) {
         errors.add(
@@ -75,6 +90,7 @@ Future<void> main(List<String> arguments) async {
           errors.add('$key must be zero, got ${coverage[key]}');
       }
       if (errors.isNotEmpty) {
+        for (final failure in runtime.failures) stderr.writeln(failure);
         for (final error in errors) stderr.writeln(error);
         exitCode = 1;
       } else {
@@ -85,7 +101,192 @@ Future<void> main(List<String> arguments) async {
           ? arguments[1]
           : 'build/catalog/catalog.db';
       stdout.writeln(await buildCatalogDatabase(outputPath));
+      stdout.writeln(buildCatalogSeed('assets/catalog/catalog_seed.v1.json'));
+    case 'seed':
+      stdout.writeln(
+        buildCatalogSeed(
+          arguments.length > 1
+              ? arguments[1]
+              : 'assets/catalog/catalog_seed.v1.json',
+        ),
+      );
   }
+}
+
+final class CatalogCompilationReport {
+  const CatalogCompilationReport({
+    required this.variantCount,
+    required this.failures,
+  });
+
+  final int variantCount;
+  final List<String> failures;
+}
+
+/// Exercises every published Cycle variant through the production SQLite
+/// resolver and compiler, then proves that its autonomous snapshot survives a
+/// training.db round-trip. Documentary and Forever inventory entries never
+/// enter this path because the published index contains Cycle templates only.
+Future<CatalogCompilationReport> verifyCatalogCompilation({
+  String sourcePath = 'catalog_src',
+}) async {
+  sqfliteFfiInit();
+  final directory = Directory.systemTemp.createTempSync('catalog_compilation_');
+  final failures = <String>[];
+  var variantCount = 0;
+  Database? catalogDatabase;
+  SqliteDatabaseFile? trainingFile;
+  try {
+    final catalogPath = '${directory.path}/catalog.db';
+    await buildCatalogDatabase(catalogPath, sourcePath: sourcePath);
+    catalogDatabase = await databaseFactoryFfi.openDatabase(catalogPath);
+    final catalog = SqliteTrainingCatalog(catalogDatabase);
+    final index = await catalog.loadIndex(catalogVersion: 1);
+    trainingFile = SqliteDatabaseFile(
+      fileName: 'training.db',
+      databasePath: '${directory.path}/training.db',
+      factory: databaseFactoryFfi,
+      version: TrainingDatabaseSchema.version,
+      onCreate: TrainingDatabaseSchema.create,
+      onUpgrade: TrainingDatabaseSchema.upgrade,
+    );
+    final snapshots = SqliteTrainingSnapshotRepository(trainingFile);
+    for (final template in index.templates) {
+      for (final variantId in template.variantIds) {
+        variantCount++;
+        final identity = '${template.id}/$variantId';
+        try {
+          final metadata = await catalogDatabase.query(
+            'catalog_variant_metadata',
+            columns: ['schedule_ids_json', 'valid_example_json'],
+            where: 'version=? AND template_id=? AND variant_id=?',
+            whereArgs: [1, template.id, variantId],
+            limit: 1,
+          );
+          if (metadata.length != 1) {
+            throw StateError('editor metadata does not resolve exactly once');
+          }
+          final allowedSchedules =
+              (jsonDecode(metadata.single['schedule_ids_json']! as String)
+                      as List<Object?>)
+                  .cast<String>();
+          final example =
+              jsonDecode(metadata.single['valid_example_json']! as String)
+                  as Map<String, Object?>;
+          final scheduleId = example['scheduleId'];
+          if (scheduleId is! String || !allowedSchedules.contains(scheduleId)) {
+            throw StateError(
+              'validExample does not select an allowed schedule',
+            );
+          }
+          final ratioBasisPoints =
+              example['trainingMaxRatioBasisPoints'] ??
+              example['trainingMaxRatio'];
+          if (ratioBasisPoints is! int ||
+              ratioBasisPoints <= 0 ||
+              ratioBasisPoints > 10000) {
+            throw StateError('validExample requires a valid TM ratio');
+          }
+
+          final definition = await catalog.resolve(
+            catalogVersion: 1,
+            templateId: template.id,
+            variantId: variantId,
+          );
+          if (definition.sessionMovementIds.isEmpty ||
+              definition.sessionMovementIds.length > 7) {
+            throw StateError('variant requires 1 to 7 scheduled sessions');
+          }
+          final maximumMovementIds = _maximumMovementIds(definition);
+          final cycleId = 'coverage-${template.id}-$variantId';
+          final generated = const CycleCompilerImpl().compile(
+            definition,
+            CycleRequest(
+              cycleId: cycleId,
+              startDate: DateTime(2026, 1, 5),
+              trainingDays: [
+                for (var i = 0; i < definition.sessionMovementIds.length; i++)
+                  i + 1,
+              ],
+              sessionOrder: definition.sessionMovementIds,
+              maxInputs: {
+                for (final movement in maximumMovementIds)
+                  movement: const OneRepMaxInput(Weight(20000, WeightUnit.kg)),
+              },
+              globalTrainingMaxRatio: Percentage(ratioBasisPoints),
+              unit: WeightUnit.kg,
+              roundingIncrement: Weight(250, WeightUnit.kg),
+              barProfile: BarProfile(
+                weight: Weight(2000, WeightUnit.kg),
+                platesPerSide: [
+                  Weight(2500, WeightUnit.kg),
+                  Weight(2000, WeightUnit.kg),
+                  Weight(1500, WeightUnit.kg),
+                  Weight(1000, WeightUnit.kg),
+                  Weight(500, WeightUnit.kg),
+                  Weight(250, WeightUnit.kg),
+                  Weight(125, WeightUnit.kg),
+                ],
+              ),
+            ),
+          );
+          if (generated.weeks.isEmpty ||
+              generated.weeks.any(
+                (week) =>
+                    week.sessions.isEmpty ||
+                    week.sessions.any(
+                      (session) =>
+                          session.blocks.isEmpty ||
+                          session.blocks.any((block) => block.sets.isEmpty),
+                    ),
+              )) {
+            throw StateError('compiler produced an empty cycle structure');
+          }
+          if (template.id == 'classic_531' &&
+              variantId == 'two_day_rotation' &&
+              !generated.effectiveTrainingMaxes.containsKey('squat')) {
+            throw StateError('two-day rotation did not resolve the squat max');
+          }
+          await snapshots.save(generated);
+          final stored = await snapshots.load(cycleId);
+          if (jsonEncode(stored.resolvedCycleJson) !=
+              jsonEncode(generated.toJson())) {
+            throw StateError('training snapshot round-trip differs');
+          }
+        } catch (error) {
+          failures.add('$identity: $error');
+        }
+      }
+    }
+  } finally {
+    await trainingFile?.close();
+    await catalogDatabase?.close();
+    if (directory.existsSync()) directory.deleteSync(recursive: true);
+  }
+  return CatalogCompilationReport(
+    variantCount: variantCount,
+    failures: List.unmodifiable(failures),
+  );
+}
+
+Set<MovementId> _maximumMovementIds(ResolvedCycleDefinition definition) {
+  final result = <MovementId>{};
+  for (final week in definition.weeks) {
+    if (week.sessions.isEmpty) {
+      for (final sessionId in definition.sessionMovementIds) {
+        for (final block in week.blocks) {
+          result.add(block.movementId ?? sessionId);
+        }
+      }
+    } else {
+      for (final session in week.sessions) {
+        for (final block in session.blocks) {
+          result.add(block.movementId ?? session.id);
+        }
+      }
+    }
+  }
+  return result;
 }
 
 Future<String> buildCatalogDatabase(
@@ -96,11 +297,28 @@ Future<String> buildCatalogDatabase(
   final errors = catalog.lint();
   if (errors.isNotEmpty) throw FormatException(errors.join('\n'));
   sqfliteFfiInit();
-  await const RuntimeCatalogBuilder().build(
-    aggregate: catalog.buildDocument(),
-    outputPath: outputPath,
-    factory: databaseFactoryFfi,
+  final output = File(outputPath)..parent.createSync(recursive: true);
+  if (output.existsSync()) await databaseFactoryFfi.deleteDatabase(output.path);
+  final database = await databaseFactoryFfi.openDatabase(
+    output.path,
+    options: OpenDatabaseOptions(
+      version: SqliteTrainingCatalog.databaseSchemaVersion,
+      onCreate: (db, _) => SqliteTrainingCatalog.createSchema(db),
+    ),
   );
+  try {
+    await const RuntimeCatalogPublisher().publish(
+      aggregate: catalog.buildDocument(),
+      database: database,
+    );
+  } catch (_) {
+    await database.close();
+    if (output.existsSync()) {
+      await databaseFactoryFfi.deleteDatabase(output.path);
+    }
+    rethrow;
+  }
+  await database.close();
   return outputPath;
 }
 
