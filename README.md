@@ -1,46 +1,41 @@
-# Hybrid 5/3/1 — Core v5
+# HybridTraining
 
-Hybrid 5/3/1 is a local-first Flutter training engine. The current branch is the
-canonical Core v5 rebuild; product UI and onboarding remain intentionally out of
-scope. A minimal validation shell exists only to exercise the engine.
+HybridTraining est une application Flutter locale de programmation et de suivi d'entraînement.
 
-## Executable reference plans
+## Architecture active
 
-- Powerlifting Standard: classic four-week 5/3/1 cycle, including deload.
-- Beyond: two three-week cycles with an intervening TM checkpoint, then deload.
-- Forever Original + FSL: two Leaders, typed 7th Week Deload, one Anchor, and a
-  typed final TM Test.
-- Beginner Prep School: three-day A/B sessions with two main movements plus
-  executable warm-up, jumps, assistance, and conditioning.
+Le chantier actif livre un premier chemin vertical testable :
 
-The canonical library also indexes documentary entries. Anything incomplete or
-marked `NEEDS_REVIEW` is unavailable and cannot be generated.
+```text
+catalog.db + demande utilisateur
+→ définition résolue
+→ CycleCompiler Dart pur
+→ cycle généré
+→ snapshot autonome dans training.db
+```
 
-## Quality commands
+Les données sont séparées par responsabilité :
+
+- `catalog.db` : définitions publiées, versionnées et référencées ;
+- `workspace.db` : profil, max, ratios, matériel et brouillons de l'utilisateur ;
+- `training.db` : cycles générés, séances, séries prévues et résultats réels.
+
+Le premier gate est Standard 5/3/1 sur quatre jours. Les anciens moteurs restent présents comme références et oracles de migration ; le nouveau chemin de production ne les appelle pas. Forever et une nouvelle interface produit sont hors du gate actuel.
+
+## Organisation du nouveau cœur
+
+Le code métier générique vit sous `lib/features/training_catalog`, `lib/features/cycle_generation` et `lib/features/training_log`. Le domaine n'importe ni Flutter, ni SQLite, ni code legacy.
+
+## Validation
 
 ```powershell
 flutter pub get
 dart format --set-exit-if-changed .
 flutter analyze
-flutter test --coverage
-flutter build apk --debug --flavor dev -t lib/main_dev.dart
-flutter build apk --debug --flavor prod -t lib/main_prod.dart
+flutter test
+git diff --check
 ```
 
-DEV and PROD use separate Android application IDs and private SQLite databases.
-Backups are versioned JSON; import is simulated before atomic application.
-`.SOURCE/`, PDFs, protected assets, and personal data must never be committed.
+L'architecture n'est considérée fonctionnelle qu'après réussite du test bout en bout chargeant le catalogue SQLite, compilant le cycle, persistant son snapshot et relisant un résultat réel de série.
 
-## Active documentation
-
-- [Architecture](docs/core-v5-architecture.md)
-- [Domain model](docs/core-v5-domain.md)
-- [Logical schema](docs/core-v5-schema.md)
-- [Canonical catalog](docs/canonical-catalog.md)
-- [Rules by generation](docs/generation-rules.md)
-- [Lifecycle and amendments](docs/lifecycle-and-amendments.md)
-- [Migrations and backups](docs/migrations.md)
-- [Definition of done](docs/definition-of-done.md)
-
-Historical audits and superseded specifications are retained under
-`docs/archive/legacy-2026-07-19/` and are not active contracts.
+Les documents historiques et les anciens rapports restent disponibles sous `docs/archive/` mais ne décrivent pas le chemin de production actif.
