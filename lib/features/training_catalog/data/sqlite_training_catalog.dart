@@ -969,6 +969,11 @@ final class SqliteTrainingCatalog
       'centiUnits': weight.centiUnits,
       'unit': weight.unit.name,
     },
+    RelativeSetLoad(:final position, :final multiplierBasisPoints) => {
+      'type': 'relative_set',
+      'position': position.name,
+      'multiplierBasisPoints': multiplierBasisPoints,
+    },
     BodyweightLoad() => {'type': 'bodyweight'},
     Unloaded() => {'type': 'unloaded'},
   };

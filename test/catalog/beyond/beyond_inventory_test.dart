@@ -29,7 +29,8 @@ void main() {
     );
     final byId = {
       for (final entry in entries)
-        (entry! as Map<String, Object?>)['id']! as String: entry,
+        (entry! as Map<String, Object?>)['id']! as String:
+            entry as Map<String, Object?>,
     };
     expect(
       {
