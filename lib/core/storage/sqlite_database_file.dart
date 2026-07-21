@@ -5,6 +5,7 @@ final class SqliteDatabaseFile {
     required this.fileName,
     required this.version,
     required this.onCreate,
+    this.onUpgrade,
     this.factory,
     this.databasePath,
   });
@@ -12,6 +13,12 @@ final class SqliteDatabaseFile {
   final String fileName;
   final int version;
   final Future<void> Function(Database database, int version) onCreate;
+  final Future<void> Function(
+    Database database,
+    int oldVersion,
+    int newVersion,
+  )?
+  onUpgrade;
   final DatabaseFactory? factory;
   final String? databasePath;
   Database? _database;
@@ -26,6 +33,7 @@ final class SqliteDatabaseFile {
         version: version,
         onConfigure: (database) => database.execute('PRAGMA foreign_keys = ON'),
         onCreate: onCreate,
+        onUpgrade: onUpgrade,
       ),
     );
     return _database!;

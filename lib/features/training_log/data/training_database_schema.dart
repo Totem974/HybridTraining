@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 abstract final class TrainingDatabaseSchema {
-  static const version = 1;
+  static const version = 2;
   static Future<void> create(Database db, int _) async {
     await db.execute('''CREATE TABLE snapshots(
       cycle_id TEXT PRIMARY KEY, schema_version INTEGER NOT NULL CHECK(schema_version = 1),
@@ -13,9 +13,11 @@ abstract final class TrainingDatabaseSchema {
       movement_id TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN
       ('planned','inProgress','completed','postponed','cancelled','skipped')))''',
     );
-    await db.execute('''CREATE TABLE blocks(
+    await db.execute(
+      '''CREATE TABLE blocks(
       id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id),
-      sequence INTEGER NOT NULL, role TEXT NOT NULL)''');
+      sequence INTEGER NOT NULL, role TEXT NOT NULL, movement_id TEXT NOT NULL)''',
+    );
     await db.execute('''CREATE TABLE planned_sets(
       id TEXT PRIMARY KEY, block_id TEXT NOT NULL REFERENCES blocks(id), sequence INTEGER NOT NULL,
       repetitions_json TEXT NOT NULL, percentage_basis_points INTEGER,
@@ -26,5 +28,17 @@ abstract final class TrainingDatabaseSchema {
       CHECK(actual_repetitions IS NULL OR actual_repetitions >= 0),
       CHECK(actual_load_centi_units IS NULL OR actual_load_centi_units >= 0),
       CHECK(result_state != 'completed' OR actual_repetitions IS NOT NULL))''');
+  }
+
+  static Future<void> upgrade(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    if (oldVersion < 2 && newVersion >= 2) {
+      await db.execute(
+        "ALTER TABLE blocks ADD COLUMN movement_id TEXT NOT NULL DEFAULT ''",
+      );
+    }
   }
 }

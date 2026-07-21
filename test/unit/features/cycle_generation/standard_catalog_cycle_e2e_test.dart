@@ -143,8 +143,9 @@ void main() {
 
       final trainingFile = SqliteDatabaseFile(
         fileName: 'training.db',
-        version: 1,
+        version: TrainingDatabaseSchema.version,
         onCreate: TrainingDatabaseSchema.create,
+        onUpgrade: TrainingDatabaseSchema.upgrade,
         factory: databaseFactoryFfi,
         databasePath: '${temporary.path}/training.db',
       );

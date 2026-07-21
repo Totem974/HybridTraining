@@ -236,6 +236,88 @@ void main() {
       throwsCode(CycleGenerationErrorCode.invalidEquipment),
     );
   });
+
+  test('resolves a bounded generic percentage parameter per movement', () {
+    const parameterized = ResolvedCycleDefinition(
+      catalogVersion: 3,
+      templateId: 'parameter-fixture',
+      variantId: 'one-session',
+      sessionMovementIds: [squat],
+      sourceReference: 'fixture',
+      weeks: [
+        WeekDefinition(
+          number: 1,
+          blocks: [
+            BlockDefinition(
+              id: 'supplemental',
+              role: 'supplemental',
+              sets: [
+                PrescribedSetDefinition(
+                  repetitions: FixedRepetitions(10),
+                  load: ParameterizedTrainingMaxPercentageLoad(
+                    parameterId: 'supplementalPercentage',
+                    defaultValue: Percentage(5000),
+                    minimum: Percentage(4000),
+                    maximum: Percentage(6000),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+    final result = const CycleCompilerImpl().compile(
+      parameterized,
+      request(
+        order: const [squat],
+        days: const [2],
+        inputs: const {
+          squat: DirectTrainingMaxInput(Weight(10000, WeightUnit.kg)),
+        },
+      ).copyWithPercentageParameter(
+        movement: squat,
+        parameterId: 'supplementalPercentage',
+        value: const Percentage(6000),
+      ),
+    );
+    expect(
+      result
+          .weeks
+          .single
+          .sessions
+          .single
+          .blocks
+          .single
+          .sets
+          .single
+          .percentageBasisPoints,
+      6000,
+    );
+  });
+}
+
+extension on CycleRequest {
+  CycleRequest copyWithPercentageParameter({
+    required MovementId movement,
+    required String parameterId,
+    required Percentage value,
+  }) => CycleRequest(
+    cycleId: cycleId,
+    startDate: startDate,
+    trainingDays: trainingDays,
+    sessionOrder: sessionOrder,
+    maxInputs: maxInputs,
+    globalTrainingMaxRatio: globalTrainingMaxRatio,
+    trainingMaxRatioByMovement: trainingMaxRatioByMovement,
+    percentageParametersByMovement: {
+      movement: {parameterId: value},
+    },
+    unit: unit,
+    roundingIncrement: roundingIncrement,
+    barProfile: barProfile,
+    includeDeload: includeDeload,
+  );
 }
 
 Matcher throwsCode(CycleGenerationErrorCode code) => throwsA(

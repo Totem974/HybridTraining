@@ -94,6 +94,19 @@ final class TrainingMaxPercentageLoad extends LoadPrescription {
   final Percentage percentage;
 }
 
+final class ParameterizedTrainingMaxPercentageLoad extends LoadPrescription {
+  const ParameterizedTrainingMaxPercentageLoad({
+    required this.parameterId,
+    required this.defaultValue,
+    required this.minimum,
+    required this.maximum,
+  });
+  final String parameterId;
+  final Percentage defaultValue;
+  final Percentage minimum;
+  final Percentage maximum;
+}
+
 final class OneRepMaxPercentageLoad extends LoadPrescription {
   const OneRepMaxPercentageLoad(this.percentage);
   final Percentage percentage;
@@ -126,16 +139,34 @@ final class BlockDefinition {
     required this.id,
     required this.role,
     required this.sets,
+    this.movementId,
   });
   final String id;
   final String role;
   final List<PrescribedSetDefinition> sets;
+  final MovementId? movementId;
+}
+
+final class SessionDefinition {
+  const SessionDefinition({
+    required this.id,
+    required this.role,
+    required this.blocks,
+  });
+  final MovementId id;
+  final String role;
+  final List<BlockDefinition> blocks;
 }
 
 final class WeekDefinition {
-  const WeekDefinition({required this.number, required this.blocks});
+  const WeekDefinition({
+    required this.number,
+    this.blocks = const [],
+    this.sessions = const [],
+  });
   final int number;
   final List<BlockDefinition> blocks;
+  final List<SessionDefinition> sessions;
 }
 
 final class ResolvedCycleDefinition {
@@ -170,6 +201,8 @@ final class CycleRequest {
     required this.maxInputs,
     required this.globalTrainingMaxRatio,
     this.trainingMaxRatioByMovement = const {},
+    this.percentageParameters = const {},
+    this.percentageParametersByMovement = const {},
     required this.unit,
     required this.roundingIncrement,
     required this.barProfile,
@@ -182,6 +215,8 @@ final class CycleRequest {
   final Map<MovementId, TrainingMaxInput> maxInputs;
   final Percentage globalTrainingMaxRatio;
   final Map<MovementId, Percentage> trainingMaxRatioByMovement;
+  final Map<String, Percentage> percentageParameters;
+  final Map<MovementId, Map<String, Percentage>> percentageParametersByMovement;
   final WeightUnit unit;
   final Weight roundingIncrement;
   final BarProfile barProfile;
@@ -227,13 +262,16 @@ final class GeneratedBlock {
     required this.id,
     required this.role,
     required this.sets,
+    required this.movementId,
   });
   final String id;
   final String role;
   final List<GeneratedSet> sets;
+  final MovementId movementId;
   Map<String, Object> toJson() => {
     'id': id,
     'role': role,
+    'movementId': movementId.value,
     'sets': sets.map((set) => set.toJson()).toList(),
   };
 }

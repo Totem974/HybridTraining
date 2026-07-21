@@ -20,8 +20,9 @@ void main() {
       final path = '${directory.path}/training.db';
       SqliteDatabaseFile file() => SqliteDatabaseFile(
         fileName: 'training.db',
-        version: 1,
+        version: TrainingDatabaseSchema.version,
         onCreate: TrainingDatabaseSchema.create,
+        onUpgrade: TrainingDatabaseSchema.upgrade,
         factory: databaseFactoryFfi,
         databasePath: path,
       );
@@ -44,6 +45,7 @@ void main() {
                   GeneratedBlock(
                     id: 'main',
                     role: 'main-work',
+                    movementId: MovementId('press'),
                     sets: [
                       GeneratedSet(
                         index: 0,
@@ -91,8 +93,9 @@ void main() {
     addTearDown(() => directory.delete(recursive: true));
     final file = SqliteDatabaseFile(
       fileName: 'training.db',
-      version: 1,
+      version: TrainingDatabaseSchema.version,
       onCreate: TrainingDatabaseSchema.create,
+      onUpgrade: TrainingDatabaseSchema.upgrade,
       factory: databaseFactoryFfi,
       databasePath: '${directory.path}/training.db',
     );
@@ -109,4 +112,41 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test(
+    'migrates training.db v1 blocks with an explicit movement column',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'training-migration-v2-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final path = '${directory.path}/training.db';
+      final legacy = await databaseFactoryFfi.openDatabase(
+        path,
+        options: OpenDatabaseOptions(
+          version: 1,
+          onCreate: (database, _) async {
+            await database.execute(
+              'CREATE TABLE blocks(id TEXT PRIMARY KEY, session_id TEXT NOT NULL, '
+              'sequence INTEGER NOT NULL, role TEXT NOT NULL)',
+            );
+          },
+        ),
+      );
+      await legacy.close();
+      final file = SqliteDatabaseFile(
+        fileName: 'training.db',
+        version: TrainingDatabaseSchema.version,
+        onCreate: TrainingDatabaseSchema.create,
+        onUpgrade: TrainingDatabaseSchema.upgrade,
+        factory: databaseFactoryFfi,
+        databasePath: path,
+      );
+      addTearDown(file.close);
+      final columns = await (await file.open()).rawQuery(
+        'PRAGMA table_info(blocks)',
+      );
+      expect(columns.map((column) => column['name']), contains('movement_id'));
+    },
+  );
 }

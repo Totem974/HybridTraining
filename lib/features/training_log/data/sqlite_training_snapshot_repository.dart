@@ -47,6 +47,7 @@ final class SqliteTrainingSnapshotRepository
               'session_id': session.id,
               'sequence': blockIndex,
               'role': block.role,
+              'movement_id': block.movementId.value,
             });
             for (final set in block.sets) {
               await tx.insert('planned_sets', {

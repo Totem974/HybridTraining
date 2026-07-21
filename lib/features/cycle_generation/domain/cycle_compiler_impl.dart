@@ -19,9 +19,16 @@ final class CycleCompilerImpl implements CycleCompiler {
     CycleRequest request,
   ) {
     _validate(definition, request);
+    final requiredMaxes = _requiredMaximums(definition, request);
     final maxes = <MovementId, Weight>{};
-    for (final movement in request.sessionOrder) {
-      final input = request.maxInputs[movement]!;
+    for (final movement in requiredMaxes) {
+      final input = request.maxInputs[movement];
+      if (input == null) {
+        throw CycleGenerationException(
+          CycleGenerationErrorCode.missingMaximum,
+          'No maximum was supplied for ${movement.value}.',
+        );
+      }
       final ratio =
           request.trainingMaxRatioByMovement[movement] ??
           request.globalTrainingMaxRatio;
@@ -52,9 +59,9 @@ final class CycleCompilerImpl implements CycleCompiler {
             date: cursor,
             movementId: movement,
             blocks: _compileBlocks(
-              week.blocks,
-              maxes[movement]!,
-              request.maxInputs[movement]!,
+              _blocksFor(week, movement),
+              movement,
+              maxes,
               request,
             ),
           ),
@@ -77,8 +84,8 @@ final class CycleCompilerImpl implements CycleCompiler {
 
   List<GeneratedBlock> _compileBlocks(
     List<BlockDefinition> definitions,
-    Weight trainingMax,
-    TrainingMaxInput maxInput,
+    MovementId sessionMovement,
+    Map<MovementId, Weight> maxes,
     CycleRequest request,
   ) => [
     for (final block in definitions)
@@ -86,13 +93,15 @@ final class CycleCompilerImpl implements CycleCompiler {
         GeneratedBlock(
           id: block.id,
           role: block.role,
+          movementId: block.movementId ?? sessionMovement,
           sets: [
             for (var index = 0; index < block.sets.length; index++)
               _compileSet(
                 index,
                 block.sets[index],
-                trainingMax,
-                maxInput,
+                block.movementId ?? sessionMovement,
+                maxes[block.movementId ?? sessionMovement],
+                request.maxInputs[block.movementId ?? sessionMovement],
                 request,
               ),
           ],
@@ -102,8 +111,9 @@ final class CycleCompilerImpl implements CycleCompiler {
   GeneratedSet _compileSet(
     int index,
     PrescribedSetDefinition definition,
-    Weight trainingMax,
-    TrainingMaxInput maxInput,
+    MovementId movement,
+    Weight? trainingMax,
+    TrainingMaxInput? maxInput,
     CycleRequest request,
   ) {
     final load = definition.load;
@@ -111,9 +121,47 @@ final class CycleCompilerImpl implements CycleCompiler {
     int? percentage;
     switch (load) {
       case TrainingMaxPercentageLoad(percentage: final value):
+        if (trainingMax == null) {
+          throw const CycleGenerationException(
+            CycleGenerationErrorCode.missingMaximum,
+            'A training max is required for a percentage load.',
+          );
+        }
+        percentage = value.basisPoints;
+        desired = loadCalculator.percentage(trainingMax, value);
+      case ParameterizedTrainingMaxPercentageLoad(
+        :final parameterId,
+        :final defaultValue,
+        :final minimum,
+        :final maximum,
+      ):
+        if (trainingMax == null) {
+          throw const CycleGenerationException(
+            CycleGenerationErrorCode.missingMaximum,
+            'A training max is required for a percentage load.',
+          );
+        }
+        final value =
+            request.percentageParametersByMovement[movement]?[parameterId] ??
+            request.percentageParameters[parameterId] ??
+            defaultValue;
+        if (value.basisPoints < minimum.basisPoints ||
+            value.basisPoints > maximum.basisPoints) {
+          throw CycleGenerationException(
+            CycleGenerationErrorCode.invalidTrainingMaxRatio,
+            'Parameter $parameterId must be between ${minimum.basisPoints} '
+            'and ${maximum.basisPoints} basis points.',
+          );
+        }
         percentage = value.basisPoints;
         desired = loadCalculator.percentage(trainingMax, value);
       case OneRepMaxPercentageLoad(percentage: final value):
+        if (maxInput == null) {
+          throw const CycleGenerationException(
+            CycleGenerationErrorCode.missingMaximum,
+            'A maximum is required for a 1RM percentage load.',
+          );
+        }
         percentage = value.basisPoints;
         desired = loadCalculator.percentage(_oneRepMax(maxInput), value);
       case FixedLoad(:final weight):
@@ -189,13 +237,7 @@ final class CycleCompilerImpl implements CycleCompiler {
         'Session order must contain every definition movement exactly once.',
       );
     }
-    for (final movement in request.sessionOrder) {
-      if (!supported.contains(movement)) {
-        throw CycleGenerationException(
-          CycleGenerationErrorCode.unsupportedMovement,
-          'Movement ${movement.value} is not supported by the definition.',
-        );
-      }
+    for (final movement in _requiredMaximums(definition, request)) {
       if (!request.maxInputs.containsKey(movement)) {
         throw CycleGenerationException(
           CycleGenerationErrorCode.missingMaximum,
@@ -221,6 +263,35 @@ final class CycleCompilerImpl implements CycleCompiler {
         'Training-max ratios must be greater than 0% and at most 100%.',
       );
     }
+  }
+
+  List<BlockDefinition> _blocksFor(WeekDefinition week, MovementId sessionId) {
+    if (week.sessions.isEmpty) return week.blocks;
+    return week.sessions
+        .singleWhere((session) => session.id == sessionId)
+        .blocks;
+  }
+
+  Set<MovementId> _requiredMaximums(
+    ResolvedCycleDefinition definition,
+    CycleRequest request,
+  ) {
+    final result = <MovementId>{};
+    for (final week in definition.weeks) {
+      for (final sessionId in request.sessionOrder) {
+        for (final block in _blocksFor(week, sessionId)) {
+          if (block.sets.any(
+            (set) =>
+                set.load is TrainingMaxPercentageLoad ||
+                set.load is ParameterizedTrainingMaxPercentageLoad ||
+                set.load is OneRepMaxPercentageLoad,
+          )) {
+            result.add(block.movementId ?? sessionId);
+          }
+        }
+      }
+    }
+    return result;
   }
 
   DateTime _onOrAfter(DateTime date, int weekday) {
