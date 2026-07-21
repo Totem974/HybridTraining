@@ -111,6 +111,9 @@ engine-binding issues. Re-running the same manifest must produce zero inserted
 or updated records.
 
 `catalog_seed_manifest.dart` builds the deterministic neutral manifest and its
-preflight report. Once the DB owner freezes the tables, add a separate adapter
-from this manifest to those tables; do not put SQL assumptions in the staging
-builder.
+preflight report. `catalog_seed_importer.dart` adapts that manifest through the
+narrow `CatalogAdministrationDatabase.transaction` boundary. It supports a
+read-only simulation and an atomic apply mode, creates only `draft` or
+`inReview` versions, retains every issue as a structured staging blocker, and
+never writes normalized runtime or publication-validation rows. The caller
+supplies version identity and time; no stable domain id or authority is derived.

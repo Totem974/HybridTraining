@@ -2,7 +2,7 @@ import 'package:sqflite/sqflite.dart';
 
 /// Schema of catalog.db. Runtime consumers open this database read-only.
 abstract final class CatalogDatabaseSchema {
-  static const version = 1;
+  static const version = 2;
 
   static Future<void> create(DatabaseExecutor db) async {
     await db.execute('''CREATE TABLE catalog_versions (
@@ -27,6 +27,7 @@ abstract final class CatalogDatabaseSchema {
       blockers_clear INTEGER NOT NULL CHECK(blockers_clear=1), signature_valid INTEGER NOT NULL CHECK(signature_valid IN (0,1)),
       validated_at TEXT NOT NULL, FOREIGN KEY(catalog_version_id) REFERENCES catalog_versions(id)
     )''');
+    await _createAdministrationStaging(db);
     await db.execute('''CREATE TABLE books (
       id TEXT PRIMARY KEY, title TEXT NOT NULL, author TEXT,
       license_status TEXT NOT NULL CHECK(license_status IN ('ownedReference','compatible','unknown','restricted'))
@@ -464,6 +465,115 @@ abstract final class CatalogDatabaseSchema {
     }
   }
 
+  static Future<void> _createAdministrationStaging(DatabaseExecutor db) async {
+    await db.execute('''CREATE TABLE catalog_staging_entries (
+      catalog_version_id TEXT NOT NULL,
+      catalog_entry_key TEXT NOT NULL,
+      canonical_record_json TEXT NOT NULL CHECK(json_valid(canonical_record_json)),
+      record_hash TEXT NOT NULL CHECK(length(record_hash)>0),
+      manifest_hash TEXT NOT NULL CHECK(length(manifest_hash)>0),
+      stable_domain_id TEXT CHECK(stable_domain_id IS NULL OR (
+        stable_domain_id = lower(stable_domain_id)
+        AND length(stable_domain_id)>0
+        AND stable_domain_id NOT GLOB '*[^a-z0-9-]*'
+        AND stable_domain_id NOT LIKE '-%'
+        AND stable_domain_id NOT LIKE '%-'
+        AND stable_domain_id NOT LIKE '%--%')),
+      authority TEXT CHECK(authority IS NULL OR authority IN ('canonical','compatible','userCustom')),
+      review_status TEXT NOT NULL CHECK(review_status IN ('needsReview','confirmed','rejected')),
+      visibility TEXT NOT NULL CHECK(visibility IN ('hidden','internal','visible')),
+      execution_status TEXT NOT NULL CHECK(execution_status IN ('supported','executable','blocked')),
+      CHECK(catalog_entry_key GLOB '[A-Z][A-Z0-9]*-[0-9][0-9][0-9]*'),
+      CHECK(review_status = 'confirmed' OR visibility != 'visible'),
+      CHECK(review_status = 'confirmed' OR execution_status != 'executable'),
+      PRIMARY KEY(catalog_version_id,catalog_entry_key),
+      FOREIGN KEY(catalog_version_id) REFERENCES catalog_versions(id)
+    )''');
+    await db.execute('''CREATE TABLE catalog_import_blockers (
+      id TEXT PRIMARY KEY,
+      catalog_version_id TEXT NOT NULL,
+      catalog_entry_key TEXT,
+      issue_code TEXT NOT NULL CHECK(length(issue_code)>0),
+      severity TEXT NOT NULL CHECK(severity IN ('info','warning','publishBlocker','error')),
+      message TEXT NOT NULL CHECK(length(message)>0),
+      FOREIGN KEY(catalog_version_id) REFERENCES catalog_versions(id),
+      FOREIGN KEY(catalog_version_id,catalog_entry_key)
+        REFERENCES catalog_staging_entries(catalog_version_id,catalog_entry_key)
+        ON DELETE CASCADE
+    )''');
+    await db.execute(
+      'CREATE INDEX catalog_staging_entries_manifest_idx '
+      'ON catalog_staging_entries(manifest_hash)',
+    );
+    await db.execute(
+      'CREATE INDEX catalog_import_blockers_version_idx '
+      'ON catalog_import_blockers(catalog_version_id,catalog_entry_key)',
+    );
+    for (final table in const [
+      'catalog_staging_entries',
+      'catalog_import_blockers',
+    ]) {
+      await db.execute(
+        '''CREATE TRIGGER ${table}_draft_only_insert BEFORE INSERT ON $table
+        WHEN (SELECT status FROM catalog_versions WHERE id=NEW.catalog_version_id)
+          NOT IN ('draft','inReview')
+        BEGIN SELECT RAISE(ABORT,'administration staging requires a draft or in-review version'); END''',
+      );
+      await db.execute(
+        '''CREATE TRIGGER ${table}_draft_only_update BEFORE UPDATE ON $table
+        WHEN (SELECT status FROM catalog_versions WHERE id=OLD.catalog_version_id)
+          NOT IN ('draft','inReview')
+          OR (SELECT status FROM catalog_versions WHERE id=NEW.catalog_version_id)
+          NOT IN ('draft','inReview')
+        BEGIN SELECT RAISE(ABORT,'administration staging requires a draft or in-review version'); END''',
+      );
+      await db.execute(
+        '''CREATE TRIGGER ${table}_version_identity BEFORE UPDATE OF catalog_version_id ON $table
+        WHEN OLD.catalog_version_id != NEW.catalog_version_id
+        BEGIN SELECT RAISE(ABORT,'catalog version identity is immutable'); END''',
+      );
+      await db.execute(
+        '''CREATE TRIGGER ${table}_published_delete BEFORE DELETE ON $table
+        WHEN (SELECT status FROM catalog_versions WHERE id=OLD.catalog_version_id)
+          IN ('published','retired')
+        BEGIN SELECT RAISE(ABORT,'published administration history is immutable'); END''',
+      );
+    }
+    await db.execute(
+      '''CREATE TRIGGER catalog_staging_manifest_insert BEFORE INSERT ON catalog_staging_entries
+      WHEN NEW.manifest_hash != (
+        SELECT content_hash FROM catalog_versions WHERE id=NEW.catalog_version_id
+      ) BEGIN SELECT RAISE(ABORT,'staged manifest hash must match catalog version'); END''',
+    );
+    await db.execute(
+      '''CREATE TRIGGER catalog_staging_manifest_update BEFORE UPDATE OF manifest_hash ON catalog_staging_entries
+      WHEN NEW.manifest_hash != (
+        SELECT content_hash FROM catalog_versions WHERE id=NEW.catalog_version_id
+      ) BEGIN SELECT RAISE(ABORT,'staged manifest hash must match catalog version'); END''',
+    );
+    await db.execute(
+      '''CREATE TRIGGER catalog_staging_promotion_gate BEFORE UPDATE OF status ON catalog_versions
+      WHEN NEW.status IN ('approved','published') AND (
+        EXISTS (
+          SELECT 1 FROM catalog_staging_entries s WHERE s.catalog_version_id=OLD.id
+        ) OR EXISTS (
+          SELECT 1 FROM catalog_import_blockers b
+          WHERE b.catalog_version_id=OLD.id AND b.severity IN ('publishBlocker','error')
+        )
+      ) BEGIN SELECT RAISE(ABORT,'staging and import blockers must pass governed promotion before approval'); END''',
+    );
+    await db.execute(
+      '''CREATE TRIGGER catalog_staging_validation_gate BEFORE INSERT ON catalog_publication_validations
+      WHEN EXISTS (
+        SELECT 1 FROM catalog_staging_entries s WHERE s.catalog_version_id=NEW.catalog_version_id
+      ) OR EXISTS (
+        SELECT 1 FROM catalog_import_blockers b
+        WHERE b.catalog_version_id=NEW.catalog_version_id
+          AND b.severity IN ('publishBlocker','error')
+      ) BEGIN SELECT RAISE(ABORT,'staged entries or import blockers cannot receive publication validation'); END''',
+    );
+  }
+
   static Future<void> _createSameVersionGuards(DatabaseExecutor db) async {
     const references = <(String, String, String)>[
       ('catalog_entry_relations', 'from_entry_id', 'catalog_entries'),
@@ -583,6 +693,10 @@ abstract final class CatalogDatabaseSchema {
     int newVersion,
   ) async {
     if (oldVersion == newVersion) return;
+    if (oldVersion == 1 && newVersion == 2) {
+      await _createAdministrationStaging(db);
+      return;
+    }
     throw StateError(
       'No catalog.db migration from $oldVersion to $newVersion.',
     );

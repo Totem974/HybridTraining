@@ -1,0 +1,356 @@
+import 'dart:convert';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:hybrid_training/features/poc_531/data/generic_engine_sqlite_codec.dart';
+import 'package:hybrid_training/features/poc_531/domain/generic_engine/generic_engine.dart';
+
+void main() {
+  const codec = GenericEngineSqliteCodec();
+
+  group('parameter_schemas.schema_json', () {
+    test('decodes v1 definitions and conditions into domain contracts', () {
+      final definitions = codec.decodeParameterSchema(
+        jsonEncode({
+          'schemaVersion': 1,
+          'parameters': [
+            {
+              'id': 'days-per-week',
+              'kind': 'integer',
+              'minimum': 2,
+              'maximum': 4,
+              'visibleWhen': {'kind': 'always', 'value': true},
+              'enabledWhen': {
+                'kind': 'not',
+                'condition': {
+                  'kind': 'present',
+                  'parameterId': 'disabled-flag',
+                },
+              },
+              'requiredWhen': {
+                'kind': 'equals',
+                'parameterId': 'mode',
+                'value': {'kind': 'enumeration', 'value': 'standard'},
+              },
+            },
+            {
+              'id': 'main-lift',
+              'kind': 'movement',
+              'allowedIds': ['squat', 'deadlift'],
+              'allowedIdsWhen': [
+                {
+                  'when': {
+                    'kind': 'all',
+                    'conditions': [
+                      {'kind': 'present', 'parameterId': 'days-per-week'},
+                    ],
+                  },
+                  'allowedIds': ['squat'],
+                },
+              ],
+            },
+          ],
+        }),
+      );
+
+      expect(definitions, hasLength(2));
+      expect(definitions.first.id, CatalogId('days-per-week'));
+      expect(definitions.first.kind, ParameterKind.integer);
+      expect(definitions.first.minimum, 2);
+      expect(definitions.first.maximum, 4);
+      expect(definitions.first.requiredWhen, isA<EqualsCondition>());
+      expect(definitions.last.allowedIds, {
+        CatalogId('squat'),
+        CatalogId('deadlift'),
+      });
+      expect(definitions.last.allowedIdsWhen, hasLength(1));
+    });
+
+    test('rejects unknown nested fields at their exact path', () {
+      expect(
+        () => codec.decodeParameterSchema(
+          jsonEncode({
+            'schemaVersion': 1,
+            'parameters': [
+              {
+                'id': 'days',
+                'kind': 'integer',
+                'visibleWhen': {
+                  'kind': 'always',
+                  'value': true,
+                  'fallback': false,
+                },
+              },
+            ],
+          }),
+        ),
+        throwsA(
+          isA<GenericEngineCodecException>()
+              .having((error) => error.code, 'code', 'unknown_field')
+              .having(
+                (error) => error.path,
+                'path',
+                r'$.parameters[0].visibleWhen.fallback',
+              ),
+        ),
+      );
+    });
+  });
+
+  group('module_versions.definition_json', () {
+    test('decodes a v1 definition with row context', () {
+      final definition = codec.decodeModuleDefinition(
+        jsonEncode({
+          'schemaVersion': 1,
+          'requiredMovementCapabilities': ['barbell'],
+          'requiredEquipment': ['rack'],
+          'supportedLoadKinds': ['percentTrainingMax'],
+          'inputPorts': [
+            {'id': 'main-lift', 'kind': 'movement', 'required': true},
+          ],
+          'outputPorts': [
+            {'id': 'work-sets', 'kind': 'prescription', 'required': true},
+          ],
+        }),
+        id: CatalogId('main-work'),
+        revision: 3,
+        governance: _governance,
+        evidence: _evidence,
+      );
+
+      expect(definition.id, CatalogId('main-work'));
+      expect(definition.revision, 3);
+      expect(definition.supportedLoadKinds, {LoadKind.percentTrainingMax});
+      expect(definition.inputPorts.single.kind, ModulePortKind.movement);
+    });
+
+    test('rejects unknown enum values', () {
+      expect(
+        () => codec.decodeModuleDefinition(
+          jsonEncode({
+            'schemaVersion': 1,
+            'requiredMovementCapabilities': <String>[],
+            'requiredEquipment': <String>[],
+            'supportedLoadKinds': ['inventedLoad'],
+            'inputPorts': <Object?>[],
+            'outputPorts': <Object?>[],
+          }),
+          id: CatalogId('module'),
+          revision: 1,
+          governance: _governance,
+          evidence: _evidence,
+        ),
+        throwsA(
+          isA<GenericEngineCodecException>()
+              .having((error) => error.code, 'code', 'unknown_enum')
+              .having(
+                (error) => error.path,
+                'path',
+                r'$.supportedLoadKinds[0]',
+              ),
+        ),
+      );
+    });
+  });
+
+  group('variant_module_bindings.configuration_json', () {
+    test('decodes a v1 binding with row context', () {
+      final binding = codec.decodeModuleBindingConfiguration(
+        jsonEncode({
+          'schemaVersion': 1,
+          'inputs': [
+            {
+              'portId': 'upstream',
+              'kind': 'module',
+              'targetId': 'main-binding',
+              'targetRevision': 2,
+            },
+          ],
+          'requiredMovementCapabilities': ['barbell'],
+        }),
+        id: CatalogId('supplemental-binding'),
+        moduleId: CatalogId('supplemental-work'),
+        moduleRevision: 4,
+      );
+
+      expect(binding.id, CatalogId('supplemental-binding'));
+      expect(binding.moduleId, CatalogId('supplemental-work'));
+      expect(binding.moduleRevision, 4);
+      expect(binding.inputs.single.targetRevision, 2);
+    });
+
+    test('rejects unknown nested binding fields', () {
+      expect(
+        () => codec.decodeModuleBindingConfiguration(
+          jsonEncode({
+            'schemaVersion': 1,
+            'inputs': [
+              {
+                'portId': 'lift',
+                'kind': 'movement',
+                'targetId': 'squat',
+                'rule': 'unsourced',
+              },
+            ],
+            'requiredMovementCapabilities': <String>[],
+          }),
+          id: CatalogId('binding'),
+          moduleId: CatalogId('module'),
+          moduleRevision: 1,
+        ),
+        throwsA(
+          isA<GenericEngineCodecException>()
+              .having((error) => error.code, 'code', 'unknown_field')
+              .having((error) => error.path, 'path', r'$.inputs[0].rule'),
+        ),
+      );
+    });
+  });
+
+  group('workspace_drafts.payload_json', () {
+    test('decodes v1 configuration values without inventing catalog rules', () {
+      final draft = codec.decodeWorkspaceDraft(jsonEncode(_workspaceDraft));
+
+      expect(draft.templateId, CatalogId('template'));
+      expect(draft.templateRevision, 2);
+      expect(draft.variantId, CatalogId('four-day'));
+      expect(
+        draft.parameters[CatalogId('days-per-week')],
+        isA<NumberParameter>()
+            .having((value) => value.kind, 'kind', ParameterKind.integer)
+            .having((value) => value.value, 'value', 4),
+      );
+      expect(draft.trainingMaxes.calculationRuleId, CatalogId('tm-rule'));
+      expect(
+        draft.trainingMaxes.inputs[CatalogId('squat')]?.kind,
+        MaxInputKind.repMax,
+      );
+      expect(draft.equipment.supportedLoads, {LoadKind.externalWeight});
+      expect(draft.assistance, isNull);
+      expect(draft.conditioning, isEmpty);
+    });
+
+    test('rejects unknown workspace fields', () {
+      final invalid = Map<String, Object?>.from(_workspaceDraft)
+        ..['automaticProgression'] = true;
+      expect(
+        () => codec.decodeWorkspaceDraft(jsonEncode(invalid)),
+        throwsA(
+          isA<GenericEngineCodecException>()
+              .having((error) => error.code, 'code', 'unknown_field')
+              .having((error) => error.path, 'path', r'$.automaticProgression'),
+        ),
+      );
+    });
+  });
+
+  test('all four SQLite payload decoders reject unknown schema versions', () {
+    final calls = <void Function()>[
+      () => codec.decodeParameterSchema(
+        jsonEncode({'schemaVersion': 2, 'parameters': <Object?>[]}),
+      ),
+      () => codec.decodeModuleDefinition(
+        jsonEncode({
+          'schemaVersion': 2,
+          'requiredMovementCapabilities': <String>[],
+          'requiredEquipment': <String>[],
+          'supportedLoadKinds': <String>[],
+          'inputPorts': <Object?>[],
+          'outputPorts': <Object?>[],
+        }),
+        id: CatalogId('module'),
+        revision: 1,
+        governance: _governance,
+        evidence: _evidence,
+      ),
+      () => codec.decodeModuleBindingConfiguration(
+        jsonEncode({
+          'schemaVersion': 2,
+          'inputs': <Object?>[],
+          'requiredMovementCapabilities': <String>[],
+        }),
+        id: CatalogId('binding'),
+        moduleId: CatalogId('module'),
+        moduleRevision: 1,
+      ),
+      () => codec.decodeWorkspaceDraft(
+        jsonEncode({..._workspaceDraft, 'schemaVersion': 2}),
+      ),
+    ];
+
+    for (final call in calls) {
+      expect(
+        call,
+        throwsA(
+          isA<GenericEngineCodecException>()
+              .having(
+                (error) => error.code,
+                'code',
+                'unsupported_schema_version',
+              )
+              .having((error) => error.path, 'path', r'$.schemaVersion'),
+        ),
+      );
+    }
+  });
+}
+
+final _governance = CatalogGovernance(
+  authority: CatalogAuthority.canonical,
+  review: CatalogReviewStatus.confirmed,
+  lifecycle: CatalogLifecycle.published,
+  visibility: CatalogVisibility.public,
+  executable: true,
+);
+
+final _evidence = CatalogEvidence(
+  ruleId: CatalogId('module-rule'),
+  references: [
+    EvidenceReference(
+      sourceId: CatalogId('source'),
+      locator: 'fixture locator',
+      sourceRevision: 1,
+    ),
+  ],
+);
+
+final Map<String, Object?> _workspaceDraft = {
+  'schemaVersion': 1,
+  'templateId': 'template',
+  'templateRevision': 2,
+  'variantId': 'four-day',
+  'parameters': [
+    {
+      'id': 'days-per-week',
+      'value': {'kind': 'integer', 'value': 4},
+    },
+    {
+      'id': 'main-lift',
+      'value': {'kind': 'movement', 'value': 'squat'},
+    },
+  ],
+  'trainingMaxes': {
+    'calculationRuleId': 'tm-rule',
+    'globalRatio': 0.9,
+    'unit': 'kilograms',
+    'roundingIncrement': 2.5,
+    'inputs': [
+      {
+        'movementId': 'squat',
+        'kind': 'repMax',
+        'weight': 100,
+        'repetitions': 5,
+        'formula': 'epley',
+      },
+    ],
+    'ratiosByMovement': [
+      {'movementId': 'squat', 'ratio': 0.85},
+    ],
+  },
+  'equipment': {
+    'equipmentIds': ['barbell'],
+    'supportedLoads': ['externalWeight'],
+    'barWeight': 20,
+    'availablePlates': [20, 10, 5, 2.5],
+  },
+  'conditioning': <Object?>[],
+};

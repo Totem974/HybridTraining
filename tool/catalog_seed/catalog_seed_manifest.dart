@@ -31,9 +31,11 @@ final class CatalogSeedIssue {
 final class CatalogSeedRecord {
   CatalogSeedRecord(Map<String, Object?> values)
     : values = _deepFreezeMap(values),
+      canonicalJson = _canonicalJson(values),
       recordHash = computeCatalogSeedSha256(_canonicalJson(values));
 
   final Map<String, Object?> values;
+  final String canonicalJson;
   final String recordHash;
   String get id => values['catalogEntryKey']! as String;
 }
