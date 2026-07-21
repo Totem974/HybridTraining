@@ -100,6 +100,14 @@ void main() {
       addTearDown(db.close);
       await _version(db, id: 'v1', ordinal: 1, hash: 'hash-1');
       await db.insert('catalog_entries', _documentaryEntry());
+      await db.insert('catalog_import_blockers', {
+        'id': 'retained-warning',
+        'catalog_version_id': 'v1',
+        'catalog_entry_key': null,
+        'issue_code': 'historical_warning',
+        'severity': 'warning',
+        'message': 'Retained non-blocking administration history.',
+      });
       await db.insert('movement_categories', {
         'id': 'category-1',
         'catalog_version_id': 'v1',
@@ -127,6 +135,14 @@ void main() {
       await expectLater(
         db.delete(
           'catalog_publication_validations',
+          where: 'catalog_version_id=?',
+          whereArgs: ['v1'],
+        ),
+        throwsA(anything),
+      );
+      await expectLater(
+        db.delete(
+          'catalog_import_blockers',
           where: 'catalog_version_id=?',
           whereArgs: ['v1'],
         ),
@@ -196,6 +212,305 @@ void main() {
       throwsA(anything),
     );
   });
+
+  test(
+    'catalog schema v1 migration adds isolated staging without data loss',
+    () async {
+      final root = await Directory.systemTemp.createTemp('catalog-migration-');
+      addTearDown(() => root.delete(recursive: true));
+      final path = '${root.path}/catalog.db';
+      final legacy = await databaseFactoryFfi.openDatabase(
+        path,
+        options: OpenDatabaseOptions(
+          version: 1,
+          singleInstance: false,
+          onConfigure: (db) => db.execute('PRAGMA foreign_keys=ON'),
+          onCreate: (db, version) async {
+            await db.execute('''CREATE TABLE catalog_versions (
+            id TEXT PRIMARY KEY, status TEXT NOT NULL, content_hash TEXT NOT NULL
+          )''');
+            await db.execute('''CREATE TABLE catalog_publication_validations (
+            catalog_version_id TEXT PRIMARY KEY
+          )''');
+            await db.execute('''CREATE TABLE catalog_entries (
+            id TEXT PRIMARY KEY, catalog_version_id TEXT NOT NULL,
+            catalog_entry_key TEXT NOT NULL, stable_domain_id TEXT NOT NULL,
+            authority TEXT NOT NULL
+          )''');
+          },
+        ),
+      );
+      await legacy.insert('catalog_versions', {
+        'id': 'legacy-v1',
+        'status': 'draft',
+        'content_hash': 'legacy-hash',
+      });
+      await legacy.insert('catalog_entries', {
+        'id': 'legacy-entry',
+        'catalog_version_id': 'legacy-v1',
+        'catalog_entry_key': 'OR-001',
+        'stable_domain_id': 'legacy-entry',
+        'authority': 'canonical',
+      });
+      await legacy.close();
+
+      final migrated = await databaseFactoryFfi.openDatabase(
+        path,
+        options: OpenDatabaseOptions(
+          version: CatalogDatabaseSchema.version,
+          singleInstance: false,
+          onConfigure: (db) => db.execute('PRAGMA foreign_keys=ON'),
+          onUpgrade: CatalogDatabaseSchema.migrate,
+        ),
+      );
+      addTearDown(migrated.close);
+
+      expect(await _tables(migrated), contains('catalog_staging_entries'));
+      expect(await _tables(migrated), contains('catalog_import_blockers'));
+      expect(
+        (await migrated.query('catalog_entries')).single['id'],
+        'legacy-entry',
+      );
+      expect(
+        (await migrated.rawQuery('PRAGMA user_version')).single['user_version'],
+        CatalogDatabaseSchema.version,
+      );
+    },
+  );
+
+  test('staged versions cannot bypass governed promotion gates', () async {
+    final root = await Directory.systemTemp.createTemp('catalog-gates-');
+    addTearDown(() => root.delete(recursive: true));
+    final path = '${root.path}/catalog.db';
+    final administration = CatalogAdministrationDatabase(
+      path: path,
+      publicationService: const CatalogPublicationService(),
+      factory: databaseFactoryFfi,
+    );
+    await administration.transaction((transaction) async {
+      await transaction.insertDraftVersion(
+        const CatalogDraftVersion(
+          id: 'staging-v1',
+          ordinal: 1,
+          status: 'inReview',
+          contentHash: 'manifest-hash',
+          canonicalizationVersion: 1,
+          signatureVerified: false,
+          trustChannel: 'localReview',
+          createdAt: '2026-07-21T00:00:00Z',
+        ),
+      );
+      await transaction.insertEntry(
+        const CatalogEntryWrite(
+          catalogVersionId: 'staging-v1',
+          catalogEntryKey: 'OR-001',
+          canonicalRecordJson: '{"catalogEntryKey":"OR-001"}',
+          recordHash: 'record-hash',
+          manifestHash: 'manifest-hash',
+          stableDomainId: null,
+          authority: null,
+          reviewStatus: 'needsReview',
+          visibility: 'hidden',
+          executionStatus: 'blocked',
+        ),
+      );
+    });
+
+    final database = await databaseFactoryFfi.openDatabase(
+      path,
+      options: OpenDatabaseOptions(singleInstance: false),
+    );
+    addTearDown(database.close);
+    await expectLater(
+      database.update(
+        'catalog_versions',
+        {'status': 'approved'},
+        where: 'id=?',
+        whereArgs: ['staging-v1'],
+      ),
+      throwsA(anything),
+    );
+    await expectLater(
+      database.insert('catalog_publication_validations', {
+        'catalog_version_id': 'staging-v1',
+        'validated_content_hash': 'manifest-hash',
+        'evidence_valid': 1,
+        'licences_valid': 1,
+        'dependencies_valid': 1,
+        'children_valid': 1,
+        'blockers_clear': 1,
+        'signature_valid': 0,
+        'validated_at': '2026-07-21T01:00:00Z',
+      }),
+      throwsA(anything),
+    );
+    expect(await database.query('catalog_publication_validations'), isEmpty);
+    expect(
+      (await database.query('catalog_versions')).single['status'],
+      'inReview',
+    );
+  });
+
+  test('global import blockers prevent approval and validation', () async {
+    final db = await databaseFactoryFfi.openDatabase(
+      inMemoryDatabasePath,
+      options: OpenDatabaseOptions(
+        version: CatalogDatabaseSchema.version,
+        singleInstance: false,
+        onConfigure: (db) => db.execute('PRAGMA foreign_keys=ON'),
+        onCreate: (db, version) => CatalogDatabaseSchema.create(db),
+      ),
+    );
+    addTearDown(db.close);
+    await _version(db, id: 'blocked-v1', ordinal: 1, hash: 'manifest-hash');
+    await db.insert('catalog_import_blockers', {
+      'id': 'global-blocker',
+      'catalog_version_id': 'blocked-v1',
+      'catalog_entry_key': null,
+      'issue_code': 'manifest_authority_missing',
+      'severity': 'publishBlocker',
+      'message': 'Global reviewed authority is missing.',
+    });
+    await db.update(
+      'catalog_versions',
+      {'status': 'inReview'},
+      where: 'id=?',
+      whereArgs: ['blocked-v1'],
+    );
+
+    await expectLater(
+      db.update(
+        'catalog_versions',
+        {'status': 'approved'},
+        where: 'id=?',
+        whereArgs: ['blocked-v1'],
+      ),
+      throwsA(anything),
+    );
+    await expectLater(
+      db.insert('catalog_publication_validations', {
+        'catalog_version_id': 'blocked-v1',
+        'validated_content_hash': 'manifest-hash',
+        'evidence_valid': 1,
+        'licences_valid': 1,
+        'dependencies_valid': 1,
+        'children_valid': 1,
+        'blockers_clear': 1,
+        'signature_valid': 0,
+        'validated_at': '2026-07-21T01:00:00Z',
+      }),
+      throwsA(anything),
+    );
+    expect(await db.query('catalog_publication_validations'), isEmpty);
+  });
+
+  test(
+    'administration staging and blockers are excluded from governed hash',
+    () async {
+      final db = await databaseFactoryFfi.openDatabase(
+        inMemoryDatabasePath,
+        options: OpenDatabaseOptions(
+          version: CatalogDatabaseSchema.version,
+          singleInstance: false,
+          onConfigure: (db) => db.execute('PRAGMA foreign_keys=ON'),
+          onCreate: (db, version) => CatalogDatabaseSchema.create(db),
+        ),
+      );
+      addTearDown(db.close);
+      await _version(db, id: 'hash-v1', ordinal: 1, hash: 'manifest-hash');
+      const service = CatalogPublicationService();
+      final before = await service.computeContentHash(
+        db,
+        catalogVersionId: 'hash-v1',
+      );
+      await db.insert('catalog_staging_entries', {
+        'catalog_version_id': 'hash-v1',
+        'catalog_entry_key': 'OR-001',
+        'canonical_record_json': '{"catalogEntryKey":"OR-001"}',
+        'record_hash': 'record-hash',
+        'manifest_hash': 'manifest-hash',
+        'stable_domain_id': null,
+        'authority': null,
+        'review_status': 'needsReview',
+        'visibility': 'hidden',
+        'execution_status': 'blocked',
+      });
+      await db.insert('catalog_import_blockers', {
+        'id': 'hash-global-warning',
+        'catalog_version_id': 'hash-v1',
+        'catalog_entry_key': null,
+        'issue_code': 'warning_only',
+        'severity': 'warning',
+        'message': 'Administrative warning.',
+      });
+
+      expect(
+        await service.computeContentHash(db, catalogVersionId: 'hash-v1'),
+        before,
+      );
+    },
+  );
+
+  test(
+    'publication service fails closed on persisted blocking issues',
+    () async {
+      final db = await databaseFactoryFfi.openDatabase(
+        inMemoryDatabasePath,
+        options: OpenDatabaseOptions(
+          version: CatalogDatabaseSchema.version,
+          singleInstance: false,
+          onConfigure: (db) => db.execute('PRAGMA foreign_keys=ON'),
+          onCreate: (db, version) => CatalogDatabaseSchema.create(db),
+        ),
+      );
+      addTearDown(db.close);
+      await _version(db, id: 'service-v1', ordinal: 1, hash: 'placeholder');
+      await db.insert(
+        'catalog_entries',
+        _documentaryEntry()..['catalog_version_id'] = 'service-v1',
+      );
+      await db.insert('catalog_import_blockers', {
+        'id': 'service-global-blocker',
+        'catalog_version_id': 'service-v1',
+        'catalog_entry_key': null,
+        'issue_code': 'global_review_missing',
+        'severity': 'error',
+        'message': 'Global review failed.',
+      });
+      const service = CatalogPublicationService();
+      await db.update('catalog_versions', {
+        'content_hash': await service.computeContentHash(
+          db,
+          catalogVersionId: 'service-v1',
+        ),
+      });
+      await db.update('catalog_versions', {'status': 'inReview'});
+      // Simulate a legacy/corrupt database that bypassed the schema transition
+      // gate. The publication service must still fail closed independently.
+      await db.execute('DROP TRIGGER catalog_staging_promotion_gate');
+      await db.update('catalog_versions', {'status': 'approved'});
+
+      await expectLater(
+        service.publish(
+          db,
+          catalogVersionId: 'service-v1',
+          publishedAt: '2026-07-21T02:00:00Z',
+        ),
+        throwsA(
+          isA<CatalogPublicationException>().having(
+            (error) => error.issues,
+            'issues',
+            containsAll([
+              'blockers.not_clear',
+              'blocker.global_review_missing',
+            ]),
+          ),
+        ),
+      );
+      expect(await db.query('catalog_publication_validations'), isEmpty);
+      expect((await db.query('catalog_versions')).single['status'], 'approved');
+    },
+  );
 
   test(
     'catalog constraints reject invalid blocked variants and prescriptions',

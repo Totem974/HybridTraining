@@ -70,7 +70,14 @@ final class CatalogPublicationService {
       final table = row['name']! as String;
       if (table == 'catalog_versions' ||
           table == 'catalog_publication_validations' ||
-          const {'books', 'editions', 'sources', 'modules'}.contains(table)) {
+          const {
+            'books',
+            'editions',
+            'sources',
+            'modules',
+            'catalog_staging_entries',
+            'catalog_import_blockers',
+          }.contains(table)) {
         continue;
       }
       final columns = await database.rawQuery('PRAGMA table_info($table)');
@@ -163,6 +170,21 @@ final class CatalogPublicationService {
       issues.add('version.hash_mismatch');
     }
 
+    final blockingImports = await transaction.query(
+      'catalog_import_blockers',
+      columns: const ['issue_code'],
+      where: 'catalog_version_id=? AND severity IN (?,?)',
+      whereArgs: [catalogVersionId, 'publishBlocker', 'error'],
+    );
+    final blockersClear = blockingImports.isEmpty;
+    if (!blockersClear) {
+      issues.add('blockers.not_clear');
+      issues.addAll({
+        for (final blocker in blockingImports)
+          'blocker.${blocker['issue_code']! as String}',
+      });
+    }
+
     final entries = await transaction.query(
       'catalog_entries',
       where: 'catalog_version_id=?',
@@ -234,7 +256,7 @@ final class CatalogPublicationService {
       'licences_valid': 1,
       'dependencies_valid': 1,
       'children_valid': 1,
-      'blockers_clear': 1,
+      'blockers_clear': blockersClear ? 1 : 0,
       'signature_valid': signatureValid ? 1 : 0,
       'validated_at': publishedAt,
     });
