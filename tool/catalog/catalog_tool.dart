@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:hybrid_training/features/training_catalog/data/runtime_catalog_builder.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
 const _documentArrays = <String>{
   'inventory',
   'sources',
@@ -25,7 +28,7 @@ const _placeholders = <String>{
   'not_implemented',
 };
 
-void main(List<String> arguments) {
+Future<void> main(List<String> arguments) async {
   if (arguments.isEmpty ||
       !{'lint', 'coverage', 'verify', 'build'}.contains(arguments.first)) {
     stderr.writeln(
@@ -78,14 +81,27 @@ void main(List<String> arguments) {
         stdout.writeln('catalog verification passed');
       }
     case 'build':
-      stdout.writeln(
-        buildCatalogSeed(
-          arguments.length > 1
-              ? arguments[1]
-              : 'build/catalog/catalog_seed.v1.json',
-        ),
-      );
+      final outputPath = arguments.length > 1
+          ? arguments[1]
+          : 'build/catalog/catalog.db';
+      stdout.writeln(await buildCatalogDatabase(outputPath));
   }
+}
+
+Future<String> buildCatalogDatabase(
+  String outputPath, {
+  String sourcePath = 'catalog_src',
+}) async {
+  final catalog = _Catalog.load(Directory(sourcePath));
+  final errors = catalog.lint();
+  if (errors.isNotEmpty) throw FormatException(errors.join('\n'));
+  sqfliteFfiInit();
+  await const RuntimeCatalogBuilder().build(
+    aggregate: catalog.buildDocument(),
+    outputPath: outputPath,
+    factory: databaseFactoryFfi,
+  );
+  return outputPath;
 }
 
 List<String> lintCatalog({String sourcePath = 'catalog_src'}) =>
