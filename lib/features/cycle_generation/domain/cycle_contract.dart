@@ -125,13 +125,83 @@ final class Unloaded extends LoadPrescription {
   const Unloaded();
 }
 
+enum RelativeSetPosition { first, second, top }
+
+final class RelativeSetLoad extends LoadPrescription {
+  const RelativeSetLoad({
+    required this.position,
+    this.multiplierBasisPoints = 10000,
+  }) : assert(multiplierBasisPoints > 0),
+       assert(multiplierBasisPoints <= 20000);
+
+  final RelativeSetPosition position;
+  final int multiplierBasisPoints;
+}
+
+enum SetExecutionKind { straight, restPause, paused, dynamic }
+
+final class SetExecution {
+  const SetExecution({
+    required this.kind,
+    this.restSeconds,
+    this.pauseSeconds,
+    this.clusterRepetitions,
+    this.targetVelocity,
+  });
+
+  const SetExecution.straight()
+    : kind = SetExecutionKind.straight,
+      restSeconds = null,
+      pauseSeconds = null,
+      clusterRepetitions = null,
+      targetVelocity = null;
+
+  final SetExecutionKind kind;
+  final int? restSeconds;
+  final int? pauseSeconds;
+  final int? clusterRepetitions;
+  final String? targetVelocity;
+
+  Map<String, Object?> toJson() => {
+    'type': kind.name,
+    'restSeconds': ?restSeconds,
+    'pauseSeconds': ?pauseSeconds,
+    'clusterRepetitions': ?clusterRepetitions,
+    'targetVelocity': ?targetVelocity,
+  };
+}
+
+enum RuntimeGateKind { jokerEligible, trainingMaxCheckpoint }
+
+final class RuntimeGate {
+  const RuntimeGate({required this.kind, required this.required});
+
+  final RuntimeGateKind kind;
+  final bool required;
+}
+
+enum RuntimeDecisionStatus { pending, notRequired }
+
+final class RuntimeDecision {
+  const RuntimeDecision({required this.kind, required this.status});
+
+  final RuntimeGateKind kind;
+  final RuntimeDecisionStatus status;
+
+  Map<String, Object> toJson() => {'type': kind.name, 'status': status.name};
+}
+
 final class PrescribedSetDefinition {
   const PrescribedSetDefinition({
     required this.repetitions,
     required this.load,
+    this.execution = const SetExecution.straight(),
+    this.runtimeGates = const [],
   });
   final RepetitionPrescription repetitions;
   final LoadPrescription load;
+  final SetExecution execution;
+  final List<RuntimeGate> runtimeGates;
 }
 
 final class BlockDefinition {
@@ -239,6 +309,8 @@ final class GeneratedSet {
     required this.percentageBasisPoints,
     required this.plannedLoad,
     required this.platesPerSide,
+    this.execution = const SetExecution.straight(),
+    this.runtimeDecisions = const [],
     this.warning,
   });
   final int index;
@@ -246,6 +318,8 @@ final class GeneratedSet {
   final int? percentageBasisPoints;
   final Weight? plannedLoad;
   final List<Weight> platesPerSide;
+  final SetExecution execution;
+  final List<RuntimeDecision> runtimeDecisions;
   final GenerationWarning? warning;
   Map<String, Object?> toJson() => {
     'index': index,
@@ -253,6 +327,10 @@ final class GeneratedSet {
     'percentageBasisPoints': percentageBasisPoints,
     'plannedLoad': plannedLoad?.toJson(),
     'platesPerSide': platesPerSide.map((plate) => plate.toJson()).toList(),
+    'execution': execution.toJson(),
+    'runtimeDecisions': runtimeDecisions
+        .map((decision) => decision.toJson())
+        .toList(),
     'warning': warning?.toJson(),
   };
 }

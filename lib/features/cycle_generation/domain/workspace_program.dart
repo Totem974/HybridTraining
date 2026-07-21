@@ -118,6 +118,11 @@ final class WorkspaceProgramCodec {
     },
     BodyweightLoad() => {'type': 'bodyweight'},
     Unloaded() => {'type': 'unloaded'},
+    RelativeSetLoad(:final position, :final multiplierBasisPoints) => {
+      'type': 'relative_set',
+      'position': position.name,
+      'multiplierBasisPoints': multiplierBasisPoints,
+    },
   };
 
   WeekDefinition _week(Object? value) {
@@ -243,6 +248,20 @@ final class WorkspaceProgramCodec {
         _keys(map, const {'type', 'basisPoints'});
         return OneRepMaxPercentageLoad(
           Percentage(_integer(map, 'basisPoints')),
+        );
+      case 'relative_set':
+        _keys(map, const {'type', 'position', 'multiplierBasisPoints'});
+        final position = _string(map, 'position');
+        if (!RelativeSetPosition.values.any(
+          (value) => value.name == position,
+        )) {
+          throw WorkspaceProgramFormatException(
+            'Unknown relative set position $position',
+          );
+        }
+        return RelativeSetLoad(
+          position: RelativeSetPosition.values.byName(position),
+          multiplierBasisPoints: _integer(map, 'multiplierBasisPoints'),
         );
       case 'fixed':
         _keys(map, const {'type', 'centiUnits', 'unit'});

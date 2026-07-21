@@ -99,6 +99,7 @@ final class CycleCompilerImpl implements CycleCompiler {
               _compileSet(
                 index,
                 block.sets[index],
+                definitions,
                 block.movementId ?? sessionMovement,
                 maxes[block.movementId ?? sessionMovement],
                 request.maxInputs[block.movementId ?? sessionMovement],
@@ -111,6 +112,7 @@ final class CycleCompilerImpl implements CycleCompiler {
   GeneratedSet _compileSet(
     int index,
     PrescribedSetDefinition definition,
+    List<BlockDefinition> sessionBlocks,
     MovementId movement,
     Weight? trainingMax,
     TrainingMaxInput? maxInput,
@@ -168,6 +170,25 @@ final class CycleCompilerImpl implements CycleCompiler {
         desired = weight;
       case BodyweightLoad() || Unloaded():
         desired = null;
+      case RelativeSetLoad(:final position, :final multiplierBasisPoints):
+        if (trainingMax == null) {
+          throw const CycleGenerationException(
+            CycleGenerationErrorCode.missingMaximum,
+            'A training max is required for a relative set load.',
+          );
+        }
+        final target = _relativeTarget(
+          sessionBlocks,
+          movement,
+          position,
+          request,
+        );
+        percentage =
+            (target.basisPoints * multiplierBasisPoints + 5000) ~/ 10000;
+        desired = loadCalculator.percentage(
+          trainingMax,
+          Percentage(percentage),
+        );
     }
     PlateSelection? selection;
     if (desired != null) {
@@ -183,8 +204,102 @@ final class CycleCompilerImpl implements CycleCompiler {
       percentageBasisPoints: percentage,
       plannedLoad: selection?.load,
       platesPerSide: selection?.platesPerSide ?? const [],
+      execution: definition.execution,
+      runtimeDecisions: [
+        for (final gate in definition.runtimeGates)
+          RuntimeDecision(
+            kind: gate.kind,
+            status: gate.required
+                ? RuntimeDecisionStatus.pending
+                : RuntimeDecisionStatus.notRequired,
+          ),
+      ],
       warning: selection?.warning,
     );
+  }
+
+  Percentage _relativeTarget(
+    List<BlockDefinition> sessionBlocks,
+    MovementId movement,
+    RelativeSetPosition position,
+    CycleRequest request,
+  ) {
+    final candidates = sessionBlocks
+        .where(
+          (block) =>
+              const {'main_work', 'main work'}.contains(block.role) &&
+              (block.movementId == null || block.movementId == movement),
+        )
+        .toList(growable: false);
+    if (candidates.isEmpty) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.missingRelativeLoadTarget,
+        'A relative load requires a main-work block in the same session.',
+      );
+    }
+    if (candidates.length > 1) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.ambiguousRelativeLoadTarget,
+        'A relative load found multiple main-work blocks for its movement.',
+      );
+    }
+    final workSets = candidates.single.sets;
+    final index = switch (position) {
+      RelativeSetPosition.first => 0,
+      RelativeSetPosition.second => workSets.length < 2 ? null : 1,
+      RelativeSetPosition.top => workSets.length - 1,
+    };
+    if (index == null || workSets.isEmpty) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.missingRelativeLoadTarget,
+        'The referenced main-work set does not exist.',
+      );
+    }
+    final load = workSets[index].load;
+    return switch (load) {
+      TrainingMaxPercentageLoad(:final percentage) => percentage,
+      ParameterizedTrainingMaxPercentageLoad(
+        :final parameterId,
+        :final defaultValue,
+        :final minimum,
+        :final maximum,
+      ) =>
+        _percentageParameter(
+          request,
+          movement,
+          parameterId,
+          defaultValue,
+          minimum,
+          maximum,
+        ),
+      _ => throw const CycleGenerationException(
+        CycleGenerationErrorCode.missingRelativeLoadTarget,
+        'Relative set loads require a TM-percentage main-work set.',
+      ),
+    };
+  }
+
+  Percentage _percentageParameter(
+    CycleRequest request,
+    MovementId movement,
+    String parameterId,
+    Percentage defaultValue,
+    Percentage minimum,
+    Percentage maximum,
+  ) {
+    final value =
+        request.percentageParametersByMovement[movement]?[parameterId] ??
+        request.percentageParameters[parameterId] ??
+        defaultValue;
+    if (value.basisPoints < minimum.basisPoints ||
+        value.basisPoints > maximum.basisPoints) {
+      throw CycleGenerationException(
+        CycleGenerationErrorCode.invalidTrainingMaxRatio,
+        'Parameter $parameterId must be between ${minimum.basisPoints} '
+        'and ${maximum.basisPoints} basis points.',
+      );
+    }
+    return value;
   }
 
   Weight _oneRepMax(TrainingMaxInput input) {
@@ -284,7 +399,8 @@ final class CycleCompilerImpl implements CycleCompiler {
             (set) =>
                 set.load is TrainingMaxPercentageLoad ||
                 set.load is ParameterizedTrainingMaxPercentageLoad ||
-                set.load is OneRepMaxPercentageLoad,
+                set.load is OneRepMaxPercentageLoad ||
+                set.load is RelativeSetLoad,
           )) {
             result.add(block.movementId ?? sessionId);
           }

@@ -9,6 +9,8 @@ enum CycleGenerationErrorCode {
   unitMismatch,
   invalidRepMaxFormula,
   invalidEquipment,
+  missingRelativeLoadTarget,
+  ambiguousRelativeLoadTarget,
 }
 
 final class CycleGenerationException implements Exception {
