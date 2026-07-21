@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": 1,
+  "status": "published",
+  "sourceReference": "Jim Wendler, 5/3/1: The Simplest and Most Effective Training System to Increase Raw Strength, 2nd edition (2011), The 5/3/1 Program and How to Progress sections, pp. 21-40.",
+  "movements": [
+    {"id": "overhead_press", "name": "Overhead Press"},
+    {"id": "deadlift", "name": "Deadlift"},
+    {"id": "bench_press", "name": "Bench Press"},
+    {"id": "squat", "name": "Squat"}
+  ],
+  "templates": [{
+    "id": "standard_531",
+    "name": "Standard 5/3/1",
+    "variants": [{
+      "id": "four_day",
+      "name": "Four day",
+      "schedule": {"type": "ordered_sessions", "movementIds": ["overhead_press", "deadlift", "bench_press", "squat"]},
+      "weeks": [
+        {"number": 1, "blocks": [
+          {"id": "warm_up", "role": "warm_up", "sets": [
+            {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 4000}},
+            {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 5000}},
+            {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 6000}}
+          ]},
+          {"id": "main", "role": "main_work", "sets": [
+            {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 6500}},
+            {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+            {"repetitions": {"type": "amrap", "minimum": 5}, "load": {"type": "training_max_percentage", "basisPoints": 8500}}
+          ]}
+        ]},
+        {"number": 2, "blocks": [
+          {"id": "warm_up", "role": "warm_up", "sets": [
+            {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 4000}},
+            {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 5000}},
+            {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 6000}}
+          ]},
+          {"id": "main", "role": "main_work", "sets": [
+            {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 7000}},
+            {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 8000}},
+            {"repetitions": {"type": "amrap", "minimum": 3}, "load": {"type": "training_max_percentage", "basisPoints": 9000}}
+          ]}
+        ]},
+        {"number": 3, "blocks": [
+          {"id": "warm_up", "role": "warm_up", "sets": [
+            {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 4000}},
+            {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 5000}},
+            {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 6000}}
+          ]},
+          {"id": "main", "role": "main_work", "sets": [
+            {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+            {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 8500}},
+            {"repetitions": {"type": "amrap", "minimum": 1}, "load": {"type": "training_max_percentage", "basisPoints": 9500}}
+          ]}
+        ]},
+        {"number": 4, "blocks": [
+          {"id": "deload", "role": "deload", "sets": [
+            {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 4000}},
+            {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 5000}},
+            {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 6000}}
+          ]}
+        ]}
+      ]
+    }]
+  }]
+}
