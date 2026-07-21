@@ -1,19 +1,15 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:sqflite/sqflite.dart';
 
-import 'sqlite_training_catalog.dart';
-
 /// Materializes the canonical declarative aggregate into a published SQLite
 /// catalogue. Records are inserted in the aggregate's already-sorted order.
-final class RuntimeCatalogBuilder {
-  const RuntimeCatalogBuilder();
+final class RuntimeCatalogPublisher {
+  const RuntimeCatalogPublisher();
 
-  Future<void> build({
+  Future<void> publish({
     required Map<String, Object?> aggregate,
-    required String outputPath,
-    required DatabaseFactory factory,
+    required Database database,
   }) async {
     if (aggregate['schemaVersion'] != 1 || aggregate['status'] != 'published') {
       throw const FormatException('A published schemaVersion 1 is required.');
@@ -23,26 +19,7 @@ final class RuntimeCatalogBuilder {
       throw const FormatException('documents must be a list.');
     }
 
-    final output = File(outputPath);
-    output.parent.createSync(recursive: true);
-    if (output.existsSync()) {
-      await factory.deleteDatabase(output.path);
-    }
-    final database = await factory.openDatabase(
-      output.path,
-      options: OpenDatabaseOptions(
-        version: SqliteTrainingCatalog.databaseSchemaVersion,
-        onCreate: (db, _) => SqliteTrainingCatalog.createSchema(db),
-      ),
-    );
-    try {
-      await _populate(database, documents);
-    } catch (_) {
-      await database.close();
-      if (output.existsSync()) await factory.deleteDatabase(output.path);
-      rethrow;
-    }
-    await database.close();
+    await _populate(database, documents);
   }
 
   Future<void> _populate(Database db, List<Object?> documentValues) async {
@@ -51,8 +28,9 @@ final class RuntimeCatalogBuilder {
       final document = _map(value, 'document');
       final content = _map(document['content'], 'document.content');
       final kind = content['kind'];
-      if (kind is! String)
+      if (kind is! String) {
         throw const FormatException('kind must be a string.');
+      }
       final key = kind == 'inventory' ? 'entries' : kind;
       final values = content[key];
       if (values is! List<Object?>) {
@@ -161,6 +139,13 @@ final class RuntimeCatalogBuilder {
       final components = <String, Map<String, Object?>>{};
       for (final component in records['components'] ?? const []) {
         components['${component['id']}@${component['revision']}'] = component;
+        await txn.insert('catalog_library_entries', {
+          'version': version,
+          'kind': 'component_definition',
+          'id': component['id'],
+          'revision': component['revision'],
+          'payload_json': jsonEncode(component),
+        });
         await txn.insert('catalog_components', {
           'version': version,
           'id': component['id'],
@@ -174,6 +159,13 @@ final class RuntimeCatalogBuilder {
       };
       for (final template in records['templates'] ?? const []) {
         final templateId = template['id']! as String;
+        await txn.insert('catalog_library_entries', {
+          'version': version,
+          'kind': 'template_definition',
+          'id': templateId,
+          'revision': template['revision'],
+          'payload_json': jsonEncode(template),
+        });
         await txn.insert('catalog_templates', {
           'version': version,
           'id': templateId,

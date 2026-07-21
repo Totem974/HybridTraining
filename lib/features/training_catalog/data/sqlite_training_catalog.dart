@@ -2,12 +2,15 @@ import 'dart:convert';
 
 import 'package:sqflite/sqflite.dart';
 
+import '../../cycle_generation/application/catalog_plan_resolver.dart';
 import '../../cycle_generation/domain/cycle_contract.dart';
 import '../../cycle_generation/domain/cycle_option_schema.dart';
 import '../application/catalog_repository.dart';
 import '../domain/catalog_codec.dart';
 import '../domain/catalog_index.dart';
 import '../domain/catalog_models.dart';
+import 'catalog_plan_data_resolver.dart';
+import 'catalog_source_document_codec.dart';
 
 final class SqliteTrainingCatalog
     implements TrainingCatalogRepository, CycleCatalogQuery {
@@ -835,6 +838,13 @@ final class SqliteTrainingCatalog
         'Unknown template/variant $templateId/$variantId',
       );
     }
+    final declarative = await _resolveDeclarativePlan(
+      catalogVersion: catalogVersion,
+      templateId: templateId,
+      variantId: variantId,
+      sourceReference: versions.single['source_reference']! as String,
+    );
+    if (declarative != null) return declarative;
     final sessions = await database.query(
       'catalog_sessions',
       where: 'version=? AND template_id=? AND variant_id=?',
@@ -886,6 +896,93 @@ final class SqliteTrainingCatalog
       weeks: weeks,
       sourceReference: versions.single['source_reference']! as String,
     );
+  }
+
+  Future<ResolvedCycleDefinition?> _resolveDeclarativePlan({
+    required int catalogVersion,
+    required String templateId,
+    required String variantId,
+    required String sourceReference,
+  }) async {
+    final templateRows = await database.query(
+      'catalog_library_entries',
+      columns: ['payload_json'],
+      where: 'version=? AND kind=? AND id=?',
+      whereArgs: [catalogVersion, 'template_definition', templateId],
+      limit: 1,
+    );
+    if (templateRows.isEmpty) return null;
+    const codec = CatalogSourceDocumentCodec();
+    final template = codec
+        .decodeTemplates(
+          jsonEncode({
+            'schemaVersion': 1,
+            'kind': 'templates',
+            'templates': [
+              jsonDecode(templateRows.single['payload_json']! as String),
+            ],
+          }),
+        )
+        .single;
+    final variant = template.variants.singleWhere(
+      (item) => item.id == variantId,
+      orElse: () => throw CatalogNotFoundException(
+        'Unknown template/variant $templateId/$variantId',
+      ),
+    );
+    final scheduleReference = variant.scheduleIds.first;
+    final scheduleRows = await database.query(
+      'catalog_schedules_v2',
+      columns: ['payload_json'],
+      where: 'version=? AND id=? AND revision=?',
+      whereArgs: [
+        catalogVersion,
+        scheduleReference.id,
+        scheduleReference.revision,
+      ],
+      limit: 1,
+    );
+    if (scheduleRows.isEmpty) {
+      throw CatalogNotFoundException(
+        'Missing schedule ${scheduleReference.id}',
+      );
+    }
+    final schedules = codec.decodeSchedules(
+      jsonEncode({
+        'schemaVersion': 1,
+        'kind': 'schedules',
+        'schedules': [
+          jsonDecode(scheduleRows.single['payload_json']! as String),
+        ],
+      }),
+    );
+    final componentRows = await database.query(
+      'catalog_library_entries',
+      columns: ['payload_json'],
+      where: 'version=? AND kind=?',
+      whereArgs: [catalogVersion, 'component_definition'],
+      orderBy: 'id',
+    );
+    final components = codec.decodeComponents(
+      jsonEncode({
+        'schemaVersion': 1,
+        'kind': 'components',
+        'components': [
+          for (final row in componentRows)
+            jsonDecode(row['payload_json']! as String),
+        ],
+      }),
+    );
+    final plan = const CatalogPlanDataResolver().resolve(
+      catalogVersion: catalogVersion,
+      template: template,
+      variant: variant,
+      scheduleReference: scheduleReference,
+      schedules: schedules,
+      components: components,
+      sourceReference: sourceReference,
+    );
+    return const CatalogPlanResolver().resolve(plan);
   }
 
   static PrescribedSetDefinition _decodeSet(Map<String, Object?> row) {

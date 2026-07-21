@@ -305,6 +305,12 @@ final class CatalogCodec {
       case 'one_rep_max_percentage':
         _keys(map, const {'type', 'basisPoints'});
         return OneRepMaxPercentageLoad(Percentage(_int(map, 'basisPoints')));
+      case 'relative_set':
+        _keys(map, const {'type', 'position', 'multiplierBasisPoints'});
+        return RelativeSetLoad(
+          position: RelativeSetPosition.values.byName(_string(map, 'position')),
+          multiplierBasisPoints: _int(map, 'multiplierBasisPoints'),
+        );
       case 'fixed':
         _keys(map, const {'type', 'centiUnits', 'unit'});
         final unit = _string(map, 'unit');

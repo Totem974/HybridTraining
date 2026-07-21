@@ -42,7 +42,45 @@ void main() {
           );
           expect(definition.sessionMovementIds, isNotEmpty);
           expect(definition.weeks, isNotEmpty);
-          expect(definition.weeks.expand((week) => week.blocks), isNotEmpty);
+          expect(
+            definition.weeks.expand(
+              (week) => [
+                ...week.blocks,
+                ...week.sessions.expand((session) => session.blocks),
+              ],
+            ),
+            isNotEmpty,
+          );
+        }
+        for (final identity in const {
+          'classic_for_beginners': 'original_progression',
+          'classic_full_body_phase_1': 'phase_1',
+          'classic_full_body_phase_2': 'phase_2',
+          'classic_full_body_phase_3': 'phase_3',
+        }.entries) {
+          final definition = await repository.resolve(
+            catalogVersion: 1,
+            templateId: identity.key,
+            variantId: identity.value,
+          );
+          expect(
+            definition.sessionMovementIds.map((item) => item.value),
+            orderedEquals(const ['monday', 'wednesday', 'friday']),
+          );
+          for (final week in definition.weeks) {
+            expect(week.sessions, hasLength(3));
+            expect(
+              week.sessions.every((session) => session.blocks.isNotEmpty),
+              isTrue,
+            );
+            expect(
+              week.sessions
+                  .expand((session) => session.blocks)
+                  .map((block) => block.movementId?.value)
+                  .whereType<String>(),
+              isNot(contains(anyOf('monday', 'wednesday', 'friday'))),
+            );
+          }
         }
         expect(
           (await database.rawQuery(
