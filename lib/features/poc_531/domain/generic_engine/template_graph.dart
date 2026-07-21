@@ -129,14 +129,88 @@ final class ConditionalAllowedIds {
 }
 
 final class TemplateVariant {
-  TemplateVariant({required this.id, required Set<catalog.CatalogId> moduleIds})
-    : moduleIds = UnmodifiableSetView(Set.of(moduleIds));
+  TemplateVariant({
+    required this.id,
+    Set<catalog.CatalogId> moduleIds = const {},
+    Iterable<ParameterDefinition>? parameters,
+    Iterable<ModuleBinding>? moduleBindings,
+    Iterable<DeclarativeRule>? rules,
+    Iterable<catalog.CatalogEvidence> evidence = const [],
+  }) : moduleIds = UnmodifiableSetView(Set.of(moduleIds)),
+       _parameters = parameters == null
+           ? null
+           : UnmodifiableListView(List.of(parameters)),
+       _moduleBindings = moduleBindings == null
+           ? null
+           : UnmodifiableListView(List.of(moduleBindings)),
+       _rules = rules == null ? null : UnmodifiableListView(List.of(rules)),
+       evidenceByRuleId = _groupEvidence(evidence) {
+    if (_parameters case final parameters?) {
+      _unique(parameters.map((value) => value.id), 'variant parameter');
+    }
+    if (_moduleBindings case final bindings?) {
+      _unique(bindings.map((value) => value.id), 'variant module binding');
+    }
+    if (_rules case final rules?) {
+      _unique(rules.map((value) => value.id), 'variant rule');
+    }
+  }
+
   final catalog.CatalogId id;
+
+  /// Legacy module selection used only while constructing old graph callers.
   final Set<catalog.CatalogId> moduleIds;
+
+  /// Null means that the graph constructor must migrate legacy graph fields.
+  final List<ParameterDefinition>? _parameters;
+  final List<ModuleBinding>? _moduleBindings;
+  final List<DeclarativeRule>? _rules;
+  List<ParameterDefinition> get parameters => _parameters ?? const [];
+  List<ModuleBinding> get moduleBindings => _moduleBindings ?? const [];
+  List<DeclarativeRule> get rules => _rules ?? const [];
+  final Map<catalog.CatalogId, List<catalog.EvidenceReference>>
+  evidenceByRuleId;
+
+  TemplateVariant _withLegacyDefaults({
+    required List<ParameterDefinition> parameters,
+    required List<ModuleBinding> modules,
+    required List<ParameterConstraint> constraints,
+  }) {
+    final knownModuleIds = modules.map((binding) => binding.id).toSet();
+    if (_moduleBindings == null && !knownModuleIds.containsAll(moduleIds)) {
+      throw ArgumentError('Variant references an unknown module binding.');
+    }
+    if (_moduleBindings != null &&
+        moduleIds.isNotEmpty &&
+        !_moduleBindings
+            .map((binding) => binding.id)
+            .toSet()
+            .containsAll(moduleIds)) {
+      throw ArgumentError('Variant module selection contradicts its bindings.');
+    }
+    final scopedModules =
+        _moduleBindings ??
+        modules
+            .where((binding) => moduleIds.contains(binding.id))
+            .toList(growable: false);
+    return TemplateVariant(
+      id: id,
+      moduleIds: scopedModules.map((binding) => binding.id).toSet(),
+      parameters: _parameters ?? parameters,
+      moduleBindings: scopedModules,
+      rules: _rules ?? constraints.map(DeclarativeRule.fromLegacyConstraint),
+      evidence: evidenceByRuleId.entries.map(
+        (entry) =>
+            catalog.CatalogEvidence(ruleId: entry.key, references: entry.value),
+      ),
+    );
+  }
 }
 
 sealed class ParameterCondition {
   const ParameterCondition();
+  int get astVersion => declarativeRuleAstVersion;
+  String get nodeType;
   bool evaluate(Map<catalog.CatalogId, ResolvedParameter> values);
 }
 
@@ -144,12 +218,16 @@ final class AlwaysCondition extends ParameterCondition {
   const AlwaysCondition(this.value);
   final bool value;
   @override
+  String get nodeType => 'always';
+  @override
   bool evaluate(Map<catalog.CatalogId, ResolvedParameter> values) => value;
 }
 
 final class PresentCondition extends ParameterCondition {
   const PresentCondition(this.id);
   final catalog.CatalogId id;
+  @override
+  String get nodeType => 'present';
   @override
   bool evaluate(Map<catalog.CatalogId, ResolvedParameter> values) =>
       values.containsKey(id);
@@ -160,6 +238,8 @@ final class EqualsCondition extends ParameterCondition {
   final catalog.CatalogId id;
   final ResolvedParameter expected;
   @override
+  String get nodeType => 'equals';
+  @override
   bool evaluate(Map<catalog.CatalogId, ResolvedParameter> values) =>
       _sameParameter(values[id], expected);
 }
@@ -167,6 +247,8 @@ final class EqualsCondition extends ParameterCondition {
 final class NotCondition extends ParameterCondition {
   const NotCondition(this.condition);
   final ParameterCondition condition;
+  @override
+  String get nodeType => 'not';
   @override
   bool evaluate(Map<catalog.CatalogId, ResolvedParameter> values) =>
       !condition.evaluate(values);
@@ -177,6 +259,8 @@ final class AllCondition extends ParameterCondition {
     : conditions = UnmodifiableListView(List.of(conditions));
   final List<ParameterCondition> conditions;
   @override
+  String get nodeType => 'all';
+  @override
   bool evaluate(Map<catalog.CatalogId, ResolvedParameter> values) =>
       conditions.every((value) => value.evaluate(values));
 }
@@ -185,6 +269,8 @@ final class AnyCondition extends ParameterCondition {
   AnyCondition(Iterable<ParameterCondition> conditions)
     : conditions = UnmodifiableListView(List.of(conditions));
   final List<ParameterCondition> conditions;
+  @override
+  String get nodeType => 'any';
   @override
   bool evaluate(Map<catalog.CatalogId, ResolvedParameter> values) =>
       conditions.any((value) => value.evaluate(values));
@@ -199,6 +285,76 @@ final class ParameterConstraint {
   final catalog.CatalogId id;
   final ParameterCondition validWhen;
   final String message;
+}
+
+const declarativeRuleAstVersion = 1;
+
+enum DeclarativeRuleKind { compatibility, visibility, required, constraint }
+
+/// A closed, data-only rule. It cannot execute callbacks or arbitrary code.
+final class DeclarativeRule {
+  DeclarativeRule({
+    required this.id,
+    required this.kind,
+    required this.expression,
+    required String message,
+    this.targetParameterId,
+  }) : message = message.trim() {
+    DeclarativeRuleAstBoundary.requireSupported(
+      version: expression.astVersion,
+      nodeType: expression.nodeType,
+    );
+    final targetsParameter =
+        kind == DeclarativeRuleKind.visibility ||
+        kind == DeclarativeRuleKind.required;
+    if (targetsParameter != (targetParameterId != null)) {
+      throw ArgumentError(
+        'Visibility and required rules need exactly one parameter target.',
+      );
+    }
+    if (this.message.isEmpty) {
+      throw ArgumentError('A declarative rule message is required.');
+    }
+  }
+
+  factory DeclarativeRule.fromLegacyConstraint(ParameterConstraint value) =>
+      DeclarativeRule(
+        id: value.id,
+        kind: DeclarativeRuleKind.constraint,
+        expression: value.validWhen,
+        message: value.message,
+      );
+
+  final catalog.CatalogId id;
+  final DeclarativeRuleKind kind;
+  final ParameterCondition expression;
+  final String message;
+  final catalog.CatalogId? targetParameterId;
+}
+
+/// Validation hook for a future JSON codec. Unknown versions and nodes fail
+/// closed before a domain rule can be constructed.
+abstract final class DeclarativeRuleAstBoundary {
+  static const supportedNodeTypes = <String>{
+    'always',
+    'present',
+    'equals',
+    'not',
+    'all',
+    'any',
+  };
+
+  static void requireSupported({
+    required int version,
+    required String nodeType,
+  }) {
+    if (version != declarativeRuleAstVersion ||
+        !supportedNodeTypes.contains(nodeType)) {
+      throw UnsupportedError(
+        'Unsupported declarative rule AST v$version node "$nodeType".',
+      );
+    }
+  }
 }
 
 enum ModulePortKind {
@@ -313,10 +469,18 @@ final class TrainingTemplateGraph implements catalog.TemplateGraph {
     required Iterable<ModuleBinding> modules,
     Iterable<ParameterConstraint> constraints = const [],
     this.evidence,
-  }) : variants = UnmodifiableListView(List.of(variants)),
-       parameters = UnmodifiableListView(List.of(parameters)),
+  }) : parameters = UnmodifiableListView(List.of(parameters)),
        modules = UnmodifiableListView(List.of(modules)),
-       constraints = UnmodifiableListView(List.of(constraints)) {
+       constraints = UnmodifiableListView(List.of(constraints)),
+       variants = UnmodifiableListView(
+         List<TemplateVariant>.of(variants).map(
+           (variant) => variant._withLegacyDefaults(
+             parameters: List.of(parameters),
+             modules: List.of(modules),
+             constraints: List.of(constraints),
+           ),
+         ),
+       ) {
     if (revision <= 0 ||
         governance.authority != catalog.CatalogAuthority.userCustom &&
             evidence == null) {
@@ -325,11 +489,23 @@ final class TrainingTemplateGraph implements catalog.TemplateGraph {
     _unique(this.variants.map((value) => value.id), 'variant');
     _unique(this.parameters.map((value) => value.id), 'parameter');
     _unique(this.modules.map((value) => value.id), 'module');
-    final knownModules = this.modules.map((value) => value.id).toSet();
-    if (this.variants.any(
-      (variant) => !knownModules.containsAll(variant.moduleIds),
-    )) {
-      throw ArgumentError('Variant references an unknown module.');
+    for (final variant in this.variants) {
+      final parameterIds = variant.parameters.map((value) => value.id).toSet();
+      if (variant.rules.any(
+        (rule) =>
+            rule.targetParameterId != null &&
+            !parameterIds.contains(rule.targetParameterId),
+      )) {
+        throw ArgumentError('Variant rule targets an unknown parameter.');
+      }
+      if (governance.authority != catalog.CatalogAuthority.userCustom &&
+          variant.rules.any(
+            (rule) => !variant.evidenceByRuleId.containsKey(rule.id),
+          )) {
+        throw ArgumentError(
+          'Canonical and compatible variant rules require evidence by rule ID.',
+        );
+      }
     }
   }
 
@@ -344,6 +520,19 @@ final class TrainingTemplateGraph implements catalog.TemplateGraph {
   final List<ParameterDefinition> parameters;
   final List<ModuleBinding> modules;
   final List<ParameterConstraint> constraints;
+}
+
+Map<catalog.CatalogId, List<catalog.EvidenceReference>> _groupEvidence(
+  Iterable<catalog.CatalogEvidence> evidence,
+) {
+  final grouped = <catalog.CatalogId, List<catalog.EvidenceReference>>{};
+  for (final item in evidence) {
+    grouped.putIfAbsent(item.ruleId, () => []).addAll(item.references);
+  }
+  return UnmodifiableMapView({
+    for (final entry in grouped.entries)
+      entry.key: UnmodifiableListView(List.of(entry.value)),
+  });
 }
 
 void _unique(Iterable<catalog.CatalogId> ids, String label) {

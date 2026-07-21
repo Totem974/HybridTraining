@@ -34,7 +34,9 @@ void main() {
         .whereType<File>()
         .where((file) => file.path.endsWith('.dart'))
         .where(
-          (file) => !file.path.endsWith('catalog_administration_database.dart'),
+          (file) =>
+              !file.path.endsWith('catalog_administration_database.dart') &&
+              !file.path.endsWith('catalog_promotion_service.dart'),
         )
         .where((file) => forbiddenImport.hasMatch(file.readAsStringSync()))
         .map((file) => file.path)
@@ -284,6 +286,238 @@ void main() {
     expect(blockers.single['id'], 'global-warning');
     expect(blockers.single['message'], 'Updated manifest warning.');
   });
+
+  test('promotion audit writes stay inside the narrow transaction', () async {
+    final root = await Directory.systemTemp.createTemp('catalog-promotion-');
+    addTearDown(() => root.delete(recursive: true));
+    final path = '${root.path}/catalog.db';
+    final facade = _facade(path);
+
+    await facade.transaction((transaction) async {
+      await transaction.insertDraftVersion(_draft());
+      await transaction.insertPromotionBatch(
+        const CatalogPromotionBatchWrite(
+          id: 'promotion-1',
+          catalogVersionId: 'seed-v1',
+          sourceManifestHash: 'manifest-hash',
+          status: 'planned',
+          createdAt: '2026-07-21T00:00:00Z',
+          completedAt: null,
+        ),
+      );
+      await transaction.insertPromotionItem(
+        const CatalogPromotionItemWrite(
+          id: 'promotion-item-1',
+          promotionBatchId: 'promotion-1',
+          catalogVersionId: 'seed-v1',
+          catalogEntryKey: 'OR-001',
+          sourceRecordHash: 'record-hash',
+          targetCatalogEntryId: null,
+          status: 'pending',
+          issueCode: null,
+        ),
+      );
+      await transaction.updatePromotionItem(
+        const CatalogPromotionItemWrite(
+          id: 'promotion-item-1',
+          promotionBatchId: 'promotion-1',
+          catalogVersionId: 'seed-v1',
+          catalogEntryKey: 'OR-001',
+          sourceRecordHash: 'record-hash',
+          targetCatalogEntryId: null,
+          status: 'rejected',
+          issueCode: 'authority_missing',
+        ),
+      );
+      await transaction.updatePromotionBatch(
+        const CatalogPromotionBatchWrite(
+          id: 'promotion-1',
+          catalogVersionId: 'seed-v1',
+          sourceManifestHash: 'manifest-hash',
+          status: 'failed',
+          createdAt: '2026-07-21T00:00:00Z',
+          completedAt: '2026-07-21T00:01:00Z',
+        ),
+      );
+    });
+
+    final database = await databaseFactoryFfi.openDatabase(
+      path,
+      options: OpenDatabaseOptions(readOnly: true, singleInstance: false),
+    );
+    addTearDown(database.close);
+    expect(
+      (await database.query('catalog_promotion_batches')).single['status'],
+      'failed',
+    );
+    expect(
+      (await database.query('catalog_promotion_items')).single['issue_code'],
+      'authority_missing',
+    );
+    expect(await database.query('catalog_entries'), isEmpty);
+  });
+
+  test(
+    'promotion reads and normalized writes are typed and idempotent',
+    () async {
+      final root = await Directory.systemTemp.createTemp(
+        'catalog-promote-api-',
+      );
+      addTearDown(() => root.delete(recursive: true));
+      final facade = _facade('${root.path}/catalog.db');
+
+      await facade.transaction((transaction) async {
+        await transaction.insertDraftVersion(_draft());
+        await transaction.insertDraftVersion(
+          const CatalogDraftVersion(
+            id: 'normalized-v2',
+            ordinal: 2,
+            status: 'draft',
+            parentVersionId: 'seed-v1',
+            contentHash: 'normalized-hash',
+            canonicalizationVersion: 1,
+            signatureVerified: false,
+            trustChannel: 'localReview',
+            createdAt: '2026-07-21T01:00:00Z',
+          ),
+        );
+        await transaction.insertEntry(_entry());
+        await transaction.insertImportBlocker(
+          const CatalogImportBlockerWrite(
+            id: 'source-warning',
+            catalogVersionId: 'seed-v1',
+            catalogEntryKey: null,
+            issueCode: 'source_warning',
+            severity: 'warning',
+            message: 'Source warning.',
+          ),
+        );
+        expect((await transaction.findVersionById('seed-v1'))?.ordinal, 1);
+        expect(await transaction.listStagedEntries('seed-v1'), hasLength(1));
+        expect(await transaction.listImportBlockers('seed-v1'), hasLength(1));
+
+        await transaction.insertGovernedEntry(
+          const CatalogGovernedEntryWrite(
+            id: 'governed-entry',
+            catalogVersionId: 'normalized-v2',
+            catalogEntryKey: 'OR-001',
+            stableDomainId: 'standard-531',
+            nature: 'cycleDefinition',
+            authority: 'canonical',
+            reviewStatus: 'confirmed',
+            implementationStatus: 'notStarted',
+            executionStatus: 'supported',
+            productSurface: 'cycle',
+            visibility: 'internal',
+            licenseStatus: 'compatible',
+          ),
+        );
+        await transaction.insertBook(
+          const CatalogBookWrite(
+            id: 'reviewed-book',
+            title: 'Fictitious numeric rules',
+            author: 'Fixture Author',
+            licenseStatus: 'unknown',
+          ),
+        );
+        await transaction.insertEdition(
+          const CatalogEditionWrite(
+            id: 'reviewed-edition',
+            bookId: 'reviewed-book',
+            label: 'Fixture edition',
+            publicationYear: 2026,
+            digest: null,
+          ),
+        );
+        expect(
+          (await transaction.findEditionById('reviewed-edition'))?.bookId,
+          'reviewed-book',
+        );
+        await transaction.insertSource(
+          const CatalogSourceWrite(
+            id: 'reviewed-source',
+            editionId: 'reviewed-edition',
+            revision: 1,
+            kind: 'reviewedRepository',
+            locator: 'fixture://reviewed-source',
+            note: 'Fictitious reviewed source.',
+          ),
+        );
+        expect(
+          (await transaction.findSourceById('reviewed-source'))?.revision,
+          1,
+        );
+        await transaction.insertEvidence(
+          const CatalogEvidenceWrite(
+            id: 'governed-evidence',
+            catalogVersionId: 'normalized-v2',
+            sourceId: 'reviewed-source',
+            ruleId: 'governed-entry-review',
+            subjectType: 'catalogEntry',
+            subjectId: 'governed-entry',
+            reviewStatus: 'confirmed',
+            contentReuse: 'none',
+            excerptDigest: null,
+            note: 'Fictitious promotion evidence.',
+          ),
+        );
+        await transaction.insertDeclarativeRule(
+          const CatalogDeclarativeRuleWrite(
+            id: 'governed-rule',
+            catalogVersionId: 'normalized-v2',
+            ownerType: 'catalogEntry',
+            ownerId: 'governed-entry',
+            kind: 'required',
+            schemaVersion: 1,
+            expressionJson: '{}',
+            blockerCode: null,
+            reviewStatus: 'confirmed',
+          ),
+        );
+        await transaction.insertPromotionBatch(
+          const CatalogPromotionBatchWrite(
+            id: 'applied-promotion',
+            catalogVersionId: 'normalized-v2',
+            sourceManifestHash: 'manifest-hash',
+            status: 'planned',
+            createdAt: '2026-07-21T01:00:00Z',
+            completedAt: null,
+          ),
+        );
+        await transaction.insertPromotionItem(
+          const CatalogPromotionItemWrite(
+            id: 'applied-item',
+            promotionBatchId: 'applied-promotion',
+            catalogVersionId: 'normalized-v2',
+            catalogEntryKey: 'OR-001',
+            sourceRecordHash: 'record-1',
+            targetCatalogEntryId: 'governed-entry',
+            status: 'promoted',
+            issueCode: null,
+          ),
+        );
+        await transaction.updatePromotionBatch(
+          const CatalogPromotionBatchWrite(
+            id: 'applied-promotion',
+            catalogVersionId: 'normalized-v2',
+            sourceManifestHash: 'manifest-hash',
+            status: 'applied',
+            createdAt: '2026-07-21T01:00:00Z',
+            completedAt: '2026-07-21T01:01:00Z',
+          ),
+        );
+        final applied = await transaction.findAppliedPromotion(
+          sourceManifestHash: 'manifest-hash',
+          targetContentHash: 'normalized-hash',
+        );
+        expect(applied?.id, 'applied-promotion');
+        expect(
+          await transaction.listPromotionItems('applied-promotion'),
+          hasLength(1),
+        );
+      });
+    },
+  );
 }
 
 CatalogAdministrationDatabase _facade(String path) =>

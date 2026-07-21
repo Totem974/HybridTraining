@@ -116,6 +116,21 @@ Chaque règle exécutable DOIT référencer une ou plusieurs preuves structurée
 - statut d'implémentation et statut d'exécution, sur leurs axes dédiés ;
 - statut de licence et restrictions de redistribution.
 
+Chaque preuve déclare aussi son niveau de réutilisation de contenu :
+
+- `none` : règle factuelle ou numérique réécrite et structurée sans reprise de
+  texte ni d'actif ; un statut de licence `unknown` n'interdit pas sa
+  publication ;
+- `excerpt` : court extrait identifié par une empreinte ;
+- `asset` : actif protégé identifié par une empreinte.
+
+`excerpt` et `asset` exigent une édition, une localisation précise et un statut
+de licence `ownedReference` ou `compatible`. `none` conserve les mêmes gates de
+provenance (livre, édition, pages/localisation et preuve `confirmed`) mais
+n'invente pas une restriction de licence sur un fait ou un calcul original.
+Cette distinction n'autorise jamais la copie de texte, d'illustration, de police
+ou d'autre actif protégé.
+
 Une observation black-box peut justifier une ergonomie, une capacité ou un
 default de référence. Elle ne remplace pas une prescription métier du livre.
 Une source sans licence compatible peut permettre une réimplémentation
@@ -323,6 +338,8 @@ Un snapshot ne passe à `published` que si les preuves suivantes sont liées à
 son identifiant, sa version et son empreinte :
 
 - revue provenance/licence ;
+- classification `content_reuse` explicite ; licence compatible obligatoire
+  uniquement pour `excerpt` et `asset` ;
 - validation structurelle, sémantique, graphe et configuration ;
 - tests de définition, compilation et règles négatives ;
 - tests de sérialisation, round-trip et migrations ;

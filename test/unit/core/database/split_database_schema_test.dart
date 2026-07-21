@@ -214,7 +214,7 @@ void main() {
   });
 
   test(
-    'catalog schema v1 migration adds isolated staging without data loss',
+    'catalog schema v2 to v4 migration preserves data and fails rules closed',
     () async {
       final root = await Directory.systemTemp.createTemp('catalog-migration-');
       addTearDown(() => root.delete(recursive: true));
@@ -222,7 +222,7 @@ void main() {
       final legacy = await databaseFactoryFfi.openDatabase(
         path,
         options: OpenDatabaseOptions(
-          version: 1,
+          version: 2,
           singleInstance: false,
           onConfigure: (db) => db.execute('PRAGMA foreign_keys=ON'),
           onCreate: (db, version) async {
@@ -236,6 +236,23 @@ void main() {
             id TEXT PRIMARY KEY, catalog_version_id TEXT NOT NULL,
             catalog_entry_key TEXT NOT NULL, stable_domain_id TEXT NOT NULL,
             authority TEXT NOT NULL
+          )''');
+            await db.execute('''CREATE TABLE declarative_rules (
+            id TEXT PRIMARY KEY, catalog_version_id TEXT NOT NULL,
+            owner_type TEXT NOT NULL, owner_id TEXT NOT NULL,
+            kind TEXT NOT NULL, expression_json TEXT NOT NULL,
+            blocker_code TEXT
+          )''');
+            await db.execute('''CREATE TABLE catalog_staging_entries (
+            catalog_version_id TEXT NOT NULL, catalog_entry_key TEXT NOT NULL,
+            PRIMARY KEY(catalog_version_id,catalog_entry_key)
+          )''');
+            await db.execute('''CREATE TABLE catalog_import_blockers (
+            id TEXT PRIMARY KEY, catalog_version_id TEXT NOT NULL,
+            catalog_entry_key TEXT, severity TEXT NOT NULL
+          )''');
+            await db.execute('''CREATE TABLE evidence (
+            id TEXT PRIMARY KEY, excerpt_digest TEXT
           )''');
           },
         ),
@@ -251,6 +268,22 @@ void main() {
         'catalog_entry_key': 'OR-001',
         'stable_domain_id': 'legacy-entry',
         'authority': 'canonical',
+      });
+      await legacy.insert('declarative_rules', {
+        'id': 'legacy-rule',
+        'catalog_version_id': 'legacy-v1',
+        'owner_type': 'catalogEntry',
+        'owner_id': 'legacy-entry',
+        'kind': 'required',
+        'expression_json': '{}',
+      });
+      await legacy.insert('evidence', {
+        'id': 'legacy-fact',
+        'excerpt_digest': null,
+      });
+      await legacy.insert('evidence', {
+        'id': 'legacy-excerpt',
+        'excerpt_digest': 'sha256:legacy',
       });
       await legacy.close();
 
@@ -270,6 +303,25 @@ void main() {
       expect(
         (await migrated.query('catalog_entries')).single['id'],
         'legacy-entry',
+      );
+      expect(
+        await migrated.query('declarative_rules'),
+        contains(containsPair('review_status', 'needsReview')),
+      );
+      expect(
+        (await migrated.query('declarative_rules')).single['schema_version'],
+        1,
+      );
+      expect(
+        await migrated.query(
+          'evidence',
+          columns: const ['content_reuse'],
+          orderBy: 'id',
+        ),
+        [
+          {'content_reuse': 'excerpt'},
+          {'content_reuse': 'none'},
+        ],
       );
       expect(
         (await migrated.rawQuery('PRAGMA user_version')).single['user_version'],
@@ -443,6 +495,24 @@ void main() {
         'severity': 'warning',
         'message': 'Administrative warning.',
       });
+      await db.insert('catalog_promotion_batches', {
+        'id': 'hash-batch',
+        'catalog_version_id': 'hash-v1',
+        'source_manifest_hash': 'manifest-hash',
+        'status': 'planned',
+        'created_at': '2026-07-21T00:00:00Z',
+        'completed_at': null,
+      });
+      await db.insert('catalog_promotion_items', {
+        'id': 'hash-item',
+        'promotion_batch_id': 'hash-batch',
+        'catalog_version_id': 'hash-v1',
+        'catalog_entry_key': 'OR-001',
+        'source_record_hash': 'record-hash',
+        'target_catalog_entry_id': null,
+        'status': 'pending',
+        'issue_code': null,
+      });
 
       expect(
         await service.computeContentHash(db, catalogVersionId: 'hash-v1'),
@@ -565,7 +635,7 @@ void main() {
     await _version(db, id: 'v1', ordinal: 1, hash: 'hash');
     await db.insert(
       'catalog_entries',
-      _entry('entry-standard', 'OR-001', 'standard-531'),
+      _entry('entry-standard', 'OR-001', 'standard-531', license: 'unknown'),
     );
     await _runtimeGraph(db);
     await db.insert(
@@ -595,6 +665,68 @@ void main() {
       (await db.query('runtime_catalog_entries')).map((row) => row['id']),
       ['entry-standard'],
     );
+  });
+
+  test('only excerpt or asset reuse requires a compatible licence', () async {
+    final db = await databaseFactoryFfi.openDatabase(
+      inMemoryDatabasePath,
+      options: OpenDatabaseOptions(
+        version: CatalogDatabaseSchema.version,
+        singleInstance: false,
+        onConfigure: (db) => db.execute('PRAGMA foreign_keys=ON'),
+        onCreate: (db, version) => CatalogDatabaseSchema.create(db),
+      ),
+    );
+    addTearDown(db.close);
+    await _version(db, id: 'v1', ordinal: 1, hash: 'placeholder');
+    await db.insert(
+      'catalog_entries',
+      _entry('entry-standard', 'OR-001', 'standard-531', license: 'unknown'),
+    );
+    await _runtimeGraph(db);
+    await db.update(
+      'evidence',
+      {'content_reuse': 'excerpt', 'excerpt_digest': 'sha256:fixture'},
+      where: 'id=?',
+      whereArgs: ['evidence-1'],
+    );
+    const service = CatalogPublicationService();
+    final hash = await service.computeContentHash(db, catalogVersionId: 'v1');
+    await db.update('catalog_versions', {'content_hash': hash});
+    await db.update('catalog_versions', {'status': 'inReview'});
+    await db.update('catalog_versions', {'status': 'approved'});
+
+    await expectLater(
+      service.publish(
+        db,
+        catalogVersionId: 'v1',
+        publishedAt: '2026-07-21T00:00:00Z',
+      ),
+      throwsA(
+        isA<CatalogPublicationException>().having(
+          (error) => error.issues,
+          'issues',
+          contains('evidence.evidence-1.licence'),
+        ),
+      ),
+    );
+    await db.update(
+      'books',
+      {'license_status': 'compatible'},
+      where: 'id=?',
+      whereArgs: ['book-1'],
+    );
+    final licensedHash = await service.computeContentHash(
+      db,
+      catalogVersionId: 'v1',
+    );
+    await db.update('catalog_versions', {'content_hash': licensedHash});
+    await service.publish(
+      db,
+      catalogVersionId: 'v1',
+      publishedAt: '2026-07-21T00:01:00Z',
+    );
+    expect((await db.query('catalog_versions')).single['status'], 'published');
   });
 
   test(
@@ -639,6 +771,104 @@ void main() {
       );
     },
   );
+
+  test('entry aliases are unique evidenced runtime content', () async {
+    final db = await databaseFactoryFfi.openDatabase(
+      inMemoryDatabasePath,
+      options: OpenDatabaseOptions(
+        version: CatalogDatabaseSchema.version,
+        singleInstance: false,
+        onConfigure: (db) => db.execute('PRAGMA foreign_keys=ON'),
+        onCreate: (db, version) => CatalogDatabaseSchema.create(db),
+      ),
+    );
+    addTearDown(db.close);
+    await _version(db, id: 'v1', ordinal: 1, hash: 'placeholder');
+    await _version(db, id: 'v2', ordinal: 2, hash: 'other');
+    await db.insert('catalog_entries', _documentaryEntry());
+    await db.insert(
+      'catalog_entries',
+      _documentaryEntry()
+        ..['id'] = 'documentary-entry-v2'
+        ..['catalog_version_id'] = 'v2'
+        ..['catalog_entry_key'] = 'OR-998'
+        ..['stable_domain_id'] = 'documentary-entry-v2',
+    );
+    await _aliasEvidence(db, id: 'alias-confirmed', review: 'confirmed');
+    await _aliasEvidence(db, id: 'alias-unreviewed', review: 'needsReview');
+    const service = CatalogPublicationService();
+    final before = await service.computeContentHash(db, catalogVersionId: 'v1');
+    await db.insert('catalog_entry_aliases', {
+      'id': 'alias-standard',
+      'catalog_version_id': 'v1',
+      'namespace': 'legacy',
+      'alias': 'Standard',
+      'catalog_entry_id': 'documentary-entry',
+      'evidence_id': 'alias-confirmed',
+      'review_status': 'confirmed',
+    });
+    await expectLater(
+      db.insert('catalog_entry_aliases', {
+        'id': 'alias-duplicate',
+        'catalog_version_id': 'v1',
+        'namespace': 'legacy',
+        'alias': 'Standard',
+        'catalog_entry_id': 'documentary-entry',
+        'evidence_id': 'alias-confirmed',
+        'review_status': 'confirmed',
+      }),
+      throwsA(anything),
+    );
+    await expectLater(
+      db.insert('catalog_entry_aliases', {
+        'id': 'alias-cross-version',
+        'catalog_version_id': 'v1',
+        'namespace': 'legacy',
+        'alias': 'Cross version',
+        'catalog_entry_id': 'documentary-entry-v2',
+        'evidence_id': 'alias-confirmed',
+        'review_status': 'confirmed',
+      }),
+      throwsA(anything),
+    );
+    await db.insert('catalog_entry_aliases', {
+      'id': 'alias-with-unreviewed-evidence',
+      'catalog_version_id': 'v1',
+      'namespace': 'legacy',
+      'alias': 'Unreviewed',
+      'catalog_entry_id': 'documentary-entry',
+      'evidence_id': 'alias-unreviewed',
+      'review_status': 'confirmed',
+    });
+    final after = await service.computeContentHash(db, catalogVersionId: 'v1');
+    expect(after, isNot(before));
+    await db.update(
+      'catalog_versions',
+      {'content_hash': after, 'status': 'inReview'},
+      where: 'id=?',
+      whereArgs: ['v1'],
+    );
+    await db.update(
+      'catalog_versions',
+      {'status': 'approved'},
+      where: 'id=?',
+      whereArgs: ['v1'],
+    );
+    await expectLater(
+      service.publish(
+        db,
+        catalogVersionId: 'v1',
+        publishedAt: '2026-07-21T00:00:00Z',
+      ),
+      throwsA(
+        isA<CatalogPublicationException>().having(
+          (error) => error.issues,
+          'issues',
+          contains('alias.alias-with-unreviewed-evidence.evidence'),
+        ),
+      ),
+    );
+  });
 
   test('P0 catalog graph round-trips without semantic side channels', () async {
     final db = await databaseFactoryFfi.openDatabase(
@@ -1102,6 +1332,21 @@ void main() {
         'owner_id': 'variant-1',
         'kind': 'required',
         'expression_json': '{',
+        'schema_version': 1,
+        'review_status': 'confirmed',
+      }),
+      throwsA(anything),
+    );
+    await expectLater(
+      db.insert('declarative_rules', {
+        'id': 'invalid-rule-metadata',
+        'catalog_version_id': 'v1',
+        'owner_type': 'variant',
+        'owner_id': 'variant-1',
+        'kind': 'required',
+        'expression_json': '{}',
+        'schema_version': 0,
+        'review_status': 'guessed',
       }),
       throwsA(anything),
     );
@@ -1112,6 +1357,8 @@ void main() {
       'owner_id': 'variant-1',
       'kind': 'required',
       'expression_json': '{}',
+      'schema_version': 1,
+      'review_status': 'confirmed',
     });
     final service = const CatalogPublicationService();
     final hash = await service.computeContentHash(db, catalogVersionId: 'v1');
@@ -1261,6 +1508,8 @@ void main() {
       'owner_id': 'missing-variant',
       'kind': 'required',
       'expression_json': '{}',
+      'schema_version': 1,
+      'review_status': 'confirmed',
     });
     try {
       await const CatalogPublicationService().publish(
@@ -1471,6 +1720,40 @@ void main() {
   });
 }
 
+Future<void> _aliasEvidence(
+  Database db, {
+  required String id,
+  required String review,
+}) async {
+  await db.insert('books', {
+    'id': 'alias-book',
+    'title': 'Alias evidence',
+    'license_status': 'compatible',
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  await db.insert('editions', {
+    'id': 'alias-edition',
+    'book_id': 'alias-book',
+    'label': 'Test edition',
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  await db.insert('sources', {
+    'id': 'source-$id',
+    'edition_id': 'alias-edition',
+    'revision': 1,
+    'kind': 'reviewedRepository',
+    'locator': 'fixture://$id',
+    'note': '',
+  });
+  await db.insert('evidence', {
+    'id': id,
+    'catalog_version_id': 'v1',
+    'source_id': 'source-$id',
+    'rule_id': id,
+    'subject_type': 'catalogEntry',
+    'subject_id': 'documentary-entry',
+    'review_status': review,
+  });
+}
+
 Future<void> _version(
   Database db, {
   required String id,
@@ -1558,8 +1841,21 @@ Map<String, Object?> _documentaryEntry() => {
 };
 
 Future<void> _runtimeGraph(Database db) async {
+  await db.insert('books', {
+    'id': 'book-1',
+    'title': 'Fictitious numeric rules',
+    'author': 'Fixture Author',
+    'license_status': 'unknown',
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  await db.insert('editions', {
+    'id': 'edition-1',
+    'book_id': 'book-1',
+    'label': 'Fixture edition',
+    'publication_year': 2026,
+  }, conflictAlgorithm: ConflictAlgorithm.ignore);
   await db.insert('sources', {
     'id': 'source-1',
+    'edition_id': 'edition-1',
     'revision': 1,
     'kind': 'book',
     'locator': 'Book pages 1-2',
@@ -1671,6 +1967,8 @@ Future<void> _p0Graph(Database db) async {
     'owner_id': 'variant-1',
     'kind': 'required',
     'expression_json': '{"parameter":"assistance"}',
+    'schema_version': 1,
+    'review_status': 'confirmed',
   });
   await db.insert('engine_binding_variants', {
     'id': 'engine-variant-1',
