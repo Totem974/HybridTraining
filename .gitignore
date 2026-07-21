@@ -16,6 +16,9 @@ migrate_working_dir/
 .SOURCE/
 reference/
 /captures/
+/docs/sources-local/
+/.dart_appdata/
+/.cleanup-backup/
 /local.properties
 /.gradle/
 /.kotlin/
