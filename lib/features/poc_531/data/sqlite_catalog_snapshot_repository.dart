@@ -21,6 +21,20 @@ abstract interface class CatalogSnapshotCodec {
     required CatalogId moduleId,
     required int moduleRevision,
   });
+
+  DeclarativeRule decodeDeclarativeRule(
+    String source, {
+    required CatalogId id,
+    required DeclarativeRuleKind kind,
+  });
+}
+
+abstract interface class CatalogAliasResolutionPort {
+  Future<CatalogId?> resolveAlias({
+    required CatalogId catalogVersionId,
+    required String namespace,
+    required String alias,
+  });
 }
 
 final class CatalogSnapshotLoadException implements Exception {
@@ -35,7 +49,8 @@ final class CatalogSnapshotLoadException implements Exception {
 
 /// Read-only, fail-closed adapter from a published catalog.db to the pure Dart
 /// cycle V5 contract.
-final class SqliteCatalogSnapshotRepository implements CatalogSnapshotPort {
+final class SqliteCatalogSnapshotRepository
+    implements CatalogSnapshotPort, CatalogAliasResolutionPort {
   const SqliteCatalogSnapshotRepository({
     required this.database,
     required this.codec,
@@ -47,6 +62,50 @@ final class SqliteCatalogSnapshotRepository implements CatalogSnapshotPort {
   final DatabaseExecutor database;
   final CatalogSnapshotCodec codec;
   final CatalogPublicationService publicationService;
+
+  @override
+  Future<CatalogId?> resolveAlias({
+    required CatalogId catalogVersionId,
+    required String namespace,
+    required String alias,
+  }) async {
+    final normalizedNamespace = namespace.trim();
+    final normalizedAlias = alias.trim();
+    if (normalizedNamespace.isEmpty || normalizedAlias.isEmpty) {
+      throw const CatalogSnapshotLoadException('alias.lookup_invalid');
+    }
+    await _loadTrustedVersion(catalogVersionId, null);
+    final rows = await database.rawQuery(
+      '''SELECT a.catalog_entry_id,
+                a.review_status AS alias_review_status,
+                e.stable_domain_id, e.authority,
+                e.review_status AS entry_review_status,
+                e.implementation_status, e.execution_status, e.visibility,
+                e.license_status, ev.review_status AS evidence_review_status,
+                ev.subject_type AS evidence_subject_type,
+                ev.subject_id AS evidence_subject_id
+         FROM catalog_entry_aliases a
+         JOIN catalog_entries e ON e.id=a.catalog_entry_id
+           AND e.catalog_version_id=a.catalog_version_id
+         JOIN evidence ev ON ev.id=a.evidence_id
+           AND ev.catalog_version_id=a.catalog_version_id
+         WHERE a.catalog_version_id=? AND a.namespace=? AND a.alias=?''',
+      [catalogVersionId.value, normalizedNamespace, normalizedAlias],
+    );
+    if (rows.isEmpty) return null;
+    if (rows.length != 1) {
+      throw const CatalogSnapshotLoadException('alias.ambiguous');
+    }
+    final row = rows.single;
+    if (row['alias_review_status'] != 'confirmed' ||
+        row['evidence_review_status'] != 'confirmed' ||
+        row['evidence_subject_type'] != 'catalogEntry' ||
+        row['evidence_subject_id'] != row['catalog_entry_id'] ||
+        !_governance(row).isExecutable) {
+      throw const CatalogSnapshotLoadException('alias.not_governed');
+    }
+    return CatalogId(_string(row, 'stable_domain_id'));
+  }
 
   @override
   Future<CatalogSnapshot> load(CatalogId snapshotId, {int? revision}) async {
@@ -144,14 +203,13 @@ final class SqliteCatalogSnapshotRepository implements CatalogSnapshotPort {
   }
 
   Future<void> _rejectUnsupportedTopLevelDefinitions(String versionId) async {
-    if ((await database.query(
-      'declarative_rules',
-      columns: const ['id'],
-      where: 'catalog_version_id=?',
-      whereArgs: [versionId],
-      limit: 1,
+    if ((await database.rawQuery(
+      "SELECT 1 FROM declarative_rules WHERE catalog_version_id=? AND owner_type!='variant' LIMIT 1",
+      [versionId],
     )).isNotEmpty) {
-      throw const CatalogSnapshotLoadException('declarative_rule.unsupported');
+      throw const CatalogSnapshotLoadException(
+        'declarative_rule.owner_unsupported',
+      );
     }
     if ((await database.query(
       'finite_programs',
@@ -267,17 +325,10 @@ final class SqliteCatalogSnapshotRepository implements CatalogSnapshotPort {
       if (variantRows.isEmpty) {
         throw const CatalogSnapshotLoadException('template.variant_missing');
       }
-      if (variantRows.length != 1) {
-        throw const CatalogSnapshotLoadException(
-          'template.variant_parameter_schema_unsupported',
-        );
-      }
-      final parameters = <ParameterDefinition>[];
-      final bindings = <ModuleBinding>[];
       final variants = <TemplateVariant>[];
       for (final variantRow in variantRows) {
         final variantId = _string(variantRow, 'id');
-        await _loadEvidence(
+        final variantEvidence = await _loadEvidenceItems(
           versionId,
           subjectType: 'variant',
           subjectId: variantId,
@@ -304,9 +355,10 @@ final class SqliteCatalogSnapshotRepository implements CatalogSnapshotPort {
             'parameter_schema.version_unsupported',
           );
         }
-        parameters.addAll(
-          codec.decodeParameterSchema(_string(schemas.single, 'schema_json')),
+        final parameters = codec.decodeParameterSchema(
+          _string(schemas.single, 'schema_json'),
         );
+        final bindings = <ModuleBinding>[];
         final bindingRows = await database.rawQuery(
           '''SELECT mb.*, mv.revision AS module_revision,
                     mv.definition_json, mv.review_status AS module_review_status,
@@ -368,10 +420,30 @@ final class SqliteCatalogSnapshotRepository implements CatalogSnapshotPort {
           bindings.add(binding);
           variantBindingIds.add(binding.id);
         }
+        final rules = await _loadVariantRules(versionId, variantId);
+        final ruleEvidence = <CatalogEvidence>[];
+        for (final rule in rules) {
+          final evidence = await _loadEvidenceItems(
+            versionId,
+            subjectType: 'rule',
+            subjectId: rule.id.value,
+          );
+          if (evidence.length != 1 || evidence.single.ruleId != rule.id) {
+            throw CatalogSnapshotLoadException(
+              'declarative_rule.evidence_mismatch',
+              rule.id,
+            );
+          }
+          ruleEvidence.add(evidence.single);
+        }
         variants.add(
           TemplateVariant(
             id: CatalogId(_string(variantRow, 'stable_key')),
             moduleIds: variantBindingIds,
+            parameters: parameters,
+            moduleBindings: bindings,
+            rules: rules,
+            evidence: [...variantEvidence, ...ruleEvidence],
           ),
         );
       }
@@ -381,13 +453,46 @@ final class SqliteCatalogSnapshotRepository implements CatalogSnapshotPort {
           revision: templateRevision,
           governance: _governance(templateRow),
           variants: variants,
-          parameters: parameters,
-          modules: bindings,
+          parameters: const [],
+          modules: const [],
           evidence: templateEvidence,
         ),
       );
     }
     return (templates: templates, modules: definitions.values.toList());
+  }
+
+  Future<List<DeclarativeRule>> _loadVariantRules(
+    String versionId,
+    String variantId,
+  ) async {
+    final rows = await database.query(
+      'declarative_rules',
+      where: 'catalog_version_id=? AND owner_type=? AND owner_id=?',
+      whereArgs: [versionId, 'variant', variantId],
+      orderBy: 'id',
+    );
+    final result = <DeclarativeRule>[];
+    for (final row in rows) {
+      if (row['review_status'] != 'confirmed') {
+        throw const CatalogSnapshotLoadException(
+          'declarative_rule.review_unconfirmed',
+        );
+      }
+      if (row['schema_version'] != 1) {
+        throw const CatalogSnapshotLoadException(
+          'declarative_rule.schema_unsupported',
+        );
+      }
+      result.add(
+        codec.decodeDeclarativeRule(
+          _string(row, 'expression_json'),
+          id: CatalogId(_string(row, 'id')),
+          kind: _ruleKind(_string(row, 'kind')),
+        ),
+      );
+    }
+    return result;
   }
 
   Future<void> _validateCycleBinding(
@@ -421,6 +526,25 @@ final class SqliteCatalogSnapshotRepository implements CatalogSnapshotPort {
     required String subjectType,
     required String subjectId,
   }) async {
+    final evidence = await _loadEvidenceItems(
+      versionId,
+      subjectType: subjectType,
+      subjectId: subjectId,
+    );
+    if (evidence.length != 1) {
+      throw CatalogSnapshotLoadException(
+        'evidence.multiple_rules_unsupported',
+        '$subjectType:$subjectId',
+      );
+    }
+    return evidence.single;
+  }
+
+  Future<List<CatalogEvidence>> _loadEvidenceItems(
+    String versionId, {
+    required String subjectType,
+    required String subjectId,
+  }) async {
     final rows = await database.rawQuery(
       '''SELECT e.rule_id, s.id AS source_id, s.locator, s.revision
          FROM evidence e JOIN sources s ON s.id=e.source_id
@@ -435,26 +559,35 @@ final class SqliteCatalogSnapshotRepository implements CatalogSnapshotPort {
         '$subjectType:$subjectId',
       );
     }
-    final ruleIds = rows.map((row) => _string(row, 'rule_id')).toSet();
-    if (ruleIds.length != 1) {
-      throw CatalogSnapshotLoadException(
-        'evidence.multiple_rules_unsupported',
-        '$subjectType:$subjectId',
-      );
+    final byRuleId = <CatalogId, List<EvidenceReference>>{};
+    for (final row in rows) {
+      byRuleId
+          .putIfAbsent(CatalogId(_string(row, 'rule_id')), () => [])
+          .add(
+            EvidenceReference(
+              sourceId: CatalogId(_string(row, 'source_id')),
+              locator: _string(row, 'locator'),
+              sourceRevision: _integer(row, 'revision'),
+            ),
+          );
     }
-    return CatalogEvidence(
-      ruleId: CatalogId(ruleIds.single),
-      references: [
-        for (final row in rows)
-          EvidenceReference(
-            sourceId: CatalogId(_string(row, 'source_id')),
-            locator: _string(row, 'locator'),
-            sourceRevision: _integer(row, 'revision'),
-          ),
-      ],
-    );
+    return [
+      for (final entry in byRuleId.entries)
+        CatalogEvidence(ruleId: entry.key, references: entry.value),
+    ];
   }
 }
+
+DeclarativeRuleKind _ruleKind(String value) => switch (value) {
+  'compatibility' => DeclarativeRuleKind.compatibility,
+  'visibility' => DeclarativeRuleKind.visibility,
+  'required' => DeclarativeRuleKind.required,
+  'constraint' => DeclarativeRuleKind.constraint,
+  _ => throw CatalogSnapshotLoadException(
+    'declarative_rule.kind_unsupported',
+    value,
+  ),
+};
 
 void _requireSupportedPorts(Iterable<Object> ports) {
   const supported = {

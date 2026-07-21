@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/core/database/catalog/catalog_database_schema.dart';
 import 'package:hybrid_training/core/database/catalog/catalog_publication_service.dart';
@@ -16,7 +18,7 @@ void main() {
     database = await databaseFactoryFfi.openDatabase(
       inMemoryDatabasePath,
       options: OpenDatabaseOptions(
-        version: 1,
+        version: CatalogDatabaseSchema.version,
         onConfigure: (db) => db.execute('PRAGMA foreign_keys=ON'),
         onCreate: (db, version) => CatalogDatabaseSchema.create(db),
       ),
@@ -44,8 +46,16 @@ void main() {
     final template = snapshot.templates.single as TrainingTemplateGraph;
     expect(template.id, CatalogId('standard-cycle'));
     expect(template.variants.single.id, CatalogId('base'));
-    expect(template.parameters.single.id, CatalogId('main-movement'));
-    expect(template.modules.single.id, CatalogId('main-binding'));
+    expect(
+      template.variants.single.parameters.single.id,
+      CatalogId('main-movement'),
+    );
+    expect(
+      template.variants.single.moduleBindings.single.id,
+      CatalogId('main-binding'),
+    );
+    expect(template.parameters, isEmpty);
+    expect(template.modules, isEmpty);
     expect(snapshot.modules.single.id, CatalogId('main-work'));
     expect(snapshot.modules.single.evidence, isNotNull);
   });
@@ -101,45 +111,85 @@ void main() {
     );
   });
 
-  test('rejects a declarative constraint until rules are decoded', () async {
-    await _insertCycleGraph(database);
-    await database.insert('declarative_rules', {
-      'id': 'constraint-one',
-      'catalog_version_id': 'catalog-v1',
-      'owner_type': 'variant',
-      'owner_id': 'variant-one',
-      'kind': 'constraint',
-      'expression_json': '{"parameter":"main-movement"}',
-    });
-    await _evidence(
-      database,
-      id: 'evidence-constraint',
-      type: 'rule',
-      subjectId: 'constraint-one',
-      ruleId: 'constraint-rule',
-    );
-    await _publish(database);
+  test(
+    'round-trips multiple declarative rules with evidence by rule ID',
+    () async {
+      await _insertCycleGraph(database);
+      await _insertRule(
+        database,
+        id: 'constraint-one',
+        kind: 'constraint',
+        condition: '{"astVersion":1,"nodeType":"always","value":true}',
+      );
+      await _insertRule(
+        database,
+        id: 'visible-main',
+        kind: 'visibility',
+        targetParameterId: 'main-movement',
+        condition:
+            '{"astVersion":1,"nodeType":"present","parameterId":"main-movement"}',
+      );
+      await _publish(database);
 
-    await expectLater(
-      SqliteCatalogSnapshotRepository(
+      final snapshot = await SqliteCatalogSnapshotRepository(
         database: database,
         codec: const GenericEngineSqliteCodec(),
-      ).load(CatalogId('catalog-v1')),
-      throwsA(
-        isA<CatalogSnapshotLoadException>().having(
-          (error) => error.code,
-          'code',
-          'declarative_rule.unsupported',
-        ),
-      ),
-    );
-  });
+      ).load(CatalogId('catalog-v1'));
+      final variant =
+          (snapshot.templates.single as TrainingTemplateGraph).variants.single;
 
-  test('does not merge mutually exclusive schemas from A/B variants', () async {
+      expect(variant.rules.map((rule) => rule.id), [
+        CatalogId('constraint-one'),
+        CatalogId('visible-main'),
+      ]);
+      expect(
+        variant.evidenceByRuleId.keys,
+        containsAll([CatalogId('constraint-one'), CatalogId('visible-main')]),
+      );
+    },
+  );
+
+  test('round-trips mutually exclusive schemas from A/B variants', () async {
     await _insertCycleGraph(database);
     await _insertSecondVariant(database);
     await _publish(database);
 
+    final snapshot = await SqliteCatalogSnapshotRepository(
+      database: database,
+      codec: const GenericEngineSqliteCodec(),
+    ).load(CatalogId('catalog-v1'));
+    final variants =
+        (snapshot.templates.single as TrainingTemplateGraph).variants;
+
+    expect(variants, hasLength(2));
+    expect(
+      variants
+          .singleWhere((variant) => variant.id == CatalogId('base'))
+          .parameters
+          .single
+          .id,
+      CatalogId('main-movement'),
+    );
+    expect(
+      variants
+          .singleWhere((variant) => variant.id == CatalogId('alternate'))
+          .parameters
+          .single
+          .id,
+      CatalogId('alternate-only'),
+    );
+  });
+
+  test('rejects an unknown declarative rule AST node', () async {
+    await _insertCycleGraph(database);
+    await _insertRule(
+      database,
+      id: 'unknown-rule',
+      kind: 'constraint',
+      condition: '{"astVersion":1,"nodeType":"futureNode"}',
+    );
+    await _publish(database);
+
     await expectLater(
       SqliteCatalogSnapshotRepository(
         database: database,
@@ -149,11 +199,56 @@ void main() {
         isA<CatalogSnapshotLoadException>().having(
           (error) => error.code,
           'code',
-          'template.variant_parameter_schema_unsupported',
+          'catalog.not_decodable',
         ),
       ),
     );
   });
+
+  test(
+    'resolves a governed catalog entry alias in its published version',
+    () async {
+      await _insertCycleGraph(database);
+      await _evidence(
+        database,
+        id: 'evidence-alias',
+        type: 'catalogEntry',
+        subjectId: 'entry-template',
+        ruleId: 'alias-rule',
+      );
+      await database.insert('catalog_entry_aliases', {
+        'id': 'alias-one',
+        'catalog_version_id': 'catalog-v1',
+        'namespace': 'legacy',
+        'alias': 'standard-531-v1',
+        'catalog_entry_id': 'entry-template',
+        'evidence_id': 'evidence-alias',
+        'review_status': 'confirmed',
+      });
+      await _publish(database);
+      final repository = SqliteCatalogSnapshotRepository(
+        database: database,
+        codec: const GenericEngineSqliteCodec(),
+      );
+
+      expect(
+        await repository.resolveAlias(
+          catalogVersionId: CatalogId('catalog-v1'),
+          namespace: 'legacy',
+          alias: 'standard-531-v1',
+        ),
+        CatalogId('standard-cycle'),
+      );
+      expect(
+        await repository.resolveAlias(
+          catalogVersionId: CatalogId('catalog-v1'),
+          namespace: 'legacy',
+          alias: 'unknown',
+        ),
+        isNull,
+      );
+    },
+  );
 
   test('rejects missing executable child evidence', () async {
     await _insertCycleGraph(database, includeMovementEvidence: false);
@@ -224,6 +319,18 @@ final class _FixtureCodec implements CatalogSnapshotCodec {
       allowedIds: {CatalogId('back-squat')},
     ),
   ];
+
+  @override
+  DeclarativeRule decodeDeclarativeRule(
+    String source, {
+    required CatalogId id,
+    required DeclarativeRuleKind kind,
+  }) => DeclarativeRule(
+    id: id,
+    kind: kind,
+    expression: const AlwaysCondition(true),
+    message: 'test.rule',
+  );
 
   @override
   ModuleDefinition decodeModuleDefinition(
@@ -471,6 +578,39 @@ Future<void> _insertSecondVariant(Database database) async {
     type: 'variant',
     subjectId: 'variant-two',
     ruleId: 'variant-two-rule',
+  );
+}
+
+Future<void> _insertRule(
+  Database database, {
+  required String id,
+  required String kind,
+  required String condition,
+  String? targetParameterId,
+}) async {
+  await database.insert('declarative_rules', {
+    'id': id,
+    'catalog_version_id': 'catalog-v1',
+    'owner_type': 'variant',
+    'owner_id': 'variant-one',
+    'kind': kind,
+    'expression_json': jsonEncode({
+      'schemaVersion': 1,
+      'ruleId': id,
+      'kind': kind,
+      'condition': jsonDecode(condition),
+      'messageKey': 'genericEngine.rules.${id.replaceAll('-', 'X')}',
+      'targetParameterId': ?targetParameterId,
+    }),
+    'schema_version': 1,
+    'review_status': 'confirmed',
+  });
+  await _evidence(
+    database,
+    id: 'evidence-$id',
+    type: 'rule',
+    subjectId: id,
+    ruleId: id,
   );
 }
 

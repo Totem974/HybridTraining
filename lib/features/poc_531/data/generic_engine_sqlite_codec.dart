@@ -225,6 +225,94 @@ final class GenericEngineSqliteCodec implements CatalogSnapshotCodec {
     }
   }
 
+  @override
+  DeclarativeRule decodeDeclarativeRule(
+    String json, {
+    required CatalogId id,
+    required DeclarativeRuleKind kind,
+  }) {
+    final root = _root(json);
+    _version(root);
+    final decodedKind = _enum(
+      root['kind'],
+      r'$.kind',
+      DeclarativeRuleKind.values,
+    );
+    final targetsParameter =
+        decodedKind == DeclarativeRuleKind.visibility ||
+        decodedKind == DeclarativeRuleKind.required;
+    _closed(
+      root,
+      r'$',
+      required: {
+        'schemaVersion',
+        'ruleId',
+        'kind',
+        'condition',
+        'messageKey',
+        if (targetsParameter) 'targetParameterId',
+      },
+    );
+    final decodedId = _id(root['ruleId'], r'$.ruleId');
+    if (decodedId != id) {
+      throw _invalid(r'$.ruleId', 'Rule ID does not match its SQL row.');
+    }
+    if (decodedKind != kind) {
+      throw _invalid(r'$.kind', 'Rule kind does not match its SQL row.');
+    }
+    try {
+      return DeclarativeRule(
+        id: decodedId,
+        kind: decodedKind,
+        expression: _condition(root['condition'], r'$.condition'),
+        message: _messageKey(root['messageKey'], r'$.messageKey'),
+        targetParameterId: targetsParameter
+            ? _id(root['targetParameterId'], r'$.targetParameterId')
+            : null,
+      );
+    } on ArgumentError catch (error) {
+      throw _invalid(r'$', error.message.toString());
+    }
+  }
+
+  String encodeDeclarativeRule(DeclarativeRule rule) {
+    final targetsParameter =
+        rule.kind == DeclarativeRuleKind.visibility ||
+        rule.kind == DeclarativeRuleKind.required;
+    if (targetsParameter != (rule.targetParameterId != null)) {
+      throw _invalid(
+        r'$.targetParameterId',
+        'Rule target does not match its kind.',
+      );
+    }
+    final messageKey = _messageKey(rule.message, r'$.messageKey');
+    return jsonEncode(
+      _canonicalize({
+        'schemaVersion': schemaVersion,
+        'ruleId': rule.id.value,
+        'kind': rule.kind.name,
+        'condition': _encodeCondition(rule.expression),
+        'messageKey': messageKey,
+        if (rule.targetParameterId case final target?)
+          'targetParameterId': target.value,
+      }),
+    );
+  }
+
+  TemplateVariant assembleVariant({
+    required CatalogId id,
+    required Iterable<ParameterDefinition> parameters,
+    required Iterable<ModuleBinding> moduleBindings,
+    required Iterable<DeclarativeRule> rules,
+    required Iterable<RuleEvidenceRow> evidenceRows,
+  }) => TemplateVariant(
+    id: id,
+    parameters: parameters,
+    moduleBindings: moduleBindings,
+    rules: rules,
+    evidence: groupEvidenceByRuleId(evidenceRows),
+  );
+
   GenericEngineWorkspaceDraft decodeWorkspaceDraft(String json) {
     final root = _root(json);
     _closed(
@@ -272,6 +360,25 @@ final class GenericEngineSqliteCodec implements CatalogSnapshotCodec {
       ]),
     );
   }
+}
+
+/// One confirmed SQL evidence row before references are grouped by rule ID.
+final class RuleEvidenceRow {
+  const RuleEvidenceRow({required this.ruleId, required this.reference});
+
+  final CatalogId ruleId;
+  final EvidenceReference reference;
+}
+
+List<CatalogEvidence> groupEvidenceByRuleId(Iterable<RuleEvidenceRow> rows) {
+  final grouped = <CatalogId, List<EvidenceReference>>{};
+  for (final row in rows) {
+    grouped.putIfAbsent(row.ruleId, () => []).add(row.reference);
+  }
+  return List.unmodifiable([
+    for (final entry in grouped.entries)
+      CatalogEvidence(ruleId: entry.key, references: entry.value),
+  ]);
 }
 
 Map<String, Object?> _root(String source) {
@@ -363,38 +470,117 @@ ConditionalAllowedIds _conditionalAllowedIds(Object? value, String path) {
 
 ParameterCondition _condition(Object? value, String path) {
   final object = _object(value, path);
-  final kind = _string(object['kind'], '$path.kind');
-  switch (kind) {
+  final version = _integer(object['astVersion'], '$path.astVersion');
+  if (version != declarativeRuleAstVersion) {
+    throw GenericEngineCodecException(
+      code: 'unsupported_ast_version',
+      path: '$path.astVersion',
+      message: 'Only declarative rule AST version 1 is supported.',
+    );
+  }
+  final nodeType = _string(object['nodeType'], '$path.nodeType');
+  if (!DeclarativeRuleAstBoundary.supportedNodeTypes.contains(nodeType)) {
+    throw GenericEngineCodecException(
+      code: 'unknown_ast_node',
+      path: '$path.nodeType',
+      message: 'Unknown declarative rule AST node: $nodeType.',
+    );
+  }
+  switch (nodeType) {
     case 'always':
-      _closed(object, path, required: const {'kind', 'value'});
+      _closed(
+        object,
+        path,
+        required: const {'astVersion', 'nodeType', 'value'},
+      );
       return AlwaysCondition(_boolean(object['value'], '$path.value'));
     case 'present':
-      _closed(object, path, required: const {'kind', 'parameterId'});
+      _closed(
+        object,
+        path,
+        required: const {'astVersion', 'nodeType', 'parameterId'},
+      );
       return PresentCondition(_id(object['parameterId'], '$path.parameterId'));
     case 'equals':
-      _closed(object, path, required: const {'kind', 'parameterId', 'value'});
+      _closed(
+        object,
+        path,
+        required: const {'astVersion', 'nodeType', 'parameterId', 'value'},
+      );
       return EqualsCondition(
         _id(object['parameterId'], '$path.parameterId'),
         _resolvedParameter(object['value'], '$path.value'),
       );
     case 'not':
-      _closed(object, path, required: const {'kind', 'condition'});
+      _closed(
+        object,
+        path,
+        required: const {'astVersion', 'nodeType', 'condition'},
+      );
       return NotCondition(_condition(object['condition'], '$path.condition'));
     case 'all':
     case 'any':
-      _closed(object, path, required: const {'kind', 'conditions'});
+      _closed(
+        object,
+        path,
+        required: const {'astVersion', 'nodeType', 'conditions'},
+      );
       final values = _list(object['conditions'], '$path.conditions');
       final conditions = [
         for (var index = 0; index < values.length; index++)
           _condition(values[index], '$path.conditions[$index]'),
       ];
-      return kind == 'all'
+      return nodeType == 'all'
           ? AllCondition(conditions)
           : AnyCondition(conditions);
     default:
-      throw _unknownEnum('$path.kind', kind);
+      throw StateError('AST node was validated before dispatch.');
   }
 }
+
+Map<String, Object?> _encodeCondition(ParameterCondition condition) {
+  DeclarativeRuleAstBoundary.requireSupported(
+    version: condition.astVersion,
+    nodeType: condition.nodeType,
+  );
+  return switch (condition) {
+    AlwaysCondition(:final value) => {
+      'astVersion': condition.astVersion,
+      'nodeType': condition.nodeType,
+      'value': value,
+    },
+    PresentCondition(:final id) => {
+      'astVersion': condition.astVersion,
+      'nodeType': condition.nodeType,
+      'parameterId': id.value,
+    },
+    EqualsCondition(:final id, :final expected) => {
+      'astVersion': condition.astVersion,
+      'nodeType': condition.nodeType,
+      'parameterId': id.value,
+      'value': _encodeResolvedParameter(expected),
+    },
+    NotCondition(condition: final nested) => {
+      'astVersion': condition.astVersion,
+      'nodeType': condition.nodeType,
+      'condition': _encodeCondition(nested),
+    },
+    AllCondition(:final conditions) || AnyCondition(:final conditions) => {
+      'astVersion': condition.astVersion,
+      'nodeType': condition.nodeType,
+      'conditions': conditions.map(_encodeCondition).toList(growable: false),
+    },
+  };
+}
+
+Map<String, Object?> _encodeResolvedParameter(ResolvedParameter parameter) => {
+  'kind': parameter.kind.name,
+  'value': switch (parameter) {
+    BooleanParameter(:final value) => value,
+    NumberParameter(:final value) => value,
+    IdParameter(:final value) => value.value,
+  },
+};
 
 ResolvedParameter _resolvedParameter(Object? value, String path) {
   final object = _object(value, path);
@@ -815,6 +1001,14 @@ String _string(Object? value, String path) {
   return value;
 }
 
+String _messageKey(Object? value, String path) {
+  final key = _string(value, path);
+  if (!RegExp(r'^[a-z][a-zA-Z0-9]*(?:\.[a-z][a-zA-Z0-9]*)+$').hasMatch(key)) {
+    throw _invalid(path, 'Expected a stable namespaced localization key.');
+  }
+  return key;
+}
+
 bool _boolean(Object? value, String path) {
   if (value is! bool) throw _type(path, 'boolean');
   return value;
@@ -910,6 +1104,15 @@ void _uniqueIds(Iterable<CatalogId> ids, String path) {
     throw _invalid(path, 'Duplicate ID.');
   }
 }
+
+Object? _canonicalize(Object? value) => switch (value) {
+  Map map => {
+    for (final key in map.keys.map((key) => key.toString()).toList()..sort())
+      key: _canonicalize(map[key]),
+  },
+  List list => [for (final item in list) _canonicalize(item)],
+  _ => value,
+};
 
 GenericEngineCodecException _type(String path, String expected) =>
     GenericEngineCodecException(

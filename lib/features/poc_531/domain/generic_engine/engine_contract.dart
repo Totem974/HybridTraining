@@ -713,10 +713,30 @@ final class TemplateContractResolver {
           'Unknown variant.',
         ),
       );
+      return (value: null, issues: List.unmodifiable(issues));
     }
     final definitions = {
-      for (final definition in graph.parameters) definition.id: definition,
+      for (final definition in variant.parameters) definition.id: definition,
     };
+    final rules = variant.rules;
+    bool isVisible(ParameterDefinition definition) =>
+        definition.visibleWhen.evaluate(request.parameters) &&
+        rules
+            .where(
+              (rule) =>
+                  rule.kind == DeclarativeRuleKind.visibility &&
+                  rule.targetParameterId == definition.id,
+            )
+            .every((rule) => rule.expression.evaluate(request.parameters));
+    bool isRequired(ParameterDefinition definition) =>
+        definition.requiredWhen.evaluate(request.parameters) ||
+        rules
+            .where(
+              (rule) =>
+                  rule.kind == DeclarativeRuleKind.required &&
+                  rule.targetParameterId == definition.id,
+            )
+            .any((rule) => rule.expression.evaluate(request.parameters));
     for (final entry in request.parameters.entries) {
       final definition = definitions[entry.key];
       if (definition == null) {
@@ -727,7 +747,7 @@ final class TemplateContractResolver {
             'Unknown parameter.',
           ),
         );
-      } else if (!definition.visibleWhen.evaluate(request.parameters) ||
+      } else if (!isVisible(definition) ||
           !definition.enabledWhen.evaluate(request.parameters)) {
         issues.add(
           ContractIssue(
@@ -772,8 +792,8 @@ final class TemplateContractResolver {
     }
     if (definitions.values.any(
       (definition) =>
-          definition.requiredWhen.evaluate(request.parameters) &&
-          definition.visibleWhen.evaluate(request.parameters) &&
+          isRequired(definition) &&
+          isVisible(definition) &&
           definition.enabledWhen.evaluate(request.parameters) &&
           !request.parameters.containsKey(definition.id),
     )) {
@@ -845,12 +865,7 @@ final class TemplateContractResolver {
         );
       }
     }
-    if (variant == null) {
-      return (value: null, issues: List.unmodifiable(issues));
-    }
-    final modules = graph.modules
-        .where((module) => variant.moduleIds.contains(module.id))
-        .toList(growable: false);
+    final modules = variant.moduleBindings;
     final activeBindings = {for (final binding in modules) binding.id: binding};
     for (final binding in modules) {
       final definition = request.snapshot.modules
@@ -999,13 +1014,19 @@ final class TemplateContractResolver {
       }
     }
     issues.addAll(_moduleCycleIssues(modules));
-    for (final constraint in graph.constraints) {
-      if (!constraint.validWhen.evaluate(request.parameters)) {
+    for (final rule in rules.where(
+      (rule) =>
+          rule.kind == DeclarativeRuleKind.compatibility ||
+          rule.kind == DeclarativeRuleKind.constraint,
+    )) {
+      if (!rule.expression.evaluate(request.parameters)) {
         issues.add(
           ContractIssue(
-            constraint.id.value,
-            r'$.parameters',
-            constraint.message,
+            rule.id.value,
+            rule.kind == DeclarativeRuleKind.compatibility
+                ? r'$.variantId'
+                : r'$.parameters',
+            rule.message,
           ),
         );
       }

@@ -18,16 +18,23 @@ void main() {
               'kind': 'integer',
               'minimum': 2,
               'maximum': 4,
-              'visibleWhen': {'kind': 'always', 'value': true},
+              'visibleWhen': {
+                'astVersion': 1,
+                'nodeType': 'always',
+                'value': true,
+              },
               'enabledWhen': {
-                'kind': 'not',
+                'astVersion': 1,
+                'nodeType': 'not',
                 'condition': {
-                  'kind': 'present',
+                  'astVersion': 1,
+                  'nodeType': 'present',
                   'parameterId': 'disabled-flag',
                 },
               },
               'requiredWhen': {
-                'kind': 'equals',
+                'astVersion': 1,
+                'nodeType': 'equals',
                 'parameterId': 'mode',
                 'value': {'kind': 'enumeration', 'value': 'standard'},
               },
@@ -39,9 +46,14 @@ void main() {
               'allowedIdsWhen': [
                 {
                   'when': {
-                    'kind': 'all',
+                    'astVersion': 1,
+                    'nodeType': 'all',
                     'conditions': [
-                      {'kind': 'present', 'parameterId': 'days-per-week'},
+                      {
+                        'astVersion': 1,
+                        'nodeType': 'present',
+                        'parameterId': 'days-per-week',
+                      },
                     ],
                   },
                   'allowedIds': ['squat'],
@@ -75,7 +87,8 @@ void main() {
                 'id': 'days',
                 'kind': 'integer',
                 'visibleWhen': {
-                  'kind': 'always',
+                  'astVersion': 1,
+                  'nodeType': 'always',
                   'value': true,
                   'fallback': false,
                 },
@@ -206,6 +219,189 @@ void main() {
     });
   });
 
+  group('declarative_rules.expression_json', () {
+    test('encodes and decodes the complete closed v1 AST symmetrically', () {
+      final source = DeclarativeRule(
+        id: CatalogId('option-visible'),
+        kind: DeclarativeRuleKind.visibility,
+        targetParameterId: CatalogId('variant-option'),
+        expression: AllCondition([
+          PresentCondition(CatalogId('mode')),
+          const NotCondition(AlwaysCondition(false)),
+          EqualsCondition(
+            CatalogId('mode'),
+            IdParameter(CatalogId('standard'), ParameterKind.enumeration),
+          ),
+          AnyCondition(const [AlwaysCondition(true), AlwaysCondition(false)]),
+        ]),
+        message: 'genericEngine.rules.optionVisible',
+      );
+
+      final encoded = codec.encodeDeclarativeRule(source);
+      final decoded = codec.decodeDeclarativeRule(
+        encoded,
+        id: source.id,
+        kind: source.kind,
+      );
+      final json = jsonDecode(encoded) as Map<String, dynamic>;
+      final condition = json['condition'] as Map<String, dynamic>;
+
+      expect(json['schemaVersion'], 1);
+      expect(json['ruleId'], 'option-visible');
+      expect(json['messageKey'], 'genericEngine.rules.optionVisible');
+      expect(condition['astVersion'], 1);
+      expect(condition['nodeType'], 'all');
+      expect(decoded.id, source.id);
+      expect(decoded.kind, DeclarativeRuleKind.visibility);
+      expect(decoded.targetParameterId, CatalogId('variant-option'));
+      expect(decoded.expression, isA<AllCondition>());
+    });
+
+    test('rejects unknown AST versions and node types', () {
+      Map<String, Object?> envelope(Map<String, Object?> condition) => {
+        'schemaVersion': 1,
+        'ruleId': 'compatibility-rule',
+        'kind': 'compatibility',
+        'condition': condition,
+        'messageKey': 'genericEngine.rules.compatibility',
+      };
+
+      expect(
+        () => codec.decodeDeclarativeRule(
+          jsonEncode(
+            envelope({'astVersion': 2, 'nodeType': 'always', 'value': true}),
+          ),
+          id: CatalogId('compatibility-rule'),
+          kind: DeclarativeRuleKind.compatibility,
+        ),
+        throwsA(
+          isA<GenericEngineCodecException>()
+              .having((error) => error.code, 'code', 'unsupported_ast_version')
+              .having((error) => error.path, 'path', r'$.condition.astVersion'),
+        ),
+      );
+      expect(
+        () => codec.decodeDeclarativeRule(
+          jsonEncode(envelope({'astVersion': 1, 'nodeType': 'executeCode'})),
+          id: CatalogId('compatibility-rule'),
+          kind: DeclarativeRuleKind.compatibility,
+        ),
+        throwsA(
+          isA<GenericEngineCodecException>()
+              .having((error) => error.code, 'code', 'unknown_ast_node')
+              .having((error) => error.path, 'path', r'$.condition.nodeType'),
+        ),
+      );
+    });
+
+    test('rejects row mismatch and kind-specific target shapes', () {
+      final visibility = {
+        'schemaVersion': 1,
+        'ruleId': 'visible-option',
+        'kind': 'visibility',
+        'condition': {'astVersion': 1, 'nodeType': 'always', 'value': true},
+        'messageKey': 'genericEngine.rules.visibleOption',
+      };
+      expect(
+        () => codec.decodeDeclarativeRule(
+          jsonEncode(visibility),
+          id: CatalogId('visible-option'),
+          kind: DeclarativeRuleKind.visibility,
+        ),
+        throwsA(
+          isA<GenericEngineCodecException>()
+              .having((error) => error.code, 'code', 'missing_field')
+              .having((error) => error.path, 'path', r'$.targetParameterId'),
+        ),
+      );
+
+      final compatibility = {
+        ...visibility,
+        'ruleId': 'compatible-option',
+        'kind': 'compatibility',
+        'targetParameterId': 'variant-option',
+      };
+      expect(
+        () => codec.decodeDeclarativeRule(
+          jsonEncode(compatibility),
+          id: CatalogId('compatible-option'),
+          kind: DeclarativeRuleKind.compatibility,
+        ),
+        throwsA(
+          isA<GenericEngineCodecException>()
+              .having((error) => error.code, 'code', 'unknown_field')
+              .having((error) => error.path, 'path', r'$.targetParameterId'),
+        ),
+      );
+      expect(
+        () => codec.decodeDeclarativeRule(
+          jsonEncode({...compatibility}..remove('targetParameterId')),
+          id: CatalogId('different-row-id'),
+          kind: DeclarativeRuleKind.compatibility,
+        ),
+        throwsA(
+          isA<GenericEngineCodecException>()
+              .having((error) => error.code, 'code', 'invalid_value')
+              .having((error) => error.path, 'path', r'$.ruleId'),
+        ),
+      );
+    });
+
+    test('requires a stable namespaced localization key', () {
+      expect(
+        () => codec.decodeDeclarativeRule(
+          jsonEncode({
+            'schemaVersion': 1,
+            'ruleId': 'rule',
+            'kind': 'constraint',
+            'condition': {'astVersion': 1, 'nodeType': 'always', 'value': true},
+            'messageKey': 'Free text is forbidden',
+          }),
+          id: CatalogId('rule'),
+          kind: DeclarativeRuleKind.constraint,
+        ),
+        throwsA(
+          isA<GenericEngineCodecException>()
+              .having((error) => error.code, 'code', 'invalid_value')
+              .having((error) => error.path, 'path', r'$.messageKey'),
+        ),
+      );
+    });
+  });
+
+  test('assembles variant-scoped contracts and groups evidence by rule ID', () {
+    final rule = DeclarativeRule(
+      id: CatalogId('scoped-rule'),
+      kind: DeclarativeRuleKind.constraint,
+      expression: const AlwaysCondition(true),
+      message: 'genericEngine.rules.scoped',
+    );
+    final variant = codec.assembleVariant(
+      id: CatalogId('variant-a'),
+      parameters: [
+        ParameterDefinition(
+          id: CatalogId('variant-option'),
+          kind: ParameterKind.boolean,
+        ),
+      ],
+      moduleBindings: const [],
+      rules: [rule],
+      evidenceRows: [
+        RuleEvidenceRow(ruleId: rule.id, reference: _reference('p. 10')),
+        RuleEvidenceRow(ruleId: rule.id, reference: _reference('p. 11')),
+        RuleEvidenceRow(
+          ruleId: CatalogId('another-rule'),
+          reference: _reference('p. 12'),
+        ),
+      ],
+    );
+
+    expect(variant.parameters.single.id, CatalogId('variant-option'));
+    expect(variant.rules.single.id, rule.id);
+    expect(variant.evidenceByRuleId[rule.id], hasLength(2));
+    expect(variant.evidenceByRuleId, hasLength(2));
+  });
+
   group('workspace_drafts.payload_json', () {
     test('decodes v1 configuration values without inventing catalog rules', () {
       final draft = codec.decodeWorkspaceDraft(jsonEncode(_workspaceDraft));
@@ -243,7 +439,7 @@ void main() {
     });
   });
 
-  test('all four SQLite payload decoders reject unknown schema versions', () {
+  test('all SQLite payload decoders reject unknown schema versions', () {
     final calls = <void Function()>[
       () => codec.decodeParameterSchema(
         jsonEncode({'schemaVersion': 2, 'parameters': <Object?>[]}),
@@ -271,6 +467,17 @@ void main() {
         id: CatalogId('binding'),
         moduleId: CatalogId('module'),
         moduleRevision: 1,
+      ),
+      () => codec.decodeDeclarativeRule(
+        jsonEncode({
+          'schemaVersion': 2,
+          'ruleId': 'rule',
+          'kind': 'constraint',
+          'condition': {'astVersion': 1, 'nodeType': 'always', 'value': true},
+          'messageKey': 'genericEngine.rules.rule',
+        }),
+        id: CatalogId('rule'),
+        kind: DeclarativeRuleKind.constraint,
       ),
       () => codec.decodeWorkspaceDraft(
         jsonEncode({..._workspaceDraft, 'schemaVersion': 2}),
@@ -311,6 +518,12 @@ final _evidence = CatalogEvidence(
       sourceRevision: 1,
     ),
   ],
+);
+
+EvidenceReference _reference(String locator) => EvidenceReference(
+  sourceId: CatalogId('source'),
+  locator: locator,
+  sourceRevision: 1,
 );
 
 final Map<String, Object?> _workspaceDraft = {

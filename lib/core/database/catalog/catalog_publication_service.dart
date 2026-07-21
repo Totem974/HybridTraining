@@ -77,6 +77,8 @@ final class CatalogPublicationService {
             'modules',
             'catalog_staging_entries',
             'catalog_import_blockers',
+            'catalog_promotion_batches',
+            'catalog_promotion_items',
           }.contains(table)) {
         continue;
       }
@@ -176,13 +178,34 @@ final class CatalogPublicationService {
       where: 'catalog_version_id=? AND severity IN (?,?)',
       whereArgs: [catalogVersionId, 'publishBlocker', 'error'],
     );
-    final blockersClear = blockingImports.isEmpty;
-    if (!blockersClear) {
+    final stagedEntries = await transaction.query(
+      'catalog_staging_entries',
+      columns: const ['catalog_entry_key'],
+      where: 'catalog_version_id=?',
+      whereArgs: [catalogVersionId],
+      limit: 1,
+    );
+    final incompletePromotions = await transaction.query(
+      'catalog_promotion_batches',
+      columns: const ['id'],
+      where: 'catalog_version_id=? AND status!=?',
+      whereArgs: [catalogVersionId, 'applied'],
+      limit: 1,
+    );
+    final blockersClear =
+        blockingImports.isEmpty &&
+        stagedEntries.isEmpty &&
+        incompletePromotions.isEmpty;
+    if (blockingImports.isNotEmpty) {
       issues.add('blockers.not_clear');
       issues.addAll({
         for (final blocker in blockingImports)
           'blocker.${blocker['issue_code']! as String}',
       });
+    }
+    if (stagedEntries.isNotEmpty) issues.add('promotion.staging_not_consumed');
+    if (incompletePromotions.isNotEmpty) {
+      issues.add('promotion.batch_incomplete');
     }
 
     final entries = await transaction.query(
@@ -197,13 +220,6 @@ final class CatalogPublicationService {
       final executable = entry['execution_status'] == 'executable';
       if (visible && entry['review_status'] != 'confirmed') {
         issues.add('entry.$id.review');
-      }
-      if (visible &&
-          !const {
-            'ownedReference',
-            'compatible',
-          }.contains(entry['license_status'])) {
-        issues.add('entry.$id.licence');
       }
       if (executable) {
         if ((await transaction.rawQuery(
@@ -228,6 +244,12 @@ final class CatalogPublicationService {
     }
     await _validatePolymorphicReferences(transaction, catalogVersionId, issues);
     await _validateRuleEvidence(transaction, catalogVersionId, issues);
+    await _validateAliases(transaction, catalogVersionId, issues);
+    await _validateEvidenceContentLicenses(
+      transaction,
+      catalogVersionId,
+      issues,
+    );
     await _validateExecutableGraphEvidence(
       transaction,
       catalogVersionId,
@@ -283,16 +305,91 @@ final class CatalogPublicationService {
   ) async {
     for (final rule in await db.query(
       'declarative_rules',
-      columns: const ['id'],
+      columns: const ['id', 'schema_version', 'review_status'],
       where: 'catalog_version_id=?',
       whereArgs: [versionId],
     )) {
       final id = rule['id']! as String;
+      if (rule['schema_version'] != 1) {
+        issues.add('rule.$id.schema_version');
+      }
+      if (rule['review_status'] != 'confirmed') {
+        issues.add('rule.$id.review');
+      }
       final evidence = await db.rawQuery(
         "SELECT 1 FROM evidence WHERE catalog_version_id=? AND subject_type='rule' AND subject_id=? AND review_status='confirmed' LIMIT 1",
         [versionId, id],
       );
       if (evidence.isEmpty) issues.add('rule.$id.evidence');
+    }
+  }
+
+  static Future<void> _validateAliases(
+    DatabaseExecutor db,
+    String versionId,
+    List<String> issues,
+  ) async {
+    for (final alias in await db.query(
+      'catalog_entry_aliases',
+      columns: const ['id', 'catalog_entry_id', 'evidence_id', 'review_status'],
+      where: 'catalog_version_id=?',
+      whereArgs: [versionId],
+    )) {
+      final id = alias['id']! as String;
+      if (alias['review_status'] != 'confirmed') {
+        issues.add('alias.$id.review');
+      }
+      final evidence = await db.query(
+        'evidence',
+        columns: const ['id'],
+        where:
+            'id=? AND catalog_version_id=? AND subject_type=? '
+            'AND subject_id=? AND review_status=?',
+        whereArgs: [
+          alias['evidence_id'],
+          versionId,
+          'catalogEntry',
+          alias['catalog_entry_id'],
+          'confirmed',
+        ],
+        limit: 1,
+      );
+      if (evidence.isEmpty) issues.add('alias.$id.evidence');
+    }
+  }
+
+  static Future<void> _validateEvidenceContentLicenses(
+    DatabaseExecutor db,
+    String versionId,
+    List<String> issues,
+  ) async {
+    final rows = await db.rawQuery(
+      '''SELECT ev.id,ev.content_reuse,s.kind AS source_kind,
+        s.locator,s.edition_id,b.license_status AS book_license_status
+      FROM evidence ev
+      JOIN sources s ON s.id=ev.source_id
+      LEFT JOIN editions ed ON ed.id=s.edition_id
+      LEFT JOIN books b ON b.id=ed.book_id
+      WHERE ev.catalog_version_id=?''',
+      [versionId],
+    );
+    for (final row in rows) {
+      final id = row['id']! as String;
+      final locator = row['locator'] as String?;
+      if (locator == null || locator.trim().isEmpty) {
+        issues.add('evidence.$id.locator');
+      }
+      if (row['source_kind'] == 'book' &&
+          (row['edition_id'] == null || row['book_license_status'] == null)) {
+        issues.add('evidence.$id.book_reference');
+      }
+      if (row['content_reuse'] != 'none' &&
+          !const {
+            'ownedReference',
+            'compatible',
+          }.contains(row['book_license_status'])) {
+        issues.add('evidence.$id.licence');
+      }
     }
   }
 

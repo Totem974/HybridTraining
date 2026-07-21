@@ -2,7 +2,7 @@ import 'package:sqflite/sqflite.dart';
 
 /// Schema of catalog.db. Runtime consumers open this database read-only.
 abstract final class CatalogDatabaseSchema {
-  static const version = 2;
+  static const version = 4;
 
   static Future<void> create(DatabaseExecutor db) async {
     await db.execute('''CREATE TABLE catalog_versions (
@@ -75,7 +75,10 @@ abstract final class CatalogDatabaseSchema {
         AND rule_id NOT LIKE '%-' AND rule_id NOT LIKE '%--%'),
       subject_type TEXT NOT NULL CHECK(subject_type IN ('catalogEntry','template','variant','moduleVersion','rule','schedule','finiteProgram','movement','assistancePlan','policy')), subject_id TEXT NOT NULL,
       review_status TEXT NOT NULL CHECK(review_status IN ('needsReview','confirmed','rejected')),
+      content_reuse TEXT NOT NULL DEFAULT 'none' CHECK(content_reuse IN ('none','excerpt','asset')),
       excerpt_digest TEXT, note TEXT NOT NULL DEFAULT '',
+      CHECK((content_reuse='none' AND excerpt_digest IS NULL) OR
+        (content_reuse IN ('excerpt','asset') AND excerpt_digest IS NOT NULL)),
       FOREIGN KEY(catalog_version_id) REFERENCES catalog_versions(id), FOREIGN KEY(source_id) REFERENCES sources(id),
       UNIQUE(catalog_version_id,source_id,subject_type,subject_id)
     )''');
@@ -159,6 +162,8 @@ abstract final class CatalogDatabaseSchema {
       owner_id TEXT NOT NULL,
       kind TEXT NOT NULL CHECK(kind IN ('compatibility','visibility','required','constraint')),
       expression_json TEXT NOT NULL CHECK(json_valid(expression_json)), blocker_code TEXT,
+      schema_version INTEGER NOT NULL CHECK(schema_version > 0),
+      review_status TEXT NOT NULL CHECK(review_status IN ('needsReview','confirmed','rejected')),
       FOREIGN KEY(catalog_version_id) REFERENCES catalog_versions(id)
     )''');
     await db.execute('''CREATE TABLE finite_programs (
@@ -296,32 +301,8 @@ abstract final class CatalogDatabaseSchema {
       policy_json TEXT NOT NULL, review_status TEXT NOT NULL CHECK(review_status IN ('needsReview','confirmed','rejected')),
       FOREIGN KEY(catalog_version_id) REFERENCES catalog_versions(id), FOREIGN KEY(variant_id) REFERENCES variants(id), UNIQUE(variant_id,kind)
     )''');
-    for (final table in _versionedTables) {
-      await db.execute(
-        'CREATE INDEX ${table}_catalog_version_idx ON $table(catalog_version_id)',
-      );
-      await db.execute(
-        '''CREATE TRIGGER ${table}_immutable_insert BEFORE INSERT ON $table
-        WHEN (SELECT status FROM catalog_versions WHERE id=NEW.catalog_version_id) IN ('published','retired')
-        BEGIN SELECT RAISE(ABORT,'published catalog is immutable'); END''',
-      );
-      await db.execute(
-        '''CREATE TRIGGER ${table}_immutable_update BEFORE UPDATE ON $table
-        WHEN (SELECT status FROM catalog_versions WHERE id=OLD.catalog_version_id) IN ('published','retired')
-          OR (SELECT status FROM catalog_versions WHERE id=NEW.catalog_version_id) IN ('published','retired')
-        BEGIN SELECT RAISE(ABORT,'published catalog is immutable'); END''',
-      );
-      await db.execute(
-        '''CREATE TRIGGER ${table}_version_identity BEFORE UPDATE OF catalog_version_id ON $table
-        WHEN OLD.catalog_version_id != NEW.catalog_version_id
-        BEGIN SELECT RAISE(ABORT,'catalog version identity is immutable'); END''',
-      );
-      await db.execute(
-        '''CREATE TRIGGER ${table}_immutable_delete BEFORE DELETE ON $table
-        WHEN (SELECT status FROM catalog_versions WHERE id=OLD.catalog_version_id) IN ('published','retired')
-        BEGIN SELECT RAISE(ABORT,'published catalog is immutable'); END''',
-      );
-    }
+    await _createCatalogV3Tables(db);
+    await _createVersionedTableGuards(db, _versionedTables);
     await _createReferencedDefinitionImmutability(db);
     await db.execute(
       'CREATE INDEX evidence_subject_idx ON evidence(subject_type,subject_id)',
@@ -393,7 +374,14 @@ abstract final class CatalogDatabaseSchema {
         SELECT t.revision FROM variants v JOIN templates t ON t.id=v.template_id WHERE v.id=NEW.variant_id
       ) BEGIN SELECT RAISE(ABORT,'engine binding revision must match template revision'); END''',
     );
-    await db.execute('''CREATE VIEW runtime_catalog_entries AS
+    await _createRuntimeCatalogView(db);
+    await _createSameVersionGuards(db);
+    await _createCatalogIdGuards(db);
+  }
+
+  static Future<void> _createRuntimeCatalogView(DatabaseExecutor db) =>
+      db.execute(
+        '''CREATE VIEW runtime_catalog_entries AS
       WITH RECURSIVE dependencies(root_id,dependency_id) AS (
         SELECT from_entry_id,to_entry_id FROM catalog_entry_relations WHERE kind='dependency'
         UNION
@@ -405,7 +393,7 @@ abstract final class CatalogDatabaseSchema {
       WHERE v.status='published' AND e.review_status='confirmed'
         AND (v.trust_channel!='signedRemote' OR v.signature_verified=1)
         AND e.implementation_status='implemented' AND e.execution_status='executable'
-        AND e.visibility='visible' AND e.license_status IN ('ownedReference','compatible')
+        AND e.visibility='visible'
         AND EXISTS (SELECT 1 FROM evidence ev WHERE ev.catalog_version_id=e.catalog_version_id
           AND ev.subject_id=e.id AND ev.review_status='confirmed')
         AND EXISTS (SELECT 1 FROM templates t JOIN variants va ON va.template_id=t.id
@@ -427,10 +415,39 @@ abstract final class CatalogDatabaseSchema {
           JOIN policies p ON p.variant_id=va.id WHERE t.catalog_entry_id=e.id AND p.review_status!='confirmed')
         AND NOT EXISTS (SELECT 1 FROM dependencies r JOIN catalog_entries d ON d.id=r.dependency_id
           WHERE r.root_id=e.id AND
-            (d.review_status!='confirmed' OR d.implementation_status!='implemented' OR d.execution_status='blocked'
-             OR d.license_status NOT IN ('ownedReference','compatible')))''');
-    await _createSameVersionGuards(db);
-    await _createCatalogIdGuards(db);
+            (d.review_status!='confirmed' OR d.implementation_status!='implemented' OR d.execution_status='blocked'))''',
+      );
+
+  static Future<void> _createVersionedTableGuards(
+    DatabaseExecutor db,
+    Iterable<String> tables,
+  ) async {
+    for (final table in tables) {
+      await db.execute(
+        'CREATE INDEX ${table}_catalog_version_idx ON $table(catalog_version_id)',
+      );
+      await db.execute(
+        '''CREATE TRIGGER ${table}_immutable_insert BEFORE INSERT ON $table
+        WHEN (SELECT status FROM catalog_versions WHERE id=NEW.catalog_version_id) IN ('published','retired')
+        BEGIN SELECT RAISE(ABORT,'published catalog is immutable'); END''',
+      );
+      await db.execute(
+        '''CREATE TRIGGER ${table}_immutable_update BEFORE UPDATE ON $table
+        WHEN (SELECT status FROM catalog_versions WHERE id=OLD.catalog_version_id) IN ('published','retired')
+          OR (SELECT status FROM catalog_versions WHERE id=NEW.catalog_version_id) IN ('published','retired')
+        BEGIN SELECT RAISE(ABORT,'published catalog is immutable'); END''',
+      );
+      await db.execute(
+        '''CREATE TRIGGER ${table}_version_identity BEFORE UPDATE OF catalog_version_id ON $table
+        WHEN OLD.catalog_version_id != NEW.catalog_version_id
+        BEGIN SELECT RAISE(ABORT,'catalog version identity is immutable'); END''',
+      );
+      await db.execute(
+        '''CREATE TRIGGER ${table}_immutable_delete BEFORE DELETE ON $table
+        WHEN (SELECT status FROM catalog_versions WHERE id=OLD.catalog_version_id) IN ('published','retired')
+        BEGIN SELECT RAISE(ABORT,'published catalog is immutable'); END''',
+      );
+    }
   }
 
   static Future<void> _createReferencedDefinitionImmutability(
@@ -463,6 +480,183 @@ abstract final class CatalogDatabaseSchema {
         );
       }
     }
+  }
+
+  static Future<void> _createCatalogV3Tables(
+    DatabaseExecutor db, {
+    bool migrating = false,
+  }) async {
+    await db.execute('''CREATE TABLE catalog_entry_aliases (
+      id TEXT PRIMARY KEY,
+      catalog_version_id TEXT NOT NULL,
+      namespace TEXT NOT NULL,
+      alias TEXT NOT NULL CHECK(length(trim(alias))>0),
+      catalog_entry_id TEXT NOT NULL,
+      evidence_id TEXT NOT NULL,
+      review_status TEXT NOT NULL CHECK(review_status IN ('needsReview','confirmed','rejected')),
+      FOREIGN KEY(catalog_version_id) REFERENCES catalog_versions(id),
+      FOREIGN KEY(catalog_entry_id) REFERENCES catalog_entries(id),
+      FOREIGN KEY(evidence_id) REFERENCES evidence(id),
+      UNIQUE(catalog_version_id,namespace,alias)
+    )''');
+    await db.execute('''CREATE TABLE catalog_promotion_batches (
+      id TEXT PRIMARY KEY,
+      catalog_version_id TEXT NOT NULL,
+      source_manifest_hash TEXT NOT NULL CHECK(length(source_manifest_hash)>0),
+      status TEXT NOT NULL CHECK(status IN ('planned','applied','failed')),
+      created_at TEXT NOT NULL,
+      completed_at TEXT,
+      CHECK((status='planned' AND completed_at IS NULL) OR
+        (status IN ('applied','failed') AND completed_at IS NOT NULL)),
+      FOREIGN KEY(catalog_version_id) REFERENCES catalog_versions(id),
+      UNIQUE(catalog_version_id,source_manifest_hash),
+      UNIQUE(id,catalog_version_id)
+    )''');
+    await db.execute('''CREATE TABLE catalog_promotion_items (
+      id TEXT PRIMARY KEY,
+      promotion_batch_id TEXT NOT NULL,
+      catalog_version_id TEXT NOT NULL,
+      catalog_entry_key TEXT NOT NULL,
+      source_record_hash TEXT NOT NULL CHECK(length(source_record_hash)>0),
+      target_catalog_entry_id TEXT,
+      status TEXT NOT NULL CHECK(status IN ('pending','promoted','rejected')),
+      issue_code TEXT,
+      CHECK(catalog_entry_key GLOB '[A-Z][A-Z0-9]*-[0-9][0-9][0-9]*'),
+      CHECK((status='pending' AND target_catalog_entry_id IS NULL AND issue_code IS NULL) OR
+        (status='promoted' AND target_catalog_entry_id IS NOT NULL AND issue_code IS NULL) OR
+        (status='rejected' AND target_catalog_entry_id IS NULL AND issue_code IS NOT NULL)),
+      FOREIGN KEY(promotion_batch_id,catalog_version_id)
+        REFERENCES catalog_promotion_batches(id,catalog_version_id),
+      FOREIGN KEY(catalog_version_id) REFERENCES catalog_versions(id),
+      FOREIGN KEY(target_catalog_entry_id) REFERENCES catalog_entries(id),
+      UNIQUE(promotion_batch_id,catalog_entry_key)
+    )''');
+    await db.execute(
+      'CREATE INDEX catalog_promotion_items_version_idx '
+      'ON catalog_promotion_items(catalog_version_id)',
+    );
+    for (final (table, column, parent, nullable) in const [
+      ('catalog_entry_aliases', 'catalog_entry_id', 'catalog_entries', false),
+      ('catalog_entry_aliases', 'evidence_id', 'evidence', false),
+      (
+        'catalog_promotion_items',
+        'target_catalog_entry_id',
+        'catalog_entries',
+        true,
+      ),
+    ]) {
+      final nullGuard = nullable ? 'NEW.$column IS NOT NULL AND ' : '';
+      await db.execute(
+        '''CREATE TRIGGER ${table}_${column}_same_version_insert BEFORE INSERT ON $table
+        WHEN $nullGuard(SELECT catalog_version_id FROM $parent WHERE id=NEW.$column) != NEW.catalog_version_id
+        BEGIN SELECT RAISE(ABORT,'cross-version reference'); END''',
+      );
+      await db.execute(
+        '''CREATE TRIGGER ${table}_${column}_same_version_update BEFORE UPDATE OF $column ON $table
+        WHEN $nullGuard(SELECT catalog_version_id FROM $parent WHERE id=NEW.$column) != NEW.catalog_version_id
+        BEGIN SELECT RAISE(ABORT,'cross-version reference'); END''',
+      );
+    }
+    for (final table in const [
+      'catalog_promotion_batches',
+      'catalog_promotion_items',
+    ]) {
+      await db.execute(
+        '''CREATE TRIGGER ${table}_draft_only_insert BEFORE INSERT ON $table
+        WHEN (SELECT status FROM catalog_versions WHERE id=NEW.catalog_version_id)
+          NOT IN ('draft','inReview')
+        BEGIN SELECT RAISE(ABORT,'catalog promotion administration requires a draft or in-review version'); END''',
+      );
+      await db.execute(
+        '''CREATE TRIGGER ${table}_draft_only_update BEFORE UPDATE ON $table
+        WHEN (SELECT status FROM catalog_versions WHERE id=OLD.catalog_version_id)
+          NOT IN ('draft','inReview')
+          OR (SELECT status FROM catalog_versions WHERE id=NEW.catalog_version_id)
+          NOT IN ('draft','inReview')
+        BEGIN SELECT RAISE(ABORT,'catalog promotion administration requires a draft or in-review version'); END''',
+      );
+      await db.execute(
+        '''CREATE TRIGGER ${table}_version_identity BEFORE UPDATE OF catalog_version_id ON $table
+        WHEN OLD.catalog_version_id != NEW.catalog_version_id
+        BEGIN SELECT RAISE(ABORT,'catalog version identity is immutable'); END''',
+      );
+      await db.execute(
+        '''CREATE TRIGGER ${table}_published_delete BEFORE DELETE ON $table
+        WHEN (SELECT status FROM catalog_versions WHERE id=OLD.catalog_version_id)
+          IN ('published','retired')
+        BEGIN SELECT RAISE(ABORT,'published promotion history is immutable'); END''',
+      );
+    }
+    await db.execute(
+      '''CREATE TRIGGER catalog_promotion_batch_lifecycle BEFORE UPDATE OF status ON catalog_promotion_batches
+      WHEN NOT (OLD.status='planned' AND NEW.status IN ('applied','failed'))
+      BEGIN SELECT RAISE(ABORT,'invalid catalog promotion lifecycle transition'); END''',
+    );
+    await db.execute(
+      '''CREATE TRIGGER catalog_promotion_batch_completion BEFORE UPDATE OF status ON catalog_promotion_batches
+      WHEN NEW.status='applied' AND (
+        NOT EXISTS (SELECT 1 FROM catalog_promotion_items i WHERE i.promotion_batch_id=OLD.id)
+        OR EXISTS (SELECT 1 FROM catalog_promotion_items i
+          WHERE i.promotion_batch_id=OLD.id AND i.status!='promoted')
+      ) BEGIN SELECT RAISE(ABORT,'every promotion item must be promoted before batch completion'); END''',
+    );
+    for (final operation in const ['INSERT', 'UPDATE', 'DELETE']) {
+      final batchId = operation == 'INSERT'
+          ? 'NEW.promotion_batch_id'
+          : 'OLD.promotion_batch_id';
+      await db.execute(
+        '''CREATE TRIGGER catalog_promotion_items_applied_${operation.toLowerCase()}
+        BEFORE $operation ON catalog_promotion_items
+        WHEN (SELECT status FROM catalog_promotion_batches WHERE id=$batchId)='applied'
+        BEGIN SELECT RAISE(ABORT,'applied promotion items are immutable'); END''',
+      );
+    }
+    if (migrating) {
+      await _createVersionedTableGuards(db, const ['catalog_entry_aliases']);
+      const invalidNamespace =
+          '''NEW.namespace != lower(NEW.namespace) OR length(NEW.namespace)=0
+        OR NEW.namespace GLOB '*[^a-z0-9-]*' OR NEW.namespace LIKE '-%'
+        OR NEW.namespace LIKE '%-' OR NEW.namespace LIKE '%--%' ''';
+      await db.execute(
+        '''CREATE TRIGGER catalog_entry_aliases_namespace_catalog_id_insert
+        BEFORE INSERT ON catalog_entry_aliases WHEN $invalidNamespace
+        BEGIN SELECT RAISE(ABORT,'invalid CatalogId'); END''',
+      );
+      await db.execute(
+        '''CREATE TRIGGER catalog_entry_aliases_namespace_catalog_id_update
+        BEFORE UPDATE OF namespace ON catalog_entry_aliases WHEN $invalidNamespace
+        BEGIN SELECT RAISE(ABORT,'invalid CatalogId'); END''',
+      );
+    }
+    await db.execute('DROP TRIGGER IF EXISTS catalog_staging_promotion_gate');
+    await db.execute(
+      '''CREATE TRIGGER catalog_staging_promotion_gate BEFORE UPDATE OF status ON catalog_versions
+      WHEN NEW.status IN ('approved','published') AND (
+        EXISTS (
+          SELECT 1 FROM catalog_staging_entries s WHERE s.catalog_version_id=OLD.id
+        ) OR EXISTS (
+          SELECT 1 FROM catalog_import_blockers b
+          WHERE b.catalog_version_id=OLD.id AND b.severity IN ('publishBlocker','error')
+        ) OR EXISTS (
+          SELECT 1 FROM catalog_promotion_batches p
+          WHERE p.catalog_version_id=OLD.id AND p.status!='applied'
+        )
+      ) BEGIN SELECT RAISE(ABORT,'catalog promotion must be complete and blocker-free before approval'); END''',
+    );
+    await db.execute('DROP TRIGGER IF EXISTS catalog_staging_validation_gate');
+    await db.execute(
+      '''CREATE TRIGGER catalog_staging_validation_gate BEFORE INSERT ON catalog_publication_validations
+      WHEN EXISTS (
+        SELECT 1 FROM catalog_staging_entries s WHERE s.catalog_version_id=NEW.catalog_version_id
+      ) OR EXISTS (
+        SELECT 1 FROM catalog_import_blockers b
+        WHERE b.catalog_version_id=NEW.catalog_version_id
+          AND b.severity IN ('publishBlocker','error')
+      ) OR EXISTS (
+        SELECT 1 FROM catalog_promotion_batches p
+        WHERE p.catalog_version_id=NEW.catalog_version_id AND p.status!='applied'
+      ) BEGIN SELECT RAISE(ABORT,'incomplete catalog promotion cannot receive publication validation'); END''',
+    );
   }
 
   static Future<void> _createAdministrationStaging(DatabaseExecutor db) async {
@@ -666,6 +860,7 @@ abstract final class CatalogDatabaseSchema {
       ('equipment', 'stable_key'),
       ('movements', 'stable_key'),
       ('assistance_plans', 'stable_key'),
+      ('catalog_entry_aliases', 'namespace'),
       ('engine_binding_capabilities', 'capability_id'),
       ('engine_binding_options', 'option_id'),
       ('schedule_segment_roles', 'role_id'),
@@ -693,10 +888,40 @@ abstract final class CatalogDatabaseSchema {
     int newVersion,
   ) async {
     if (oldVersion == newVersion) return;
-    if (oldVersion == 1 && newVersion == 2) {
+    if (oldVersion == 1 && newVersion >= 2) {
       await _createAdministrationStaging(db);
+    }
+    if (oldVersion <= 2 && newVersion >= 3) {
+      await db.execute(
+        'ALTER TABLE declarative_rules ADD COLUMN schema_version '
+        'INTEGER NOT NULL DEFAULT 1 CHECK(schema_version > 0)',
+      );
+      await db.execute(
+        "ALTER TABLE declarative_rules ADD COLUMN review_status TEXT NOT NULL "
+        "DEFAULT 'needsReview' CHECK(review_status IN ('needsReview','confirmed','rejected'))",
+      );
+      await _createCatalogV3Tables(db, migrating: true);
+    }
+    if (oldVersion <= 3 && newVersion == 4) {
+      await db.execute(
+        "ALTER TABLE evidence ADD COLUMN content_reuse TEXT NOT NULL "
+        "DEFAULT 'none' CHECK(content_reuse IN ('none','excerpt','asset'))",
+      );
+      await db.update('evidence', {
+        'content_reuse': 'excerpt',
+      }, where: 'excerpt_digest IS NOT NULL');
+      final runtimeViews = await db.rawQuery(
+        "SELECT 1 FROM sqlite_master WHERE type='view' "
+        "AND name='runtime_catalog_entries' LIMIT 1",
+      );
+      if (runtimeViews.isNotEmpty) {
+        await db.execute('DROP VIEW runtime_catalog_entries');
+        await _createRuntimeCatalogView(db);
+      }
       return;
     }
+    if (oldVersion <= 2 && newVersion == 3) return;
+    if (oldVersion == 1 && newVersion == 2) return;
     throw StateError(
       'No catalog.db migration from $oldVersion to $newVersion.',
     );
@@ -705,6 +930,7 @@ abstract final class CatalogDatabaseSchema {
   static const _versionedTables = <String>[
     'catalog_entries',
     'catalog_entry_relations',
+    'catalog_entry_aliases',
     'evidence',
     'module_versions',
     'templates',
