@@ -100,6 +100,42 @@ void main() {
     }
   });
 
+  test('migrates catalog.db v1 with complete catalogue tables', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'catalog-db-migration-',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final path = '${directory.path}/catalog.db';
+    final legacy = await databaseFactoryFfi.openDatabase(
+      path,
+      options: OpenDatabaseOptions(
+        version: 1,
+        onCreate: (db, _) => db.execute('''CREATE TABLE catalog_versions(
+          version INTEGER PRIMARY KEY, status TEXT NOT NULL,
+          source_reference TEXT NOT NULL)'''),
+      ),
+    );
+    await legacy.close();
+    final migrated = await openCatalogDatabase(
+      factory: databaseFactoryFfi,
+      path: path,
+    );
+    addTearDown(() => migrated.database.close());
+    final tables = (await migrated.database.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type='table'",
+    )).map((row) => row['name']);
+    expect(
+      tables,
+      containsAll([
+        'catalog_inventory',
+        'catalog_option_schemas',
+        'catalog_schedules_v2',
+        'catalog_variant_metadata',
+        'catalog_library_entries',
+      ]),
+    );
+  });
+
   test('rejects unknown template or variant', () async {
     await repository.installSeed(seed);
     expect(

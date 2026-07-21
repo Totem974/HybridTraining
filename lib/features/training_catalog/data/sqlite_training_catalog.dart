@@ -11,6 +11,7 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
   SqliteTrainingCatalog(this.database);
 
   static const schemaVersion = 1;
+  static const databaseSchemaVersion = 2;
   final Database database;
 
   static Future<void> createSchema(Database db) async {
@@ -87,6 +88,7 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
       PRIMARY KEY(version,template_id,variant_id,week_number,position),
       FOREIGN KEY(version,component_id) REFERENCES catalog_components(version,id))''',
     );
+    await _createCompleteCatalogTables(db);
     // Stable catalog vocabulary. Tables outside the first vertical slice are
     // intentionally empty until a concrete feature needs their columns.
     await db.execute(
@@ -137,6 +139,11 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
       'catalog_components',
       'catalog_rules',
       'catalog_variant_week_components',
+      'catalog_inventory',
+      'catalog_option_schemas',
+      'catalog_schedules_v2',
+      'catalog_variant_metadata',
+      'catalog_library_entries',
     ]) {
       await db.execute(
         '''CREATE TRIGGER ${table}_published_update BEFORE UPDATE ON $table
@@ -160,12 +167,65 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
       'catalog_components',
       'catalog_rules',
       'catalog_variant_week_components',
+      'catalog_inventory',
+      'catalog_option_schemas',
+      'catalog_schedules_v2',
+      'catalog_variant_metadata',
+      'catalog_library_entries',
     ]) {
       await db.execute(
         '''CREATE TRIGGER ${table}_published_insert BEFORE INSERT ON $table
         WHEN (SELECT status FROM catalog_versions WHERE version=NEW.version)='published'
         BEGIN SELECT RAISE(ABORT, 'published catalog version is immutable'); END''',
       );
+    }
+  }
+
+  static Future<void> _createCompleteCatalogTables(Database db) async {
+    await db.execute(
+      '''CREATE TABLE catalog_inventory(
+      version INTEGER NOT NULL, id TEXT NOT NULL, generation TEXT NOT NULL,
+      classification TEXT NOT NULL, title TEXT NOT NULL, cycle_template_id TEXT,
+      source_rule_ids_json TEXT NOT NULL,
+      PRIMARY KEY(version,id), FOREIGN KEY(version) REFERENCES catalog_versions(version))''',
+    );
+    await db.execute(
+      '''CREATE TABLE catalog_option_schemas(
+      version INTEGER NOT NULL, id TEXT NOT NULL, revision INTEGER NOT NULL,
+      payload_json TEXT NOT NULL,
+      PRIMARY KEY(version,id), FOREIGN KEY(version) REFERENCES catalog_versions(version))''',
+    );
+    await db.execute(
+      '''CREATE TABLE catalog_schedules_v2(
+      version INTEGER NOT NULL, id TEXT NOT NULL, revision INTEGER NOT NULL,
+      payload_json TEXT NOT NULL,
+      PRIMARY KEY(version,id), FOREIGN KEY(version) REFERENCES catalog_versions(version))''',
+    );
+    await db.execute('''CREATE TABLE catalog_variant_metadata(
+      version INTEGER NOT NULL, template_id TEXT NOT NULL, variant_id TEXT NOT NULL,
+      revision INTEGER NOT NULL, labels_json TEXT NOT NULL, source_rule_ids_json TEXT NOT NULL,
+      option_schema_id TEXT NOT NULL, schedule_ids_json TEXT NOT NULL,
+      compatibility_json TEXT NOT NULL, valid_example_json TEXT NOT NULL,
+      PRIMARY KEY(version,template_id,variant_id),
+      FOREIGN KEY(version,template_id,variant_id)
+        REFERENCES catalog_variants(version,template_id,id),
+      FOREIGN KEY(version,option_schema_id)
+        REFERENCES catalog_option_schemas(version,id))''');
+    await db.execute(
+      '''CREATE TABLE catalog_library_entries(
+      version INTEGER NOT NULL, kind TEXT NOT NULL, id TEXT NOT NULL,
+      revision INTEGER NOT NULL, payload_json TEXT NOT NULL,
+      PRIMARY KEY(version,kind,id), FOREIGN KEY(version) REFERENCES catalog_versions(version))''',
+    );
+  }
+
+  static Future<void> upgradeSchema(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    if (oldVersion < 2 && newVersion >= 2) {
+      await _createCompleteCatalogTables(db);
     }
   }
 
@@ -361,6 +421,28 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
           'position',
           'component_id',
         ],
+        'catalog_inventory': [
+          'id',
+          'generation',
+          'classification',
+          'title',
+          'cycle_template_id',
+          'source_rule_ids_json',
+        ],
+        'catalog_option_schemas': ['id', 'revision', 'payload_json'],
+        'catalog_schedules_v2': ['id', 'revision', 'payload_json'],
+        'catalog_library_entries': ['kind', 'id', 'revision', 'payload_json'],
+        'catalog_variant_metadata': [
+          'template_id',
+          'variant_id',
+          'revision',
+          'labels_json',
+          'source_rule_ids_json',
+          'option_schema_id',
+          'schedule_ids_json',
+          'compatibility_json',
+          'valid_example_json',
+        ],
       }.entries) {
         final columns = table.value.join(',');
         await txn.execute(
@@ -443,6 +525,20 @@ final class SqliteTrainingCatalog implements TrainingCatalogRepository {
     if (orphan != 0) {
       throw CatalogFormatException(
         'Catalog version $version has missing component dependencies',
+      );
+    }
+    final missingOptionSchema = Sqflite.firstIntValue(
+      await db.rawQuery(
+        '''SELECT COUNT(*) FROM catalog_variant_metadata m
+        LEFT JOIN catalog_option_schemas o
+          ON o.version=m.version AND o.id=m.option_schema_id
+        WHERE m.version=? AND o.id IS NULL''',
+        [version],
+      ),
+    );
+    if (missingOptionSchema != 0) {
+      throw CatalogFormatException(
+        'Catalog version $version has missing option schemas',
       );
     }
     final knownRules = (await db.query(
@@ -663,9 +759,10 @@ Future<SqliteTrainingCatalog> openCatalogDatabase({
   final database = await factory.openDatabase(
     path,
     options: OpenDatabaseOptions(
-      version: SqliteTrainingCatalog.schemaVersion,
+      version: SqliteTrainingCatalog.databaseSchemaVersion,
       onConfigure: (db) => db.execute('PRAGMA foreign_keys=ON'),
       onCreate: (db, _) => SqliteTrainingCatalog.createSchema(db),
+      onUpgrade: SqliteTrainingCatalog.upgradeSchema,
     ),
   );
   final repository = SqliteTrainingCatalog(database);
