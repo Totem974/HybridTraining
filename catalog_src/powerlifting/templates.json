@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "kind": "templates",
+  "templates": [
+    {
+      "id": "powerlifting_classic_531",
+      "revision": 1,
+      "labels": {
+        "en": "Classic 5/3/1 for powerlifting",
+        "fr": "5/3/1 classique pour powerlifting"
+      },
+      "sourceRuleIds": [
+        "pl.001"
+      ],
+      "variants": [
+        {
+          "id": "four_day_531_deload",
+          "revision": 1,
+          "labels": {
+            "en": "Four days, 5/3/1 and deload",
+            "fr": "Quatre jours, 5/3/1 et deload"
+          },
+          "sourceRuleIds": [
+            "pl.001"
+          ],
+          "optionSchemaId": {
+            "id": "powerlifting_classic_531_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            }
+          ],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "movements": [
+              "squat",
+              "bench_press",
+              "deadlift",
+              "overhead_press"
+            ]
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeDeload": true
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

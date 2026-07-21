@@ -1,0 +1,293 @@
+{
+  "schemaVersion": 1,
+  "kind": "sources",
+  "sources": [
+    {
+      "ruleId": "or.assistance.bodyweight_observed_volume",
+      "work": "Original 5/3/1 application",
+      "edition": "2.6.1",
+      "section": "Bodyweight controls observed 2026-07-21: 75-150 total repetitions by 5; 1-10 sets",
+      "reviewStatus": "referenceAppObserved"
+    },
+    {
+      "ruleId": "or.classic.four_day",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 13–14; 27–31",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.classic.three_day_variant",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 13; 99",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.classic.two_day_variant",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 13; 100–102",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.main.option_1",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 28–30",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.main.option_2",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 28–29",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.performance.pr_set",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 30–31",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.deload.classic",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 29–31",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.tm.ninety_percent",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 27–29",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.progression.monthly",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 32–38",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.progression.microloading",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 37",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.progression.reset",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 39",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.warm_up.40_50_60",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 41",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.measure.epley",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 27; 42–43",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.autoregulation.bad_day",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 44",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.bbb.same_lift",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 62–63",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.bbb.loading",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 63",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.assistance.triumvirate",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 64–65",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.assistance.jack_shit",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 66",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.assistance.periodization_bible",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 67–68",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.assistance.bodyweight",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 69",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.sst.progression",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 70–77",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.sst.pairings",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 71–77",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.rest_pause.principle",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 78–80",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.rest_pause.ab",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 80–88",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.rest_pause.deload",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 87–88",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.mnov.warm_up",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 90–97",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.mnov.conditioning",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 91–98",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.schedule.three_day",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 99",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.schedule.two_day_option_1",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 100–101",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.schedule.two_day_option_2",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 101–102",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.full_body.phase_1",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 103–104",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.full_body.phase_2",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 104–105",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.full_body.phase_3",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 105–106",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.full_body.phase_4",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 106–107",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.full_body.more",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 107–108",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.full_body.more_squatting",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 108–109",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.hybrid.crossfit",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 110–116",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.beginner.full_body",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 117–118",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.assistance.abs_circuit",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 59",
+      "reviewStatus": "reviewed"
+    },
+    {
+      "ruleId": "or.assistance.library",
+      "work": "5/3/1: The Simplest and Most Effective Training System for Raw Strength",
+      "edition": "second edition",
+      "section": "PDF pp. 45–61",
+      "reviewStatus": "reviewed"
+    }
+  ]
+}

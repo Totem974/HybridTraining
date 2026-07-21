@@ -1,0 +1,497 @@
+{
+  "schemaVersion": 1,
+  "kind": "inventory",
+  "entries": [
+    {
+      "id": "OR-001",
+      "generation": "original",
+      "classification": "cycleTemplate",
+      "title": {
+        "en": "Classic 5/3/1 - four-day split",
+        "fr": "Classic 5/3/1 - four-day split"
+      },
+      "cycleTemplateId": "classic_531",
+      "sourceRuleIds": [
+        "or.classic.four_day"
+      ]
+    },
+    {
+      "id": "OR-002",
+      "generation": "original",
+      "classification": "schedule",
+      "title": {
+        "en": "Classic 5/3/1 - three-day rotation",
+        "fr": "Classic 5/3/1 - three-day rotation"
+      },
+      "sourceRuleIds": [
+        "or.classic.three_day_variant"
+      ]
+    },
+    {
+      "id": "OR-003",
+      "generation": "original",
+      "classification": "schedule",
+      "title": {
+        "en": "Classic 5/3/1 - two-day rotation",
+        "fr": "Classic 5/3/1 - two-day rotation"
+      },
+      "sourceRuleIds": [
+        "or.classic.two_day_variant"
+      ]
+    },
+    {
+      "id": "OR-004",
+      "generation": "original",
+      "classification": "sharedComponent",
+      "title": {
+        "en": "Classic loading option 1",
+        "fr": "Classic loading option 1"
+      },
+      "sourceRuleIds": [
+        "or.main.option_1"
+      ]
+    },
+    {
+      "id": "OR-005",
+      "generation": "original",
+      "classification": "documentation",
+      "title": {
+        "en": "Classic loading option 2",
+        "fr": "Classic loading option 2"
+      },
+      "sourceRuleIds": [
+        "or.main.option_2"
+      ]
+    },
+    {
+      "id": "OR-006",
+      "generation": "original",
+      "classification": "sharedComponent",
+      "title": {
+        "en": "PR set / last set",
+        "fr": "PR set / last set"
+      },
+      "sourceRuleIds": [
+        "or.performance.pr_set"
+      ]
+    },
+    {
+      "id": "OR-007",
+      "generation": "original",
+      "classification": "sharedComponent",
+      "title": {
+        "en": "Classic deload",
+        "fr": "Classic deload"
+      },
+      "sourceRuleIds": [
+        "or.deload.classic"
+      ]
+    },
+    {
+      "id": "OR-008",
+      "generation": "original",
+      "classification": "rule",
+      "title": {
+        "en": "Classic training max",
+        "fr": "Classic training max"
+      },
+      "sourceRuleIds": [
+        "or.tm.ninety_percent"
+      ]
+    },
+    {
+      "id": "OR-009",
+      "generation": "original",
+      "classification": "rule",
+      "title": {
+        "en": "Monthly progression",
+        "fr": "Monthly progression"
+      },
+      "sourceRuleIds": [
+        "or.progression.monthly"
+      ]
+    },
+    {
+      "id": "OR-010",
+      "generation": "original",
+      "classification": "rule",
+      "title": {
+        "en": "Microloading",
+        "fr": "Microloading"
+      },
+      "sourceRuleIds": [
+        "or.progression.microloading"
+      ]
+    },
+    {
+      "id": "OR-011",
+      "generation": "original",
+      "classification": "rule",
+      "title": {
+        "en": "Reset after stalling",
+        "fr": "Reset after stalling"
+      },
+      "sourceRuleIds": [
+        "or.progression.reset"
+      ]
+    },
+    {
+      "id": "OR-012",
+      "generation": "original",
+      "classification": "sharedComponent",
+      "title": {
+        "en": "Specific warm-up",
+        "fr": "Specific warm-up"
+      },
+      "sourceRuleIds": [
+        "or.warm_up.40_50_60"
+      ]
+    },
+    {
+      "id": "OR-013",
+      "generation": "original",
+      "classification": "rule",
+      "title": {
+        "en": "Estimated 1RM formula",
+        "fr": "Estimated 1RM formula"
+      },
+      "sourceRuleIds": [
+        "or.measure.epley"
+      ]
+    },
+    {
+      "id": "OR-014",
+      "generation": "original",
+      "classification": "rule",
+      "title": {
+        "en": "Bad-day protocol",
+        "fr": "Bad-day protocol"
+      },
+      "sourceRuleIds": [
+        "or.autoregulation.bad_day"
+      ]
+    },
+    {
+      "id": "OR-015",
+      "generation": "original",
+      "classification": "cycleTemplate",
+      "title": {
+        "en": "Boring But Big - same lift",
+        "fr": "Boring But Big - same lift"
+      },
+      "cycleTemplateId": "classic_boring_but_big",
+      "sourceRuleIds": [
+        "or.bbb.same_lift"
+      ]
+    },
+    {
+      "id": "OR-016",
+      "generation": "original",
+      "classification": "documentation",
+      "title": {
+        "en": "Boring But Big loading variants",
+        "fr": "Boring But Big loading variants"
+      },
+      "sourceRuleIds": [
+        "or.bbb.loading"
+      ]
+    },
+    {
+      "id": "OR-017",
+      "generation": "original",
+      "classification": "cycleTemplate",
+      "title": {
+        "en": "Triumvirate",
+        "fr": "Triumvirate"
+      },
+      "sourceRuleIds": [
+        "or.assistance.triumvirate"
+      ],
+      "cycleTemplateId": "classic_triumvirate"
+    },
+    {
+      "id": "OR-018",
+      "generation": "original",
+      "classification": "cycleTemplate",
+      "title": {
+        "en": "I'm Not Doing Jack Shit",
+        "fr": "I'm Not Doing Jack Shit"
+      },
+      "cycleTemplateId": "classic_jack_shit",
+      "sourceRuleIds": [
+        "or.assistance.jack_shit"
+      ]
+    },
+    {
+      "id": "OR-019",
+      "generation": "original",
+      "classification": "cycleTemplate",
+      "title": {
+        "en": "Periodization Bible",
+        "fr": "Periodization Bible"
+      },
+      "sourceRuleIds": [
+        "or.assistance.periodization_bible"
+      ],
+      "cycleTemplateId": "classic_periodization_bible"
+    },
+    {
+      "id": "OR-020",
+      "generation": "original",
+      "classification": "cycleTemplate",
+      "title": {
+        "en": "Bodyweight assistance",
+        "fr": "Bodyweight assistance"
+      },
+      "sourceRuleIds": [
+        "or.assistance.bodyweight"
+      ],
+      "cycleTemplateId": "classic_bodyweight"
+    },
+    {
+      "id": "OR-021",
+      "generation": "original",
+      "classification": "cycleTemplate",
+      "title": {
+        "en": "Simplest Strength Template",
+        "fr": "Simplest Strength Template"
+      },
+      "cycleTemplateId": "classic_simplest_strength",
+      "sourceRuleIds": [
+        "or.sst.progression"
+      ]
+    },
+    {
+      "id": "OR-022",
+      "generation": "original",
+      "classification": "rule",
+      "title": {
+        "en": "Simplest Strength pairings",
+        "fr": "Simplest Strength pairings"
+      },
+      "sourceRuleIds": [
+        "or.sst.pairings"
+      ]
+    },
+    {
+      "id": "OR-023",
+      "generation": "original",
+      "classification": "documentation",
+      "title": {
+        "en": "5/3/1 and Rest/Pause principle",
+        "fr": "5/3/1 and Rest/Pause principle"
+      },
+      "sourceRuleIds": [
+        "or.rest_pause.principle"
+      ]
+    },
+    {
+      "id": "OR-024",
+      "generation": "original",
+      "classification": "documentation",
+      "title": {
+        "en": "5/3/1 and Rest/Pause A/B",
+        "fr": "5/3/1 and Rest/Pause A/B"
+      },
+      "sourceRuleIds": [
+        "or.rest_pause.ab"
+      ]
+    },
+    {
+      "id": "OR-025",
+      "generation": "original",
+      "classification": "documentation",
+      "title": {
+        "en": "Rest/Pause deload",
+        "fr": "Rest/Pause deload"
+      },
+      "sourceRuleIds": [
+        "or.rest_pause.deload"
+      ]
+    },
+    {
+      "id": "OR-026",
+      "generation": "original",
+      "classification": "documentation",
+      "title": {
+        "en": "Moving North of Vag warm-up",
+        "fr": "Moving North of Vag warm-up"
+      },
+      "sourceRuleIds": [
+        "or.mnov.warm_up"
+      ]
+    },
+    {
+      "id": "OR-027",
+      "generation": "original",
+      "classification": "documentation",
+      "title": {
+        "en": "Moving North of Vag conditioning",
+        "fr": "Moving North of Vag conditioning"
+      },
+      "sourceRuleIds": [
+        "or.mnov.conditioning"
+      ]
+    },
+    {
+      "id": "OR-028",
+      "generation": "original",
+      "classification": "schedule",
+      "title": {
+        "en": "Training three days per week",
+        "fr": "Training three days per week"
+      },
+      "sourceRuleIds": [
+        "or.schedule.three_day"
+      ]
+    },
+    {
+      "id": "OR-029",
+      "generation": "original",
+      "classification": "schedule",
+      "title": {
+        "en": "Training two days per week - option 1",
+        "fr": "Training two days per week - option 1"
+      },
+      "sourceRuleIds": [
+        "or.schedule.two_day_option_1"
+      ]
+    },
+    {
+      "id": "OR-030",
+      "generation": "original",
+      "classification": "schedule",
+      "title": {
+        "en": "Training two days per week - option 2",
+        "fr": "Training two days per week - option 2"
+      },
+      "sourceRuleIds": [
+        "or.schedule.two_day_option_2"
+      ]
+    },
+    {
+      "id": "OR-031",
+      "generation": "original",
+      "classification": "cycleTemplate",
+      "cycleTemplateId": "classic_full_body_phase_1",
+      "title": {
+        "en": "Full Body Training - phase 1",
+        "fr": "Full Body Training - phase 1"
+      },
+      "sourceRuleIds": [
+        "or.full_body.phase_1"
+      ]
+    },
+    {
+      "id": "OR-032",
+      "generation": "original",
+      "classification": "cycleTemplate",
+      "cycleTemplateId": "classic_full_body_phase_2",
+      "title": {
+        "en": "Full Body Training - phase 2",
+        "fr": "Full Body Training - phase 2"
+      },
+      "sourceRuleIds": [
+        "or.full_body.phase_2"
+      ]
+    },
+    {
+      "id": "OR-033",
+      "generation": "original",
+      "classification": "cycleTemplate",
+      "cycleTemplateId": "classic_full_body_phase_3",
+      "title": {
+        "en": "Full Body Training - phase 3",
+        "fr": "Full Body Training - phase 3"
+      },
+      "sourceRuleIds": [
+        "or.full_body.phase_3"
+      ]
+    },
+    {
+      "id": "OR-034",
+      "generation": "original",
+      "classification": "documentation",
+      "title": {
+        "en": "Full Body Training - phase 4",
+        "fr": "Full Body Training - phase 4"
+      },
+      "sourceRuleIds": [
+        "or.full_body.phase_4"
+      ]
+    },
+    {
+      "id": "OR-035",
+      "generation": "original",
+      "classification": "documentation",
+      "title": {
+        "en": "More Full Body Training",
+        "fr": "More Full Body Training"
+      },
+      "sourceRuleIds": [
+        "or.full_body.more"
+      ]
+    },
+    {
+      "id": "OR-036",
+      "generation": "original",
+      "classification": "documentation",
+      "title": {
+        "en": "More Squatting",
+        "fr": "More Squatting"
+      },
+      "sourceRuleIds": [
+        "or.full_body.more_squatting"
+      ]
+    },
+    {
+      "id": "OR-037",
+      "generation": "original",
+      "classification": "documentation",
+      "title": {
+        "en": "5/3/1 and CrossFit",
+        "fr": "5/3/1 and CrossFit"
+      },
+      "sourceRuleIds": [
+        "or.hybrid.crossfit"
+      ]
+    },
+    {
+      "id": "OR-038",
+      "generation": "original",
+      "classification": "cycleTemplate",
+      "title": {
+        "en": "5/3/1 for Beginners",
+        "fr": "5/3/1 for Beginners"
+      },
+      "sourceRuleIds": [
+        "or.beginner.full_body"
+      ],
+      "cycleTemplateId": "classic_for_beginners"
+    },
+    {
+      "id": "OR-039",
+      "generation": "original",
+      "classification": "sharedComponent",
+      "title": {
+        "en": "Stronger Abs Circuit",
+        "fr": "Stronger Abs Circuit"
+      },
+      "sourceRuleIds": [
+        "or.assistance.abs_circuit"
+      ]
+    },
+    {
+      "id": "OR-040",
+      "generation": "original",
+      "classification": "documentation",
+      "title": {
+        "en": "Original assistance library",
+        "fr": "Original assistance library"
+      },
+      "sourceRuleIds": [
+        "or.assistance.library"
+      ]
+    }
+  ]
+}

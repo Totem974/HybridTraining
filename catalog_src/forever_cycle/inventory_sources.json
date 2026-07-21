@@ -1,0 +1,1281 @@
+﻿{
+    "schemaVersion":  1,
+    "kind":  "sources",
+    "sources":  [
+                    {
+                        "ruleId":  "fv.entry.133",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 29-30",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.134",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 29-30",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.135",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 29-30",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.136",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 31-35",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.137",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 33-35",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.138",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 33-35",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.139",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 32-35",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.140",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 32-35",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.141",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 50-56",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.142",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 57-59",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.143",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 59-60",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.144",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 60-61",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.145",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 61-62",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.146",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 63",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.147",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 64-66",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.148",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 66-67",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.149",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 67",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.150",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 67-68",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.151",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 68-69",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.152",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 68-69",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.153",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 68-69",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.154",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 71-72",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.155",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 73",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.156",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 73-75",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.157",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 75-77",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.158",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 77-79",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.159",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 79-80",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.160",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 80-82",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.161",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 82-83",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.162",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 83-84",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.163",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 84",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.164",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 84-85",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.165",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 84-85",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.166",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 85",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.167",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 86-87",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.168",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 87-89",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.169",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 89-92",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.170",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 92-93",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.171",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 92-93",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.172",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 93-95",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.173",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 95-96",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.174",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 97-98",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.175",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 98-99",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.176",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 99-104",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.177",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 105-106",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.178",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 107-108",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.179",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 109",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.180",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 109-110",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.181",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 111-112",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.182",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 113-114",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.183",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 115-116",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.184",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 117-118",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.185",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 119",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.186",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 120-122",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.187",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 123",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.188",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 124-126",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.189",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 126-127",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.190",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 127-129",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.191",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 129-130",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.192",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 130-133",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.193",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 133-134",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.194",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 134-135",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.195",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 135-136",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.196",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 137-139",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.197",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 139-140",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.198",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 140-142",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.199",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 142-144",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.200",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 144-146",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.201",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 146-147",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.202",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 147-150",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.203",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 150-151",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.204",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 151",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.205",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 151-152",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.206",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 152-153",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.207",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 153-154",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.208",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 155-157",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.209",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 158",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.210",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 158",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.211",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 159",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.212",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 159",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.213",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 160",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.214",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 160",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.215",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 161",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.216",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 161",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.217",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 162",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.218",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 162",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.219",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 163",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.220",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 163",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.221",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 164",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.222",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 164",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.223",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 165",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.224",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 165",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.225",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 166",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.226",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 167",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.227",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 168",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.228",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 168",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.229",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 169",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.230",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 169",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.231",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 170",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.232",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 170",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.233",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 171-174",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.234",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 174-176",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.235",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 176-180",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.236",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 181-182",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.237",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 183-184",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.238",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 185-189",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.239",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 189-191",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.240",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 192-194",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.241",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 194",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.242",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 195",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.243",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 195",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.244",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 195",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.245",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 195-196",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.246",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 196",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.247",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 196",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.248",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 197-199",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.249",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 198-199",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.250",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 199-202",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.251",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 202-203",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.252",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 204-208",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.253",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 209-210",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.254",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 211-212",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.255",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 212-213",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.256",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 213-216",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.257",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 215-216",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.258",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 217-222",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.259",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 223-226",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.260",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 227-229",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.261",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 227-229",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.262",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 230-231",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.263",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 231-232",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.264",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 233",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.265",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 234-235",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.266",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 235-236",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.267",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 237",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.268",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 237-239",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.269",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 239-240",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.270",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 240",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.271",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 240",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.272",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 240",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.273",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 241-242",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.274",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 241-242",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.275",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 243-245",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.276",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 244-245",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.277",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 245-248",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.278",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 249-250",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.279",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 251-252",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.280",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 253",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.281",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 263-265",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.282",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 15, 176-180",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.283",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 32, 167-170",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.284",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 57 onward",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.285",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 15-17, 77-80",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.286",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 75-80",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.287",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 71-85",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.288",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 140-146",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.289",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 80-82",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.290",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 57-70",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.291",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 146-154",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.292",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 99-112",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.293",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 130-136",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.294",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 36-48",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.295",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 36-48",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.296",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 36-48",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.297",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 21-27",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.298",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 19-21",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.299",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 256-266",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.300",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 256-265",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.301",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 279",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.302",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 279",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.303",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 279",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.304",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 280",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.305",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 281",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.306",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 70, 85, 142, 145, 157, 210",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.307",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 70, 85, 142, 145, 157, 210",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.308",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 70, 85, 142, 145, 157, 210",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.309",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 70, 85, 142, 145, 157, 210",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.310",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 70, 85, 142, 145, 157, 210",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.311",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 70, 85, 142, 145, 157, 210",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.312",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 70, 85, 142, 145, 157, 210",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.313",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 70, 85, 142, 145, 157, 210",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "fv.entry.314",
+                        "work":  "5/3/1 Forever",
+                        "edition":  "First edition (2017)",
+                        "section":  "pp. 70, 85, 142, 145, 157, 210",
+                        "reviewStatus":  "reviewed"
+                    }
+                ]
+}
+

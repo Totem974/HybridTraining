@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "kind": "optionSchemas",
+  "optionSchemas": [{
+    "id":"powerlifting_classic_531_options",
+    "revision":1,
+    "sourceRuleIds":["pl.001"],
+    "parameters":[
+      {"id":"training_max_ratio","type":"percentage","scope":"global","default":9000,"minimum":9000,"maximum":9000,"step":null,"allowedValues":[],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
+      {"id":"include_deload","type":"boolean","scope":"global","default":true,"minimum":null,"maximum":null,"step":null,"allowedValues":[true],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}}
+    ]
+  }]
+}

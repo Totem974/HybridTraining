@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "kind": "components",
+  "components": [
+    {
+      "id": "warmup_original_40_50_60",
+      "revision": 1,
+      "role": "warm_up",
+      "labels": {"en": "Original 40/50/60 warm-up", "fr": "Échauffement Original 40/50/60"},
+      "sourceRuleIds": ["or.warm_up.40_50_60"],
+      "parameterSchemaIds": [],
+      "constraints": {"movementRelation": "sameAsMain", "setOrder": "declared"},
+      "compatibilities": {"generations": ["original", "beyond", "forever"], "mainWorkRoles": ["main_work"]},
+      "block": {"id": "warm_up", "role": "warm_up", "sets": [
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 4000}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 5000}},
+        {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 6000}}
+      ]}
+    },
+    {
+      "id": "main_standard_5_week",
+      "revision": 1,
+      "role": "main_work",
+      "labels": {"en": "Standard 5s week", "fr": "Semaine standard de 5"},
+      "sourceRuleIds": ["or.main.option_1", "or.performance.pr_set"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "five", "lastSet": "amrapPermission"},
+      "compatibilities": {"weekOrders": ["five_three_one", "three_five_one"]},
+      "block": {"id": "main", "role": "main_work", "sets": [
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 6500}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+        {"repetitions": {"type": "amrap", "minimum": 5}, "load": {"type": "training_max_percentage", "basisPoints": 8500}}
+      ]}
+    },
+    {
+      "id": "main_standard_3_week",
+      "revision": 1,
+      "role": "main_work",
+      "labels": {"en": "Standard 3s week", "fr": "Semaine standard de 3"},
+      "sourceRuleIds": ["or.main.option_1", "or.performance.pr_set"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "three", "lastSet": "amrapPermission"},
+      "compatibilities": {"weekOrders": ["five_three_one", "three_five_one"]},
+      "block": {"id": "main", "role": "main_work", "sets": [
+        {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 7000}},
+        {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 8000}},
+        {"repetitions": {"type": "amrap", "minimum": 3}, "load": {"type": "training_max_percentage", "basisPoints": 9000}}
+      ]}
+    },
+    {
+      "id": "main_standard_531_week",
+      "revision": 1,
+      "role": "main_work",
+      "labels": {"en": "Standard 5/3/1 week", "fr": "Semaine standard 5/3/1"},
+      "sourceRuleIds": ["or.main.option_1", "or.performance.pr_set"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "fiveThreeOne", "lastSet": "amrapPermission"},
+      "compatibilities": {"weekOrders": ["five_three_one", "three_five_one"]},
+      "block": {"id": "main", "role": "main_work", "sets": [
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+        {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 8500}},
+        {"repetitions": {"type": "amrap", "minimum": 1}, "load": {"type": "training_max_percentage", "basisPoints": 9500}}
+      ]}
+    },
+    {
+      "id": "main_fives_pro_5_week",
+      "revision": 1,
+      "role": "main_work",
+      "labels": {"en": "5's Pro 5s week", "fr": "5's Pro semaine de 5"},
+      "sourceRuleIds": ["beyond_063"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "five", "lastSet": "fixed"},
+      "compatibilities": {"weekOrders": ["five_three_one", "three_five_one"]},
+      "block": {"id": "main", "role": "main_work", "sets": [
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 6500}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 8500}}
+      ]}
+    },
+    {
+      "id": "main_fives_pro_3_week",
+      "revision": 1,
+      "role": "main_work",
+      "labels": {"en": "5's Pro 3s week", "fr": "5's Pro semaine de 3"},
+      "sourceRuleIds": ["beyond_063"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "three", "lastSet": "fixed"},
+      "compatibilities": {"weekOrders": ["five_three_one", "three_five_one"]},
+      "block": {"id": "main", "role": "main_work", "sets": [
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 7000}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 8000}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 9000}}
+      ]}
+    },
+    {
+      "id": "main_fives_pro_531_week",
+      "revision": 1,
+      "role": "main_work",
+      "labels": {"en": "5's Pro 5/3/1 week", "fr": "5's Pro semaine 5/3/1"},
+      "sourceRuleIds": ["beyond_063"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "fiveThreeOne", "lastSet": "fixed"},
+      "compatibilities": {"weekOrders": ["five_three_one", "three_five_one"]},
+      "block": {"id": "main", "role": "main_work", "sets": [
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 8500}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 9500}}
+      ]}
+    },
+    {
+      "id": "deload_original_40_50_60",
+      "revision": 1,
+      "role": "deload",
+      "labels": {"en": "Original deload 40/50/60", "fr": "Deload Original 40/50/60"},
+      "sourceRuleIds": ["or.deload.classic"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "deload", "lastSet": "fixed"},
+      "compatibilities": {"generations": ["original"]},
+      "block": {"id": "deload", "role": "deload", "sets": [
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 4000}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 5000}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 6000}}
+      ]}
+    },
+    {
+      "id": "supplemental_bbb_original_5x10_50",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "BBB Original 5x10 at 50% TM", "fr": "BBB Original 5x10 à 50 % TM"},
+      "sourceRuleIds": ["or.bbb.same_lift", "beyond_015"],
+      "parameterSchemaIds": [],
+      "constraints": {"movementRelation": "sameAsMain", "setOrder": "declared"},
+      "compatibilities": {"generations": ["original", "beyond"]},
+      "block": {"id": "supplemental", "role": "supplemental", "sets": [
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 5000}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 5000}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 5000}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 5000}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 5000}}
+      ]}
+    }
+  ]
+}

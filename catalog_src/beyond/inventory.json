@@ -1,0 +1,1294 @@
+{
+    "schemaVersion":  1,
+    "kind":  "inventory",
+    "entries":  [
+                    {
+                        "id":  "beyond_001",
+                        "generation":  "beyond",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "Cycle 6 semaines - Ordre 5/3/1",
+                                      "fr":  "Cycle 6 semaines - Ordre 5/3/1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_001"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_002",
+                        "generation":  "beyond",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "Cycle 6 semaines - Ordre 3/5/1",
+                                      "fr":  "Cycle 6 semaines - Ordre 3/5/1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_002"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_003",
+                        "generation":  "beyond",
+                        "classification":  "sharedComponent",
+                        "title":  {
+                                      "en":  "Beyond warm-up - Incréments de 10% depuis la première série",
+                                      "fr":  "Beyond warm-up - Incréments de 10% depuis la première série"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_003"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_004",
+                        "generation":  "beyond",
+                        "classification":  "cycleTemplate",
+                        "cycleTemplateId":  "beyond_pyramid",
+                        "title":  {
+                                      "en":  "5/3/1 Pyramid - Montée puis redescente",
+                                      "fr":  "5/3/1 Pyramid - Montée puis redescente"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_004"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_005",
+                        "generation":  "beyond",
+                        "classification":  "cycleTemplate",
+                        "cycleTemplateId":  "beyond_first_set_last",
+                        "title":  {
+                                      "en":  "First Set Last - AMRAP FSL",
+                                      "fr":  "First Set Last - AMRAP FSL"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_005"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_006",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "First Set Last - Multiple Sets",
+                                      "fr":  "First Set Last - Multiple Sets"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_006"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_007",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "First Set Last - Rest Pause (upper body)",
+                                      "fr":  "First Set Last - Rest Pause (upper body)"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_007"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_008",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "First Set Last - Pause Squat / Pause Bench",
+                                      "fr":  "First Set Last - Pause Squat / Pause Bench"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_008"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_009",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 Strength Phase - Part 1",
+                                      "fr":  "5/3/1 Strength Phase - Part 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_009"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_010",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 Strength Phase - Part 2",
+                                      "fr":  "5/3/1 Strength Phase - Part 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_010"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_011",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 + Dynamic Work - Variation 1",
+                                      "fr":  "5/3/1 + Dynamic Work - Variation 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_011"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_012",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 + Dynamic Work - Variation 1",
+                                      "fr":  "5/3/1 + Dynamic Work - Variation 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_012"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_013",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 + Dynamic Work - Variation 2",
+                                      "fr":  "5/3/1 + Dynamic Work - Variation 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_013"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_014",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 + Dynamic Work - Variation 2",
+                                      "fr":  "5/3/1 + Dynamic Work - Variation 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_014"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_015",
+                        "generation":  "beyond",
+                        "classification":  "cycleTemplate",
+                        "cycleTemplateId":  "beyond_boring_but_big",
+                        "title":  {
+                                      "en":  "Boring But Big - Base",
+                                      "fr":  "Boring But Big - Base"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_015"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_016",
+                        "generation":  "beyond",
+                        "classification":  "sharedComponent",
+                        "title":  {
+                                      "en":  "Boring But Big - Template 1",
+                                      "fr":  "Boring But Big - Template 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_016"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_017",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Big - Template 2",
+                                      "fr":  "Boring But Big - Template 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_017"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_018",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Big - Prep phase",
+                                      "fr":  "Boring But Big - Prep phase"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_018"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_019",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Big - Prep + standard 50%",
+                                      "fr":  "Boring But Big - Prep + standard 50%"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_019"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_020",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Big - Variation I",
+                                      "fr":  "Boring But Big - Variation I"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_020"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_021",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Big - Variation II",
+                                      "fr":  "Boring But Big - Variation II"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_021"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_022",
+                        "generation":  "beyond",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "Boring But Big - 6 Week Challenge",
+                                      "fr":  "Boring But Big - 6 Week Challenge"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_022"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_023",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Big - 5×5 variation",
+                                      "fr":  "Boring But Big - 5×5 variation"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_023"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_024",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Big - 5×3 variation",
+                                      "fr":  "Boring But Big - 5×3 variation"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_024"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_025",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Big - 5×1 variation",
+                                      "fr":  "Boring But Big - 5×1 variation"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_025"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_026",
+                        "generation":  "beyond",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "Boring But Big - 13 Week Challenge",
+                                      "fr":  "Boring But Big - 13 Week Challenge"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_026"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_027",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Big - 2 Days/Week",
+                                      "fr":  "Boring But Big - 2 Days/Week"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_027"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_028",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Big - Rule of 50",
+                                      "fr":  "Boring But Big - Rule of 50"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_028"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_029",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 and the Fatherland - GVT Template 1",
+                                      "fr":  "5/3/1 and the Fatherland - GVT Template 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_029"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_030",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 and the Fatherland - GVT Template 2",
+                                      "fr":  "5/3/1 and the Fatherland - GVT Template 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_030"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_031",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 and the Fatherland - GVT 3 jours",
+                                      "fr":  "5/3/1 and the Fatherland - GVT 3 jours"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_031"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_032",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 and the Fatherland - GVT 2 jours",
+                                      "fr":  "5/3/1 and the Fatherland - GVT 2 jours"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_032"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_033",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 and the Fatherland - BBB 3 semaines → GVT 3 semaines",
+                                      "fr":  "5/3/1 and the Fatherland - BBB 3 semaines → GVT 3 semaines"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_033"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_034",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 SVR Training - Volume + rep record + singles",
+                                      "fr":  "5/3/1 SVR Training - Volume + rep record + singles"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_034"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_035",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Rule of 10 - 10 reps totales au top set",
+                                      "fr":  "Rule of 10 - 10 reps totales au top set"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_035"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_036",
+                        "generation":  "beyond",
+                        "classification":  "sharedComponent",
+                        "title":  {
+                                      "en":  "Joker Sets - Jokers après PR set",
+                                      "fr":  "Joker Sets - Jokers après PR set"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_036"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_037",
+                        "generation":  "beyond",
+                        "classification":  "sharedComponent",
+                        "title":  {
+                                      "en":  "Joker Supersets - Upper-body supersets",
+                                      "fr":  "Joker Supersets - Upper-body supersets"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_037"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_038",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Base - Ramp 10→100% TM",
+                                      "fr":  "Base - Ramp 10→100% TM"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_038"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_039",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Beyond 5/3/1 Training Maximally - Option 1",
+                                      "fr":  "Beyond 5/3/1 Training Maximally - Option 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_039"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_040",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Beyond 5/3/1 Training Maximally - Option 2",
+                                      "fr":  "Beyond 5/3/1 Training Maximally - Option 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_040"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_041",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Beyond 5/3/1 Training Maximally - Option 3",
+                                      "fr":  "Beyond 5/3/1 Training Maximally - Option 3"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_041"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_042",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Beyond 5/3/1 Training Maximally - Option 4",
+                                      "fr":  "Beyond 5/3/1 Training Maximally - Option 4"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_042"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_043",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Beyond 5/3/1 Training Maximally - Option 5",
+                                      "fr":  "Beyond 5/3/1 Training Maximally - Option 5"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_043"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_044",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Beyond 5/3/1 Training Maximally - Option 6",
+                                      "fr":  "Beyond 5/3/1 Training Maximally - Option 6"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_044"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_045",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Beyond 5/3/1 Training Maximally - Option 7",
+                                      "fr":  "Beyond 5/3/1 Training Maximally - Option 7"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_045"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_046",
+                        "generation":  "beyond",
+                        "classification":  "schedule",
+                        "title":  {
+                                      "en":  "Training schedule - Template 1",
+                                      "fr":  "Training schedule - Template 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_046"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_047",
+                        "generation":  "beyond",
+                        "classification":  "schedule",
+                        "title":  {
+                                      "en":  "Training schedule - Template 2",
+                                      "fr":  "Training schedule - Template 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_047"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_048",
+                        "generation":  "beyond",
+                        "classification":  "schedule",
+                        "title":  {
+                                      "en":  "Training schedule - Template 3",
+                                      "fr":  "Training schedule - Template 3"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_048"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_049",
+                        "generation":  "beyond",
+                        "classification":  "schedule",
+                        "title":  {
+                                      "en":  "Training schedule - Template 4",
+                                      "fr":  "Training schedule - Template 4"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_049"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_050",
+                        "generation":  "beyond",
+                        "classification":  "schedule",
+                        "title":  {
+                                      "en":  "Training schedule - Template 5",
+                                      "fr":  "Training schedule - Template 5"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_050"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_051",
+                        "generation":  "beyond",
+                        "classification":  "schedule",
+                        "title":  {
+                                      "en":  "Training schedule - Template 6",
+                                      "fr":  "Training schedule - Template 6"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_051"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_052",
+                        "generation":  "beyond",
+                        "classification":  "schedule",
+                        "title":  {
+                                      "en":  "Training schedule - Template 7",
+                                      "fr":  "Training schedule - Template 7"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_052"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_053",
+                        "generation":  "beyond",
+                        "classification":  "schedule",
+                        "title":  {
+                                      "en":  "Training schedule - Template 8",
+                                      "fr":  "Training schedule - Template 8"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_053"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_054",
+                        "generation":  "beyond",
+                        "classification":  "schedule",
+                        "title":  {
+                                      "en":  "Training schedule - Template 9",
+                                      "fr":  "Training schedule - Template 9"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_054"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_055",
+                        "generation":  "beyond",
+                        "classification":  "schedule",
+                        "title":  {
+                                      "en":  "Training schedule - Template 10",
+                                      "fr":  "Training schedule - Template 10"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_055"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_056",
+                        "generation":  "beyond",
+                        "classification":  "schedule",
+                        "title":  {
+                                      "en":  "Training schedule - Template 11",
+                                      "fr":  "Training schedule - Template 11"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_056"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_057",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body Training - Base",
+                                      "fr":  "Full Body Training - Base"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_057"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_058",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body Power Clean - Variation 1",
+                                      "fr":  "Full Body Power Clean - Variation 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_058"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_059",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body Power Clean - Part 2",
+                                      "fr":  "Full Body Power Clean - Part 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_059"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_060",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body Full Boring - Full Boring",
+                                      "fr":  "Full Body Full Boring - Full Boring"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_060"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_061",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Spinal Tap Training - Part 1",
+                                      "fr":  "Spinal Tap Training - Part 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_061"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_062",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Spinal Tap Training - Part 2",
+                                      "fr":  "Spinal Tap Training - Part 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_062"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_063",
+                        "generation":  "beyond",
+                        "classification":  "cycleTemplate",
+                        "cycleTemplateId":  "beyond_fives_progression",
+                        "title":  {
+                                      "en":  "5’s Progression - Beginner",
+                                      "fr":  "5’s Progression - Beginner"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_063"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_064",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5’s Progression - Advanced / assistance",
+                                      "fr":  "5’s Progression - Advanced / assistance"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_064"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_065",
+                        "generation":  "beyond",
+                        "classification":  "sharedComponent",
+                        "title":  {
+                                      "en":  "More on the Deload - Deload option 1",
+                                      "fr":  "More on the Deload - Deload option 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_065"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_066",
+                        "generation":  "beyond",
+                        "classification":  "sharedComponent",
+                        "title":  {
+                                      "en":  "More on the Deload - Deload option 2",
+                                      "fr":  "More on the Deload - Deload option 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_066"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_067",
+                        "generation":  "beyond",
+                        "classification":  "sharedComponent",
+                        "title":  {
+                                      "en":  "More on the Deload - Deload option 3",
+                                      "fr":  "More on the Deload - Deload option 3"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_067"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_068",
+                        "generation":  "beyond",
+                        "classification":  "sharedComponent",
+                        "title":  {
+                                      "en":  "More on the Deload - Deload option 4",
+                                      "fr":  "More on the Deload - Deload option 4"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_068"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_069",
+                        "generation":  "beyond",
+                        "classification":  "sharedComponent",
+                        "title":  {
+                                      "en":  "More on the Deload - Deload option 5",
+                                      "fr":  "More on the Deload - Deload option 5"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_069"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_070",
+                        "generation":  "beyond",
+                        "classification":  "sharedComponent",
+                        "title":  {
+                                      "en":  "More on the Deload - Full Body Deload",
+                                      "fr":  "More on the Deload - Full Body Deload"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_070"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_071",
+                        "generation":  "beyond",
+                        "classification":  "sharedComponent",
+                        "title":  {
+                                      "en":  "More on the Deload - High Intensity Deload",
+                                      "fr":  "More on the Deload - High Intensity Deload"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_071"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_072",
+                        "generation":  "beyond",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "28 Weeks of Training - Programme annuel partiel",
+                                      "fr":  "28 Weeks of Training - Programme annuel partiel"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_072"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_073",
+                        "generation":  "beyond",
+                        "classification":  "schedule",
+                        "title":  {
+                                      "en":  "28 Weeks of Training - Schedule 1",
+                                      "fr":  "28 Weeks of Training - Schedule 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_073"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_074",
+                        "generation":  "beyond",
+                        "classification":  "schedule",
+                        "title":  {
+                                      "en":  "28 Weeks of Training - Schedule 2",
+                                      "fr":  "28 Weeks of Training - Schedule 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_074"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_075",
+                        "generation":  "beyond",
+                        "classification":  "schedule",
+                        "title":  {
+                                      "en":  "28 Weeks of Training - Schedule 3",
+                                      "fr":  "28 Weeks of Training - Schedule 3"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_075"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_076",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Advanced 5/3/1 - 5×5 / 5×3 / 5×1",
+                                      "fr":  "Advanced 5/3/1 - 5×5 / 5×3 / 5×1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_076"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_077",
+                        "generation":  "beyond",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "2×2×2 - Deux muscu, deux mobilité, deux conditioning",
+                                      "fr":  "2×2×2 - Deux muscu, deux mobilité, deux conditioning"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_077"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_078",
+                        "generation":  "beyond",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "2 Day/Week - Hypertrophy Phase",
+                                      "fr":  "2 Day/Week - Hypertrophy Phase"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_078"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_079",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Hypertrophy Phase - Bad Knees",
+                                      "fr":  "Hypertrophy Phase - Bad Knees"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_079"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_080",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Hypertrophy Phase - Bad Back",
+                                      "fr":  "Hypertrophy Phase - Bad Back"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_080"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_081",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Hypertrophy Phase - Bad Shoulders",
+                                      "fr":  "Hypertrophy Phase - Bad Shoulders"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_081"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_082",
+                        "generation":  "beyond",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "2 Day/Week - Strength Phase",
+                                      "fr":  "2 Day/Week - Strength Phase"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_082"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_083",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Strength Phase - Changes / adaptations",
+                                      "fr":  "Strength Phase - Changes / adaptations"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_083"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_084",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Two Day/Week – New Template - 4 lifts/semaine",
+                                      "fr":  "Two Day/Week – New Template - 4 lifts/semaine"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_084"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_085",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "S.S.S. — Singles, Speed, Size - Système général",
+                                      "fr":  "S.S.S. — Singles, Speed, Size - Système général"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_085"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_086",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "12-Week S.S.S. Program - Phase 1",
+                                      "fr":  "12-Week S.S.S. Program - Phase 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_086"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_087",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "12-Week S.S.S. Program - Phase 2",
+                                      "fr":  "12-Week S.S.S. Program - Phase 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_087"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_088",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "12-Week S.S.S. Program - Prep phase",
+                                      "fr":  "12-Week S.S.S. Program - Prep phase"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_088"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_089",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Volume Work 75/85 - Base",
+                                      "fr":  "Volume Work 75/85 - Base"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_089"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_090",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Volume Work 75/85 - 75% Volume Work",
+                                      "fr":  "Volume Work 75/85 - 75% Volume Work"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_090"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_091",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Volume Work 75/85 - 85% Volume Work",
+                                      "fr":  "Volume Work 75/85 - 85% Volume Work"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_091"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_092",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Volume Work 75/85 - Peaking Phase",
+                                      "fr":  "Volume Work 75/85 - Peaking Phase"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_092"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_093",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Volume Work 75/85 - Template 1",
+                                      "fr":  "Volume Work 75/85 - Template 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_093"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_094",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Volume Work 75/85 - Template 2",
+                                      "fr":  "Volume Work 75/85 - Template 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_094"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_095",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Volume Work 75/85 - Template 3",
+                                      "fr":  "Volume Work 75/85 - Template 3"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_095"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_096",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Volume Work 75/85 - Template 4",
+                                      "fr":  "Volume Work 75/85 - Template 4"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_096"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_097",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Big 3 Month Challenge - 3 mois",
+                                      "fr":  "Boring But Big 3 Month Challenge - 3 mois"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_097"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_098",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Strength Challenge - Weeks 1–4",
+                                      "fr":  "Strength Challenge - Weeks 1–4"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_098"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_099",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Strength Challenge - Weeks 5–8",
+                                      "fr":  "Strength Challenge - Weeks 5–8"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_099"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_100",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Strength Challenge - Weeks 9–12 / Test",
+                                      "fr":  "Strength Challenge - Weeks 9–12 / Test"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_100"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_101",
+                        "generation":  "beyond",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "Prowler Challenge - 12-week challenge",
+                                      "fr":  "Prowler Challenge - 12-week challenge"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_101"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_102",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "100 Rep Challenge - Programme complet",
+                                      "fr":  "100 Rep Challenge - Programme complet"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_102"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_103",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "100 Rep Challenge - Upper Body 100",
+                                      "fr":  "100 Rep Challenge - Upper Body 100"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_103"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_104",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "100 Rep Challenge - Lower Body 100",
+                                      "fr":  "100 Rep Challenge - Lower Body 100"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_104"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_105",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 Rest Pause Challenge - 6 weeks",
+                                      "fr":  "5/3/1 Rest Pause Challenge - 6 weeks"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_105"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_106",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 Frequency Project - Original",
+                                      "fr":  "5/3/1 Frequency Project - Original"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_106"
+                                          ]
+                    },
+                    {
+                        "id":  "beyond_107",
+                        "generation":  "beyond",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 Frequency Project - 2.0",
+                                      "fr":  "5/3/1 Frequency Project - 2.0"
+                                  },
+                        "sourceRuleIds":  [
+                                              "beyond_107"
+                                          ]
+                    }
+                ]
+}

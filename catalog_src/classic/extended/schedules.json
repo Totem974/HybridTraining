@@ -1,0 +1,124 @@
+﻿{
+    "schemaVersion":  1,
+    "kind":  "schedules",
+    "schedules":  [
+                      {
+                          "id":  "classic_extended_three_day_full_body",
+                          "revision":  1,
+                          "labels":  {
+                                         "en":  "Three-day full-body",
+                                         "fr":  "Corps entier sur trois jours"
+                                     },
+                          "sourceRuleIds":  [
+                                                "or.full_body.phase_1",
+                                                "or.beginner.full_body"
+                                            ],
+                          "type":  "multiMovement",
+                          "sessions":  [
+                                           {
+                                               "id":  "monday",
+                                               "role":  "fullBodyA",
+                                               "movementIds":  [
+                                                                   "back_squat",
+                                                                   "bench_press",
+                                                                   "dumbbell_press",
+                                                                   "dumbbell_row"
+                                                               ]
+                                           },
+                                           {
+                                               "id":  "wednesday",
+                                               "role":  "fullBodyB",
+                                               "movementIds":  [
+                                                                   "deadlift",
+                                                                   "overhead_press",
+                                                                   "back_squat",
+                                                                   "bench_press",
+                                                                   "chin_up"
+                                                               ]
+                                           },
+                                           {
+                                               "id":  "friday",
+                                               "role":  "fullBodyC",
+                                               "movementIds":  [
+                                                                   "bench_press",
+                                                                   "back_squat",
+                                                                   "overhead_press",
+                                                                   "deadlift"
+                                                               ]
+                                           }
+                                       ]
+                      },
+                      {
+                          "id":  "classic_extended_two_day_option_one",
+                          "revision":  1,
+                          "labels":  {
+                                         "en":  "Two-day paired lifts",
+                                         "fr":  "Deux jours, mouvements apparies"
+                                     },
+                          "sourceRuleIds":  [
+                                                "or.schedule.two_day_option_1"
+                                            ],
+                          "type":  "multiMovement",
+                          "sessions":  [
+                                           {
+                                               "id":  "day_one",
+                                               "role":  "pairedLifts",
+                                               "movementIds":  [
+                                                                   "back_squat",
+                                                                   "bench_press"
+                                                               ]
+                                           },
+                                           {
+                                               "id":  "day_two",
+                                               "role":  "pairedLifts",
+                                               "movementIds":  [
+                                                                   "deadlift",
+                                                                   "overhead_press"
+                                                               ]
+                                           }
+                                       ]
+                      },
+                      {
+                          "id":  "classic_extended_two_day_option_two",
+                          "revision":  1,
+                          "labels":  {
+                                         "en":  "Two-day rotating lifts",
+                                         "fr":  "Deux jours, mouvements en rotation"
+                                     },
+                          "sourceRuleIds":  [
+                                                "or.schedule.two_day_option_2"
+                                            ],
+                          "type":  "rotating",
+                          "sessions":  [
+                                           {
+                                               "id":  "overhead_press",
+                                               "role":  "mainLift",
+                                               "movementIds":  [
+                                                                   "overhead_press"
+                                                               ]
+                                           },
+                                           {
+                                               "id":  "deadlift",
+                                               "role":  "mainLift",
+                                               "movementIds":  [
+                                                                   "deadlift"
+                                                               ]
+                                           },
+                                           {
+                                               "id":  "bench_press",
+                                               "role":  "mainLift",
+                                               "movementIds":  [
+                                                                   "bench_press"
+                                                               ]
+                                           },
+                                           {
+                                               "id":  "back_squat",
+                                               "role":  "mainLift",
+                                               "movementIds":  [
+                                                                   "back_squat"
+                                                               ]
+                                           }
+                                       ]
+                      }
+                  ]
+}

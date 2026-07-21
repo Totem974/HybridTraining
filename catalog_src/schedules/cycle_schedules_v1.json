@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "kind": "schedules",
+  "schedules": [
+    {
+      "id": "schedule_four_day_fixed",
+      "revision": 1,
+      "labels": {"en": "Four-day fixed standard split", "fr": "Répartition standard fixe sur quatre jours"},
+      "sourceRuleIds": ["or.classic.four_day"],
+      "type": "fixed",
+      "sessions": [
+        {"id": "overhead_press", "role": "mainLift", "movementIds": ["overhead_press"]},
+        {"id": "deadlift", "role": "mainLift", "movementIds": ["deadlift"]},
+        {"id": "bench_press", "role": "mainLift", "movementIds": ["bench_press"]},
+        {"id": "squat", "role": "mainLift", "movementIds": ["squat"]}
+      ]
+    },
+    {
+      "id": "schedule_three_day_rotating",
+      "revision": 1,
+      "labels": {"en": "Three-day rotating four-lift schedule", "fr": "Rotation des quatre mouvements sur trois jours"},
+      "sourceRuleIds": ["or.schedule.three_day"],
+      "type": "rotating",
+      "sessions": [
+        {"id": "overhead_press", "role": "mainLift", "movementIds": ["overhead_press"]},
+        {"id": "deadlift", "role": "mainLift", "movementIds": ["deadlift"]},
+        {"id": "bench_press", "role": "mainLift", "movementIds": ["bench_press"]},
+        {"id": "squat", "role": "mainLift", "movementIds": ["squat"]}
+      ]
+    },
+    {
+      "id": "schedule_two_day_multi_movement_option_one",
+      "revision": 1,
+      "labels": {"en": "Two-day, two-lift schedule", "fr": "Programme deux jours avec deux mouvements"},
+      "sourceRuleIds": ["or.schedule.two_day_option_1"],
+      "type": "multiMovement",
+      "sessions": [
+        {"id": "squat_bench_press", "role": "multiLift", "movementIds": ["squat", "bench_press"]},
+        {"id": "deadlift_overhead_press", "role": "multiLift", "movementIds": ["deadlift", "overhead_press"]}
+      ]
+    },
+    {
+      "id": "schedule_two_day_rotating_four_lifts",
+      "revision": 1,
+      "labels": {"en": "Two-day rotating four-lift schedule", "fr": "Rotation des quatre mouvements sur deux jours"},
+      "sourceRuleIds": ["or.schedule.two_day_option_2"],
+      "type": "rotating",
+      "sessions": [
+        {"id": "overhead_press", "role": "mainLift", "movementIds": ["overhead_press"]},
+        {"id": "deadlift", "role": "mainLift", "movementIds": ["deadlift"]},
+        {"id": "bench_press", "role": "mainLift", "movementIds": ["bench_press"]},
+        {"id": "squat", "role": "mainLift", "movementIds": ["squat"]}
+      ]
+    }
+  ]
+}

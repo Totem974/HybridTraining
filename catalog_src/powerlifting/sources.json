@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "kind": "sources",
+  "sources": [
+    {"ruleId":"pl.001","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 8â€“21","reviewStatus":"reviewed"},
+    {"ruleId":"pl.002","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 11â€“13","reviewStatus":"reviewed"},
+    {"ruleId":"pl.003","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 25â€“27","reviewStatus":"reviewed"},
+    {"ruleId":"pl.004","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 28â€“30","reviewStatus":"reviewed"},
+    {"ruleId":"pl.005","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 31â€“33","reviewStatus":"reviewed"},
+    {"ruleId":"pl.006","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 33â€“37","reviewStatus":"reviewed"},
+    {"ruleId":"pl.007","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 37â€“41","reviewStatus":"reviewed"},
+    {"ruleId":"pl.008","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 41â€“44","reviewStatus":"reviewed"},
+    {"ruleId":"pl.009","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 45â€“49","reviewStatus":"reviewed"},
+    {"ruleId":"pl.010","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 49â€“53","reviewStatus":"reviewed"},
+    {"ruleId":"pl.011","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 53â€“54","reviewStatus":"reviewed"},
+    {"ruleId":"pl.012","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 55â€“57","reviewStatus":"reviewed"},
+    {"ruleId":"pl.013","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF p. 57","reviewStatus":"reviewed"},
+    {"ruleId":"pl.014","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 57â€“58","reviewStatus":"reviewed"},
+    {"ruleId":"pl.015","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF p. 59","reviewStatus":"reviewed"},
+    {"ruleId":"pl.016","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 60â€“62","reviewStatus":"reviewed"},
+    {"ruleId":"pl.017","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 64â€“69","reviewStatus":"reviewed"},
+    {"ruleId":"pl.018","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 85â€“88","reviewStatus":"reviewed"},
+    {"ruleId":"pl.019","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 85â€“88","reviewStatus":"reviewed"},
+    {"ruleId":"pl.020","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 89â€“93","reviewStatus":"reviewed"},
+    {"ruleId":"pl.021","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 93â€“96","reviewStatus":"reviewed"},
+    {"ruleId":"pl.022","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF pp. 97â€“100","reviewStatus":"reviewed"},
+    {"ruleId":"pl.023","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF p. 101","reviewStatus":"reviewed"},
+    {"ruleId":"pl.024","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF p. 101","reviewStatus":"reviewed"},
+    {"ruleId":"pl.025","work":"5/3/1 for Powerlifting","edition":"original","section":"PDF p. 101","reviewStatus":"reviewed"}
+  ]
+}

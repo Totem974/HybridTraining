@@ -35,8 +35,12 @@ strict primitive `block` payload.
 
 `templates` contains `templates`: `id`, `revision`, `labels`, `sourceRuleIds`,
 and `variants`. Every variant has `id`, `revision`, `labels`, `sourceRuleIds`,
-ordered `componentIds` (stable references), `optionSchemaId`, `scheduleIds`,
-`compatibilities`, and `validExample`.
+ordered `weekPlans` (`weekNumber` plus stable `componentIds`),
+`optionSchemaId`, `scheduleIds`, optional `assistancePlanIds`, optional
+`conditioningDefinitionIds`, `compatibilities`, and `validExample`.
+Finite or multi-phase Cycle programs additionally use ordered `phases`, each
+containing `id`, `repeatCount`, and `weekPlans`. A simple cycle has `weekPlans`
+and no `phases`; a finite program has `phases` and no top-level `weekPlans`.
 
 `optionSchemas` contains `optionSchemas`: `id`, `revision`, `sourceRuleIds`, and
 ordered `parameters` using the common parameter shape.

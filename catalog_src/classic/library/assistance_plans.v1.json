@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "kind": "assistancePlans",
+  "assistancePlans": [
+    {
+      "id": "original_triumvirate_classic",
+      "revision": 1,
+      "labels": {"en":"Triumvirate classic example","fr":"Exemple classique Triumvirate"},
+      "sourceRuleIds": ["or.assistance.triumvirate"],
+      "slots": [
+        {"id":"press_assistance","sessionRole":"overhead_press","minimumExercises":2,"maximumExercises":2,"allowedCategories":["push","pull"],"prescriptions":[{"exerciseId":"dips","sets":5,"repetitions":{"type":"fixed","count":15},"load":{"type":"unconfigured"}},{"exerciseId":"pull_up","sets":5,"repetitions":{"type":"fixed","count":10},"load":{"type":"unconfigured"}}]},
+        {"id":"deadlift_assistance","sessionRole":"deadlift","minimumExercises":2,"maximumExercises":2,"allowedCategories":["posteriorChain","abdominal"],"prescriptions":[{"exerciseId":"good_morning","sets":5,"repetitions":{"type":"fixed","count":12},"load":{"type":"unconfigured"}},{"exerciseId":"hanging_leg_raise","sets":5,"repetitions":{"type":"fixed","count":15},"load":{"type":"unconfigured"}}]},
+        {"id":"bench_assistance","sessionRole":"bench_press","minimumExercises":2,"maximumExercises":2,"allowedCategories":["push","pull"],"prescriptions":[{"exerciseId":"dumbbell_bench_press","sets":5,"repetitions":{"type":"fixed","count":15},"load":{"type":"unconfigured"}},{"exerciseId":"dumbbell_row","sets":5,"repetitions":{"type":"fixed","count":10},"load":{"type":"unconfigured"}}]},
+        {"id":"squat_assistance","sessionRole":"squat","minimumExercises":2,"maximumExercises":2,"allowedCategories":["quadriceps","posteriorChain"],"prescriptions":[{"exerciseId":"leg_press","sets":5,"repetitions":{"type":"fixed","count":15},"load":{"type":"unconfigured"}},{"exerciseId":"hamstring_curl","sets":5,"repetitions":{"type":"fixed","count":10},"load":{"type":"unconfigured"}}]}
+      ],
+      "constraints": ["exactlyThreeExercisesPerSessionIncludingMainLift"],
+      "compatibleExerciseCategories": ["push","pull","posteriorChain","abdominal","quadriceps"]
+    },
+    {
+      "id": "original_periodization_bible",
+      "revision": 1,
+      "labels": {"en":"Periodization Bible assistance","fr":"Assistance Periodization Bible"},
+      "sourceRuleIds": ["or.assistance.periodization_bible"],
+      "slots": [
+        {"id":"press_push","sessionRole":"overhead_press","minimumExercises":1,"maximumExercises":1,"allowedCategories":["push"],"recommendedExerciseIds":["dips"]},
+        {"id":"press_upper_back","sessionRole":"overhead_press","minimumExercises":1,"maximumExercises":1,"allowedCategories":["pull","upperBack"],"recommendedExerciseIds":["pull_up"]},
+        {"id":"press_triceps","sessionRole":"overhead_press","minimumExercises":1,"maximumExercises":1,"allowedCategories":["arms"],"recommendedExerciseIds":["triceps_pushdown"]},
+        {"id":"deadlift_hamstrings","sessionRole":"deadlift","minimumExercises":1,"maximumExercises":1,"allowedCategories":["posteriorChain"],"recommendedExerciseIds":["hamstring_curl"]},
+        {"id":"deadlift_quads","sessionRole":"deadlift","minimumExercises":1,"maximumExercises":1,"allowedCategories":["quadriceps"],"recommendedExerciseIds":["leg_press"]},
+        {"id":"deadlift_abs","sessionRole":"deadlift","minimumExercises":1,"maximumExercises":1,"allowedCategories":["abdominal"],"recommendedExerciseIds":["hanging_leg_raise"]},
+        {"id":"bench_push","sessionRole":"bench_press","minimumExercises":1,"maximumExercises":1,"allowedCategories":["push"],"recommendedExerciseIds":["dumbbell_bench_press"]},
+        {"id":"bench_upper_back","sessionRole":"bench_press","minimumExercises":1,"maximumExercises":1,"allowedCategories":["pull","upperBack"],"recommendedExerciseIds":["dumbbell_row"]},
+        {"id":"bench_triceps","sessionRole":"bench_press","minimumExercises":1,"maximumExercises":1,"allowedCategories":["arms"],"recommendedExerciseIds":["triceps_extension"]},
+        {"id":"squat_low_back","sessionRole":"squat","minimumExercises":1,"maximumExercises":1,"allowedCategories":["lowBack"],"recommendedExerciseIds":["good_morning"]},
+        {"id":"squat_quads","sessionRole":"squat","minimumExercises":1,"maximumExercises":1,"allowedCategories":["quadriceps"],"recommendedExerciseIds":["leg_press"]},
+        {"id":"squat_abs","sessionRole":"squat","minimumExercises":1,"maximumExercises":1,"allowedCategories":["abdominal"],"recommendedExerciseIds":["ab_wheel"]}
+      ],
+      "prescription": {"sets":5,"repetitions":{"type":"range","minimum":10,"maximum":20},"load":{"type":"unconfigured"}},
+      "constraints": ["threeCategorySlotsPerSession"],
+      "compatibleExerciseCategories": ["push","pull","upperBack","arms","posteriorChain","quadriceps","abdominal","lowBack"]
+    },
+    {
+      "id": "original_bodyweight",
+      "revision": 1,
+      "labels": {"en":"Original bodyweight assistance","fr":"Assistance Original au poids du corps"},
+      "sourceRuleIds": ["or.assistance.bodyweight","or.assistance.bodyweight_observed_volume"],
+      "slots": [
+        {"id":"bodyweight_session","sessionRole":"eachMainSession","minimumExercises":1,"maximumExercises":10,"allowedCategories":["bodyweight"],"recommendedExerciseIds":["chin_up","leg_raise"]}
+      ],
+      "prescription": {"sets":{"minimum":1,"maximum":10,"step":1},"totalRepetitions":{"minimum":75,"maximum":150,"step":5},"load":{"type":"bodyweight"}},
+      "constraints": ["omitDuringDeload","distributeTotalDeterministicallyAcrossSets"],
+      "compatibleExerciseCategories": ["bodyweight","pull","upperBack","arms","abdominal"]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "kind": "optionSchemas",
+  "optionSchemas": [{
+    "id":"original_for_beginners_options",
+    "revision":1,
+    "sourceRuleIds":["or.beginner.full_body"],
+    "parameters":[
+      {"id":"supplemental_progression","type":"enumeration","scope":"global","default":"original","minimum":null,"maximum":null,"step":null,"allowedValues":["original","intermediate"],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
+      {"id":"training_max_ratio","type":"percentage","scope":"global","default":9000,"minimum":9000,"maximum":9000,"step":null,"allowedValues":[],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}}
+    ]
+  }]
+}

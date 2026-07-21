@@ -1,0 +1,976 @@
+{
+  "schemaVersion": 1,
+  "kind": "templates",
+  "templates": [
+    {
+      "id": "classic_531",
+      "revision": 1,
+      "labels": {
+        "en": "Classic 5/3/1",
+        "fr": "Classic 5/3/1"
+      },
+      "sourceRuleIds": [
+        "or.classic.four_day"
+      ],
+      "variants": [
+        {
+          "id": "four_day",
+          "revision": 1,
+          "labels": {
+            "en": "Four day",
+            "fr": "Four day"
+          },
+          "sourceRuleIds": [
+            "or.classic.four_day"
+          ],
+          "optionSchemaId": {
+            "id": "classic_531_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            }
+          ],
+          "compatibilities": {
+            "trainingMaxRequired": true
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeWarmUp": true,
+            "includeDeload": true
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
+            }
+          ],
+          "assistancePlanIds": [],
+          "conditioningDefinitionIds": []
+        },
+        {
+          "id": "three_day_rotation",
+          "revision": 1,
+          "labels": {
+            "en": "Three-day rotation",
+            "fr": "Three-day rotation"
+          },
+          "sourceRuleIds": [
+            "or.classic.three_day_variant",
+            "or.schedule.three_day"
+          ],
+          "optionSchemaId": {
+            "id": "classic_531_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_three_day_rotating",
+              "revision": 1
+            }
+          ],
+          "compatibilities": {
+            "trainingMaxRequired": true
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_three_day_rotating",
+            "includeWarmUp": true,
+            "includeDeload": true
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
+            }
+          ],
+          "assistancePlanIds": [],
+          "conditioningDefinitionIds": []
+        },
+        {
+          "id": "two_day_rotation",
+          "revision": 1,
+          "labels": {
+            "en": "Two-day rotation",
+            "fr": "Two-day rotation"
+          },
+          "sourceRuleIds": [
+            "or.classic.two_day_variant",
+            "or.schedule.two_day_option_1",
+            "or.schedule.two_day_option_2"
+          ],
+          "optionSchemaId": {
+            "id": "classic_531_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_two_day_multi_movement_option_one",
+              "revision": 1
+            },
+            {
+              "id": "schedule_two_day_rotating_four_lifts",
+              "revision": 1
+            }
+          ],
+          "compatibilities": {
+            "trainingMaxRequired": true
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_two_day_multi_movement_option_one",
+            "includeWarmUp": true,
+            "includeDeload": true
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
+            }
+          ],
+          "assistancePlanIds": [],
+          "conditioningDefinitionIds": []
+        }
+      ]
+    },
+    {
+      "id": "classic_boring_but_big",
+      "revision": 1,
+      "labels": {
+        "en": "Boring But Big",
+        "fr": "Boring But Big"
+      },
+      "sourceRuleIds": [
+        "or.bbb.same_lift"
+      ],
+      "variants": [
+        {
+          "id": "same_lift_5x10",
+          "revision": 1,
+          "labels": {
+            "en": "Same lift, five sets of ten",
+            "fr": "Same lift, five sets of ten"
+          },
+          "sourceRuleIds": [
+            "or.bbb.same_lift"
+          ],
+          "optionSchemaId": {
+            "id": "classic_531_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            }
+          ],
+          "compatibilities": {
+            "trainingMaxRequired": true
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeWarmUp": true,
+            "includeDeload": true
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                },
+                {
+                  "id": "supplemental_bbb_original_5x10_50",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                },
+                {
+                  "id": "supplemental_bbb_original_5x10_50",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                },
+                {
+                  "id": "supplemental_bbb_original_5x10_50",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
+            }
+          ],
+          "assistancePlanIds": [],
+          "conditioningDefinitionIds": []
+        }
+      ]
+    },
+    {
+      "id": "classic_jack_shit",
+      "revision": 1,
+      "labels": {
+        "en": "I'm Not Doing Jack Shit",
+        "fr": "I'm Not Doing Jack Shit"
+      },
+      "sourceRuleIds": [
+        "or.assistance.jack_shit"
+      ],
+      "variants": [
+        {
+          "id": "main_lift_only",
+          "revision": 1,
+          "labels": {
+            "en": "Main lift only",
+            "fr": "Main lift only"
+          },
+          "sourceRuleIds": [
+            "or.assistance.jack_shit"
+          ],
+          "optionSchemaId": {
+            "id": "classic_531_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            },
+            {
+              "id": "schedule_three_day_rotating",
+              "revision": 1
+            },
+            {
+              "id": "schedule_two_day_multi_movement_option_one",
+              "revision": 1
+            }
+          ],
+          "compatibilities": {
+            "trainingMaxRequired": true
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeWarmUp": false,
+            "includeDeload": true
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
+            }
+          ],
+          "assistancePlanIds": [],
+          "conditioningDefinitionIds": []
+        }
+      ]
+    },
+    {
+      "id": "classic_simplest_strength",
+      "revision": 1,
+      "labels": {
+        "en": "Simplest Strength Template",
+        "fr": "Simplest Strength Template"
+      },
+      "sourceRuleIds": [
+        "or.sst.progression",
+        "or.sst.pairings"
+      ],
+      "variants": [
+        {
+          "id": "original",
+          "revision": 1,
+          "labels": {
+            "en": "Original progression",
+            "fr": "Original progression"
+          },
+          "sourceRuleIds": [
+            "or.sst.progression",
+            "or.sst.pairings"
+          ],
+          "optionSchemaId": {
+            "id": "classic_simplest_strength_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            }
+          ],
+          "assistancePlanIds": [],
+          "conditioningDefinitionIds": [],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "independentSecondaryMaxRequired": true
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "pressDaySecondary": "close_grip_bench_press",
+            "deadliftDaySecondary": "front_squat",
+            "benchDaySecondary": "incline_press",
+            "squatDaySecondary": "straight_leg_deadlift"
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                },
+                {
+                  "id": "supplemental_simplest_strength_original_week_1",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                },
+                {
+                  "id": "supplemental_simplest_strength_original_week_2",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                },
+                {
+                  "id": "supplemental_simplest_strength_week_3",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "supplemental_simplest_strength_week_4",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "powerlifting",
+          "revision": 1,
+          "labels": {
+            "en": "Powerlifting progression",
+            "fr": "Powerlifting progression"
+          },
+          "sourceRuleIds": [
+            "or.sst.progression",
+            "or.sst.pairings"
+          ],
+          "optionSchemaId": {
+            "id": "classic_simplest_strength_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            }
+          ],
+          "assistancePlanIds": [],
+          "conditioningDefinitionIds": [],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "independentSecondaryMaxRequired": true
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "pressDaySecondary": "close_grip_bench_press",
+            "deadliftDaySecondary": "front_squat",
+            "benchDaySecondary": "incline_press",
+            "squatDaySecondary": "straight_leg_deadlift"
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                },
+                {
+                  "id": "supplemental_simplest_strength_original_week_2",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                },
+                {
+                  "id": "supplemental_simplest_strength_original_week_1",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                },
+                {
+                  "id": "supplemental_simplest_strength_week_3",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "supplemental_simplest_strength_week_4",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "classic_triumvirate",
+      "revision": 1,
+      "labels": {
+        "en": "Triumvirate",
+        "fr": "Triumvirate"
+      },
+      "sourceRuleIds": [
+        "or.assistance.triumvirate"
+      ],
+      "variants": [
+        {
+          "id": "four_day",
+          "revision": 1,
+          "labels": {
+            "en": "Four day",
+            "fr": "Four day"
+          },
+          "sourceRuleIds": [
+            "or.assistance.triumvirate"
+          ],
+          "optionSchemaId": {
+            "id": "classic_531_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            }
+          ],
+          "assistancePlanIds": [
+            {
+              "id": "original_triumvirate_classic",
+              "revision": 1
+            }
+          ],
+          "conditioningDefinitionIds": [],
+          "compatibilities": {
+            "trainingMaxRequired": true
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeWarmUp": true,
+            "includeDeload": false,
+            "assistancePlanId": "original_triumvirate_classic"
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "classic_periodization_bible",
+      "revision": 1,
+      "labels": {
+        "en": "Periodization Bible",
+        "fr": "Periodization Bible"
+      },
+      "sourceRuleIds": [
+        "or.assistance.periodization_bible"
+      ],
+      "variants": [
+        {
+          "id": "four_day",
+          "revision": 1,
+          "labels": {
+            "en": "Four day",
+            "fr": "Four day"
+          },
+          "sourceRuleIds": [
+            "or.assistance.periodization_bible"
+          ],
+          "optionSchemaId": {
+            "id": "classic_531_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            }
+          ],
+          "assistancePlanIds": [
+            {
+              "id": "original_periodization_bible",
+              "revision": 1
+            }
+          ],
+          "conditioningDefinitionIds": [],
+          "compatibilities": {
+            "trainingMaxRequired": true
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeWarmUp": true,
+            "includeDeload": false,
+            "assistancePlanId": "original_periodization_bible"
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "classic_bodyweight",
+      "revision": 1,
+      "labels": {
+        "en": "Bodyweight assistance",
+        "fr": "Bodyweight assistance"
+      },
+      "sourceRuleIds": [
+        "or.assistance.bodyweight"
+      ],
+      "variants": [
+        {
+          "id": "four_day",
+          "revision": 1,
+          "labels": {
+            "en": "Four day",
+            "fr": "Four day"
+          },
+          "sourceRuleIds": [
+            "or.assistance.bodyweight"
+          ],
+          "optionSchemaId": {
+            "id": "classic_531_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            }
+          ],
+          "assistancePlanIds": [
+            {
+              "id": "original_bodyweight",
+              "revision": 1
+            }
+          ],
+          "conditioningDefinitionIds": [],
+          "compatibilities": {
+            "trainingMaxRequired": true
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeWarmUp": true,
+            "includeDeload": false,
+            "assistancePlanId": "original_bodyweight"
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

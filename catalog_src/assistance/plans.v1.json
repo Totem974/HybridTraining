@@ -1,0 +1,68 @@
+﻿{
+  "schemaVersion": 1,
+  "kind": "assistancePlans",
+  "assistancePlans": [
+    {
+      "id": "forever_balanced_50_100",
+      "revision": 1,
+      "labels": {"en": "Forever 50-100 per category", "fr": "Forever 50-100 par categorie"},
+      "sourceRuleIds": ["fv.assistance.general.p36_48"],
+      "slots": [
+        {"category":"push","minimumTotal":50,"maximumTotal":100,"unit":"repetitions","minimumExercises":1,"maximumExercises":2},
+        {"category":"pull","minimumTotal":50,"maximumTotal":100,"unit":"repetitions","minimumExercises":1,"maximumExercises":2},
+        {"category":"singleLegCore","minimumTotal":50,"maximumTotal":100,"unit":"repetitions","minimumExercises":1,"maximumExercises":2}
+      ],
+      "constraints": ["sledOrProwlerExcludesSingleLegCore", "highSquatOrDeadliftVolumeAvoidsLowerBackFatigue"],
+      "compatibleExerciseCategories": ["push", "pull", "singleLegCore"]
+    },
+    {
+      "id": "forever_reduced_0_50",
+      "revision": 1,
+      "labels": {"en": "Forever reduced 0-50 per category", "fr": "Forever reduit 0-50 par categorie"},
+      "sourceRuleIds": ["fv.conditioning.running_adaptation.p264_265"],
+      "slots": [
+        {"category":"push","minimumTotal":0,"maximumTotal":50,"unit":"repetitions","minimumExercises":0,"maximumExercises":2},
+        {"category":"pull","minimumTotal":0,"maximumTotal":50,"unit":"repetitions","minimumExercises":0,"maximumExercises":2},
+        {"category":"singleLegCore","minimumTotal":0,"maximumTotal":0,"unit":"repetitions","minimumExercises":0,"maximumExercises":0}
+      ],
+      "constraints": ["noLowerBackWork", "noSingleLegWork"],
+      "compatibleExerciseCategories": ["push", "pull"]
+    },
+    {
+      "id": "forever_recovery_bodyweight",
+      "revision": 1,
+      "labels": {"en": "Recovery-friendly assistance", "fr": "Assistance favorable a la recuperation"},
+      "sourceRuleIds": ["fv.assistance.general.p36_48"],
+      "slots": [
+        {"category":"push","minimumTotal":25,"maximumTotal":50,"unit":"repetitions","minimumExercises":1,"maximumExercises":1},
+        {"category":"pull","minimumTotal":25,"maximumTotal":50,"unit":"repetitions","minimumExercises":1,"maximumExercises":1},
+        {"category":"singleLegCore","minimumTotal":25,"maximumTotal":50,"unit":"repetitions","minimumExercises":1,"maximumExercises":1}
+      ],
+      "constraints": ["preferBodyweightBandsAndLightAbdominalWork"],
+      "compatibleExerciseCategories": ["push", "pull", "singleLegCore"]
+    },
+    {
+      "id": "forever_neck_optional",
+      "revision": 1,
+      "labels": {"en": "Optional neck work", "fr": "Travail du cou optionnel"},
+      "sourceRuleIds": ["fv.assistance.neck.p43_44"],
+      "slots": [
+        {"category":"neck","minimumTotal":0,"maximumTotal":50,"unit":"repetitions","minimumExercises":0,"maximumExercises":2}
+      ],
+      "constraints": ["excludedFromPushPullSingleLegCoreTotals"],
+      "compatibleExerciseCategories": ["neck"]
+    },
+    {
+      "id": "forever_farmer_walk_distance",
+      "revision": 1,
+      "labels": {"en": "Farmer walk distance", "fr": "Marche du fermier en distance"},
+      "sourceRuleIds": ["fv.assistance.farmer_walk.p43"],
+      "slots": [
+        {"category":"singleLegCore","minimumTotal":240,"maximumTotal":400,"unit":"yards","minimumExercises":1,"maximumExercises":1}
+      ],
+      "constraints": ["distanceMustNotBeConvertedToRepetitions"],
+      "compatibleExerciseCategories": ["singleLegCore"]
+    }
+  ]
+}
+

@@ -1,0 +1,2065 @@
+﻿{
+    "schemaVersion":  1,
+    "kind":  "components",
+    "components":  [
+                       {
+                           "id":  "classic_beginner_main_squat_week_1",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Beginner squat week 1",
+                                          "fr":  "Debutant squat semaine 1"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.beginner.full_body"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_beginner_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "monday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "back_squat"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "beginner_main_week_1",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  6500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8500
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_beginner_main_deadlift_press_week_1",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Beginner deadlift_press week 1",
+                                          "fr":  "Debutant deadlift_press semaine 1"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.beginner.full_body"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_beginner_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "wednesday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "deadlift",
+                                                                       "overhead_press"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "beginner_main_week_1",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  6500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8500
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_beginner_main_bench_week_1",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Beginner bench week 1",
+                                          "fr":  "Debutant bench semaine 1"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.beginner.full_body"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_beginner_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "friday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "bench_press"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "beginner_main_week_1",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  6500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8500
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_beginner_main_squat_week_2",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Beginner squat week 2",
+                                          "fr":  "Debutant squat semaine 2"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.beginner.full_body"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_beginner_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "monday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "back_squat"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "beginner_main_week_2",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  9000
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_beginner_main_deadlift_press_week_2",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Beginner deadlift_press week 2",
+                                          "fr":  "Debutant deadlift_press semaine 2"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.beginner.full_body"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_beginner_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "wednesday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "deadlift",
+                                                                       "overhead_press"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "beginner_main_week_2",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  9000
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_beginner_main_bench_week_2",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Beginner bench week 2",
+                                          "fr":  "Debutant bench semaine 2"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.beginner.full_body"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_beginner_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "friday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "bench_press"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "beginner_main_week_2",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  9000
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_beginner_main_squat_week_3",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Beginner squat week 3",
+                                          "fr":  "Debutant squat semaine 3"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.beginner.full_body"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_beginner_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "monday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "back_squat"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "beginner_main_week_3",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  9500
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_beginner_main_deadlift_press_week_3",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Beginner deadlift_press week 3",
+                                          "fr":  "Debutant deadlift_press semaine 3"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.beginner.full_body"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_beginner_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "wednesday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "deadlift",
+                                                                       "overhead_press"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "beginner_main_week_3",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  9500
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_beginner_main_bench_week_3",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Beginner bench week 3",
+                                          "fr":  "Debutant bench semaine 3"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.beginner.full_body"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_beginner_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "friday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "bench_press"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "beginner_main_week_3",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  9500
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_beginner_main_squat_week_4",
+                           "revision":  1,
+                           "role":  "deload",
+                           "labels":  {
+                                          "en":  "Beginner squat week 4",
+                                          "fr":  "Debutant squat semaine 4"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.beginner.full_body"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_beginner_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "monday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "back_squat"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "beginner_main_week_4",
+                                         "role":  "deload",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  4000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  6000
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_beginner_main_deadlift_press_week_4",
+                           "revision":  1,
+                           "role":  "deload",
+                           "labels":  {
+                                          "en":  "Beginner deadlift_press week 4",
+                                          "fr":  "Debutant deadlift_press semaine 4"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.beginner.full_body"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_beginner_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "wednesday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "deadlift",
+                                                                       "overhead_press"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "beginner_main_week_4",
+                                         "role":  "deload",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  4000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  6000
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_beginner_main_bench_week_4",
+                           "revision":  1,
+                           "role":  "deload",
+                           "labels":  {
+                                          "en":  "Beginner bench week 4",
+                                          "fr":  "Debutant bench semaine 4"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.beginner.full_body"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_beginner_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "friday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "bench_press"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "beginner_main_week_4",
+                                         "role":  "deload",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  4000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  6000
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_beginner_supplemental_bench",
+                           "revision":  1,
+                           "role":  "supplemental",
+                           "labels":  {
+                                          "en":  "Beginner supplemental bench",
+                                          "fr":  "Supplemental debutant bench"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.beginner.full_body"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_beginner_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "monday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "bench_press"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "beginner_supplemental_5x10",
+                                         "role":  "supplemental",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_beginner_supplemental_squat",
+                           "revision":  1,
+                           "role":  "supplemental",
+                           "labels":  {
+                                          "en":  "Beginner supplemental squat",
+                                          "fr":  "Supplemental debutant squat"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.beginner.full_body"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_beginner_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "friday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "back_squat"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "beginner_supplemental_5x10",
+                                         "role":  "supplemental",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_main_squat_week_1",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Full Body squat week 1",
+                                          "fr":  "Full Body squat semaine 1"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1",
+                                                 "or.full_body.phase_2",
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "monday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "back_squat"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_main_week_1",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  6500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8500
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_main_bench_week_1",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Full Body bench week 1",
+                                          "fr":  "Full Body bench semaine 1"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1",
+                                                 "or.full_body.phase_2",
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "wednesday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "bench_press"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_main_week_1",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  6500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8500
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_main_press_deadlift_week_1",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Full Body press_deadlift week 1",
+                                          "fr":  "Full Body press_deadlift semaine 1"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1",
+                                                 "or.full_body.phase_2",
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "friday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "overhead_press",
+                                                                       "deadlift"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_main_week_1",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  6500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8500
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_main_squat_week_2",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Full Body squat week 2",
+                                          "fr":  "Full Body squat semaine 2"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1",
+                                                 "or.full_body.phase_2",
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "monday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "back_squat"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_main_week_2",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  9000
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_main_bench_week_2",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Full Body bench week 2",
+                                          "fr":  "Full Body bench semaine 2"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1",
+                                                 "or.full_body.phase_2",
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "wednesday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "bench_press"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_main_week_2",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  9000
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_main_press_deadlift_week_2",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Full Body press_deadlift week 2",
+                                          "fr":  "Full Body press_deadlift semaine 2"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1",
+                                                 "or.full_body.phase_2",
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "friday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "overhead_press",
+                                                                       "deadlift"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_main_week_2",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  9000
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_main_squat_week_3",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Full Body squat week 3",
+                                          "fr":  "Full Body squat semaine 3"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1",
+                                                 "or.full_body.phase_2",
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "monday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "back_squat"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_main_week_3",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  9500
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_main_bench_week_3",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Full Body bench week 3",
+                                          "fr":  "Full Body bench semaine 3"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1",
+                                                 "or.full_body.phase_2",
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "wednesday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "bench_press"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_main_week_3",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  9500
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_main_press_deadlift_week_3",
+                           "revision":  1,
+                           "role":  "main_work",
+                           "labels":  {
+                                          "en":  "Full Body press_deadlift week 3",
+                                          "fr":  "Full Body press_deadlift semaine 3"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1",
+                                                 "or.full_body.phase_2",
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "friday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "overhead_press",
+                                                                       "deadlift"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_main_week_3",
+                                         "role":  "main_work",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "amrap",
+                                                                              "minimum":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  9500
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_main_squat_week_4",
+                           "revision":  1,
+                           "role":  "deload",
+                           "labels":  {
+                                          "en":  "Full Body squat week 4",
+                                          "fr":  "Full Body squat semaine 4"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1",
+                                                 "or.full_body.phase_2",
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "monday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "back_squat"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_main_week_4",
+                                         "role":  "deload",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  4000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  6000
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_main_bench_week_4",
+                           "revision":  1,
+                           "role":  "deload",
+                           "labels":  {
+                                          "en":  "Full Body bench week 4",
+                                          "fr":  "Full Body bench semaine 4"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1",
+                                                 "or.full_body.phase_2",
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "wednesday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "bench_press"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_main_week_4",
+                                         "role":  "deload",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  4000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  6000
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_main_press_deadlift_week_4",
+                           "revision":  1,
+                           "role":  "deload",
+                           "labels":  {
+                                          "en":  "Full Body press_deadlift week 4",
+                                          "fr":  "Full Body press_deadlift semaine 4"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1",
+                                                 "or.full_body.phase_2",
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "friday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "overhead_press",
+                                                                       "deadlift"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_main_week_4",
+                                         "role":  "deload",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  4000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  6000
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_phase_1_extra_squat",
+                           "revision":  1,
+                           "role":  "supplemental",
+                           "labels":  {
+                                          "en":  "phase_1 extra squat",
+                                          "fr":  "phase_1 squat supplementaire"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "wednesday",
+                                                                      "friday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "back_squat"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_extra_squat",
+                                         "role":  "supplemental",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  4000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  5000
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  5
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  6000
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_phase_2_extra_squat",
+                           "revision":  1,
+                           "role":  "supplemental",
+                           "labels":  {
+                                          "en":  "phase_2 extra squat",
+                                          "fr":  "phase_2 squat supplementaire"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_2"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "wednesday",
+                                                                      "friday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "back_squat"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_extra_squat",
+                                         "role":  "supplemental",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  6500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8500
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_phase_3_extra_squat",
+                           "revision":  1,
+                           "role":  "supplemental",
+                           "labels":  {
+                                          "en":  "phase_3 extra squat",
+                                          "fr":  "phase_3 squat supplementaire"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "setOrder":  "declared"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "wednesday",
+                                                                      "friday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "back_squat"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_extra_squat",
+                                         "role":  "supplemental",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  7500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  3
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  8500
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  1
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "training_max_percentage",
+                                                                       "basisPoints":  9500
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_assistance_dumbbell_press",
+                           "revision":  1,
+                           "role":  "assistance",
+                           "labels":  {
+                                          "en":  "Full Body dumbbell_press",
+                                          "fr":  "Full Body dumbbell_press"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1",
+                                                 "or.full_body.phase_2",
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "loadSelection":  "userSelectedBecauseSourcePrescribesNoLoad"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "monday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "dumbbell_press"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_dumbbell_press",
+                                         "role":  "assistance",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "range",
+                                                                              "minimum":  10,
+                                                                              "maximum":  15
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "unloaded"
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "range",
+                                                                              "minimum":  10,
+                                                                              "maximum":  15
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "unloaded"
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "range",
+                                                                              "minimum":  10,
+                                                                              "maximum":  15
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "unloaded"
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_assistance_dumbbell_row",
+                           "revision":  1,
+                           "role":  "assistance",
+                           "labels":  {
+                                          "en":  "Full Body dumbbell_row",
+                                          "fr":  "Full Body dumbbell_row"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1",
+                                                 "or.full_body.phase_2",
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "loadSelection":  "userSelectedBecauseSourcePrescribesNoLoad"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "monday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "dumbbell_row"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_dumbbell_row",
+                                         "role":  "assistance",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "unloaded"
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "unloaded"
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "unloaded"
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       },
+                       {
+                           "id":  "classic_full_body_assistance_chin_up",
+                           "revision":  1,
+                           "role":  "assistance",
+                           "labels":  {
+                                          "en":  "Full Body chin_up",
+                                          "fr":  "Full Body chin_up"
+                                      },
+                           "sourceRuleIds":  [
+                                                 "or.full_body.phase_1",
+                                                 "or.full_body.phase_2",
+                                                 "or.full_body.phase_3"
+                                             ],
+                           "parameterSchemaIds":  [
+                                                      "classic_extended_full_body_options"
+                                                  ],
+                           "constraints":  {
+                                               "loadSelection":  "userSelectedBecauseSourcePrescribesNoLoad"
+                                           },
+                           "compatibilities":  {
+                                                   "sessionIds":  [
+                                                                      "wednesday"
+                                                                  ],
+                                                   "movementIds":  [
+                                                                       "chin_up"
+                                                                   ]
+                                               },
+                           "block":  {
+                                         "id":  "full_body_chin_up",
+                                         "role":  "assistance",
+                                         "sets":  [
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "bodyweight"
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "bodyweight"
+                                                                   }
+                                                      },
+                                                      {
+                                                          "repetitions":  {
+                                                                              "type":  "fixed",
+                                                                              "count":  10
+                                                                          },
+                                                          "load":  {
+                                                                       "type":  "bodyweight"
+                                                                   }
+                                                      }
+                                                  ]
+                                     }
+                       }
+                   ]
+}

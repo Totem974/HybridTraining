@@ -1,0 +1,755 @@
+{
+    "schemaVersion":  1,
+    "kind":  "sources",
+    "sources":  [
+                    {
+                        "ruleId":  "beyond_001",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 11–14 - Cycle 6 semaines - Ordre 5/3/1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_002",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 11–14 - Cycle 6 semaines - Ordre 3/5/1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_003",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 15–16 - Beyond warm-up - Incréments de 10% depuis la première série",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_004",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 18–19 - 5/3/1 Pyramid - Montée puis redescente",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_005",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 20 - First Set Last - AMRAP FSL",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_006",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 21 - First Set Last - Multiple Sets",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_007",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 22 - First Set Last - Rest Pause (upper body)",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_008",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 23 - First Set Last - Pause Squat / Pause Bench",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_009",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 24 - 5/3/1 Strength Phase - Part 1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_010",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 24–25 - 5/3/1 Strength Phase - Part 2",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_011",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 26–27 - 5/3/1 + Dynamic Work - Variation 1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_012",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 27 - 5/3/1 + Dynamic Work - Variation 1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_013",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 27 - 5/3/1 + Dynamic Work - Variation 2",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_014",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 27–28 - 5/3/1 + Dynamic Work - Variation 2",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_015",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 29–31 - Boring But Big - Base",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_016",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 30 - Boring But Big - Template 1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_017",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 30 - Boring But Big - Template 2",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_018",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 30–31 - Boring But Big - Prep phase",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_019",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 30–31 - Boring But Big - Prep + standard 50%",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_020",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 32–34 - Boring But Big - Variation I",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_021",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 35 - Boring But Big - Variation II",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_022",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 36 - Boring But Big - 6 Week Challenge",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_023",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 37 - Boring But Big - 5×5 variation",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_024",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 38 - Boring But Big - 5×3 variation",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_025",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 39–40 - Boring But Big - 5×1 variation",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_026",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 41 - Boring But Big - 13 Week Challenge",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_027",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 42–43 - Boring But Big - 2 Days/Week",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_028",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 44 - Boring But Big - Rule of 50",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_029",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 45–46 - 5/3/1 and the Fatherland - GVT Template 1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_030",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 45–46 - 5/3/1 and the Fatherland - GVT Template 2",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_031",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 46–47 - 5/3/1 and the Fatherland - GVT 3 jours",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_032",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 47–48 - 5/3/1 and the Fatherland - GVT 2 jours",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_033",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 46 - 5/3/1 and the Fatherland - BBB 3 semaines → GVT 3 semaines",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_034",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 49 - 5/3/1 SVR Training - Volume + rep record + singles",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_035",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 50 - Rule of 10 - 10 reps totales au top set",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_036",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 51–56 - Joker Sets - Jokers après PR set",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_037",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 57–58 - Joker Supersets - Upper-body supersets",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_038",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 59–60 - Base - Ramp 10→100% TM",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_039",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 60–61 - Beyond 5/3/1 Training Maximally - Option 1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_040",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 61 - Beyond 5/3/1 Training Maximally - Option 2",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_041",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 61–62 - Beyond 5/3/1 Training Maximally - Option 3",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_042",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 62–63 - Beyond 5/3/1 Training Maximally - Option 4",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_043",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 63–64 - Beyond 5/3/1 Training Maximally - Option 5",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_044",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 64 - Beyond 5/3/1 Training Maximally - Option 6",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_045",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 64–65 - Beyond 5/3/1 Training Maximally - Option 7",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_046",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 66–70 - Training schedule - Template 1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_047",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 66–70 - Training schedule - Template 2",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_048",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 66–70 - Training schedule - Template 3",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_049",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 66–70 - Training schedule - Template 4",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_050",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 66–70 - Training schedule - Template 5",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_051",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 66–70 - Training schedule - Template 6",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_052",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 66–70 - Training schedule - Template 7",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_053",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 66–70 - Training schedule - Template 8",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_054",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 66–70 - Training schedule - Template 9",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_055",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 66–70 - Training schedule - Template 10",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_056",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 66–70 - Training schedule - Template 11",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_057",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 71 - Full Body Training - Base",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_058",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 72–73 - Full Body Power Clean - Variation 1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_059",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 74 - Full Body Power Clean - Part 2",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_060",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 75–76 - Full Body Full Boring - Full Boring",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_061",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 77–79 - Spinal Tap Training - Part 1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_062",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 80–82 - Spinal Tap Training - Part 2",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_063",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 83–84 - 5’s Progression - Beginner",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_064",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 83–84 - 5’s Progression - Advanced / assistance",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_065",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 85 - More on the Deload - Deload option 1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_066",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 85 - More on the Deload - Deload option 2",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_067",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 85 - More on the Deload - Deload option 3",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_068",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 85 - More on the Deload - Deload option 4",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_069",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 85 - More on the Deload - Deload option 5",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_070",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 86 - More on the Deload - Full Body Deload",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_071",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 87 - More on the Deload - High Intensity Deload",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_072",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 88–90 - 28 Weeks of Training - Programme annuel partiel",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_073",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 88–90 - 28 Weeks of Training - Schedule 1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_074",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 88–90 - 28 Weeks of Training - Schedule 2",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_075",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 88–90 - 28 Weeks of Training - Schedule 3",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_076",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 91–96 - Advanced 5/3/1 - 5×5 / 5×3 / 5×1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_077",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 97–104 - 2×2×2 - Deux muscu, deux mobilité, deux conditioning",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_078",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 104–110 - 2 Day/Week - Hypertrophy Phase",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_079",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 107–108 - Hypertrophy Phase - Bad Knees",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_080",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 109 - Hypertrophy Phase - Bad Back",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_081",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 110 - Hypertrophy Phase - Bad Shoulders",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_082",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 111–115 - 2 Day/Week - Strength Phase",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_083",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 113 - Strength Phase - Changes / adaptations",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_084",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 124–125 - Two Day/Week – New Template - 4 lifts/semaine",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_085",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 126–132 - S.S.S. — Singles, Speed, Size - Système général",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_086",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 133–134 - 12-Week S.S.S. Program - Phase 1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_087",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 135 - 12-Week S.S.S. Program - Phase 2",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_088",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 136 - 12-Week S.S.S. Program - Prep phase",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_089",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 137–143 - Volume Work 75/85 - Base",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_090",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 139–140 - Volume Work 75/85 - 75% Volume Work",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_091",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 141–142 - Volume Work 75/85 - 85% Volume Work",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_092",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 143 - Volume Work 75/85 - Peaking Phase",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_093",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 144–145 - Volume Work 75/85 - Template 1",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_094",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 144–145 - Volume Work 75/85 - Template 2",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_095",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 144–145 - Volume Work 75/85 - Template 3",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_096",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 144–145 - Volume Work 75/85 - Template 4",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_097",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 150–160 - Boring But Big 3 Month Challenge - 3 mois",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_098",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 161–175 - Strength Challenge - Weeks 1–4",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_099",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 176–180 - Strength Challenge - Weeks 5–8",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_100",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 181–196 - Strength Challenge - Weeks 9–12 / Test",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_101",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 197–204 - Prowler Challenge - 12-week challenge",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_102",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 205–215 - 100 Rep Challenge - Programme complet",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_103",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 209 - 100 Rep Challenge - Upper Body 100",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_104",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 210 - 100 Rep Challenge - Lower Body 100",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_105",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 216–223 - 5/3/1 Rest Pause Challenge - 6 weeks",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_106",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 224–229 - 5/3/1 Frequency Project - Original",
+                        "reviewStatus":  "reviewed"
+                    },
+                    {
+                        "ruleId":  "beyond_107",
+                        "work":  "Beyond 5/3/1",
+                        "edition":  "2013",
+                        "section":  "PDF p. 230–231 - 5/3/1 Frequency Project - 2.0",
+                        "reviewStatus":  "reviewed"
+                    }
+                ]
+}

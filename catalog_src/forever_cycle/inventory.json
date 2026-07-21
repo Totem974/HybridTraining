@@ -1,0 +1,2190 @@
+{
+    "schemaVersion":  1,
+    "kind":  "inventory",
+    "entries":  [
+                    {
+                        "id":  "FV-133",
+                        "generation":  "forever",
+                        "classification":  "transition",
+                        "title":  {
+                                      "en":  "Leader / Anchor - 3 Leaders + 2 Anchors",
+                                      "fr":  "Leader / Anchor - 3 Leaders + 2 Anchors"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.133"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-134",
+                        "generation":  "forever",
+                        "classification":  "transition",
+                        "title":  {
+                                      "en":  "Leader / Anchor - 2 Leaders + 2 Anchors",
+                                      "fr":  "Leader / Anchor - 2 Leaders + 2 Anchors"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.134"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-135",
+                        "generation":  "forever",
+                        "classification":  "transition",
+                        "title":  {
+                                      "en":  "Leader / Anchor - 2 Leaders + 1 Anchor",
+                                      "fr":  "Leader / Anchor - 2 Leaders + 1 Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.135"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-136",
+                        "generation":  "forever",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "TM Test - 4 jours",
+                                      "fr":  "TM Test - 4 jours"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.136"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-137",
+                        "generation":  "forever",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "TM Test - 3 jours",
+                                      "fr":  "TM Test - 3 jours"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.137"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-138",
+                        "generation":  "forever",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "TM Test - 2 jours",
+                                      "fr":  "TM Test - 2 jours"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.138"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-139",
+                        "generation":  "forever",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "Deload - Leader Ã¢â€ â€™ Anchor",
+                                      "fr":  "Deload - Leader Ã¢â€ â€™ Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.139"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-140",
+                        "generation":  "forever",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "PR Test - AprÃƒÂ¨s Anchor",
+                                      "fr":  "PR Test - AprÃƒÂ¨s Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.140"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-141",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Beginner Prep School - A/B full-body",
+                                      "fr":  "Beginner Prep School - A/B full-body"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.141"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-142",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Big - Base 4 jours",
+                                      "fr":  "Boring But Big - Base 4 jours"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.142"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-143",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Big - Base 3 jours",
+                                      "fr":  "Boring But Big - Base 3 jours"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.143"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-144",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Forever BBB - Progression 50/60/70%",
+                                      "fr":  "Forever BBB - Progression 50/60/70%"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.144"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-145",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Original BBB - 50% constant",
+                                      "fr":  "Original BBB - 50% constant"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.145"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-146",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body BBB - Deux lifts/jour",
+                                      "fr":  "Full Body BBB - Deux lifts/jour"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.146"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-147",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "BBB Challenge - Cycle 1Ã¢â‚¬â€œ3",
+                                      "fr":  "BBB Challenge - Cycle 1Ã¢â‚¬â€œ3"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.147"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-148",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "BBB FSL - 5Ãƒâ€”10 @ FSL",
+                                      "fr":  "BBB FSL - 5Ãƒâ€”10 @ FSL"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.148"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-149",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Slightly Less BBB - 3Ãƒâ€”10",
+                                      "fr":  "Slightly Less BBB - 3Ãƒâ€”10"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.149"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-150",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "SLFBBB - Slightly Less F***ing BBB",
+                                      "fr":  "SLFBBB - Slightly Less F***ing BBB"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.150"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-151",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "BBB mix - Deux lifts BBB + deux lifts FSL/BBS",
+                                      "fr":  "BBB mix - Deux lifts BBB + deux lifts FSL/BBS"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.151"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-152",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "BBB double-frequency - MÃƒÂªme supplemental sur deux jours liÃƒÂ©s",
+                                      "fr":  "BBB double-frequency - MÃƒÂªme supplemental sur deux jours liÃƒÂ©s"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.152"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-153",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "BBB time-saving - 1Ãƒâ€”10 @50/60/70 ou ordre inverse",
+                                      "fr":  "BBB time-saving - 1Ãƒâ€”10 @50/60/70 ou ordre inverse"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.153"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-154",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "First Set Last - Base 4 jours",
+                                      "fr":  "First Set Last - Base 4 jours"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.154"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-155",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "First Set Last - Base 3 jours",
+                                      "fr":  "First Set Last - Base 3 jours"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.155"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-156",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5Ã¢â‚¬â„¢s Pro, 5Ãƒâ€”5 FSL - Leader standard",
+                                      "fr":  "5Ã¢â‚¬â„¢s Pro, 5Ãƒâ€”5 FSL - Leader standard"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.156"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-157",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5Ã¢â‚¬â„¢s Progression, Jokers and FSL - Anchor",
+                                      "fr":  "5Ã¢â‚¬â„¢s Progression, Jokers and FSL - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.157"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-158",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "PR Set and FSL - Anchor",
+                                      "fr":  "PR Set and FSL - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.158"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-159",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "PR Set, Jokers and FSL - Anchor",
+                                      "fr":  "PR Set, Jokers and FSL - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.159"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-160",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 and Widowmakers - Anchor",
+                                      "fr":  "5/3/1 and Widowmakers - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.160"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-161",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5Ã¢â‚¬â„¢s Progression and FSL - Anchor modÃƒÂ©rÃƒÂ©",
+                                      "fr":  "5Ã¢â‚¬â„¢s Progression and FSL - Anchor modÃƒÂ©rÃƒÂ©"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.161"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-162",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body, 5Ã¢â‚¬â„¢s Pro - Full body",
+                                      "fr":  "Full Body, 5Ã¢â‚¬â„¢s Pro - Full body"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.162"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-163",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body, PR Set - Full body",
+                                      "fr":  "Full Body, PR Set - Full body"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.163"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-164",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Beyond, FSL - Beyond sets + FSL",
+                                      "fr":  "Beyond, FSL - Beyond sets + FSL"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.164"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-165",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Original 5/3/1 - Anchor simple",
+                                      "fr":  "Original 5/3/1 - Anchor simple"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.165"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-166",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "FSL Mix and Match - Par lift",
+                                      "fr":  "FSL Mix and Match - Par lift"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.166"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-167",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "1000% Awesome - Leader",
+                                      "fr":  "1000% Awesome - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.167"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-168",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "1000% Awesome - Anchor",
+                                      "fr":  "1000% Awesome - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.168"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-169",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "SVR II - Leader",
+                                      "fr":  "SVR II - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.169"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-170",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "SVR II - Anchor option 1",
+                                      "fr":  "SVR II - Anchor option 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.170"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-171",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "SVR II - Anchor option 2",
+                                      "fr":  "SVR II - Anchor option 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.171"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-172",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "The Morning Star - Leader",
+                                      "fr":  "The Morning Star - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.172"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-173",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "The Morning Star - Anchor",
+                                      "fr":  "The Morning Star - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.173"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-174",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Volume and Strength - Leader",
+                                      "fr":  "Volume and Strength - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.174"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-175",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Volume and Strength - Anchor",
+                                      "fr":  "Volume and Strength - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.175"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-176",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5Ãƒâ€”5/3/1 - Leader",
+                                      "fr":  "5Ãƒâ€”5/3/1 - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.176"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-177",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5Ãƒâ€”5/3/1 - Anchor 4 jours",
+                                      "fr":  "5Ãƒâ€”5/3/1 - Anchor 4 jours"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.177"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-178",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5Ãƒâ€”5/3/1 - Anchor 3 jours",
+                                      "fr":  "5Ãƒâ€”5/3/1 - Anchor 3 jours"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.178"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-179",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Rhodes 5Ãƒâ€”5/3/1 - Variation",
+                                      "fr":  "Rhodes 5Ãƒâ€”5/3/1 - Variation"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.179"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-180",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "PortalÃ¢â‚¬â„¢s 5Ãƒâ€”5/3/1 - Leader",
+                                      "fr":  "PortalÃ¢â‚¬â„¢s 5Ãƒâ€”5/3/1 - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.180"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-181",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "PortalÃ¢â‚¬â„¢s 5Ãƒâ€”5/3/1 - Anchor",
+                                      "fr":  "PortalÃ¢â‚¬â„¢s 5Ãƒâ€”5/3/1 - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.181"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-182",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Five and Dime - Leader",
+                                      "fr":  "Five and Dime - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.182"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-183",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Five and Dime - Anchor",
+                                      "fr":  "Five and Dime - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.183"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-184",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Simplest Strength Template - Leader",
+                                      "fr":  "Simplest Strength Template - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.184"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-185",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Simplest Strength Template - Anchor",
+                                      "fr":  "Simplest Strength Template - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.185"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-186",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "God Is a Beast - Programme / Leader",
+                                      "fr":  "God Is a Beast - Programme / Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.186"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-187",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "God Is a Beast - Anchor / FSL",
+                                      "fr":  "God Is a Beast - Anchor / FSL"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.187"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-188",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body, Four Days - Leader",
+                                      "fr":  "Full Body, Four Days - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.188"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-189",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body, Four Days - Anchor",
+                                      "fr":  "Full Body, Four Days - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.189"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-190",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Black Army Jacket - Leader",
+                                      "fr":  "Black Army Jacket - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.190"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-191",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Black Army Jacket - Anchor",
+                                      "fr":  "Black Army Jacket - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.191"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-192",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Spinal Tap, 5Ã¢â‚¬â„¢s Pro - Leader",
+                                      "fr":  "Spinal Tap, 5Ã¢â‚¬â„¢s Pro - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.192"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-193",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Spinal Tap, 5Ã¢â‚¬â„¢s Pro - Anchor",
+                                      "fr":  "Spinal Tap, 5Ã¢â‚¬â„¢s Pro - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.193"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-194",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Spinal Tap, High School Years - Leader",
+                                      "fr":  "Spinal Tap, High School Years - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.194"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-195",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Spinal Tap, High School Years - Anchor",
+                                      "fr":  "Spinal Tap, High School Years - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.195"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-196",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Coffinworm - Leader",
+                                      "fr":  "Coffinworm - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.196"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-197",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Coffinworm - Anchor",
+                                      "fr":  "Coffinworm - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.197"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-198",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Second Set Last - Base",
+                                      "fr":  "Second Set Last - Base"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.198"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-199",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Second Set Last - Full Body 85%",
+                                      "fr":  "Second Set Last - Full Body 85%"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.199"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-200",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Second Set Last - Full Body 85% / BBS",
+                                      "fr":  "Second Set Last - Full Body 85% / BBS"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.200"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-201",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Strong - Base",
+                                      "fr":  "Boring But Strong - Base"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.201"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-202",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Strong - Challenge",
+                                      "fr":  "Boring But Strong - Challenge"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.202"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-203",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "BBS Variations - NTW, BBS",
+                                      "fr":  "BBS Variations - NTW, BBS"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.203"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-204",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "BBS Variations - The Whip and the Body, BBS",
+                                      "fr":  "BBS Variations - The Whip and the Body, BBS"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.204"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-205",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "BBS Variations - Negative Birth, BBS",
+                                      "fr":  "BBS Variations - Negative Birth, BBS"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.205"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-206",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "BBS Variations - At the Mouth, BBS",
+                                      "fr":  "BBS Variations - At the Mouth, BBS"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.206"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-207",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "BBS Variations - FSL/BBS",
+                                      "fr":  "BBS Variations - FSL/BBS"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.207"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-208",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Supplemental Heaven - Alternate supplemental lifts",
+                                      "fr":  "Supplemental Heaven - Alternate supplemental lifts"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.208"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-209",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 1",
+                                      "fr":  "Full Body 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.209"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-210",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 2 - Comme FB1 avec Widowmaker squat vendredi",
+                                      "fr":  "Full Body 2 - Comme FB1 avec Widowmaker squat vendredi"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.210"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-211",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 3 - Comme FB1 avec BBS press",
+                                      "fr":  "Full Body 3 - Comme FB1 avec BBS press"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.211"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-212",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 4 - Widowmaker squat + SLDL",
+                                      "fr":  "Full Body 4 - Widowmaker squat + SLDL"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.212"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-213",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 5 - BBS squat lundi ou vendredi",
+                                      "fr":  "Full Body 5 - BBS squat lundi ou vendredi"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.213"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-214",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 6 - SSL squat + BBB squat vendredi",
+                                      "fr":  "Full Body 6 - SSL squat + BBB squat vendredi"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.214"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-215",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 7 - BBS squat lundi et vendredi",
+                                      "fr":  "Full Body 7 - BBS squat lundi et vendredi"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.215"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-216",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 8 - Power clean + squat/push/pull",
+                                      "fr":  "Full Body 8 - Power clean + squat/push/pull"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.216"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-217",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 9 - Power clean + BBS press",
+                                      "fr":  "Full Body 9 - Power clean + BBS press"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.217"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-218",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 10 - Power clean + volume squat/press",
+                                      "fr":  "Full Body 10 - Power clean + volume squat/press"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.218"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-219",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 11 - BBS squat + BBS press; journÃƒÂ©es longues",
+                                      "fr":  "Full Body 11 - BBS squat + BBS press; journÃƒÂ©es longues"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.219"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-220",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 12 - Spinal Tap squat au milieu + Widowmaker",
+                                      "fr":  "Full Body 12 - Spinal Tap squat au milieu + Widowmaker"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.220"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-221",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 13 - Deadlift-centric: FSL + BBS deadlift",
+                                      "fr":  "Full Body 13 - Deadlift-centric: FSL + BBS deadlift"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.221"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-222",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 14 - Encore plus de volume deadlift; BBS deux jours",
+                                      "fr":  "Full Body 14 - Encore plus de volume deadlift; BBS deux jours"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.222"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-223",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 15 - BBS squat et deadlift",
+                                      "fr":  "Full Body 15 - BBS squat et deadlift"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.223"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-224",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 16 - Pousse press, squat et deadlift avec BBS",
+                                      "fr":  "Full Body 16 - Pousse press, squat et deadlift avec BBS"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.224"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-225",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body 17",
+                                      "fr":  "Full Body 17"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.225"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-226",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body Anchor 1 - 3/5/1; PR/Jokers deux jours, FSL au milieu",
+                                      "fr":  "Full Body Anchor 1 - 3/5/1; PR/Jokers deux jours, FSL au milieu"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.226"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-227",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body Anchor 2 - Comme A1 + 5Ãƒâ€”3 SSL squat vendredi",
+                                      "fr":  "Full Body Anchor 2 - Comme A1 + 5Ãƒâ€”3 SSL squat vendredi"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.227"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-228",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body Anchor 3 - PR/Jokers + FSL combinations",
+                                      "fr":  "Full Body Anchor 3 - PR/Jokers + FSL combinations"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.228"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-229",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body Anchor 4 - Widowmaker vendredi + SLDL",
+                                      "fr":  "Full Body Anchor 4 - Widowmaker vendredi + SLDL"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.229"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-230",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body Anchor 5 - FSL superset push/pull",
+                                      "fr":  "Full Body Anchor 5 - FSL superset push/pull"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.230"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-231",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body Anchor 6 - Deadlift-centric Anchor",
+                                      "fr":  "Full Body Anchor 6 - Deadlift-centric Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.231"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-232",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Full Body Anchor 7 - Variation intensive Anchor",
+                                      "fr":  "Full Body Anchor 7 - Variation intensive Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.232"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-233",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Pervertor - Leader",
+                                      "fr":  "Pervertor - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.233"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-234",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Pervertor - Anchor",
+                                      "fr":  "Pervertor - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.234"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-235",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Original 5/3/1 - Forever revision",
+                                      "fr":  "Original 5/3/1 - Forever revision"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.235"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-236",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Original 5/3/1 + FSL - Anchor",
+                                      "fr":  "Original 5/3/1 + FSL - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.236"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-237",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 Prowler Challenge - Challenge",
+                                      "fr":  "5/3/1 Prowler Challenge - Challenge"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.237"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-238",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Original 5/3/1 Challenge - Challenge complet",
+                                      "fr":  "Original 5/3/1 Challenge - Challenge complet"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.238"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-239",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Combination Template - Mix par lift",
+                                      "fr":  "Combination Template - Mix par lift"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.239"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-240",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Limited Time - Widowmaker",
+                                      "fr":  "Limited Time - Widowmaker"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.240"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-241",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Limited Time - BBS",
+                                      "fr":  "Limited Time - BBS"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.241"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-242",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Limited Time - BBB",
+                                      "fr":  "Limited Time - BBB"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.242"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-243",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Limited Time - BBB/BBS",
+                                      "fr":  "Limited Time - BBB/BBS"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.243"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-244",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Limited Time - 5Ãƒâ€”5/3/1",
+                                      "fr":  "Limited Time - 5Ãƒâ€”5/3/1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.244"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-245",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Limited Time - Anchor",
+                                      "fr":  "Limited Time - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.245"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-246",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Limited Time - Assistance/Jumps options 1Ã¢â‚¬â€œ4",
+                                      "fr":  "Limited Time - Assistance/Jumps options 1Ã¢â‚¬â€œ4"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.246"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-247",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Limited Time - Conditioning",
+                                      "fr":  "Limited Time - Conditioning"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.247"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-248",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Bodybuild the Upper / Athlete the Lower - Leader",
+                                      "fr":  "Bodybuild the Upper / Athlete the Lower - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.248"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-249",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Bodybuild the Upper / Athlete the Lower - Anchor",
+                                      "fr":  "Bodybuild the Upper / Athlete the Lower - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.249"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-250",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Strength and Conditioning - Leader",
+                                      "fr":  "Strength and Conditioning - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.250"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-251",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Strength and Conditioning - Anchor",
+                                      "fr":  "Strength and Conditioning - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.251"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-252",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "The Wendler Classic - Leader",
+                                      "fr":  "The Wendler Classic - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.252"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-253",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "The Wendler Classic - Anchor",
+                                      "fr":  "The Wendler Classic - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.253"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-254",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Leviathan - Leader",
+                                      "fr":  "Leviathan - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.254"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-255",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Leviathan - Anchor",
+                                      "fr":  "Leviathan - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.255"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-256",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Con Clavi Con Dio - Leader",
+                                      "fr":  "Con Clavi Con Dio - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.256"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-257",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Con Clavi Con Dio - Anchor",
+                                      "fr":  "Con Clavi Con Dio - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.257"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-258",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Prep and Fat Loss Training - Advanced Prep Program",
+                                      "fr":  "Prep and Fat Loss Training - Advanced Prep Program"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.258"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-259",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 Strength Circuits - Leader",
+                                      "fr":  "5/3/1 Strength Circuits - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.259"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-260",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 Strength Circuits - Anchor option 1",
+                                      "fr":  "5/3/1 Strength Circuits - Anchor option 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.260"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-261",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5/3/1 Strength Circuits - Anchor option 2",
+                                      "fr":  "5/3/1 Strength Circuits - Anchor option 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.261"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-262",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5Ã¢â‚¬â„¢s Pro Forever - Leader",
+                                      "fr":  "5Ã¢â‚¬â„¢s Pro Forever - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.262"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-263",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5Ã¢â‚¬â„¢s Pro Forever - Anchor",
+                                      "fr":  "5Ã¢â‚¬â„¢s Pro Forever - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.263"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-264",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Titanium Knickknack Challenge - Part 1",
+                                      "fr":  "Titanium Knickknack Challenge - Part 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.264"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-265",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Titanium Knickknack Challenge - Part 2",
+                                      "fr":  "Titanium Knickknack Challenge - Part 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.265"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-266",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Titanium Knickknack Challenge - Part 3",
+                                      "fr":  "Titanium Knickknack Challenge - Part 3"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.266"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-267",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Titanium Knickknack Challenge - Overview",
+                                      "fr":  "Titanium Knickknack Challenge - Overview"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.267"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-268",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Widowmaker Circuit - Leader",
+                                      "fr":  "Widowmaker Circuit - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.268"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-269",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Widowmaker Circuit - Anchor",
+                                      "fr":  "Widowmaker Circuit - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.269"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-270",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Widowmaker Circuit - Option 1",
+                                      "fr":  "Widowmaker Circuit - Option 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.270"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-271",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Widowmaker Circuit - Option 2",
+                                      "fr":  "Widowmaker Circuit - Option 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.271"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-272",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Widowmaker Circuit - Option 3",
+                                      "fr":  "Widowmaker Circuit - Option 3"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.272"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-273",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Ceremony of Opposites - Maintenance",
+                                      "fr":  "Ceremony of Opposites - Maintenance"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.273"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-274",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Ceremony of Opposites - Leader/Anchor",
+                                      "fr":  "Ceremony of Opposites - Leader/Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.274"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-275",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "2Ãƒâ€”2Ãƒâ€”2 - Leader",
+                                      "fr":  "2Ãƒâ€”2Ãƒâ€”2 - Leader"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.275"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-276",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "2Ãƒâ€”2Ãƒâ€”2 - Anchor",
+                                      "fr":  "2Ãƒâ€”2Ãƒâ€”2 - Anchor"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.276"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-277",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Krypteia - Part 1",
+                                      "fr":  "Krypteia - Part 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.277"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-278",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Krypteia - Part 2",
+                                      "fr":  "Krypteia - Part 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.278"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-279",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Krypteia - Part 3",
+                                      "fr":  "Krypteia - Part 3"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.279"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-280",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Krypteia - Programme complet",
+                                      "fr":  "Krypteia - Programme complet"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.280"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-281",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "RunninÃ¢â‚¬â„¢ with the Devil - Running progression",
+                                      "fr":  "RunninÃ¢â‚¬â„¢ with the Devil - Running progression"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.281"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-282",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Original 5/3/1",
+                                      "fr":  "Original 5/3/1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.282"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-283",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "3/5/1",
+                                      "fr":  "3/5/1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.283"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-284",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5Ã¢â‚¬â„¢s Pro",
+                                      "fr":  "5Ã¢â‚¬â„¢s Pro"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.284"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-285",
+                        "generation":  "forever",
+                        "classification":  "rule",
+                        "title":  {
+                                      "en":  "PR Set",
+                                      "fr":  "PR Set"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.285"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-286",
+                        "generation":  "forever",
+                        "classification":  "rule",
+                        "title":  {
+                                      "en":  "Joker Sets",
+                                      "fr":  "Joker Sets"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.286"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-287",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "First Set Last",
+                                      "fr":  "First Set Last"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.287"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-288",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Second Set Last",
+                                      "fr":  "Second Set Last"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.288"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-289",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Widowmaker",
+                                      "fr":  "Widowmaker"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.289"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-290",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Big",
+                                      "fr":  "Boring But Big"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.290"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-291",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Boring But Strong",
+                                      "fr":  "Boring But Strong"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.291"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-292",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "5Ãƒâ€”5/3/1",
+                                      "fr":  "5Ãƒâ€”5/3/1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.292"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-293",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Spinal Tap",
+                                      "fr":  "Spinal Tap"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.293"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-294",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Push",
+                                      "fr":  "Push"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.294"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-295",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Pull",
+                                      "fr":  "Pull"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.295"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-296",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Single Leg/Core",
+                                      "fr":  "Single Leg/Core"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.296"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-297",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Jumps/Throws",
+                                      "fr":  "Jumps/Throws"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.297"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-298",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Agile 8 / general warm-up",
+                                      "fr":  "Agile 8 / general warm-up"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.298"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-299",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Easy conditioning",
+                                      "fr":  "Easy conditioning"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.299"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-300",
+                        "generation":  "forever",
+                        "classification":  "documentation",
+                        "title":  {
+                                      "en":  "Hard conditioning",
+                                      "fr":  "Hard conditioning"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.300"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-301",
+                        "generation":  "forever",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "Active Recovery 1",
+                                      "fr":  "Active Recovery 1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.301"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-302",
+                        "generation":  "forever",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "Active Recovery 2",
+                                      "fr":  "Active Recovery 2"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.302"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-303",
+                        "generation":  "forever",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "Active Recovery 3",
+                                      "fr":  "Active Recovery 3"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.303"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-304",
+                        "generation":  "forever",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "Active Recovery 4",
+                                      "fr":  "Active Recovery 4"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.304"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-305",
+                        "generation":  "forever",
+                        "classification":  "protocol",
+                        "title":  {
+                                      "en":  "Active Recovery for Older Athlete",
+                                      "fr":  "Active Recovery for Older Athlete"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.305"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-306",
+                        "generation":  "forever",
+                        "classification":  "transition",
+                        "title":  {
+                                      "en":  "5Ã¢â‚¬â„¢s Pro + BBB Challenge Ã¢â€ â€™ 5Ã¢â‚¬â„¢s Pro + 5Ãƒâ€”5 FSL",
+                                      "fr":  "5Ã¢â‚¬â„¢s Pro + BBB Challenge Ã¢â€ â€™ 5Ã¢â‚¬â„¢s Pro + 5Ãƒâ€”5 FSL"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.306"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-307",
+                        "generation":  "forever",
+                        "classification":  "transition",
+                        "title":  {
+                                      "en":  "BBB Ã¢â€ â€™ Original 5/3/1",
+                                      "fr":  "BBB Ã¢â€ â€™ Original 5/3/1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.307"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-308",
+                        "generation":  "forever",
+                        "classification":  "transition",
+                        "title":  {
+                                      "en":  "5Ã¢â‚¬â„¢s Pro + Forever BBB Ã¢â€ â€™ 5/3/1 PR sets + 5Ãƒâ€”5 FSL",
+                                      "fr":  "5Ã¢â‚¬â„¢s Pro + Forever BBB Ã¢â€ â€™ 5/3/1 PR sets + 5Ãƒâ€”5 FSL"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.308"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-309",
+                        "generation":  "forever",
+                        "classification":  "transition",
+                        "title":  {
+                                      "en":  "5Ã¢â‚¬â„¢s Pro + BBB Ã¢â€ â€™ 5/3/1 PR sets + Jokers + 5Ãƒâ€”5 FSL",
+                                      "fr":  "5Ã¢â‚¬â„¢s Pro + BBB Ã¢â€ â€™ 5/3/1 PR sets + Jokers + 5Ãƒâ€”5 FSL"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.309"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-310",
+                        "generation":  "forever",
+                        "classification":  "transition",
+                        "title":  {
+                                      "en":  "BBS (2Ã¢â‚¬â€œ3 cycles) Ã¢â€ â€™ PR Set + FSL",
+                                      "fr":  "BBS (2Ã¢â‚¬â€œ3 cycles) Ã¢â€ â€™ PR Set + FSL"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.310"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-311",
+                        "generation":  "forever",
+                        "classification":  "transition",
+                        "title":  {
+                                      "en":  "BBS (2Ã¢â‚¬â€œ3 cycles) Ã¢â€ â€™ PR Set + Jokers + FSL",
+                                      "fr":  "BBS (2Ã¢â‚¬â€œ3 cycles) Ã¢â€ â€™ PR Set + Jokers + FSL"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.311"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-312",
+                        "generation":  "forever",
+                        "classification":  "transition",
+                        "title":  {
+                                      "en":  "SSL (2Ã¢â‚¬â€œ3 cycles) Ã¢â€ â€™ 5Ã¢â‚¬â„¢s Progression + Jokers + FSL",
+                                      "fr":  "SSL (2Ã¢â‚¬â€œ3 cycles) Ã¢â€ â€™ 5Ã¢â‚¬â„¢s Progression + Jokers + FSL"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.312"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-313",
+                        "generation":  "forever",
+                        "classification":  "transition",
+                        "title":  {
+                                      "en":  "Supplemental Heaven Ã¢â€ â€™ Original 5/3/1",
+                                      "fr":  "Supplemental Heaven Ã¢â€ â€™ Original 5/3/1"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.313"
+                                          ]
+                    },
+                    {
+                        "id":  "FV-314",
+                        "generation":  "forever",
+                        "classification":  "transition",
+                        "title":  {
+                                      "en":  "Advanced Prep/Fat Loss Ã¢â€ â€™ Full Body PR Set",
+                                      "fr":  "Advanced Prep/Fat Loss Ã¢â€ â€™ Full Body PR Set"
+                                  },
+                        "sourceRuleIds":  [
+                                              "fv.entry.314"
+                                          ]
+                    }
+                ]
+}

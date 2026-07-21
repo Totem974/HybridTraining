@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "kind": "sources",
+  "sources": [
+    {"ruleId":"by.two_by_two_by_two.p97_104","work":"Beyond 5/3/1","edition":"2013","section":"PDF pp. 97-104 - 2x2x2 program","reviewStatus":"reviewed"},
+    {"ruleId":"fv.main_lifts.p17","work":"5/3/1 Forever","edition":"First edition (2017)","section":"p. 17 - main lift definitions","reviewStatus":"reviewed"},
+    {"ruleId":"fv.assistance.general.p36_48","work":"5/3/1 Forever","edition":"First edition (2017)","section":"pp. 36-48 - assistance categories and guidance","reviewStatus":"reviewed"},
+    {"ruleId":"fv.assistance.push.p36_38","work":"5/3/1 Forever","edition":"First edition (2017)","section":"pp. 36-38 - push assistance","reviewStatus":"reviewed"},
+    {"ruleId":"fv.assistance.pull.p38_41","work":"5/3/1 Forever","edition":"First edition (2017)","section":"pp. 38-41 - pull assistance","reviewStatus":"reviewed"},
+    {"ruleId":"fv.assistance.single_leg_core.p41_43","work":"5/3/1 Forever","edition":"First edition (2017)","section":"pp. 41-43 - single-leg and core assistance","reviewStatus":"reviewed"},
+    {"ruleId":"fv.assistance.farmer_walk.p43","work":"5/3/1 Forever","edition":"First edition (2017)","section":"p. 43 - farmer walk assistance","reviewStatus":"reviewed"},
+    {"ruleId":"fv.assistance.neck.p43_44","work":"5/3/1 Forever","edition":"First edition (2017)","section":"pp. 43-44 - neck assistance","reviewStatus":"reviewed"},
+    {"ruleId":"fv.conditioning.prowler.p259_260","work":"5/3/1 Forever","edition":"First edition (2017)","section":"pp. 259-260 - Prowler conditioning","reviewStatus":"reviewed"},
+    {"ruleId":"fv.conditioning.sled.p261","work":"5/3/1 Forever","edition":"First edition (2017)","section":"p. 261 - sled conditioning","reviewStatus":"reviewed"},
+    {"ruleId":"fv.conditioning.hills.p261_262","work":"5/3/1 Forever","edition":"First edition (2017)","section":"pp. 261-262 - hill conditioning","reviewStatus":"reviewed"},
+    {"ruleId":"fv.conditioning.running_adaptation.p264_265","work":"5/3/1 Forever","edition":"First edition (2017)","section":"pp. 264-265 - running adaptation","reviewStatus":"reviewed"},
+    {"ruleId":"fv.conditioning.running_test.p265","work":"5/3/1 Forever","edition":"First edition (2017)","section":"p. 265 - running test","reviewStatus":"reviewed"},
+    {"ruleId":"fv.conditioning.easy.p265_266","work":"5/3/1 Forever","edition":"First edition (2017)","section":"pp. 265-266 - easy conditioning","reviewStatus":"reviewed"},
+    {"ruleId":"fv.full_body_8.p161","work":"5/3/1 Forever","edition":"First edition (2017)","section":"p. 161 - Full Body 8 reference","reviewStatus":"reviewed"}
+  ]
+}

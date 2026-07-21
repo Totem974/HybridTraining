@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "kind": "optionSchemas",
+  "optionSchemas": [{
+    "id":"classic_531_options","revision":1,
+    "sourceRuleIds":["or.tm.ninety_percent","or.warm_up.40_50_60","or.deload.classic"],
+    "parameters":[
+      {"id":"training_max_ratio","type":"percentage","scope":"global","default":9000,"minimum":9000,"maximum":9000,"step":null,"allowedValues":[],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
+      {"id":"include_warm_up","type":"boolean","scope":"global","default":true,"minimum":null,"maximum":null,"step":null,"allowedValues":[true,false],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
+      {"id":"include_deload","type":"boolean","scope":"global","default":true,"minimum":null,"maximum":null,"step":null,"allowedValues":[true,false],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}}
+    ]
+  }, {
+    "id":"classic_simplest_strength_options","revision":1,
+    "sourceRuleIds":["or.sst.progression","or.sst.pairings"],
+    "parameters":[
+      {"id":"press_day_secondary","type":"movement","scope":"perSession","default":"close_grip_bench_press","minimum":null,"maximum":null,"step":null,"allowedValues":["close_grip_bench_press"],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
+      {"id":"deadlift_day_secondary","type":"movement","scope":"perSession","default":"front_squat","minimum":null,"maximum":null,"step":null,"allowedValues":["front_squat"],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
+      {"id":"bench_day_secondary","type":"movement","scope":"perSession","default":"incline_press","minimum":null,"maximum":null,"step":null,"allowedValues":["incline_press"],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
+      {"id":"squat_day_secondary","type":"movement","scope":"perSession","default":"straight_leg_deadlift","minimum":null,"maximum":null,"step":null,"allowedValues":["straight_leg_deadlift"],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}}
+    ]
+  }]
+}

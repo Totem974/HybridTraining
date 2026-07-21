@@ -1,0 +1,13 @@
+﻿{
+  "schemaVersion": 1,
+  "kind": "movements",
+  "movements": [
+    {"id":"back_squat","revision":1,"labels":{"en":"Back squat","fr":"Squat arriere"},"sourceRuleIds":["fv.main_lifts.p17"],"pattern":"squat","trainingMaxEligible":true,"requiredCapabilities":["barbell","rack","plates"]},
+    {"id":"bench_press","revision":1,"labels":{"en":"Bench press","fr":"Developpe couche"},"sourceRuleIds":["fv.main_lifts.p17"],"pattern":"horizontalPush","trainingMaxEligible":true,"requiredCapabilities":["barbell","bench","rack","plates"]},
+    {"id":"deadlift","revision":1,"labels":{"en":"Deadlift","fr":"Souleve de terre"},"sourceRuleIds":["fv.main_lifts.p17"],"pattern":"hinge","trainingMaxEligible":true,"requiredCapabilities":["barbell","plates"]},
+    {"id":"overhead_press","revision":1,"labels":{"en":"Press","fr":"Developpe militaire"},"sourceRuleIds":["fv.main_lifts.p17"],"pattern":"verticalPush","trainingMaxEligible":true,"requiredCapabilities":["barbell","rack","plates"]},
+    {"id":"power_clean","revision":1,"labels":{"en":"Power clean","fr":"EpaulÃ© en puissance"},"sourceRuleIds":["fv.full_body_8.p161"],"pattern":"olympicPull","trainingMaxEligible":true,"requiredCapabilities":["barbell","plates","liftingArea"]},
+    {"id":"front_squat","revision":1,"labels":{"en":"Front squat","fr":"Squat avant"},"sourceRuleIds":["by.two_by_two_by_two.p97_104"],"pattern":"squat","trainingMaxEligible":true,"requiredCapabilities":["barbell","rack","plates"]}
+  ]
+}
+

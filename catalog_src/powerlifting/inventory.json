@@ -1,0 +1,307 @@
+{
+  "schemaVersion": 1,
+  "kind": "inventory",
+  "entries": [
+    {
+      "id": "PL-001",
+      "generation": "powerlifting",
+      "classification": "cycleTemplate",
+      "title": {
+        "en": "Classic 5/3/1",
+        "fr": "Classic 5/3/1"
+      },
+      "cycleTemplateId": "powerlifting_classic_531",
+      "sourceRuleIds": [
+        "pl.001"
+      ]
+    },
+    {
+      "id": "PL-002",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "5/3/1 Powerlifting - 3/5/1 and singles",
+        "fr": "5/3/1 Powerlifting - 3/5/1 and singles"
+      },
+      "sourceRuleIds": [
+        "pl.002"
+      ]
+    },
+    {
+      "id": "PL-003",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "Off-season - mass",
+        "fr": "Off-season - mass"
+      },
+      "sourceRuleIds": [
+        "pl.003"
+      ]
+    },
+    {
+      "id": "PL-004",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "Off-season - strength",
+        "fr": "Off-season - strength"
+      },
+      "sourceRuleIds": [
+        "pl.004"
+      ]
+    },
+    {
+      "id": "PL-005",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "Off-season - conditioning",
+        "fr": "Off-season - conditioning"
+      },
+      "sourceRuleIds": [
+        "pl.005"
+      ]
+    },
+    {
+      "id": "PL-006",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "Off-season - equipped lifter",
+        "fr": "Off-season - equipped lifter"
+      },
+      "sourceRuleIds": [
+        "pl.006"
+      ]
+    },
+    {
+      "id": "PL-007",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "Pre-meet - raw",
+        "fr": "Pre-meet - raw"
+      },
+      "sourceRuleIds": [
+        "pl.007"
+      ]
+    },
+    {
+      "id": "PL-008",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "Pre-meet - equipped",
+        "fr": "Pre-meet - equipped"
+      },
+      "sourceRuleIds": [
+        "pl.008"
+      ]
+    },
+    {
+      "id": "PL-009",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "Meet preparation - raw",
+        "fr": "Meet preparation - raw"
+      },
+      "sourceRuleIds": [
+        "pl.009"
+      ]
+    },
+    {
+      "id": "PL-010",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "Meet preparation - equipped",
+        "fr": "Meet preparation - equipped"
+      },
+      "sourceRuleIds": [
+        "pl.010"
+      ]
+    },
+    {
+      "id": "PL-011",
+      "generation": "powerlifting",
+      "classification": "protocol",
+      "title": {
+        "en": "Meet week",
+        "fr": "Meet week"
+      },
+      "sourceRuleIds": [
+        "pl.011"
+      ]
+    },
+    {
+      "id": "PL-012",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "N.O.V. Powerlifting - annual template",
+        "fr": "N.O.V. Powerlifting - annual template"
+      },
+      "sourceRuleIds": [
+        "pl.012"
+      ]
+    },
+    {
+      "id": "PL-013",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "N.O.V. Powerlifting - meet preparation",
+        "fr": "N.O.V. Powerlifting - meet preparation"
+      },
+      "sourceRuleIds": [
+        "pl.013"
+      ]
+    },
+    {
+      "id": "PL-014",
+      "generation": "powerlifting",
+      "classification": "transition",
+      "title": {
+        "en": "N.O.V. Powerlifting - after meet",
+        "fr": "N.O.V. Powerlifting - after meet"
+      },
+      "sourceRuleIds": [
+        "pl.014"
+      ]
+    },
+    {
+      "id": "PL-015",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "Non-competitive powerlifter - heavy singles",
+        "fr": "Non-competitive powerlifter - heavy singles"
+      },
+      "sourceRuleIds": [
+        "pl.015"
+      ]
+    },
+    {
+      "id": "PL-016",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "Old Man Winter / Mr. Gray Pubes",
+        "fr": "Old Man Winter / Mr. Gray Pubes"
+      },
+      "sourceRuleIds": [
+        "pl.016"
+      ]
+    },
+    {
+      "id": "PL-017",
+      "generation": "powerlifting",
+      "classification": "sharedComponent",
+      "title": {
+        "en": "Four-day assistance template",
+        "fr": "Four-day assistance template"
+      },
+      "sourceRuleIds": [
+        "pl.017"
+      ]
+    },
+    {
+      "id": "PL-018",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "Rich T. Baggins Squat Cycle - variation 1",
+        "fr": "Rich T. Baggins Squat Cycle - variation 1"
+      },
+      "sourceRuleIds": [
+        "pl.018"
+      ]
+    },
+    {
+      "id": "PL-019",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "Rich T. Baggins Squat Cycle - variation 2",
+        "fr": "Rich T. Baggins Squat Cycle - variation 2"
+      },
+      "sourceRuleIds": [
+        "pl.019"
+      ]
+    },
+    {
+      "id": "PL-020",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "Circa Max Squat - variation 1",
+        "fr": "Circa Max Squat - variation 1"
+      },
+      "sourceRuleIds": [
+        "pl.020"
+      ]
+    },
+    {
+      "id": "PL-021",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "Circa Max Squat - variation 2",
+        "fr": "Circa Max Squat - variation 2"
+      },
+      "sourceRuleIds": [
+        "pl.021"
+      ]
+    },
+    {
+      "id": "PL-022",
+      "generation": "powerlifting",
+      "classification": "documentation",
+      "title": {
+        "en": "Circa Max Squat - variation 3",
+        "fr": "Circa Max Squat - variation 3"
+      },
+      "sourceRuleIds": [
+        "pl.022"
+      ]
+    },
+    {
+      "id": "PL-023",
+      "generation": "powerlifting",
+      "classification": "transition",
+      "title": {
+        "en": "After Circa Max - meet or rest",
+        "fr": "After Circa Max - meet or rest"
+      },
+      "sourceRuleIds": [
+        "pl.023"
+      ]
+    },
+    {
+      "id": "PL-024",
+      "generation": "powerlifting",
+      "classification": "transition",
+      "title": {
+        "en": "After Circa Max - deload then meet",
+        "fr": "After Circa Max - deload then meet"
+      },
+      "sourceRuleIds": [
+        "pl.024"
+      ]
+    },
+    {
+      "id": "PL-025",
+      "generation": "powerlifting",
+      "classification": "transition",
+      "title": {
+        "en": "After Circa Max - opener then meet",
+        "fr": "After Circa Max - opener then meet"
+      },
+      "sourceRuleIds": [
+        "pl.025"
+      ]
+    }
+  ]
+}
