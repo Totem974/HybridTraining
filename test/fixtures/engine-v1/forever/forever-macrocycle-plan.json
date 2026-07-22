@@ -1,0 +1,74 @@
+{
+  "fixtureVersion": 1,
+  "id": "forever-macrocycle-plan",
+  "snapshot": {
+    "blocks": [
+      {
+        "cycles": [
+          {
+            "number": 1,
+            "weeks": [
+              {
+                "number": 1,
+                "sessions": [
+                  {
+                    "blocks": [
+                      {
+                        "kind": "mainWork",
+                        "prescriptions": [
+                          {
+                            "isPerformanceSet": false,
+                            "load": 70.0,
+                            "movement": "squat",
+                            "percentage": 0.7,
+                            "repetitions": 5,
+                            "roundingIncrement": 2.5,
+                            "rule": {
+                              "document": "MAIN-ORDER-001",
+                              "location": "main-work-specification.md"
+                            },
+                            "setKind": "main",
+                            "trainingMax": 100.0,
+                            "unroundedLoad": 70.0
+                          }
+                        ]
+                      }
+                    ],
+                    "date": "2026-07-20",
+                    "id": "session-1"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "id": "block-1-leader",
+        "role": "leader",
+        "rule": {
+          "document": "LIFE-PHASE-001",
+          "location": "cycle-lifecycle-specification.md"
+        },
+        "seventhWeekPurpose": null
+      }
+    ],
+    "blueprintId": "test.forever.v1",
+    "blueprintSnapshot": "{\"id\":\"test.forever.v1\",\"version\":1}",
+    "blueprintVersion": 1,
+    "events": [
+      {
+        "afterBlockId": "block-1-leader",
+        "afterCycleNumber": 1,
+        "kind": "trainingMaxProgression",
+        "rule": {
+          "document": "TM-PROG-001",
+          "location": "training-max-specification.md"
+        }
+      }
+    ],
+    "schemaVersion": 1,
+    "seed": 0,
+    "transitions": [],
+    "unit": "kilograms"
+  },
+  "logicalHash": "-40f8b5077f239dd8"
+}

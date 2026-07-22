@@ -1,0 +1,4541 @@
+{
+  "fixtureVersion": 1,
+  "id": "classic_531--two_day_rotation",
+  "catalogSelection": {
+    "catalogVersion": 2,
+    "templateId": "classic_531",
+    "variantId": "two_day_rotation",
+    "sourceReference": "catalog_src/v1",
+    "allowedScheduleIds": [
+      "schedule_two_day_multi_movement_option_one",
+      "schedule_two_day_rotating_four_lifts"
+    ],
+    "validExample": {
+      "trainingMaxRatioBasisPoints": 9000,
+      "scheduleId": "schedule_two_day_multi_movement_option_one",
+      "includeWarmUp": true,
+      "includeDeload": true
+    }
+  },
+  "coverage": {
+    "maxInputModes": [
+      "directTrainingMax",
+      "oneRepMax",
+      "repMax"
+    ],
+    "unit": "kg",
+    "globalTrainingMaxRatio": 9000,
+    "perMovementRatio": true,
+    "schedule": true,
+    "plating": true,
+    "catalogOptions": true,
+    "includeDeload": true
+  },
+  "request": {
+    "cycleId": "oracle-classic_531-two_day_rotation",
+    "startDate": "2026-01-11T00:00:00.000Z",
+    "trainingDays": [
+      1,
+      2
+    ],
+    "sessionOrder": [
+      "squat_bench_press",
+      "deadlift_overhead_press"
+    ],
+    "maxInputs": {
+      "bench_press": {
+        "type": "oneRepMax",
+        "weight": {
+          "centiUnits": 13200,
+          "unit": "kg"
+        }
+      },
+      "deadlift": {
+        "type": "repMax",
+        "weight": {
+          "centiUnits": 14950,
+          "unit": "kg"
+        },
+        "repetitions": 4,
+        "formula": "epley"
+      },
+      "deadlift_overhead_press": {
+        "type": "directTrainingMax",
+        "weight": {
+          "centiUnits": 16700,
+          "unit": "kg"
+        }
+      },
+      "overhead_press": {
+        "type": "oneRepMax",
+        "weight": {
+          "centiUnits": 18450,
+          "unit": "kg"
+        }
+      },
+      "squat": {
+        "type": "repMax",
+        "weight": {
+          "centiUnits": 20200,
+          "unit": "kg"
+        },
+        "repetitions": 7,
+        "formula": "epley"
+      },
+      "squat_bench_press": {
+        "type": "directTrainingMax",
+        "weight": {
+          "centiUnits": 21950,
+          "unit": "kg"
+        }
+      }
+    },
+    "globalTrainingMaxRatioBasisPoints": 9000,
+    "trainingMaxRatioByMovement": {
+      "squat_bench_press": 8750
+    },
+    "percentageParameters": {},
+    "percentageParametersByMovement": {},
+    "unit": "kg",
+    "roundingIncrement": {
+      "centiUnits": 250,
+      "unit": "kg"
+    },
+    "barProfile": {
+      "weight": {
+        "centiUnits": 2000,
+        "unit": "kg"
+      },
+      "platesPerSide": [
+        {
+          "centiUnits": 2500,
+          "unit": "kg"
+        },
+        {
+          "centiUnits": 2000,
+          "unit": "kg"
+        },
+        {
+          "centiUnits": 1500,
+          "unit": "kg"
+        },
+        {
+          "centiUnits": 1000,
+          "unit": "kg"
+        },
+        {
+          "centiUnits": 500,
+          "unit": "kg"
+        },
+        {
+          "centiUnits": 250,
+          "unit": "kg"
+        },
+        {
+          "centiUnits": 125,
+          "unit": "kg"
+        }
+      ]
+    },
+    "includeDeload": true
+  },
+  "response": {
+    "schemaVersion": 1,
+    "id": "oracle-classic_531-two_day_rotation",
+    "catalogVersion": 2,
+    "templateId": "classic_531",
+    "variantId": "two_day_rotation",
+    "effectiveTrainingMaxes": {
+      "squat": {
+        "centiUnits": 22422,
+        "unit": "kg"
+      },
+      "bench_press": {
+        "centiUnits": 11880,
+        "unit": "kg"
+      },
+      "squat_bench_press": {
+        "centiUnits": 21950,
+        "unit": "kg"
+      },
+      "deadlift": {
+        "centiUnits": 15249,
+        "unit": "kg"
+      },
+      "overhead_press": {
+        "centiUnits": 16605,
+        "unit": "kg"
+      },
+      "deadlift_overhead_press": {
+        "centiUnits": 16700,
+        "unit": "kg"
+      }
+    },
+    "weeks": [
+      {
+        "number": 1,
+        "sessions": [
+          {
+            "id": "oracle-classic_531-two_day_rotation-w1-s1",
+            "date": "2026-01-12T00:00:00.000",
+            "movementId": "squat_bench_press",
+            "blocks": [
+              {
+                "id": "warm_up",
+                "role": "warm_up",
+                "movementId": "squat",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 9000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 11250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 13500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "warm_up",
+                "role": "warm_up",
+                "movementId": "bench_press",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 4750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 6000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 7250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "main",
+                "role": "main_work",
+                "movementId": "squat_bench_press",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 6500,
+                    "plannedLoad": {
+                      "centiUnits": 14250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 7500,
+                    "plannedLoad": {
+                      "centiUnits": 16500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "amrap",
+                      "minimum": 5
+                    },
+                    "percentageBasisPoints": 8500,
+                    "plannedLoad": {
+                      "centiUnits": 17750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": {
+                      "code": "insufficientEquipment",
+                      "message": "Available equipment cannot reach the requested load."
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "oracle-classic_531-two_day_rotation-w1-s2",
+            "date": "2026-01-13T00:00:00.000",
+            "movementId": "deadlift_overhead_press",
+            "blocks": [
+              {
+                "id": "warm_up",
+                "role": "warm_up",
+                "movementId": "deadlift",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 6000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 7750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 9250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "warm_up",
+                "role": "warm_up",
+                "movementId": "overhead_press",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 6750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 8250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 10000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "main",
+                "role": "main_work",
+                "movementId": "deadlift_overhead_press",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 6500,
+                    "plannedLoad": {
+                      "centiUnits": 10750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 7500,
+                    "plannedLoad": {
+                      "centiUnits": 12500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "amrap",
+                      "minimum": 5
+                    },
+                    "percentageBasisPoints": 8500,
+                    "plannedLoad": {
+                      "centiUnits": 14250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "sessions": [
+          {
+            "id": "oracle-classic_531-two_day_rotation-w2-s1",
+            "date": "2026-01-19T00:00:00.000",
+            "movementId": "squat_bench_press",
+            "blocks": [
+              {
+                "id": "warm_up",
+                "role": "warm_up",
+                "movementId": "squat",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 9000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 11250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 13500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "warm_up",
+                "role": "warm_up",
+                "movementId": "bench_press",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 4750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 6000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 7250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "main",
+                "role": "main_work",
+                "movementId": "squat_bench_press",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 7000,
+                    "plannedLoad": {
+                      "centiUnits": 15250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 8000,
+                    "plannedLoad": {
+                      "centiUnits": 17500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "amrap",
+                      "minimum": 3
+                    },
+                    "percentageBasisPoints": 9000,
+                    "plannedLoad": {
+                      "centiUnits": 17750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": {
+                      "code": "insufficientEquipment",
+                      "message": "Available equipment cannot reach the requested load."
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "oracle-classic_531-two_day_rotation-w2-s2",
+            "date": "2026-01-20T00:00:00.000",
+            "movementId": "deadlift_overhead_press",
+            "blocks": [
+              {
+                "id": "warm_up",
+                "role": "warm_up",
+                "movementId": "deadlift",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 6000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 7750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 9250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "warm_up",
+                "role": "warm_up",
+                "movementId": "overhead_press",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 6750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 8250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 10000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "main",
+                "role": "main_work",
+                "movementId": "deadlift_overhead_press",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 7000,
+                    "plannedLoad": {
+                      "centiUnits": 11750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 8000,
+                    "plannedLoad": {
+                      "centiUnits": 13250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "amrap",
+                      "minimum": 3
+                    },
+                    "percentageBasisPoints": 9000,
+                    "plannedLoad": {
+                      "centiUnits": 15000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "sessions": [
+          {
+            "id": "oracle-classic_531-two_day_rotation-w3-s1",
+            "date": "2026-01-26T00:00:00.000",
+            "movementId": "squat_bench_press",
+            "blocks": [
+              {
+                "id": "warm_up",
+                "role": "warm_up",
+                "movementId": "squat",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 9000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 11250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 13500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "warm_up",
+                "role": "warm_up",
+                "movementId": "bench_press",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 4750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 6000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 7250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "main",
+                "role": "main_work",
+                "movementId": "squat_bench_press",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 7500,
+                    "plannedLoad": {
+                      "centiUnits": 16500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 8500,
+                    "plannedLoad": {
+                      "centiUnits": 17750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": {
+                      "code": "insufficientEquipment",
+                      "message": "Available equipment cannot reach the requested load."
+                    }
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "amrap",
+                      "minimum": 1
+                    },
+                    "percentageBasisPoints": 9500,
+                    "plannedLoad": {
+                      "centiUnits": 17750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": {
+                      "code": "insufficientEquipment",
+                      "message": "Available equipment cannot reach the requested load."
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "oracle-classic_531-two_day_rotation-w3-s2",
+            "date": "2026-01-27T00:00:00.000",
+            "movementId": "deadlift_overhead_press",
+            "blocks": [
+              {
+                "id": "warm_up",
+                "role": "warm_up",
+                "movementId": "deadlift",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 6000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 7750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 9250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "warm_up",
+                "role": "warm_up",
+                "movementId": "overhead_press",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 6750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 8250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 10000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "main",
+                "role": "main_work",
+                "movementId": "deadlift_overhead_press",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 7500,
+                    "plannedLoad": {
+                      "centiUnits": 12500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 3
+                    },
+                    "percentageBasisPoints": 8500,
+                    "plannedLoad": {
+                      "centiUnits": 14250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "amrap",
+                      "minimum": 1
+                    },
+                    "percentageBasisPoints": 9500,
+                    "plannedLoad": {
+                      "centiUnits": 15750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "sessions": [
+          {
+            "id": "oracle-classic_531-two_day_rotation-w4-s1",
+            "date": "2026-02-02T00:00:00.000",
+            "movementId": "squat_bench_press",
+            "blocks": [
+              {
+                "id": "deload",
+                "role": "deload",
+                "movementId": "squat_bench_press",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 8750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 11000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 13250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "oracle-classic_531-two_day_rotation-w4-s2",
+            "date": "2026-02-03T00:00:00.000",
+            "movementId": "deadlift_overhead_press",
+            "blocks": [
+              {
+                "id": "deload",
+                "role": "deload",
+                "movementId": "deadlift_overhead_press",
+                "sets": [
+                  {
+                    "index": 0,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 6750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 1,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 8250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "index": 2,
+                    "repetitions": {
+                      "type": "fixed",
+                      "count": 5
+                    },
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 10000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "snapshot": {
+    "catalogVersion": 2,
+    "effectiveTrainingMaxes": {
+      "bench_press": {
+        "centiUnits": 11880,
+        "unit": "kg"
+      },
+      "deadlift": {
+        "centiUnits": 15249,
+        "unit": "kg"
+      },
+      "deadlift_overhead_press": {
+        "centiUnits": 16700,
+        "unit": "kg"
+      },
+      "overhead_press": {
+        "centiUnits": 16605,
+        "unit": "kg"
+      },
+      "squat": {
+        "centiUnits": 22422,
+        "unit": "kg"
+      },
+      "squat_bench_press": {
+        "centiUnits": 21950,
+        "unit": "kg"
+      }
+    },
+    "id": "oracle-classic_531-two_day_rotation",
+    "schemaVersion": 1,
+    "templateId": "classic_531",
+    "variantId": "two_day_rotation",
+    "weeks": [
+      {
+        "number": 1,
+        "sessions": [
+          {
+            "blocks": [
+              {
+                "id": "warm_up",
+                "movementId": "squat",
+                "role": "warm_up",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 9000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 11250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 13500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "warm_up",
+                "movementId": "bench_press",
+                "role": "warm_up",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 4750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 6000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 7250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "main",
+                "movementId": "squat_bench_press",
+                "role": "main_work",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 6500,
+                    "plannedLoad": {
+                      "centiUnits": 14250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 7500,
+                    "plannedLoad": {
+                      "centiUnits": 16500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 8500,
+                    "plannedLoad": {
+                      "centiUnits": 17750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "minimum": 5,
+                      "type": "amrap"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": {
+                      "code": "insufficientEquipment",
+                      "message": "Available equipment cannot reach the requested load."
+                    }
+                  }
+                ]
+              }
+            ],
+            "date": "2026-01-12T00:00:00.000",
+            "id": "oracle-classic_531-two_day_rotation-w1-s1",
+            "movementId": "squat_bench_press"
+          },
+          {
+            "blocks": [
+              {
+                "id": "warm_up",
+                "movementId": "deadlift",
+                "role": "warm_up",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 6000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 7750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 9250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "warm_up",
+                "movementId": "overhead_press",
+                "role": "warm_up",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 6750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 8250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 10000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "main",
+                "movementId": "deadlift_overhead_press",
+                "role": "main_work",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 6500,
+                    "plannedLoad": {
+                      "centiUnits": 10750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 7500,
+                    "plannedLoad": {
+                      "centiUnits": 12500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 8500,
+                    "plannedLoad": {
+                      "centiUnits": 14250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "minimum": 5,
+                      "type": "amrap"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              }
+            ],
+            "date": "2026-01-13T00:00:00.000",
+            "id": "oracle-classic_531-two_day_rotation-w1-s2",
+            "movementId": "deadlift_overhead_press"
+          }
+        ]
+      },
+      {
+        "number": 2,
+        "sessions": [
+          {
+            "blocks": [
+              {
+                "id": "warm_up",
+                "movementId": "squat",
+                "role": "warm_up",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 9000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 11250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 13500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "warm_up",
+                "movementId": "bench_press",
+                "role": "warm_up",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 4750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 6000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 7250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "main",
+                "movementId": "squat_bench_press",
+                "role": "main_work",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 7000,
+                    "plannedLoad": {
+                      "centiUnits": 15250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 8000,
+                    "plannedLoad": {
+                      "centiUnits": 17500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 9000,
+                    "plannedLoad": {
+                      "centiUnits": 17750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "minimum": 3,
+                      "type": "amrap"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": {
+                      "code": "insufficientEquipment",
+                      "message": "Available equipment cannot reach the requested load."
+                    }
+                  }
+                ]
+              }
+            ],
+            "date": "2026-01-19T00:00:00.000",
+            "id": "oracle-classic_531-two_day_rotation-w2-s1",
+            "movementId": "squat_bench_press"
+          },
+          {
+            "blocks": [
+              {
+                "id": "warm_up",
+                "movementId": "deadlift",
+                "role": "warm_up",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 6000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 7750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 9250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "warm_up",
+                "movementId": "overhead_press",
+                "role": "warm_up",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 6750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 8250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 10000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "main",
+                "movementId": "deadlift_overhead_press",
+                "role": "main_work",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 7000,
+                    "plannedLoad": {
+                      "centiUnits": 11750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 8000,
+                    "plannedLoad": {
+                      "centiUnits": 13250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 9000,
+                    "plannedLoad": {
+                      "centiUnits": 15000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "minimum": 3,
+                      "type": "amrap"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              }
+            ],
+            "date": "2026-01-20T00:00:00.000",
+            "id": "oracle-classic_531-two_day_rotation-w2-s2",
+            "movementId": "deadlift_overhead_press"
+          }
+        ]
+      },
+      {
+        "number": 3,
+        "sessions": [
+          {
+            "blocks": [
+              {
+                "id": "warm_up",
+                "movementId": "squat",
+                "role": "warm_up",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 9000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 11250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 13500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "warm_up",
+                "movementId": "bench_press",
+                "role": "warm_up",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 4750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 6000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 7250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "main",
+                "movementId": "squat_bench_press",
+                "role": "main_work",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 7500,
+                    "plannedLoad": {
+                      "centiUnits": 16500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 8500,
+                    "plannedLoad": {
+                      "centiUnits": 17750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": {
+                      "code": "insufficientEquipment",
+                      "message": "Available equipment cannot reach the requested load."
+                    }
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 9500,
+                    "plannedLoad": {
+                      "centiUnits": 17750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "minimum": 1,
+                      "type": "amrap"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": {
+                      "code": "insufficientEquipment",
+                      "message": "Available equipment cannot reach the requested load."
+                    }
+                  }
+                ]
+              }
+            ],
+            "date": "2026-01-26T00:00:00.000",
+            "id": "oracle-classic_531-two_day_rotation-w3-s1",
+            "movementId": "squat_bench_press"
+          },
+          {
+            "blocks": [
+              {
+                "id": "warm_up",
+                "movementId": "deadlift",
+                "role": "warm_up",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 6000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 7750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 9250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "warm_up",
+                "movementId": "overhead_press",
+                "role": "warm_up",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 6750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 8250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 10000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              },
+              {
+                "id": "main",
+                "movementId": "deadlift_overhead_press",
+                "role": "main_work",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 7500,
+                    "plannedLoad": {
+                      "centiUnits": 12500,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 8500,
+                    "plannedLoad": {
+                      "centiUnits": 14250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 3,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 9500,
+                    "plannedLoad": {
+                      "centiUnits": 15750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "minimum": 1,
+                      "type": "amrap"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              }
+            ],
+            "date": "2026-01-27T00:00:00.000",
+            "id": "oracle-classic_531-two_day_rotation-w3-s2",
+            "movementId": "deadlift_overhead_press"
+          }
+        ]
+      },
+      {
+        "number": 4,
+        "sessions": [
+          {
+            "blocks": [
+              {
+                "id": "deload",
+                "movementId": "squat_bench_press",
+                "role": "deload",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 8750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 11000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 13250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              }
+            ],
+            "date": "2026-02-02T00:00:00.000",
+            "id": "oracle-classic_531-two_day_rotation-w4-s1",
+            "movementId": "squat_bench_press"
+          },
+          {
+            "blocks": [
+              {
+                "id": "deload",
+                "movementId": "deadlift_overhead_press",
+                "role": "deload",
+                "sets": [
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 0,
+                    "percentageBasisPoints": 4000,
+                    "plannedLoad": {
+                      "centiUnits": 6750,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 250,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 1,
+                    "percentageBasisPoints": 5000,
+                    "plannedLoad": {
+                      "centiUnits": 8250,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1000,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 125,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  },
+                  {
+                    "execution": {
+                      "type": "straight"
+                    },
+                    "index": 2,
+                    "percentageBasisPoints": 6000,
+                    "plannedLoad": {
+                      "centiUnits": 10000,
+                      "unit": "kg"
+                    },
+                    "platesPerSide": [
+                      {
+                        "centiUnits": 2500,
+                        "unit": "kg"
+                      },
+                      {
+                        "centiUnits": 1500,
+                        "unit": "kg"
+                      }
+                    ],
+                    "repetitions": {
+                      "count": 5,
+                      "type": "fixed"
+                    },
+                    "runtimeDecisions": [],
+                    "warning": null
+                  }
+                ]
+              }
+            ],
+            "date": "2026-02-03T00:00:00.000",
+            "id": "oracle-classic_531-two_day_rotation-w4-s2",
+            "movementId": "deadlift_overhead_press"
+          }
+        ]
+      }
+    ]
+  },
+  "logicalHash": "-7239e634282ca3a3"
+}

@@ -1,0 +1,16 @@
+{
+  "fixtureVersion": 1,
+  "id": "mixed-weight-units",
+  "requestPatch": {
+    "unit": "kg",
+    "roundingIncrement": {
+      "centiUnits": 500,
+      "unit": "lb"
+    }
+  },
+  "expectedError": {
+    "category": "validation",
+    "code": "mixed_weight_units",
+    "path": "$.roundingIncrement.unit"
+  }
+}

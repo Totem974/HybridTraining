@@ -1,0 +1,38 @@
+{
+  "fixtureVersion": 1,
+  "catalogVersion": 2,
+  "cycleVariantCount": 23,
+  "cycleFixtures": [
+    "beyond_boring_but_big--same_lift_5x10_50_two_cycles",
+    "beyond_first_set_last--amrap_four_day_two_cycles",
+    "beyond_fives_progression--main_lifts_four_day_two_cycles",
+    "beyond_pyramid--four_day_two_cycles",
+    "classic_531--four_day",
+    "classic_531--three_day_rotation",
+    "classic_531--two_day_rotation",
+    "classic_bodyweight--four_day",
+    "classic_boring_but_big--same_lift_5x10",
+    "classic_for_beginners--original_progression",
+    "classic_full_body_phase_1--phase_1",
+    "classic_full_body_phase_2--phase_2",
+    "classic_full_body_phase_3--phase_3",
+    "classic_jack_shit--main_lift_only",
+    "classic_periodization_bible--four_day",
+    "classic_simplest_strength--original",
+    "classic_simplest_strength--powerlifting",
+    "classic_triumvirate--four_day",
+    "forever_7th_week_protocol--deload_four_day",
+    "forever_7th_week_protocol--tm_test_four_day",
+    "forever_bbb_leader--fives_pro_5x10_50",
+    "forever_original_531_anchor--standard_531",
+    "powerlifting_classic_531--four_day_531_deload"
+  ],
+  "errorFixtures": [
+    "missing-training-max",
+    "invalid-schedule-cardinality",
+    "mixed-weight-units"
+  ],
+  "foreverFixtures": [
+    "forever-macrocycle-plan"
+  ]
+}

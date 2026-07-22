@@ -1,0 +1,15 @@
+{
+  "fixtureVersion": 1,
+  "id": "invalid-schedule-cardinality",
+  "requestPatch": {
+    "trainingDays": [
+      1
+    ],
+    "sessionOrder": []
+  },
+  "expectedError": {
+    "category": "validation",
+    "code": "invalid_schedule",
+    "path": "$.sessionOrder"
+  }
+}

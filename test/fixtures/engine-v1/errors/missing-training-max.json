@@ -1,0 +1,12 @@
+{
+  "fixtureVersion": 1,
+  "id": "missing-training-max",
+  "requestPatch": {
+    "maxInputs": {}
+  },
+  "expectedError": {
+    "category": "validation",
+    "code": "missing_training_max",
+    "path": "$.maxInputs"
+  }
+}
