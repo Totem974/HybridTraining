@@ -19,6 +19,9 @@ void main() {
     final templates = codec.decodeTemplates(
       File('catalog_src/classic/templates.json').readAsStringSync(),
     );
+    final optionRecipes = codec.decodeCycleOptionRecipes(
+      File('catalog_src/shared/cycle_option_recipes_v1.json').readAsStringSync(),
+    );
     final template = templates.firstWhere((item) => item.id == 'classic_531');
     final variant = template.variants.firstWhere(
       (item) => item.id == 'four_day',
@@ -30,6 +33,7 @@ void main() {
       scheduleReference: const ComponentReference('schedule_four_day_fixed', 1),
       schedules: schedules,
       components: components,
+      optionRecipes: optionRecipes,
       sourceReference: 'catalog-source:test',
     );
     final resolved = const CatalogPlanResolver().resolve(plan);
@@ -68,7 +72,7 @@ void main() {
     final templates = codec.decodeTemplates('''
       {"schemaVersion":1,"kind":"templates","templates":[{
         "id":"finite","revision":1,"labels":{"en":"F","fr":"F"},
-        "sourceRuleIds":["r"],"variants":[{
+        "sourceRuleIds":["r"],"surface":"cyclePublic","variants":[{
           "id":"v","revision":1,"labels":{"en":"V","fr":"V"},
           "sourceRuleIds":["r"],"optionSchemaId":{"id":"o","revision":1},
           "scheduleIds":[{"id":"s","revision":1}],"compatibilities":{},

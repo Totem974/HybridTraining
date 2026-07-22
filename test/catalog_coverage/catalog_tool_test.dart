@@ -41,6 +41,7 @@ void main() {
       'assistancePlans',
       'conditioningDefinitions',
       'foreverDefinitions',
+      'cycleOptionRecipes',
       'unresolvedCycleEntries',
       'missingVariants',
       'missingOptionSchemas',

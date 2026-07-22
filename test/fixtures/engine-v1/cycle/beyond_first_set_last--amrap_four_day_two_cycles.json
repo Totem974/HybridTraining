@@ -7,8 +7,7 @@
     "variantId": "amrap_four_day_two_cycles",
     "sourceReference": "catalog_src/v1",
     "allowedScheduleIds": [
-      "schedule_four_day_fixed",
-      "schedule_three_day_rotating"
+      "schedule_four_day_fixed"
     ],
     "validExample": {
       "scheduleId": "schedule_four_day_fixed",

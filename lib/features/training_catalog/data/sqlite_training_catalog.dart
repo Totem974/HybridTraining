@@ -708,11 +708,11 @@ final class SqliteTrainingCatalog
         _allowedKeys(map, const {'type', 'value'});
         return AlwaysCondition(map['value'] as bool? ?? true);
       case 'present':
-        _exactKeys(map, const {'type', 'optionId'});
-        return PresentCondition(map['optionId']! as String);
+        _conditionKeys(map, const {'type'});
+        return PresentCondition(_conditionOptionId(map));
       case 'equals':
-        _exactKeys(map, const {'type', 'optionId', 'value'});
-        return EqualsCondition(map['optionId']! as String, map['value']!);
+        _conditionKeys(map, const {'type', 'value'});
+        return EqualsCondition(_conditionOptionId(map), map['value']!);
       case 'not':
         _exactKeys(map, const {'type', 'condition'});
         return NotCondition(
@@ -732,25 +732,43 @@ final class SqliteTrainingCatalog
             ? AllCondition(conditions)
             : AnyCondition(conditions);
       case 'in':
-        _exactKeys(map, const {'type', 'optionId', 'values'});
+        _conditionKeys(map, const {'type', 'values'});
         final values = map['values'];
         if (values is! List<Object?>) {
           throw const CatalogFormatException('values must be a list');
         }
         return InCondition(
-          map['optionId']! as String,
+          _conditionOptionId(map),
           List<Object>.unmodifiable(values.whereType<Object>()),
         );
       case 'range':
-        _exactKeys(map, const {'type', 'optionId', 'minimum', 'maximum'});
+        _conditionKeys(map, const {'type', 'minimum', 'maximum'});
         return RangeCondition(
-          map['optionId']! as String,
+          _conditionOptionId(map),
           minimum: map['minimum']! as num,
           maximum: map['maximum']! as num,
         );
       default:
         throw CatalogFormatException('Unknown condition type $type');
     }
+  }
+
+  static void _conditionKeys(Map<String, Object?> map, Set<String> expected) {
+    _allowedKeys(map, {...expected, 'optionId', 'parameterId'});
+    if (!map.keys.toSet().containsAll(expected)) {
+      throw const CatalogFormatException('Unexpected object keys');
+    }
+    _conditionOptionId(map);
+  }
+
+  static String _conditionOptionId(Map<String, Object?> map) {
+    final optionId = map['parameterId'] ?? map['optionId'];
+    if (optionId is! String ||
+        optionId.isEmpty ||
+        (map.containsKey('parameterId') && map.containsKey('optionId'))) {
+      throw const CatalogFormatException('Condition option id is invalid');
+    }
+    return optionId;
   }
 
   static Map<String, Object?> _jsonMap(String source, String label) =>

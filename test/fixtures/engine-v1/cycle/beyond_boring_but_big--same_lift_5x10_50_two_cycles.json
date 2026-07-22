@@ -8398,35 +8398,6 @@
             ]
           }
         ]
-      },
-      {
-        "number": 7,
-        "sessions": [
-          {
-            "id": "oracle-beyond_boring_but_big-same_lift_5x10_50_two_cycles-w7-s1",
-            "date": "2026-02-16T00:00:00.000",
-            "movementId": "overhead_press",
-            "blocks": []
-          },
-          {
-            "id": "oracle-beyond_boring_but_big-same_lift_5x10_50_two_cycles-w7-s2",
-            "date": "2026-02-17T00:00:00.000",
-            "movementId": "deadlift",
-            "blocks": []
-          },
-          {
-            "id": "oracle-beyond_boring_but_big-same_lift_5x10_50_two_cycles-w7-s3",
-            "date": "2026-02-18T00:00:00.000",
-            "movementId": "bench_press",
-            "blocks": []
-          },
-          {
-            "id": "oracle-beyond_boring_but_big-same_lift_5x10_50_two_cycles-w7-s4",
-            "date": "2026-02-19T00:00:00.000",
-            "movementId": "squat",
-            "blocks": []
-          }
-        ]
       }
     ]
   },
@@ -16700,37 +16671,8 @@
             "movementId": "squat"
           }
         ]
-      },
-      {
-        "number": 7,
-        "sessions": [
-          {
-            "blocks": [],
-            "date": "2026-02-16T00:00:00.000",
-            "id": "oracle-beyond_boring_but_big-same_lift_5x10_50_two_cycles-w7-s1",
-            "movementId": "overhead_press"
-          },
-          {
-            "blocks": [],
-            "date": "2026-02-17T00:00:00.000",
-            "id": "oracle-beyond_boring_but_big-same_lift_5x10_50_two_cycles-w7-s2",
-            "movementId": "deadlift"
-          },
-          {
-            "blocks": [],
-            "date": "2026-02-18T00:00:00.000",
-            "id": "oracle-beyond_boring_but_big-same_lift_5x10_50_two_cycles-w7-s3",
-            "movementId": "bench_press"
-          },
-          {
-            "blocks": [],
-            "date": "2026-02-19T00:00:00.000",
-            "id": "oracle-beyond_boring_but_big-same_lift_5x10_50_two_cycles-w7-s4",
-            "movementId": "squat"
-          }
-        ]
       }
     ]
   },
-  "logicalHash": "-2eee4974a9f03b5d"
+  "logicalHash": "-39fec9030719f499"
 }

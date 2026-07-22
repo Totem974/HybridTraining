@@ -4,11 +4,11 @@ import '../../../tool/catalog/catalog_tool.dart' as catalog_tool;
 
 void main() {
   test(
-    'all 23 published Cycle variants compile and survive training.db',
+    'all public Cycle variants compile and survive training.db',
     () async {
       final report = await catalog_tool.verifyCatalogCompilation();
 
-      expect(report.variantCount, 23);
+      expect(report.variantCount, 19);
       expect(report.failures, isEmpty, reason: report.failures.join('\n'));
     },
     timeout: const Timeout(Duration(minutes: 2)),
