@@ -1,0 +1,129 @@
+.output-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.55fr);
+  gap: var(--space-3) var(--space-5);
+  align-items: end;
+}
+
+.output-title {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.output-title label {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 750;
+}
+
+.output-action {
+  justify-self: start;
+}
+
+.program-week + .program-week {
+  margin-top: var(--space-6);
+}
+
+.program-week__title {
+  margin: 0 0 var(--space-3) var(--space-1);
+  color: var(--color-text);
+  font-size: var(--text-lg);
+  font-weight: 950;
+  letter-spacing: 0.08em;
+}
+
+.session-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.session-card {
+  min-width: 0;
+  overflow: hidden;
+  padding: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--color-border) 28%, transparent);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.session-card__header {
+  display: grid;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.session-card__title,
+.session-block__title,
+.session-block__movement {
+  margin: 0;
+}
+
+.session-card__title {
+  font-size: var(--text-lg);
+  line-height: 1.15;
+}
+
+.session-card__date,
+.session-block__movement {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.session-block {
+  display: grid;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 35%, transparent);
+}
+
+.session-block + .session-block {
+  margin-top: var(--space-3);
+}
+
+.session-block__title {
+  font-size: var(--text-sm);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.set-row {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: calc(var(--radius-control) - 2px);
+  background: color-mix(in srgb, var(--color-canvas) 58%, transparent);
+}
+
+.set-row__prescription {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.set-row__plates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.plate-chip {
+  min-height: 1.5rem;
+  padding: 0.125rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 48%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface-raised));
+  font-size: var(--text-xs);
+}
+
+@media (max-width: 900px) {
+  .session-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .output-layout,
+  .session-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

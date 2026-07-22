@@ -1,5 +1,11 @@
 @import url("./tokens.css");
 @import url("./components.css");
+@import url("./blocks/weight.css");
+@import url("./blocks/template.css");
+@import url("./blocks/additional-options.css");
+@import url("./blocks/plating.css");
+@import url("./blocks/scheduling.css");
+@import url("./blocks/output-program.css");
 
 * {
   box-sizing: border-box;
@@ -75,6 +81,37 @@ a {
   padding-block: var(--space-7) var(--space-5);
 }
 
+.header-topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.locale-switch {
+  display: inline-flex;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+}
+
+.locale-switch button {
+  min-width: 2.75rem;
+  min-height: 2.5rem;
+  padding: var(--space-2);
+  border: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-weight: 850;
+}
+
+.locale-switch button[aria-pressed="true"] {
+  background: var(--color-control-selected);
+  color: var(--color-control-selected-ink);
+}
+
 .brand-lockup {
   display: flex;
   align-items: center;
@@ -131,7 +168,8 @@ h1 {
   background: var(--color-surface);
 }
 
-.page-switcher a {
+.page-switcher a,
+.page-switcher span {
   min-height: var(--touch-target);
   flex: 1;
   padding: var(--space-2) var(--space-4);
@@ -232,6 +270,10 @@ h1 {
     align-items: flex-start;
   }
 
+  .header-topline {
+    gap: var(--space-2);
+  }
+
   .brand-mark {
     flex-basis: 52px;
     width: 52px;
@@ -242,6 +284,11 @@ h1 {
   .header-summary {
     display: none;
   }
+}
+
+.page-switcher span[aria-disabled="true"] {
+  color: var(--color-text-muted);
+  opacity: 0.62;
 }
 
 @media (max-width: 460px) {

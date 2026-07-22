@@ -65,26 +65,31 @@ function renderWeek(week: WeekLike, options: ProgramRenderOptions): HTMLElement 
 
 function renderSession(session: SessionLike, options: ProgramRenderOptions): HTMLElement {
   const card = element("article", "session-card");
-  const name = displayName(session.movementId, options.labels.movementNames, options.labels.session);
+  const name = displayMovement(session.movementId, options.labels.movementNames, options.labels.session);
   card.setAttribute("aria-label", name);
-  card.append(element("h4", "session-card__title", name));
+  const header = element("header", "session-card__header");
+  header.append(element("h4", "session-card__title", name));
   if (session.date) {
     const date = new Date(session.date);
     if (!Number.isNaN(date.valueOf())) {
-      card.append(element("time", "session-card__date", new Intl.DateTimeFormat(options.labels.dateLocale).format(date)));
+      const time = element("time", "session-card__date", new Intl.DateTimeFormat(options.labels.dateLocale).format(date));
+      time.dateTime = session.date;
+      header.append(time);
     }
   }
+  card.append(header);
   for (const block of session.blocks) card.append(renderBlock(block, options));
   return card;
 }
 
 function renderBlock(block: BlockLike, options: ProgramRenderOptions): HTMLElement {
   const group = element("section", "session-block");
-  const movementName = block.movementId
-    ? displayName(block.movementId, options.labels.movementNames, "")
-    : "";
   const blockName = displayName(block.role, options.labels.blockNames ?? {}, options.labels.block);
-  group.append(element("h5", "session-block__title", movementName || blockName));
+  group.append(element("h5", "session-block__title", blockName));
+  if (block.movementId) {
+    const movementName = displayMovement(block.movementId, options.labels.movementNames, "");
+    if (movementName) group.append(element("p", "session-block__movement", movementName));
+  }
   for (const set of block.sets) {
     const row = element("div", "set-row");
     row.append(element("span", "set-row__prescription", formatSet(set)));
@@ -93,6 +98,7 @@ function renderBlock(block: BlockLike, options: ProgramRenderOptions): HTMLEleme
       for (const plate of set.platesPerSide) {
         const chip = element("span", "plate-chip", formatWeight(plate));
         chip.dataset.plate = "";
+        chip.setAttribute("aria-label", formatWeight(plate));
         plates.append(chip);
       }
       row.append(plates);
@@ -120,6 +126,26 @@ function formatWeight(weight: WeightLike): string {
 function displayName(id: string, names: Readonly<Record<string, string>>, fallback: string): string {
   const label = names[id];
   return typeof label === "string" && label.trim() !== "" ? label : fallback;
+}
+
+function displayMovement(
+  id: string,
+  names: Readonly<Record<string, string>>,
+  fallback: string,
+): string {
+  const direct = displayName(id, names, "");
+  if (direct) return direct;
+  const parts = id.split("+");
+  if (parts.length > 1) {
+    const labels = parts.map((part) => displayName(part, names, "")).filter(Boolean);
+    if (labels.length === parts.length) return labels.join(" + ");
+  }
+  for (const left of Object.keys(names)) {
+    for (const right of Object.keys(names)) {
+      if (`${left}_${right}` === id) return `${names[left]} + ${names[right]}`;
+    }
+  }
+  return fallback;
 }
 
 function element<K extends keyof HTMLElementTagNameMap>(

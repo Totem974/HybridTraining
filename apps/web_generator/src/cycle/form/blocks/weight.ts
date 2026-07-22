@@ -1,5 +1,3 @@
-import "../../../../styles/blocks/weight.css";
-
 import { fieldIsEnabled, fieldIsVisible, localized } from "../schema";
 import type {
   CycleEditorField,

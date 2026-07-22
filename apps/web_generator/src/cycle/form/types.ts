@@ -34,3 +34,16 @@ export interface RenderCycleFormOptions {
   readonly dispatch: CycleFormIntentHandler;
   readonly locale?: string;
 }
+
+export interface CycleBlockRenderContext {
+  readonly fields: readonly CycleEditorField[];
+  readonly locale: string;
+  readonly schemaId: string;
+  readonly dispatch: CycleFormIntentHandler;
+  readonly values: Readonly<Record<string, JsonValue>>;
+  readonly renderDefault: () => DocumentFragment;
+}
+
+export type CycleBlockRenderer = (
+  context: CycleBlockRenderContext,
+) => DocumentFragment;

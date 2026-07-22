@@ -1,0 +1,83 @@
+// @vitest-environment jsdom
+import { describe, expect, it, vi } from "vitest";
+
+import { renderTemplateBlock } from "../../../src/cycle/form/blocks/template";
+import type { CycleBlockRenderContext } from "../../../src/cycle/form/types";
+
+function context(): CycleBlockRenderContext {
+  return {
+    locale: "en",
+    schemaId: "editor",
+    dispatch: vi.fn(),
+    values: { templateId: "classic", variantId: "four-day" },
+    renderDefault: () => document.createDocumentFragment(),
+    fields: [
+      {
+        id: "template",
+        path: "templateId",
+        region: "template",
+        kind: "choice",
+        label: "Template",
+        value: "classic",
+        choices: [{ value: "classic", label: "5/3/1" }],
+      },
+      {
+        id: "variant",
+        path: "variantId",
+        region: "template",
+        kind: "choice",
+        label: "Variant",
+        value: "four-day",
+        choices: [
+          { value: "four-day", label: "Four days" },
+          { value: "two-day", label: "Two days" },
+        ],
+      },
+      {
+        id: "warm-up",
+        path: "options.warmUp",
+        region: "template",
+        kind: "boolean",
+        label: "Warm-up",
+        value: true,
+      },
+    ],
+  };
+}
+
+describe("renderTemplateBlock", () => {
+  it("renders catalogue choices as separated value rows with chevrons", () => {
+    const host = document.createElement("div");
+    host.append(renderTemplateBlock(context()));
+    expect(host.querySelectorAll(".template-selection-row")).toHaveLength(2);
+    expect(host.querySelectorAll(".template-selection-chevron")).toHaveLength(2);
+    expect(host.querySelector("[data-testid=variant] option")?.textContent).toBe(
+      "Four days",
+    );
+  });
+
+  it("places schema-declared dynamic options below the selection rows", () => {
+    const host = document.createElement("div");
+    host.append(renderTemplateBlock(context()));
+    const rows = host.querySelector(".template-selection-rows");
+    const options = host.querySelector(".template-dynamic-options");
+    expect(rows?.nextElementSibling).toBe(options);
+    expect(options?.querySelector("input[type=checkbox]")).not.toBeNull();
+  });
+
+  it("dispatches the selected schema value without template rules", () => {
+    const renderContext = context();
+    const host = document.createElement("div");
+    host.append(renderTemplateBlock(renderContext));
+    const select = host.querySelector("[data-testid=variant]") as HTMLSelectElement;
+    select.value = JSON.stringify("two-day");
+    select.dispatchEvent(new Event("change"));
+    expect(renderContext.dispatch).toHaveBeenCalledWith({
+      type: "cycle.field.changed",
+      schemaId: "editor",
+      fieldId: "variant",
+      path: "variantId",
+      value: "two-day",
+    });
+  });
+});

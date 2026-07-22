@@ -21,8 +21,7 @@ async function openIntegratedCycle(page: Page): Promise<string[]> {
   return externalRequests;
 }
 
-async function generate(page: Page) {
-  await page.getByTestId('generate').click();
+async function awaitGeneratedProgram(page: Page) {
   const engineStatus = await page.locator('#engine-status').textContent();
   expect(engineStatus, 'engine status after generation').not.toMatch(/error|required|invalid|exception/i);
   await expect(page.locator('[data-cycle-region="program"]')).toContainText(
@@ -32,7 +31,7 @@ async function generate(page: Page) {
 
 test('Standard generates a complete plated program without external network', async ({ page }) => {
   const external = await openIntegratedCycle(page);
-  await generate(page);
+  await awaitGeneratedProgram(page);
   await expect(page.locator('[data-cycle-region="program"]')).toContainText(/press|deadlift|squat/i);
   expect(external, 'external network requests').toEqual([]);
 });
@@ -41,21 +40,22 @@ test('BBB exposes catalog options and changes the generated assistance work', as
   const external = await openIntegratedCycle(page);
   await page.getByTestId('template-row').getByRole('combobox').selectOption({ label: 'Boring But Big' });
   await expect(page.locator('[data-cycle-region="additional-options"]')).toBeVisible();
-  await generate(page);
+  await awaitGeneratedProgram(page);
   await expect(page.locator('[data-cycle-region="program"]')).toContainText(/10\s*[×x]/i);
   const scheduling = page.locator('[data-cycle-region="scheduling"]');
-  await expect(scheduling.locator('.token')).toHaveCount(4);
+  await expect(scheduling.locator('.schedule-token')).toHaveCount(4);
   expect(external).toEqual([]);
 });
 
 test('Two Days renders only valid schedule tokens and generates', async ({ page }) => {
   const external = await openIntegratedCycle(page);
+  await page.getByTestId('template-row').getByRole('combobox').selectOption({ label: 'Classic 5/3/1' });
   await page.getByTestId('variant-row').getByRole('combobox').selectOption({ label: 'Two-day rotation' });
   const schedule = page.locator('[data-cycle-region="scheduling"]');
   await expect(schedule).toContainText(/SQ\+BP/);
   await expect(schedule).toContainText(/DL\+OP/);
   await expect(schedule).not.toContainText(/overhead_press|bench_press/i);
-  await generate(page);
+  await awaitGeneratedProgram(page);
   expect(external).toEqual([]);
 });
 
@@ -75,7 +75,7 @@ test('rep-max mode accepts repetitions and load before generation', async ({ pag
   for (const [movement, repetitions] of inputs) {
     await expect(page.getByTestId(`max-repetitions-${movement}`)).toHaveValue(repetitions);
   }
-  await generate(page);
+  await awaitGeneratedProgram(page);
   expect(external).toEqual([]);
 });
 
@@ -85,14 +85,14 @@ test('catalog-driven options remain effective after template changes', async ({ 
   await expect(options.getByRole('group', { name: /warm-up|échauffement/i })).toBeVisible();
   await options.getByRole('checkbox', { name: /warm-up|échauffement/i }).uncheck();
   await options.getByRole('checkbox', { name: /deload/i }).uncheck();
-  await generate(page);
+  await awaitGeneratedProgram(page);
   expect(external).toEqual([]);
 });
 
 test('plating visibility and local persistence survive reload', async ({ page }) => {
   const external = await openIntegratedCycle(page);
   await page.getByRole('checkbox', { name: /show plating|afficher les plaques/i }).check();
-  await generate(page);
+  await awaitGeneratedProgram(page);
   await expect(page.locator('[data-plate]')).not.toHaveCount(0);
   await page.reload();
   await expect(page.getByRole('checkbox', { name: /show plating|afficher les plaques/i })).toBeChecked();
@@ -101,10 +101,10 @@ test('plating visibility and local persistence survive reload', async ({ page })
 
 test('FR and EN labels switch locally', async ({ page }) => {
   const external = await openIntegratedCycle(page);
-  await page.getByRole('button', { name: /français|fr/i }).click();
-  await expect(page.getByRole('button', { name: /générer/i })).toBeVisible();
-  await page.getByRole('button', { name: /^english$/i }).click();
-  await expect(page.getByRole('button', { name: /generate/i })).toBeVisible();
+  await page.getByRole('button', { name: /^fr$/i }).click();
+  await expect(page.getByRole('checkbox', { name: /afficher les plaques/i })).toBeVisible();
+  await page.getByRole('button', { name: /^en$/i }).click();
+  await expect(page.getByRole('checkbox', { name: /show plating/i })).toBeVisible();
   expect(external).toEqual([]);
 });
 
@@ -131,7 +131,7 @@ for (const width of [1440, 390, 320]) {
     const external = await openIntegratedCycle(page);
     await expect(page.locator('#cycle-form')).toBeVisible();
     await expect(page.locator('body')).not.toHaveCSS('overflow-x', 'scroll');
-    await generate(page);
+    await awaitGeneratedProgram(page);
     expect(external).toEqual([]);
   });
 }
@@ -141,7 +141,7 @@ for (const width of [1440, 390, 320]) {
     test.skip(testInfo.project.name !== 'chromium-desktop', 'Visual evidence is recorded once with deterministic Chromium.');
     await page.setViewportSize({ width, height: width > 500 ? 1100 : 844 });
     const external = await openIntegratedCycle(page);
-    await generate(page);
+    await awaitGeneratedProgram(page);
     await mkdir(visualEvidenceDirectory, { recursive: true });
     await page.screenshot({
       path: resolve(visualEvidenceDirectory, `cycle-${width}.png`),

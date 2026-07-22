@@ -103,16 +103,11 @@ describe("renderCycleForm", () => {
     expect(root.querySelector("[data-cycle-mount=template]")?.childElementCount).toBe(0);
   });
 
-  it("dispatches schema-declared output actions", () => {
+  it("hides the manual generation action because output updates automatically", () => {
     const root = shell();
     const dispatch = vi.fn();
     renderCycleForm({ schema, root, dispatch });
-    (root.querySelector("button.action") as HTMLButtonElement).click();
-    expect(dispatch).toHaveBeenCalledWith({
-      type: "cycle.action.requested",
-      schemaId: "editor",
-      fieldId: "generate",
-      action: "generateCycle",
-    });
+    expect(root.querySelector("button.action, .output-action")).toBeNull();
+    expect(dispatch).not.toHaveBeenCalled();
   });
 });

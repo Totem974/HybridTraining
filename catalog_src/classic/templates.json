@@ -283,8 +283,8 @@
           "id": "same_lift_5x10",
           "revision": 1,
           "labels": {
-            "en": "Same lift, five sets of ten",
-            "fr": "Same lift, five sets of ten"
+            "en": "Original (5x10)",
+            "fr": "Original (5x10)"
           },
           "sourceRuleIds": [
             "or.bbb.same_lift"

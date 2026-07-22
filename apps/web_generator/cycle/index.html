@@ -16,19 +16,23 @@
     <a class="skip-link" href="#cycle-editor">Skip to the cycle editor</a>
 
     <header class="site-header" aria-labelledby="page-title">
-      <div class="brand-lockup">
-        <span class="brand-mark" aria-hidden="true">HT</span>
-        <div>
-          <p class="eyebrow">Training tools</p>
-          <h1 id="page-title">Cycle generator</h1>
-          <p class="header-summary" id="page-summary">
-            Configure and generate a training cycle locally in your browser.
-          </p>
+      <div class="header-topline">
+        <div class="brand-lockup">
+          <span class="brand-mark" aria-hidden="true">HT</span>
+          <div>
+            <p class="eyebrow" data-i18n="eyebrow">Training tools</p>
+            <h1 id="page-title" data-i18n="pageTitle">Cycle generator</h1>
+            <p class="header-summary" id="page-summary" data-i18n="pageSummary">
+              Configure and generate a training cycle locally in your browser.
+            </p>
+          </div>
         </div>
+        <div class="locale-switch" data-locale-controls aria-label="Language"></div>
       </div>
 
       <nav class="page-switcher" aria-label="Training generator">
         <a href="./" aria-current="page">Cycle</a>
+        <span aria-disabled="true">Forever</span>
       </nav>
     </header>
 
@@ -52,7 +56,7 @@
             aria-labelledby="weight-heading"
             data-cycle-region="weight"
           >
-            <h2 id="weight-heading">Weight</h2>
+            <h2 id="weight-heading" data-i18n="weight">Weight</h2>
             <div class="panel" data-cycle-mount="weight"></div>
           </section>
 
@@ -62,7 +66,7 @@
             aria-labelledby="template-heading"
             data-cycle-region="template"
           >
-            <h2 id="template-heading">Template</h2>
+            <h2 id="template-heading" data-i18n="template">Template</h2>
             <div class="panel" data-cycle-mount="template"></div>
           </section>
         </div>
@@ -73,7 +77,7 @@
           aria-labelledby="additional-options-heading"
           data-cycle-region="additional-options"
         >
-          <h2 id="additional-options-heading">Additional options</h2>
+          <h2 id="additional-options-heading" data-i18n="additionalOptions">Additional options</h2>
           <div class="panel" data-cycle-mount="additional-options"></div>
         </section>
 
@@ -84,7 +88,7 @@
             aria-labelledby="plating-heading"
             data-cycle-region="plating"
           >
-            <h2 id="plating-heading">Plating &amp; barbell</h2>
+            <h2 id="plating-heading" data-i18n="plating">Plating &amp; barbell</h2>
             <div class="panel" data-cycle-mount="plating"></div>
           </section>
 
@@ -94,7 +98,7 @@
             aria-labelledby="scheduling-heading"
             data-cycle-region="scheduling"
           >
-            <h2 id="scheduling-heading">Scheduling</h2>
+            <h2 id="scheduling-heading" data-i18n="scheduling">Scheduling</h2>
             <div class="panel" data-cycle-mount="scheduling"></div>
           </section>
         </div>
@@ -105,7 +109,7 @@
           aria-labelledby="output-heading"
           data-cycle-region="output"
         >
-          <h2 id="output-heading">Output</h2>
+          <h2 id="output-heading" data-i18n="output">Output</h2>
           <div class="panel" data-cycle-mount="output"></div>
         </section>
       </form>
@@ -117,7 +121,7 @@
         aria-live="polite"
         data-cycle-region="program"
       >
-        <h2 id="program-heading">Program</h2>
+        <h2 id="program-heading" data-i18n="program">Program</h2>
         <div data-cycle-mount="program"></div>
       </section>
     </main>

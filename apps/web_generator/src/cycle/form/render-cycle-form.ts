@@ -7,6 +7,7 @@ import {
   valuesFromSchema,
 } from "./schema";
 import type {
+  CycleBlockRenderer,
   CycleEditorChoice,
   CycleEditorField,
   CycleFormIntentHandler,
@@ -14,6 +15,25 @@ import type {
   JsonValue,
   RenderCycleFormOptions,
 } from "./types";
+import { renderWeightBlock } from "./blocks/weight";
+import { renderTemplateBlock } from "./blocks/template";
+import { renderAdditionalOptionsBlock } from "./blocks/additional-options";
+import { renderPlatingBlock } from "./blocks/plating";
+import { renderSchedulingBlock } from "./blocks/scheduling";
+import { renderOutputBlock } from "./blocks/output";
+
+const blockRenderers: Readonly<Record<CycleFormRegion, CycleBlockRenderer>> = {
+  weight: (context) => {
+    const fragment = document.createDocumentFragment();
+    fragment.append(renderWeightBlock(context));
+    return fragment;
+  },
+  template: renderTemplateBlock,
+  "additional-options": renderAdditionalOptionsBlock,
+  plating: renderPlatingBlock,
+  scheduling: renderSchedulingBlock,
+  output: renderOutputBlock,
+};
 
 const element = <K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -172,7 +192,7 @@ function renderScalar(
   applyCommonInput(input, field, enabled);
   input.value = field.value === null ? "" : String(field.value);
   wrapper.append(label, input);
-  input.addEventListener("change", () =>
+  input.addEventListener("input", () =>
     emitChange(dispatch, schemaId, field, primitiveFromInput(field, input)),
   );
   return wrapper;
@@ -313,6 +333,24 @@ function renderField(
 }
 
 function renderRegion(
+  region: CycleFormRegion,
+  fields: readonly CycleEditorField[],
+  locale: string,
+  schemaId: string,
+  dispatch: CycleFormIntentHandler,
+  values: Readonly<Record<string, JsonValue>>,
+): DocumentFragment {
+  return blockRenderers[region]({
+    fields,
+    locale,
+    schemaId,
+    dispatch,
+    values,
+    renderDefault: () => renderDefaultRegion(region, fields, locale, schemaId, dispatch, values),
+  });
+}
+
+function renderDefaultRegion(
   region: CycleFormRegion,
   fields: readonly CycleEditorField[],
   locale: string,

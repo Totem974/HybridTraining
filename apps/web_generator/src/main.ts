@@ -30,14 +30,23 @@ let values: Record<string, JsonValue> = {};
 let disposeForm: (() => void) | undefined;
 let lastRequest: object | undefined;
 let lastResponse: CycleResponse | undefined;
+let generationTimer: ReturnType<typeof setTimeout> | undefined;
+
+const translations = {
+  en: { eyebrow: 'Training tools', pageTitle: 'Cycle generator', pageSummary: 'Configure and generate a training cycle locally in your browser.', weight: 'Weight', template: 'Template', additionalOptions: 'Additional options', plating: 'Plating & barbell', scheduling: 'Scheduling', output: 'Output', program: 'Program' },
+  fr: { eyebrow: 'Outils d’entraînement', pageTitle: 'Générateur de cycle', pageSummary: 'Configurez votre cycle localement dans votre navigateur.', weight: 'Charges', template: 'Modèle', additionalOptions: 'Options supplémentaires', plating: 'Plaques et barre', scheduling: 'Planification', output: 'Sortie', program: 'Programme' },
+} as const;
 
 async function start(): Promise<void> {
   try {
     client = await EngineClient.initialize();
     catalog = client.catalogIndex<CatalogIndex>({ apiVersion: 'v1', schemaVersion: 1 });
-    const preferred = catalog.templates.find((item) => item.id === 'classic_531') ?? catalog.templates[0];
-    if (!preferred?.variantIds[0]) throw new Error('CATALOG_HAS_NO_CYCLE_VARIANTS');
-    await loadSchema(preferred.id, preferred.variantIds[0], false);
+    const preferred = catalog.templates.find((item) => item.id === 'classic_boring_but_big') ?? catalog.templates[0];
+    const preferredVariant = preferred?.variantIds.includes('same_lift_5x10')
+      ? 'same_lift_5x10'
+      : preferred?.variantIds[0];
+    if (!preferred || !preferredVariant) throw new Error('CATALOG_HAS_NO_CYCLE_VARIANTS');
+    await loadSchema(preferred.id, preferredVariant, false);
     installLocaleControls();
     root.dataset.cycleReady = 'true';
     if (status) status.textContent = '';
@@ -74,6 +83,7 @@ async function loadSchema(
   };
   values = Object.fromEntries(schema.fields.map((field) => [field.path, field.value]));
   renderEditor();
+  scheduleGeneration();
 }
 
 function renderEditor(): void {
@@ -85,6 +95,7 @@ function renderEditor(): void {
     locale,
     dispatch: handleIntent,
   });
+  applyStaticTranslations();
   installTransferControls();
 }
 
@@ -121,6 +132,12 @@ async function handleIntent(intent: CycleFormIntent): Promise<void> {
   )) {
     renderEditor();
   }
+  scheduleGeneration();
+}
+
+function scheduleGeneration(): void {
+  if (generationTimer) clearTimeout(generationTimer);
+  generationTimer = setTimeout(() => generate(), 80);
 }
 
 function generate(): void {
@@ -288,25 +305,30 @@ function numberValue(path: string, fallback: number): number {
 }
 
 function installLocaleControls(): void {
-  const header = document.querySelector('.site-header');
-  if (!header || header.querySelector('[data-locale-controls]')) return;
-  const controls = document.createElement('div');
-  controls.dataset.localeControls = '';
-  controls.className = 'segmented-control';
+  const controls = document.querySelector<HTMLElement>('[data-locale-controls]');
+  if (!controls || controls.childElementCount > 0) return;
   for (const candidate of ['fr', 'en'] as const) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.textContent = candidate === 'fr' ? 'Français' : 'English';
+    button.textContent = candidate.toUpperCase();
     button.ariaPressed = String(locale === candidate);
     button.addEventListener('click', () => {
       locale = candidate;
       preferences.setLocale(candidate);
       controls.querySelectorAll('button').forEach((item) => item.ariaPressed = String(item === button));
       renderEditor();
+      scheduleGeneration();
     });
     controls.append(button);
   }
-  header.append(controls);
+}
+
+function applyStaticTranslations(): void {
+  const messages = translations[locale];
+  document.querySelectorAll<HTMLElement>('[data-i18n]').forEach((node) => {
+    const key = node.dataset.i18n as keyof typeof messages | undefined;
+    if (key && messages[key]) node.textContent = messages[key];
+  });
 }
 
 function message(error: unknown): string {
