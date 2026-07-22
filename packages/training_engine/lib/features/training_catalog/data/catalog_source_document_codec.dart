@@ -102,11 +102,13 @@ final class SourceTemplate {
     required this.revision,
     required this.variants,
     required this.surface,
+    this.isDefault = false,
   });
   final String id;
   final int revision;
   final List<SourceVariant> variants;
   final TemplateSurface surface;
+  final bool isDefault;
 }
 
 final class SourceTemplateAlias {
@@ -188,18 +190,26 @@ final class CatalogSourceDocumentCodec {
     return _list(root, 'templates')
         .map((value) {
           final map = _map(value, 'template');
-          _keys(map, const {
-            'id',
-            'revision',
-            'labels',
-            'sourceRuleIds',
-            'surface',
-            'variants',
-          });
+          _keys(
+            map,
+            const {
+              'id',
+              'revision',
+              'labels',
+              'sourceRuleIds',
+              'surface',
+              'isDefault',
+              'variants',
+            },
+            optional: const {'isDefault'},
+          );
           return SourceTemplate(
             id: _string(map, 'id'),
             revision: _int(map, 'revision'),
             surface: TemplateSurface.values.byName(_string(map, 'surface')),
+            isDefault: map['isDefault'] == null
+                ? false
+                : _bool(map, 'isDefault'),
             variants: _list(
               map,
               'variants',
@@ -729,6 +739,9 @@ final class CatalogSourceDocumentCodec {
   static int _int(Map<String, Object?> map, String key) => map[key] is int
       ? map[key]! as int
       : throw FormatException('$key must be an integer.');
+  static bool _bool(Map<String, Object?> map, String key) => map[key] is bool
+      ? map[key]! as bool
+      : throw FormatException('$key must be a boolean.');
   static int _positiveInt(Map<String, Object?> map, String key) {
     final value = _int(map, key);
     if (value <= 0) throw FormatException('$key must be positive.');

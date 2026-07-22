@@ -16,6 +16,7 @@ void main() {
             'labels': {'en': 'Template', 'fr': 'Template'},
             'sourceRuleIds': ['rule'],
             'surface': 'cyclePublic',
+            'isDefault': true,
             'variants': [
               {
                 'id': 'variant',
@@ -58,11 +59,50 @@ void main() {
     );
 
     expect(templates.single.surface, TemplateSurface.cyclePublic);
+    expect(templates.single.isDefault, isTrue);
     expect(
       templates.single.variants.single.componentSelections.single.parameterId,
       'phase',
     );
   });
+
+  test(
+    'template isDefault is optional, boolean, and unknown keys stay rejected',
+    () {
+      Map<String, Object?> document(
+        Object? isDefault, {
+        bool unknown = false,
+      }) => {
+        'schemaVersion': 1,
+        'kind': 'templates',
+        'templates': [
+          {
+            'id': 'template',
+            'revision': 1,
+            'labels': {'en': 'Template', 'fr': 'Template'},
+            'sourceRuleIds': ['rule'],
+            'surface': 'cyclePublic',
+            'isDefault': ?isDefault,
+            if (unknown) 'unexpected': true,
+            'variants': <Object?>[],
+          },
+        ],
+      };
+      const codec = CatalogSourceDocumentCodec();
+      expect(
+        codec.decodeTemplates(jsonEncode(document(null))).single.isDefault,
+        isFalse,
+      );
+      expect(
+        () => codec.decodeTemplates(jsonEncode(document('true'))),
+        throwsFormatException,
+      );
+      expect(
+        () => codec.decodeTemplates(jsonEncode(document(false, unknown: true))),
+        throwsFormatException,
+      );
+    },
+  );
 
   test('resolver replaces target from value or schema default without IDs', () {
     const target = ComponentReference('target', 1);
