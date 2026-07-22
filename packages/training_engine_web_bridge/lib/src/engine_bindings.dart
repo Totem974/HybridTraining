@@ -430,7 +430,12 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
         value: [for (final session in schemaSchedule.sessions) session.id],
         choices: [
           for (final session in schemaSchedule.sessions)
-            {'value': session.id, 'label': _movementTokenLabel(session.id)},
+            {
+              'value': session.id,
+              'label': session.movementIds
+                  .map(_movementTokenLabel)
+                  .join('+'),
+            },
         ],
       ),
       _field(

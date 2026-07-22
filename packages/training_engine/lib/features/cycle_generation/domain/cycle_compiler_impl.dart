@@ -787,7 +787,24 @@ final class CycleCompilerImpl implements CycleCompiler {
       }
       blocks = withJokers;
     }
-    return blocks;
+    final sessionMovements = _blocksFor(
+      week,
+      sessionId,
+    ).map((block) => block.movementId).whereType<MovementId>().toSet();
+    if (sessionMovements.length <= 1) return blocks;
+    return [
+      for (final block in blocks)
+        if (block.movementId != null)
+          block
+        else
+          for (final movement in sessionMovements)
+            BlockDefinition(
+              id: block.id,
+              role: block.role,
+              sets: block.sets,
+              movementId: movement,
+            ),
+    ];
   }
 
   List<BlockDefinition> _overlayBlocks(
