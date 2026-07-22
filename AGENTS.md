@@ -2,382 +2,265 @@
 
 ## 1. Fondation stable
 
-Le catalogue, le générateur Cycle et le premier compositeur Forever sont des fondations existantes.
+Les éléments suivants existent et ne doivent pas être reconstruits :
 
-Chaîne Cycle :
+```text
+catalog_src → catalog.db
+catalog.db → CatalogResolver
+ResolvedCycleDefinition + CycleRequest → CycleCompiler
+GeneratedCycle → training.db
+```
+
+Le POC Forever reste présent mais gelé pendant cette phase.
+
+## 2. Priorité active
+
+```text
+PARITÉ VISUELLE ET FONCTIONNELLE DE /cycle
+AVANT TOUT NOUVEAU TRAVAIL FOREVER
+```
+
+La référence visuelle est constituée des captures fournies, du miroir HTML/CSS local et de la page de référence :
+
+```text
+https://fivethreeone.app/calculator
+```
+
+Les captures fournies ont autorité sur les détails de disposition.
+
+## 3. Périmètre
+
+Modifier uniquement ce qui est nécessaire à `/cycle` :
+
+- bloc Charges / Weight ;
+- bloc Modèle / Template ;
+- Options supplémentaires ;
+- Plaques et barre ;
+- Planification ;
+- Output ;
+- rendu Programme ;
+- responsive, localisation et accessibilité ;
+- contrats applicatifs strictement nécessaires à ces blocs.
+
+Préserver :
+
+- catalogue ;
+- générateur Cycle ;
+- persistance ;
+- route et page Forever ;
+- navigation Cycle/Macrocycle.
+
+Ne pas développer de nouvelle capacité Forever pendant cette phase.
+
+## 4. Règle d’architecture
+
+L’interface ne contient aucune règle d’entraînement.
 
 ```text
 catalog.db
-+ choix utilisateur
-→ CatalogResolver
-→ CycleCompiler pur
-→ GeneratedCycle
+→ CycleEditorSchema
+→ CycleEditorState
+→ widgets
+→ CycleRequest
+→ CycleCompiler
 ```
-
-Chaîne Forever :
-
-```text
-ForeverDefinition
-+ configurations de nœuds
-→ ForeverComposer
-→ CycleRequest[]
-→ même CycleCompiler
-→ GeneratedMacrocycle
-```
-
-Ne pas reconstruire le catalogue ou le moteur Cycle. Toute évolution doit rester générique et rétrocompatible.
-
-## 2. Périmètre Web actuel
-
-Le produit Web comporte exactement deux pages principales :
-
-```text
-/cycle
-/forever
-```
-
-Une bascule commune permet de passer de l’une à l’autre.
-
-Hors périmètre Web actuel :
-
-- séance du jour ;
-- suivi d’exécution ;
-- recommandations automatiques ;
-- statistiques ;
-- génération automatique du prochain cycle ;
-- génération automatique du prochain macrocycle ;
-- continuité pilotée par les résultats ;
-- application Android produit.
-
-Le Web génère un cycle ou un macrocycle autonome. Lors d’une prochaine utilisation, l’utilisateur ressaisit ou recharge ses max et crée une nouvelle génération indépendante.
-
-## 3. Priorité active
-
-```text
-1. REFAIRE L’INTERFACE WEB CYCLE
-2. REFAIRE LE CONFIGURATEUR WEB FOREVER
-3. ÉTENDRE FOREVER AUX PRESETS ET ARCHITECTURES PERSONNALISÉES
-4. VALIDER LES DEUX PAGES
-```
-
-La lisibilité et la conformité visuelle à la référence fournie sont des critères bloquants.
-
-## 4. Référence visuelle
-
-Utiliser les captures et le miroir HTML/CSS fournis comme référence de mise en page et d’interaction.
-
-Caractéristiques cibles :
-
-- fond `#181818` ;
-- contenu centré d’environ 900 px ;
-- cartes `#323232` ;
-- rayon d’environ 18 px ;
-- texte clair ;
-- accent bleu proche de `#2C9EFF` ;
-- espacements de 24 px ;
-- deux colonnes sur desktop ;
-- une colonne sous environ 770 px ;
-- sections larges et repliables ;
-- contrôles compacts ;
-- programme généré lisible par semaines et séances.
-
-Ne pas copier :
-
-- code React/minifié ;
-- marque ;
-- logo ;
-- actifs ;
-- police archivée.
-
-Utiliser les composants, icônes, traductions et polices déjà autorisés dans le projet.
-
-## 5. Structure commune des deux pages
-
-```text
-HEADER
-titre + bascule [Cycle | Forever]
-
-FORMULAIRE
-sections en cartes
-
-OUTPUT
-résumé + actions
-
-PROGRAM
-résultat généré
-```
-
-Conserver un langage visuel identique entre `/cycle` et `/forever`.
-
-## 6. Page `/cycle`
-
-Disposition desktop :
-
-```text
-WEIGHT                    TEMPLATE
-ADDITIONAL OPTIONS
-PLATING & BARBELL
-SCHEDULING                OUTPUT
-PROGRAM
-```
-
-La page réutilise le moteur et les contrats existants :
-
-```text
-CycleCatalogIndex
-CycleEditorSchema
-CycleEditorState
-CycleEditorIntent
-CycleRequest
-GeneratedCycleView
-```
-
-Aucune règle métier dans les widgets.
-
-Toutes les options visibles proviennent du catalogue.
-
-## 7. Page `/forever`
-
-Disposition desktop :
-
-```text
-WEIGHT                    MACROCYCLE
-GLOBAL OPTIONS
-PLATING & BARBELL
-CYCLES
-TIMELINE                  OUTPUT
-PROGRAM
-```
-
-### Choix du macrocycle
-
-Deux modes :
-
-```text
-Programme prédéfini
-Architecture personnalisée
-```
-
-Un preset publié charge une architecture et des contraintes sourcées.
-
-Une architecture personnalisée est `userDefined`.
-
-### Nœuds
-
-Nœuds minimum :
-
-```text
-leader
-anchor
-transition
-deload
-test
-custom
-```
-
-Affichage compact d’un cycle :
-
-```text
-C1 — Leader
-Template [select]
-Variante [select]
-[Configurer]
-Résumé des options
-```
-
-### Configuration détaillée
-
-Le bouton `Configurer` réutilise l’éditeur Cycle existant :
-
-- modal ou panneau sur desktop ;
-- plein écran sur mobile.
-
-Ne jamais créer un second moteur ou recopier les règles Cycle.
-
-## 8. Macrocycle autonome
-
-Le Web génère un macrocycle fini et autonome.
-
-Il accepte :
-
-- max saisis ou chargés ;
-- architecture ;
-- configurations des cycles ;
-- matériel ;
-- date ;
-- options.
-
-Il produit :
-
-- timeline ;
-- cycles enfants ;
-- TM projetés à l’intérieur du macrocycle ;
-- charges et plaques ;
-- snapshot ;
-- export/sauvegarde.
-
-Ne pas implémenter dans cette phase :
-
-```text
-previousMacrocycleId
-nextMacrocycleId
-Générer le macrocycle suivant
-recommandation depuis les résultats
-mise à jour automatique des max
-```
-
-Ces fonctions appartiendront à l’application d’entraînement future.
-
-## 9. Preset et architecture personnalisée
-
-### Preset
-
-- sélectionner un preset publié ;
-- afficher sa structure ;
-- verrouiller les éléments canoniques ;
-- permettre uniquement les modifications déclarées.
-
-### Architecture personnalisée
-
-Permettre :
-
-- ajouter un Leader ;
-- ajouter un Anchor ;
-- ajouter un protocole ;
-- supprimer un nœud non obligatoire ;
-- réordonner ;
-- dupliquer un cycle ;
-- copier une configuration ;
-- enregistrer le brouillon.
-
-Contraintes minimum :
-
-- séquence non vide ;
-- cycle configuré ;
-- protocole non orphelin ;
-- rôle compatible ;
-- macrocycle fini.
-
-## 10. Configuration par nœud
-
-Chaque nœud Cycle référence une configuration complète :
-
-```text
-template
-variant
-parameters
-warm-up
-Joker
-deload
-supplemental
-assistance
-conditioning
-schedule
-ordre des séances
-ratios
-matériel
-```
-
-Résolution :
-
-```text
-defaults globaux
-→ defaults du preset
-→ defaults du rôle
-→ configuration du nœud
-```
-
-Aucune valeur incompatible n’est supprimée silencieusement.
-
-## 11. ForeverComposer
-
-Le compositeur :
-
-- reste pur et déterministe ;
-- ne lit pas SQLite ;
-- ne dépend pas de Flutter ou du legacy ;
-- ne calcule aucune série ;
-- produit un macrocycle fini ;
-- appelle `CycleCompiler` pour chaque cycle ;
-- applique les règles TM uniquement à l’intérieur du macrocycle ;
-- préserve les snapshots enfants.
 
 Interdictions :
 
 ```text
-LeaderCompiler
-AnchorCompiler
-switch(templateId)
 if (templateId == ...)
-calcul de séries dans Forever
-règles métier dans les widgets
+switch(templateId)
+liste statique de templates
+pourcentages codés dans les widgets
+schedule codé dans les widgets
+calcul de TM dans les widgets
+calcul de plating dans les widgets
+fallback vers le moteur legacy
 ```
 
-## 12. Persistance Web
+Une option absente du contrat doit être ajoutée au catalogue ou à une primitive générique, pas simulée dans la présentation.
 
-### `workspace.db`
+## 5. Langage visuel
 
-Conserve :
+Reproduire le langage de la référence sans copier son code, ses actifs, sa marque ou sa police archivée.
 
-- brouillon Cycle ;
-- brouillon Forever ;
-- mode preset/custom ;
-- architecture ;
-- réglages globaux ;
-- configurations des nœuds ;
-- max ;
-- matériel ;
-- version du payload.
+Cibles :
 
-### `training.db`
+```text
+fond général      #181818
+cartes             #323232
+contrôles          gris moyen
+accent             #2C9EFF
+texte              clair
+largeur max        environ 900 px
+rayon cartes       environ 18 px
+écart sections     environ 24 px
+desktop            deux colonnes
+mobile             une colonne sous environ 771 px
+```
 
-Conserve le cycle ou macrocycle généré et ses snapshots.
+Utiliser les tokens Flutter partagés du projet.
 
-Aucune logique de recommandation du prochain programme.
+## 6. Bloc Weight
 
-## 13. Export
+- Le sélecteur `1 RM / Training Max / Rep Max` occupe toute la largeur intérieure.
+- Les mouvements sont alignés à gauche comme sur la référence.
+- Une ligne contient : repère visuel, nom, répétitions si pertinentes, charge et unité.
+- Mode 1 RM : répétitions fixées à 1.
+- Mode Training Max : saisie directe du TM.
+- Mode Rep Max : répétitions modifiables par mouvement et charge modifiable.
+- Le calcul du 1RM estimé et du TM reste dans le domaine/application.
+- Un seul ratio TM global est affiché pour les mouvements principaux.
+- Aucun ratio TM principal à côté de chaque mouvement.
+- Les ratios propres à un template restent dans le bloc Template/Options.
+- Unité kg/lb en contrôle segmenté.
 
-Les deux pages doivent pouvoir au minimum :
+## 7. Bloc Template
 
-- sauvegarder ;
-- recharger ;
-- exporter la configuration ou le résultat dans le format prévu par le projet.
+Présentation en lignes :
 
-L’import dans l’application d’entraînement future ne doit pas imposer aujourd’hui son workflow Android.
+```text
+Template     valeur sélectionnée >
+Variante     valeur sélectionnée >
+Option       valeur sélectionnée >
+```
 
-## 14. Provenance
+- libellé à gauche ;
+- valeur et chevron à droite ;
+- options dynamiques sous les deux premières lignes ;
+- aucune grande liste native qui déborde visuellement ;
+- toutes les données viennent du catalogue.
 
-- Preset canonique : référence au livre.
-- Architecture libre : `userDefined`.
-- Observation de référence : `referenceAppObserved`.
-- Ne jamais inventer une architecture canonique ou une compatibilité.
+## 8. Additional Options
 
-## 15. Agents parallèles
+Desktop : trois colonnes principales exactement :
 
-Utiliser tous les slots disponibles avec chemins exclusifs :
+```text
+WARM-UP | JOKER SETS | DELOAD
+```
 
-1. audit visuel et design system Web ;
-2. refonte `/cycle` ;
-3. modèle Forever preset/custom ;
-4. éditeur Cycle embarqué ;
-5. refonte `/forever` ;
-6. persistance/export ;
-7. responsive, FR/EN, accessibilité ;
-8. tests et revue architecturale.
+Mobile : empilement lisible.
 
-Le lead possède les contrats publics, migrations partagées, composition root et intégration.
+- Warm-up, Joker et Deload sont pilotés par le catalogue.
+- Les champs conditionnels apparaissent sous leur colonne.
+- Assistance et conditioning, lorsqu’ils existent, apparaissent dans une seconde rangée ou une carte dédiée, sans casser les trois colonnes principales.
+- Aucune option visible sans effet métier.
+- Les incompatibilités sont évaluées par le domaine/application.
 
-## 16. Efficacité
+## 9. Plaques et barre
 
-- Ne pas refaire le catalogue.
-- Ne pas refaire le moteur Cycle.
-- Ne pas préparer l’application Android.
-- Ne pas implémenter la suite automatique.
-- Ne pas boucler sur WebDriver.
-- Ne pas écrire de longs ADR.
-- Tests ciblés pendant les lots ; suite complète aux gates.
+- Conserver les compteurs `− / quantité / +` pour chaque plaque.
+- Conserver la sélection kg/lb et le profil matériel.
+- Afficher le poids de la barre à gauche dans la ligne inférieure.
+- Afficher le total maximal à droite si disponible.
+- Supprimer le champ utilisateur `Incrément d’arrondi`.
+- Supprimer le champ texte/résumé libre `Plaques par côté`.
+- L’incrément effectif est dérivé du matériel disponible dans l’application/domaine.
+- Le rendu des plaques par série reste un résultat du moteur de plating.
 
-## 17. Validation
+## 10. Planification
+
+Remplacer les champs techniques bruts par des contrôles visuels.
+
+- La fréquence vient du template/schedule.
+- Une fréquence unique est affichée comme valeur verrouillée.
+- Plusieurs fréquences autorisées utilisent un contrôle segmenté.
+- L’ordre est représenté par de petites cases/tokens.
+- Avant les icônes finales, utiliser :
+  - `OP` Overhead Press ;
+  - `BP` Bench Press ;
+  - `SQ` Squat ;
+  - `DL` Deadlift.
+- Pour une séance multi-mouvements, afficher un token de groupe, par exemple `SQ+BP`.
+- Ne permettre que les réordonnancements valides du schedule.
+- Ajouter les options `Bastard work order` et `3/5/1 week order` uniquement lorsqu’elles sont exposées par le catalogue.
+- Conserver une date de départ si le moteur en a besoin, avec un vrai date picker compact.
+- Ne jamais afficher d’IDs ou de listes brutes telles que `1,2,4,5` ou `overhead_press,...`.
+
+## 11. Output
+
+Le bloc contient :
+
+- titre du programme ;
+- option `Show plating / Afficher les plaques` ;
+- autres options uniquement si elles sont réellement supportées ;
+- bouton principal `Générer`.
+
+Ne pas afficher `Générer et sauvegarder`.
+
+La persistance interne existante peut rester, mais le libellé et le parcours Web restent ceux d’un générateur.
+
+## 12. Programme
+
+Le programme doit ressembler à la référence :
+
+```text
+SEMAINE 1
+├── carte séance OP
+├── carte séance DL
+├── carte séance BP
+└── carte séance SQ
+```
+
+Chaque carte affiche :
+
+- nom utilisateur du mouvement ;
+- date si disponible ;
+- blocs avec titres lisibles ;
+- séries sous la forme `reps × charge` ;
+- plaques en petites pastilles seulement si `Show plating` est actif ;
+- assistance sous forme de nom d’exercice et répétitions.
+
+Interdictions :
+
+- objets Dart bruts ;
+- JSON brut ;
+- IDs techniques ;
+- chaînes comme `{type: fixed, count: 5}` ;
+- détails de debug.
+
+Responsive :
+
+- quatre colonnes lorsque la largeur le permet ;
+- réduction progressive ;
+- une colonne lisible sur mobile.
+
+## 13. Travail parallèle
+
+Avant de lancer les agents, le lead :
+
+1. gèle `CycleEditorState` et les intents nécessaires ;
+2. extrait chaque bloc dans un fichier/widget distinct ;
+3. définit les tokens visuels communs ;
+4. attribue des chemins exclusifs.
+
+Aucun fichier modifié simultanément par deux agents.
+
+Répartition :
+
+1. Weight ;
+2. Template ;
+3. Additional Options ;
+4. Plating ;
+5. Scheduling ;
+6. Output + Program ;
+7. responsive + FR/EN + accessibilité ;
+8. intégration + revue read-only.
+
+Le lead possède :
+
+- page de composition ;
+- contrats publics ;
+- design tokens ;
+- composition root ;
+- exports ;
+- commits.
+
+## 14. Validation
+
+Tests ciblés pendant les blocs.
+
+Gate final :
 
 ```text
 flutter pub get
@@ -388,21 +271,26 @@ git diff --check
 flutter build web --release
 ```
 
-Validation visuelle réelle :
+Validation visuelle : 1440 px, 390 px et 320 px dans Chrome.
 
-- `/cycle` desktop et mobile ;
-- `/forever` desktop et mobile ;
-- FR et EN ;
-- clavier et accessibilité ;
+Vérifier dans Chrome :
+
+- Weight ;
+- Template ;
+- Additional Options ;
+- Plating ;
+- Scheduling ;
+- Output ;
+- Program ;
+- changement de plusieurs templates ;
 - génération ;
-- sauvegarde/rechargement ;
-- export ;
+- affichage/masquage des plaques ;
 - aucune erreur console.
 
-## 18. Git
+## 15. Git
 
 - Préserver les changements utilisateur.
 - Jamais de `git reset --hard`.
 - Jamais de push forcé.
-- Petits commits cohérents.
+- Petits commits cohérents par bloc.
 - Aucun push sans autorisation explicite.
