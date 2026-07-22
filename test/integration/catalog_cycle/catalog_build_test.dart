@@ -12,6 +12,7 @@ void main() {
     'build publishes the deterministic multi-family SQLite catalog',
     () async {
       final directory = Directory.systemTemp.createTempSync('catalog_build_');
+      Database? openedDatabase;
       try {
         final first = '${directory.path}/first.db';
         final second = '${directory.path}/second.db';
@@ -20,14 +21,15 @@ void main() {
         expect(File(first).readAsBytesSync(), File(second).readAsBytesSync());
 
         final database = await databaseFactoryFfi.openDatabase(first);
+        openedDatabase = database;
         final repository = SqliteTrainingCatalog(database);
         final index = await repository.loadIndex(catalogVersion: 2);
         final templateIds = index.templates.map((item) => item.id).toSet();
         expect(templateIds, contains('classic_531'));
         expect(templateIds, contains('beyond_boring_but_big'));
         expect(templateIds, contains('powerlifting_classic_531'));
-        expect(templateIds, contains('forever_bbb_leader'));
-        expect(templateIds, contains('forever_7th_week_protocol'));
+        expect(templateIds, isNot(contains('forever_bbb_leader')));
+        expect(templateIds, isNot(contains('forever_7th_week_protocol')));
         for (final templateId in const [
           'classic_531',
           'beyond_boring_but_big',
@@ -120,6 +122,7 @@ void main() {
         );
         await database.close();
       } finally {
+        if (openedDatabase?.isOpen ?? false) await openedDatabase!.close();
         directory.deleteSync(recursive: true);
       }
     },

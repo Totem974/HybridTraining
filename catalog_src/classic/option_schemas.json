@@ -1,22 +1,283 @@
 {
   "schemaVersion": 1,
   "kind": "optionSchemas",
-  "optionSchemas": [{
-    "id":"classic_531_options","revision":1,
-    "sourceRuleIds":["or.tm.ninety_percent","or.warm_up.40_50_60","or.deload.classic"],
-    "parameters":[
-      {"id":"training_max_ratio","presentationGroup":"hidden","type":"percentage","scope":"global","default":9000,"minimum":9000,"maximum":9000,"step":null,"allowedValues":[],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
-      {"id":"include_warm_up","presentationGroup":"warmup","labelEn":"Include warm-up","labelFr":"Inclure l’échauffement","type":"boolean","scope":"global","default":true,"minimum":null,"maximum":null,"step":null,"allowedValues":[true,false],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
-      {"id":"include_deload","presentationGroup":"deload","labelEn":"Deload after cycle","labelFr":"Deload après le cycle","type":"boolean","scope":"global","default":true,"minimum":null,"maximum":null,"step":null,"allowedValues":[true,false],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}}
-    ]
-  }, {
-    "id":"classic_simplest_strength_options","revision":1,
-    "sourceRuleIds":["or.sst.progression","or.sst.pairings"],
-    "parameters":[
-      {"id":"press_day_secondary","type":"movement","scope":"perSession","default":"close_grip_bench_press","minimum":null,"maximum":null,"step":null,"allowedValues":["close_grip_bench_press"],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
-      {"id":"deadlift_day_secondary","type":"movement","scope":"perSession","default":"front_squat","minimum":null,"maximum":null,"step":null,"allowedValues":["front_squat"],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
-      {"id":"bench_day_secondary","type":"movement","scope":"perSession","default":"incline_press","minimum":null,"maximum":null,"step":null,"allowedValues":["incline_press"],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
-      {"id":"squat_day_secondary","type":"movement","scope":"perSession","default":"straight_leg_deadlift","minimum":null,"maximum":null,"step":null,"allowedValues":["straight_leg_deadlift"],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}}
-    ]
-  }]
+  "optionSchemas": [
+    {
+      "id": "classic_531_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "or.tm.ninety_percent",
+        "or.warm_up.40_50_60",
+        "or.deload.classic"
+      ],
+      "parameters": [
+        {
+          "id": "training_max_ratio",
+          "presentationGroup": "hidden",
+          "type": "percentage",
+          "scope": "global",
+          "default": 9000,
+          "minimum": 9000,
+          "maximum": 9000,
+          "step": null,
+          "allowedValues": [],
+          "visibleWhen": { "type": "always" },
+          "enabledWhen": { "type": "always" },
+          "requiredWhen": { "type": "always" }
+        },
+        {
+          "id": "warmUp.enabled",
+          "presentationGroup": "warmup",
+          "labelEn": "Warm-up",
+          "labelFr": "Échauffement",
+          "type": "boolean",
+          "scope": "global",
+          "default": true,
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [true, false],
+          "visibleWhen": { "type": "always" },
+          "enabledWhen": { "type": "always" },
+          "requiredWhen": { "type": "always" }
+        },
+        {
+          "id": "warmUp.type",
+          "presentationGroup": "warmup",
+          "labelEn": "Option",
+          "labelFr": "Option",
+          "type": "enumeration",
+          "scope": "global",
+          "default": "original",
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": ["original", "beyond"],
+          "visibleWhen": { "type": "equals", "parameterId": "warmUp.enabled", "value": true },
+          "enabledWhen": { "type": "equals", "parameterId": "warmUp.enabled", "value": true },
+          "requiredWhen": { "type": "equals", "parameterId": "warmUp.enabled", "value": true }
+        },
+        {
+          "id": "warmUp.bases.lowerBody",
+          "presentationGroup": "warmup",
+          "labelEn": "Lower body base",
+          "labelFr": "Base bas du corps",
+          "type": "weight",
+          "scope": "global",
+          "default": { "centiUnits": 13500, "unit": "lb" },
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [],
+          "visibleWhen": { "type": "all", "conditions": [{ "type": "equals", "parameterId": "warmUp.enabled", "value": true }, { "type": "equals", "parameterId": "warmUp.type", "value": "beyond" }] },
+          "enabledWhen": { "type": "all", "conditions": [{ "type": "equals", "parameterId": "warmUp.enabled", "value": true }, { "type": "equals", "parameterId": "warmUp.type", "value": "beyond" }] },
+          "requiredWhen": { "type": "all", "conditions": [{ "type": "equals", "parameterId": "warmUp.enabled", "value": true }, { "type": "equals", "parameterId": "warmUp.type", "value": "beyond" }] }
+        },
+        {
+          "id": "warmUp.bases.upperBody",
+          "presentationGroup": "warmup",
+          "labelEn": "Upper body base",
+          "labelFr": "Base haut du corps",
+          "type": "weight",
+          "scope": "global",
+          "default": { "centiUnits": 9500, "unit": "lb" },
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [],
+          "visibleWhen": { "type": "all", "conditions": [{ "type": "equals", "parameterId": "warmUp.enabled", "value": true }, { "type": "equals", "parameterId": "warmUp.type", "value": "beyond" }] },
+          "enabledWhen": { "type": "all", "conditions": [{ "type": "equals", "parameterId": "warmUp.enabled", "value": true }, { "type": "equals", "parameterId": "warmUp.type", "value": "beyond" }] },
+          "requiredWhen": { "type": "all", "conditions": [{ "type": "equals", "parameterId": "warmUp.enabled", "value": true }, { "type": "equals", "parameterId": "warmUp.type", "value": "beyond" }] }
+        },
+        {
+          "id": "joker.enabled",
+          "presentationGroup": "joker",
+          "labelEn": "Add Joker Sets",
+          "labelFr": "Ajouter des séries Joker",
+          "type": "boolean",
+          "scope": "global",
+          "default": false,
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [true, false],
+          "visibleWhen": { "type": "always" },
+          "enabledWhen": { "type": "always" },
+          "requiredWhen": { "type": "always" }
+        },
+        {
+          "id": "joker.ceilingBasisPoints",
+          "presentationGroup": "joker",
+          "labelEn": "Up to",
+          "labelFr": "Jusqu’à",
+          "type": "enumeration",
+          "scope": "global",
+          "default": 500,
+          "minimum": 500,
+          "maximum": 3000,
+          "step": 500,
+          "allowedValues": [500, 1000, 1500, 2000, 2500, 3000],
+          "visibleWhen": { "type": "equals", "parameterId": "joker.enabled", "value": true },
+          "enabledWhen": { "type": "equals", "parameterId": "joker.enabled", "value": true },
+          "requiredWhen": { "type": "equals", "parameterId": "joker.enabled", "value": true }
+        },
+        {
+          "id": "deload.enabled",
+          "presentationGroup": "deload",
+          "labelEn": "Deload after cycle",
+          "labelFr": "Deload après le cycle",
+          "type": "boolean",
+          "scope": "global",
+          "default": true,
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [true, false],
+          "visibleWhen": { "type": "always" },
+          "enabledWhen": { "type": "always" },
+          "requiredWhen": { "type": "always" }
+        },
+        {
+          "id": "deload.type",
+          "presentationGroup": "deload",
+          "labelEn": "Option",
+          "labelFr": "Option",
+          "type": "enumeration",
+          "scope": "global",
+          "default": "deload1",
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": ["deload1", "deload2", "deload3", "deload4", "deload5", "highIntensity"],
+          "visibleWhen": { "type": "equals", "parameterId": "deload.enabled", "value": true },
+          "enabledWhen": { "type": "equals", "parameterId": "deload.enabled", "value": true },
+          "requiredWhen": { "type": "equals", "parameterId": "deload.enabled", "value": true }
+        },
+        {
+          "id": "deload.skipWarmUp",
+          "presentationGroup": "deload",
+          "labelEn": "Skip warm-up",
+          "labelFr": "Sauter l’échauffement",
+          "type": "boolean",
+          "scope": "global",
+          "default": false,
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [true, false],
+          "visibleWhen": { "type": "all", "conditions": [{ "type": "equals", "parameterId": "deload.enabled", "value": true }, { "type": "in", "parameterId": "deload.type", "values": ["deload1", "deload2", "deload3", "deload4", "deload5"] }] },
+          "enabledWhen": { "type": "all", "conditions": [{ "type": "equals", "parameterId": "deload.enabled", "value": true }, { "type": "in", "parameterId": "deload.type", "values": ["deload1", "deload2", "deload3", "deload4", "deload5"] }] },
+          "requiredWhen": { "type": "all", "conditions": [{ "type": "equals", "parameterId": "deload.enabled", "value": true }, { "type": "in", "parameterId": "deload.type", "values": ["deload1", "deload2", "deload3", "deload4", "deload5"] }] }
+        }
+      ]
+    },
+    {
+      "id": "classic_simplest_strength_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "or.sst.progression",
+        "or.sst.pairings"
+      ],
+      "parameters": [
+        {
+          "id": "press_day_secondary",
+          "presentationGroup": "hidden",
+          "type": "movement",
+          "scope": "perSession",
+          "default": "close_grip_bench_press",
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": ["close_grip_bench_press"],
+          "visibleWhen": { "type": "always" },
+          "enabledWhen": { "type": "always" },
+          "requiredWhen": { "type": "always" }
+        },
+        {
+          "id": "deadlift_day_secondary",
+          "presentationGroup": "hidden",
+          "type": "movement",
+          "scope": "perSession",
+          "default": "front_squat",
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": ["front_squat"],
+          "visibleWhen": { "type": "always" },
+          "enabledWhen": { "type": "always" },
+          "requiredWhen": { "type": "always" }
+        },
+        {
+          "id": "bench_day_secondary",
+          "presentationGroup": "hidden",
+          "type": "movement",
+          "scope": "perSession",
+          "default": "incline_press",
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": ["incline_press"],
+          "visibleWhen": { "type": "always" },
+          "enabledWhen": { "type": "always" },
+          "requiredWhen": { "type": "always" }
+        },
+        {
+          "id": "squat_day_secondary",
+          "presentationGroup": "hidden",
+          "type": "movement",
+          "scope": "perSession",
+          "default": "straight_leg_deadlift",
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": ["straight_leg_deadlift"],
+          "visibleWhen": { "type": "always" },
+          "enabledWhen": { "type": "always" },
+          "requiredWhen": { "type": "always" }
+        }
+      ]
+    },
+    {
+      "id": "classic_bodyweight_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "or.assistance.bodyweight",
+        "or.assistance.bodyweight_observed_volume"
+      ],
+      "parameters": [
+        {
+          "id": "total_repetitions",
+          "presentationGroup": "assistance",
+          "labelEn": "Total repetitions",
+          "labelFr": "Répétitions totales",
+          "type": "integer",
+          "scope": "global",
+          "default": 75,
+          "minimum": 75,
+          "maximum": 150,
+          "step": 5,
+          "allowedValues": [],
+          "visibleWhen": { "type": "always" },
+          "enabledWhen": { "type": "always" },
+          "requiredWhen": { "type": "always" }
+        },
+        {
+          "id": "set_count",
+          "presentationGroup": "assistance",
+          "labelEn": "Number of sets",
+          "labelFr": "Nombre de séries",
+          "type": "integer",
+          "scope": "global",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 10,
+          "step": 1,
+          "allowedValues": [],
+          "visibleWhen": { "type": "always" },
+          "enabledWhen": { "type": "always" },
+          "requiredWhen": { "type": "always" }
+        }
+      ]
+    }
+  ]
 }

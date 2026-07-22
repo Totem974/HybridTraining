@@ -18,12 +18,14 @@ const _documentArrays = <String>{
   'components',
   'schedules',
   'templates',
+  'templateAliases',
   'optionSchemas',
   'movements',
   'exercises',
   'assistancePlans',
   'conditioningDefinitions',
   'foreverDefinitions',
+  'cycleOptionRecipes',
 };
 String _arrayName(String kind) => kind == 'inventory' ? 'entries' : kind;
 const _placeholders = <String>{
@@ -565,6 +567,8 @@ final class _Catalog {
               ? 'sources:${record['ruleId']}'
               : document.kind == 'inventory'
               ? 'inventory:${record['id']}'
+              : document.kind == 'templateAliases'
+              ? 'templateAliases:${record['legacyTemplateId']}/${record['legacyVariantId']}'
               : '${document.kind}:${record['id']}@${record['revision']}';
           if (!identities.add(identity)) {
             throw FormatException('duplicate identity $identity');
@@ -603,6 +607,9 @@ final class _Catalog {
         (byKind['conditioningDefinitions'] ?? const [])
             .map((r) => '${r['id']}@${r['revision']}')
             .toSet();
+    final optionRecipes = (byKind['cycleOptionRecipes'] ?? const [])
+        .map((r) => '${r['id']}@${r['revision']}')
+        .toSet();
     var variants = 0,
         missingVariants = 0,
         missingOptions = 0,
@@ -617,6 +624,13 @@ final class _Catalog {
         final option = variant['optionSchemaId']! as Map<String, Object?>;
         if (!options.contains('${option['id']}@${option['revision']}')) {
           missingOptions++;
+        }
+        if (variant['optionRecipeId'] case final Map<String, Object?> recipe) {
+          if (!optionRecipes.contains(
+            '${recipe['id']}@${recipe['revision']}',
+          )) {
+            missingReferences++;
+          }
         }
         final scheduleRefs = variant['scheduleIds']! as List<Object?>;
         if (scheduleRefs.isEmpty) missingSchedules++;
@@ -653,6 +667,24 @@ final class _Catalog {
             missingReferences++;
           }
         }
+        if (variant['componentSelections']
+            case final List<Object?> selections) {
+          for (final rawSelection in selections) {
+            final selection = rawSelection! as Map<String, Object?>;
+            final refs = <Object?>[
+              selection['targetComponentId'],
+              ...((selection['choices']! as List<Object?>).map(
+                (choice) => (choice! as Map<String, Object?>)['componentId'],
+              )),
+            ];
+            for (final rawRef in refs) {
+              final ref = rawRef! as Map<String, Object?>;
+              if (!components.contains('${ref['id']}@${ref['revision']}')) {
+                missingReferences++;
+              }
+            }
+          }
+        }
         for (final pair in [
           ('assistancePlanIds', assistancePlans),
           ('conditioningDefinitionIds', conditioningDefinitions),
@@ -683,7 +715,40 @@ final class _Catalog {
         }
       }
     }
-    final templateIds = templates.map((r) => r['id']).toSet();
+    for (final recipe in byKind['cycleOptionRecipes'] ?? const []) {
+      final leaves = <Map<String, Object?>>[];
+      leaves.addAll(
+        (recipe['warmUp']! as Map<String, Object?>).values
+            .cast<Map<String, Object?>>(),
+      );
+      leaves.addAll(
+        (recipe['deload']! as Map<String, Object?>).values
+            .cast<Map<String, Object?>>(),
+      );
+      for (final leaf in leaves) {
+        final refs = <Object?>[];
+        if (leaf['componentIds'] case final List<Object?> componentIds) {
+          refs.addAll(componentIds);
+        }
+        if (leaf['byUnit'] case final Map<String, Object?> byUnit) {
+          for (final unitRefs in byUnit.values) {
+            refs.addAll(unitRefs! as List<Object?>);
+          }
+        }
+        for (final rawRef in refs) {
+          final ref = rawRef! as Map<String, Object?>;
+          if (!components.contains('${ref['id']}@${ref['revision']}')) {
+            missingReferences++;
+          }
+        }
+      }
+    }
+    final templateIds = templates.map((r) => r['id']).toSet()
+      ..addAll(
+        (byKind['templateAliases'] ?? const []).map(
+          (alias) => alias['legacyTemplateId'],
+        ),
+      );
     final cycleEntries = entries
         .where((r) => r['classification'] == 'cycleTemplate')
         .toList();
@@ -705,6 +770,7 @@ final class _Catalog {
       'assistancePlans': byKind['assistancePlans']?.length ?? 0,
       'conditioningDefinitions': byKind['conditioningDefinitions']?.length ?? 0,
       'foreverDefinitions': byKind['foreverDefinitions']?.length ?? 0,
+      'cycleOptionRecipes': byKind['cycleOptionRecipes']?.length ?? 0,
       'unresolvedCycleEntries': unresolved,
       'missingVariants': missingVariants,
       'missingOptionSchemas': missingOptions,
@@ -851,8 +917,15 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
         'labels',
         'sourceRuleIds',
         'variants',
+        'surface',
       }, at);
       _common(value, at);
+      if (!const {
+        'cyclePublic',
+        'foreverInternal',
+      }.contains(value['surface'])) {
+        throw FormatException('unknown template surface ${value['surface']}');
+      }
       final variants = _objects(value['variants'], '$at.variants');
       for (var i = 0; i < variants.length; i++) {
         final v = variants[i], vat = '$at.variants[$i]';
@@ -871,6 +944,8 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
             'conditioningDefinitionIds',
             'compatibilities',
             'validExample',
+            'componentSelections',
+            'optionRecipeId',
           },
           vat,
           optional: {
@@ -878,6 +953,8 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
             'phases',
             'assistancePlanIds',
             'conditioningDefinitionIds',
+            'componentSelections',
+            'optionRecipeId',
           },
         );
         _common(v, vat);
@@ -900,6 +977,9 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
           }
         }
         _ref(v['optionSchemaId'], '$vat.optionSchemaId');
+        if (v['optionRecipeId'] != null) {
+          _ref(v['optionRecipeId'], '$vat.optionRecipeId');
+        }
         _refs(v['scheduleIds'], '$vat.scheduleIds');
         if (v['assistancePlanIds'] != null) {
           _refs(v['assistancePlanIds'], '$vat.assistancePlanIds');
@@ -912,7 +992,108 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
         }
         _object(v['compatibilities'], '$vat.compatibilities');
         _object(v['validExample'], '$vat.validExample');
+        if (v['componentSelections'] case final List<Object?> selections) {
+          for (var j = 0; j < selections.length; j++) {
+            final selection = _object(
+              selections[j],
+              '$vat.componentSelections[$j]',
+            );
+            _exact(selection, {
+              'parameterId',
+              'targetComponentId',
+              'choices',
+            }, '$vat.componentSelections[$j]');
+            _ref(
+              selection['targetComponentId'],
+              '$vat.componentSelections[$j].targetComponentId',
+            );
+            final choices = _objects(
+              selection['choices'],
+              '$vat.componentSelections[$j].choices',
+            );
+            for (var k = 0; k < choices.length; k++) {
+              _exact(choices[k], {
+                'value',
+                'componentId',
+              }, '$vat.componentSelections[$j].choices[$k]');
+              _ref(
+                choices[k]['componentId'],
+                '$vat.componentSelections[$j].choices[$k].componentId',
+              );
+            }
+          }
+        }
       }
+    case 'cycleOptionRecipes':
+      _exact(value, {'id', 'revision', 'warmUp', 'joker', 'deload'}, at);
+      _identity(value, at);
+      final warmUp = _object(value['warmUp'], '$at.warmUp');
+      _exact(warmUp, {'original', 'beyond'}, '$at.warmUp');
+      _recipeLeaf(warmUp['original'], '$at.warmUp.original');
+      _recipeLeaf(warmUp['beyond'], '$at.warmUp.beyond');
+      final joker = _object(value['joker'], '$at.joker');
+      _exact(joker, {'blockId', 'steps'}, '$at.joker');
+      if (joker['blockId'] is! String) {
+        throw FormatException('$at.joker.blockId must be a string');
+      }
+      final steps = _objects(joker['steps'], '$at.joker.steps');
+      for (var i = 0; i < steps.length; i++) {
+        _exact(steps[i], {
+          'cumulativeIncreaseBasisPoints',
+          'repetitions',
+        }, '$at.joker.steps[$i]');
+        if (steps[i]['cumulativeIncreaseBasisPoints'] is! int) {
+          throw FormatException('$at.joker.steps[$i] invalid increase');
+        }
+        final repetitions = _object(
+          steps[i]['repetitions'],
+          '$at.joker.steps[$i].repetitions',
+        );
+        _exact(repetitions, {'type'}, '$at.joker.steps[$i].repetitions');
+        if (repetitions['type'] != 'joker') {
+          throw FormatException(
+            '$at.joker.steps[$i] requires joker repetitions',
+          );
+        }
+      }
+      final deload = _object(value['deload'], '$at.deload');
+      _exact(deload, {
+        'type1',
+        'type2',
+        'type3',
+        'type4',
+        'type5',
+        'highIntensity',
+      }, '$at.deload');
+      for (final key in const [
+        'type1',
+        'type2',
+        'type3',
+        'type4',
+        'type5',
+        'highIntensity',
+      ]) {
+        _recipeLeaf(deload[key], '$at.deload.$key');
+      }
+    case 'templateAliases':
+      _exact(value, {
+        'legacyTemplateId',
+        'legacyVariantId',
+        'templateId',
+        'variantId',
+        'optionOverrides',
+      }, at);
+      for (final key in const [
+        'legacyTemplateId',
+        'legacyVariantId',
+        'templateId',
+        'variantId',
+      ]) {
+        if (value[key] is! String || (value[key]! as String).isEmpty) {
+          throw FormatException('$at.$key must be a non-empty string');
+        }
+      }
+      _object(value['optionOverrides'], '$at.optionOverrides');
     case 'foreverDefinitions':
       _exact(value, {
         'id',
@@ -1167,6 +1348,25 @@ void _weekPlans(List<Object?> raw, String at) {
   }
 }
 
+void _recipeLeaf(Object? raw, String at) {
+  final value = _object(raw, at);
+  if (value.keys.length != 1) {
+    throw FormatException('$at requires exactly one recipe source');
+  }
+  if (value.containsKey('componentIds')) {
+    _refs(value['componentIds'], '$at.componentIds');
+    return;
+  }
+  if (value.containsKey('byUnit')) {
+    final byUnit = _object(value['byUnit'], '$at.byUnit');
+    _exact(byUnit, {'kg', 'lb'}, '$at.byUnit');
+    _refs(byUnit['kg'], '$at.byUnit.kg');
+    _refs(byUnit['lb'], '$at.byUnit.lb');
+    return;
+  }
+  throw FormatException('$at unknown recipe source');
+}
+
 void _condition(Object? raw, String at) {
   final value = _object(raw, at);
   final type = value['type'];
@@ -1222,6 +1422,20 @@ void _block(Object? raw, String at) {
           '$at primitive repetitions',
           optional: {'minimum'},
         );
+      case 'joker':
+        _exact(reps, {'type'}, '$at primitive repetitions');
+      case 'percentage_thresholds':
+        _exact(reps, {'type', 'thresholds'}, '$at primitive repetitions');
+        final thresholds = _objects(
+          reps['thresholds'],
+          '$at primitive repetitions.thresholds',
+        );
+        for (var j = 0; j < thresholds.length; j++) {
+          _exact(thresholds[j], {
+            'maximumBasisPoints',
+            'count',
+          }, '$at primitive repetitions.thresholds[$j]');
+        }
       default:
         throw FormatException('unknown primitive repetition ${reps['type']}');
     }
@@ -1252,6 +1466,34 @@ void _block(Object? raw, String at) {
         _exact(load, {'type', 'centiUnits', 'unit'}, '$at primitive load');
       case 'bodyweight' || 'unloaded':
         _exact(load, {'type'}, '$at primitive load');
+      case 'warm_up_base':
+        _exact(load, {'type', 'region'}, '$at primitive load');
+        if (!const {'upperBody', 'lowerBody'}.contains(load['region'])) {
+          throw FormatException(
+            'unknown warm-up base region ${load['region']}',
+          );
+        }
+      case 'training_max_ramp':
+        final anchor = load['anchor'];
+        if (anchor == 'before_main_work') {
+          _exact(load, {
+            'type',
+            'anchor',
+            'stepBasisPoints',
+            'lowerBound',
+            'lowerBoundStepFractionBasisPoints',
+          }, '$at primitive load');
+        } else if (anchor == 'warm_up_base') {
+          _exact(load, {
+            'type',
+            'anchor',
+            'anchorMultiplierBasisPoints',
+            'stepBasisPoints',
+            'maximumExclusiveBasisPoints',
+          }, '$at primitive load');
+        } else {
+          throw FormatException('unknown training max ramp anchor $anchor');
+        }
       default:
         throw FormatException('unknown primitive load ${load['type']}');
     }

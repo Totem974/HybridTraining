@@ -99,6 +99,15 @@ final class RuntimeCatalogPublisher {
               : 'reviewed',
         });
       }
+      for (final alias in records['templateAliases'] ?? const []) {
+        batch.insert('catalog_library_entries', {
+          'version': version,
+          'kind': 'template_alias',
+          'id': '${alias['legacyTemplateId']}/${alias['legacyVariantId']}',
+          'revision': 1,
+          'payload_json': jsonEncode(alias),
+        });
+      }
       for (final entry in records['inventory'] ?? const []) {
         batch.insert('catalog_inventory', {
           'version': version,
@@ -143,6 +152,15 @@ final class RuntimeCatalogPublisher {
             'payload_json': jsonEncode(entry),
           });
         }
+      }
+      for (final recipe in records['cycleOptionRecipes'] ?? const []) {
+        batch.insert('catalog_library_entries', {
+          'version': version,
+          'kind': 'cycle_option_recipe',
+          'id': recipe['id'],
+          'revision': recipe['revision'],
+          'payload_json': jsonEncode(recipe),
+        });
       }
 
       final components = <String, Map<String, Object?>>{};

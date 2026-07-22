@@ -12,16 +12,27 @@ void main() {
     expect(document.keys.toSet(), {'schemaVersion', 'kind', 'schedules'});
     final schedules = (document['schedules']! as List<Object?>)
         .cast<Map<String, Object?>>();
-    expect(schedules, hasLength(3));
+    expect(schedules, hasLength(5));
     expect(
       schedules.map((schedule) => schedule['id']),
       containsAll([
-        'classic_extended_three_day_full_body',
         'classic_extended_two_day_option_one',
         'classic_extended_two_day_option_two',
+        'classic_for_beginners_three_day',
+        'classic_full_body_three_day',
+        'classic_full_body_full_boring_three_day',
       ]),
     );
-    expect((schedules.first['sessions']! as List<Object?>), hasLength(3));
+    for (final schedule in schedules) {
+      expect(schedule['sessions'], isNotEmpty);
+    }
+    expect(
+      (schedules.singleWhere(
+            (schedule) => schedule['id'] == 'classic_full_body_three_day',
+          )['sessions']!
+          as List<Object?>),
+      hasLength(3),
+    );
   });
 
   test('extended options are closed and have complete conditions', () {
@@ -29,12 +40,12 @@ void main() {
     expect(document.keys.toSet(), {'schemaVersion', 'kind', 'optionSchemas'});
     final schemas = (document['optionSchemas']! as List<Object?>)
         .cast<Map<String, Object?>>();
-    expect(schemas, hasLength(3));
+    expect(schemas, hasLength(5));
     for (final schema in schemas) {
       for (final parameter
           in (schema['parameters']! as List<Object?>)
               .cast<Map<String, Object?>>()) {
-        expect(parameter.keys.toSet(), {
+        final expectedKeys = {
           'id',
           'type',
           'scope',
@@ -46,7 +57,17 @@ void main() {
           'visibleWhen',
           'enabledWhen',
           'requiredWhen',
-        });
+        };
+        if (parameter.containsKey('presentationGroup')) {
+          expectedKeys.add('presentationGroup');
+          expect(parameter['presentationGroup'], 'hidden');
+        }
+        if (parameter.containsKey('labelEn')) {
+          expectedKeys.addAll({'labelEn', 'labelFr'});
+          expect(parameter['labelEn'], isNotEmpty);
+          expect(parameter['labelFr'], isNotEmpty);
+        }
+        expect(parameter.keys.toSet(), expectedKeys);
         expect(parameter['visibleWhen'], {'type': 'always'});
         expect(parameter['enabledWhen'], {'type': 'always'});
         expect(parameter['requiredWhen'], {'type': 'always'});
@@ -60,7 +81,7 @@ void main() {
     );
     final components = (componentsDocument['components']! as List<Object?>)
         .cast<Map<String, Object?>>();
-    expect(components, hasLength(32));
+    expect(components, hasLength(44));
     for (final component in components) {
       final compatibility =
           component['compatibilities']! as Map<String, Object?>;
@@ -82,27 +103,50 @@ void main() {
         .single;
     expect(variant['weekPlans'], hasLength(4));
     expect((variant['scheduleIds']! as List<Object?>).single, {
-      'id': 'classic_extended_three_day_full_body',
+      'id': 'classic_for_beginners_three_day',
       'revision': 1,
     });
   });
 
-  test('Full Body phases one to three preserve two four-week cycles', () {
+  test('Full Body is canonical with three four-week variants and aliases', () {
     final document = load('catalog_src/classic/extended/templates.json');
     final templates = (document['templates']! as List<Object?>)
         .cast<Map<String, Object?>>();
-    for (var phaseNumber = 1; phaseNumber <= 3; phaseNumber++) {
-      final template = templates.singleWhere(
-        (value) => value['id'] == 'classic_full_body_phase_$phaseNumber',
-      );
-      final variant = (template['variants']! as List<Object?>)
-          .cast<Map<String, Object?>>()
-          .single;
-      final phase = (variant['phases']! as List<Object?>)
-          .cast<Map<String, Object?>>()
-          .single;
-      expect(phase['repeatCount'], 2);
-      expect(phase['weekPlans'], hasLength(4));
+    final template = templates.singleWhere(
+      (value) => value['id'] == 'classic_full_body',
+    );
+    expect(template['surface'], 'cyclePublic');
+    final variants = (template['variants']! as List<Object?>)
+        .cast<Map<String, Object?>>();
+    expect(variants.map((variant) => variant['id']).toSet(), {
+      'original',
+      'updated',
+      'full_boring',
+    });
+    for (final variant in variants) {
+      expect(variant, isNot(contains('phases')));
+      expect(variant['weekPlans'], hasLength(4));
+      expect(variant['scheduleIds'], isNotEmpty);
     }
+
+    final aliasDocument = load(
+      'catalog_src/classic/extended/template_aliases.json',
+    );
+    final aliases = (aliasDocument['templateAliases']! as List<Object?>)
+        .cast<Map<String, Object?>>();
+    expect(aliases, hasLength(3));
+    expect(aliases.map((alias) => alias['legacyTemplateId']).toSet(), {
+      'classic_full_body_phase_1',
+      'classic_full_body_phase_2',
+      'classic_full_body_phase_3',
+    });
+    expect(
+      aliases.map((alias) => alias['templateId']),
+      everyElement('classic_full_body'),
+    );
+    expect(
+      aliases.map((alias) => alias['variantId']),
+      everyElement('original'),
+    );
   });
 }

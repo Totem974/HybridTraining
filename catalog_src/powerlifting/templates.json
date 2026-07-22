@@ -5,6 +5,7 @@
     {
       "id": "powerlifting_classic_531",
       "revision": 1,
+      "surface": "cyclePublic",
       "labels": {
         "en": "Classic 5/3/1 for powerlifting",
         "fr": "5/3/1 classique pour powerlifting"

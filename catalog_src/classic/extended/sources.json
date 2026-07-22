@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "kind": "sources",
+  "sources": [
+    {
+      "ruleId": "app.full_body.updated",
+      "work": "fivethreeone.app calculator",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "Full Body / Updated",
+      "reviewStatus": "referenceAppObserved"
+    },
+    {
+      "ruleId": "app.full_body.full_boring",
+      "work": "fivethreeone.app calculator",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "Full Body / Full Boring",
+      "reviewStatus": "referenceAppObserved"
+    }
+  ]
+}

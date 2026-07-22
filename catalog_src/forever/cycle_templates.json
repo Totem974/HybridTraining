@@ -4,6 +4,7 @@
   "templates": [
     {
       "id":"forever_bbb_leader","revision":1,
+      "surface":"foreverInternal",
       "labels":{"en":"Boring But Big Leader","fr":"Boring But Big Leader"},
       "sourceRuleIds":["fv.forever.bbb_leader.p53_58"],
       "variants":[{
@@ -24,6 +25,7 @@
     },
     {
       "id":"forever_original_531_anchor","revision":1,
+      "surface":"foreverInternal",
       "labels":{"en":"Original 5/3/1 Anchor","fr":"5/3/1 Original Anchor"},
       "sourceRuleIds":["fv.forever.original_anchor.p169_170"],
       "variants":[{
@@ -44,6 +46,7 @@
     },
     {
       "id":"forever_7th_week_protocol","revision":1,
+      "surface":"foreverInternal",
       "labels":{"en":"7th Week Protocol","fr":"Protocole de la 7e semaine"},
       "sourceRuleIds":["fv.forever.tm_test.p20_23","fv.forever.deload.p21_23"],
       "variants":[

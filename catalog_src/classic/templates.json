@@ -5,9 +5,10 @@
     {
       "id": "classic_531",
       "revision": 1,
+      "surface": "cyclePublic",
       "labels": {
         "en": "Classic 5/3/1",
-        "fr": "Classic 5/3/1"
+        "fr": "5/3/1 classique"
       },
       "sourceRuleIds": [
         "or.classic.four_day"
@@ -17,12 +18,16 @@
           "id": "four_day",
           "revision": 1,
           "labels": {
-            "en": "Four day",
-            "fr": "Four day"
+            "en": "Standard 5/3/1",
+            "fr": "5/3/1 standard"
           },
           "sourceRuleIds": [
             "or.classic.four_day"
           ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
           "optionSchemaId": {
             "id": "classic_531_options",
             "revision": 1
@@ -106,6 +111,10 @@
             "or.classic.three_day_variant",
             "or.schedule.three_day"
           ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
           "optionSchemaId": {
             "id": "classic_531_options",
             "revision": 1
@@ -190,17 +199,21 @@
             "or.schedule.two_day_option_1",
             "or.schedule.two_day_option_2"
           ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
           "optionSchemaId": {
             "id": "classic_531_options",
             "revision": 1
           },
           "scheduleIds": [
             {
-              "id": "schedule_two_day_multi_movement_option_one",
+              "id": "schedule_two_day_rotating_four_lifts",
               "revision": 1
             },
             {
-              "id": "schedule_two_day_rotating_four_lifts",
+              "id": "schedule_two_day_multi_movement_option_one",
               "revision": 1
             }
           ],
@@ -209,7 +222,7 @@
           },
           "validExample": {
             "trainingMaxRatioBasisPoints": 9000,
-            "scheduleId": "schedule_two_day_multi_movement_option_one",
+            "scheduleId": "schedule_two_day_rotating_four_lifts",
             "includeWarmUp": true,
             "includeDeload": true
           },
@@ -271,6 +284,7 @@
     {
       "id": "classic_boring_but_big",
       "revision": 1,
+      "surface": "cyclePublic",
       "labels": {
         "en": "Boring But Big",
         "fr": "Boring But Big"
@@ -283,12 +297,16 @@
           "id": "same_lift_5x10",
           "revision": 1,
           "labels": {
-            "en": "Original (5x10)",
-            "fr": "Original (5x10)"
+            "en": "Same lift, 5 x 10 at 50%",
+            "fr": "Même mouvement, 5 × 10 à 50 %"
           },
           "sourceRuleIds": [
             "or.bbb.same_lift"
           ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
           "optionSchemaId": {
             "id": "classic_531_options",
             "revision": 1
@@ -296,6 +314,10 @@
           "scheduleIds": [
             {
               "id": "schedule_four_day_fixed",
+              "revision": 1
+            },
+            {
+              "id": "schedule_three_day_rotating",
               "revision": 1
             }
           ],
@@ -378,6 +400,7 @@
     {
       "id": "classic_jack_shit",
       "revision": 1,
+      "surface": "cyclePublic",
       "labels": {
         "en": "I'm Not Doing Jack Shit",
         "fr": "I'm Not Doing Jack Shit"
@@ -396,6 +419,10 @@
           "sourceRuleIds": [
             "or.assistance.jack_shit"
           ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
           "optionSchemaId": {
             "id": "classic_531_options",
             "revision": 1
@@ -481,9 +508,10 @@
     {
       "id": "classic_simplest_strength",
       "revision": 1,
+      "surface": "cyclePublic",
       "labels": {
         "en": "Simplest Strength Template",
-        "fr": "Simplest Strength Template"
+        "fr": "Template Simplest Strength"
       },
       "sourceRuleIds": [
         "or.sst.progression",
@@ -495,12 +523,16 @@
           "revision": 1,
           "labels": {
             "en": "Original progression",
-            "fr": "Original progression"
+            "fr": "Progression originale"
           },
           "sourceRuleIds": [
             "or.sst.progression",
             "or.sst.pairings"
           ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
           "optionSchemaId": {
             "id": "classic_simplest_strength_options",
             "revision": 1
@@ -603,6 +635,10 @@
             "or.sst.progression",
             "or.sst.pairings"
           ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
           "optionSchemaId": {
             "id": "classic_simplest_strength_options",
             "revision": 1
@@ -699,6 +735,7 @@
     {
       "id": "classic_triumvirate",
       "revision": 1,
+      "surface": "cyclePublic",
       "labels": {
         "en": "Triumvirate",
         "fr": "Triumvirate"
@@ -711,12 +748,16 @@
           "id": "four_day",
           "revision": 1,
           "labels": {
-            "en": "Four day",
-            "fr": "Four day"
+            "en": "Standard",
+            "fr": "Standard"
           },
           "sourceRuleIds": [
             "or.assistance.triumvirate"
           ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
           "optionSchemaId": {
             "id": "classic_531_options",
             "revision": 1
@@ -724,6 +765,10 @@
           "scheduleIds": [
             {
               "id": "schedule_four_day_fixed",
+              "revision": 1
+            },
+            {
+              "id": "schedule_three_day_rotating",
               "revision": 1
             }
           ],
@@ -791,9 +836,10 @@
     {
       "id": "classic_periodization_bible",
       "revision": 1,
+      "surface": "cyclePublic",
       "labels": {
         "en": "Periodization Bible",
-        "fr": "Periodization Bible"
+        "fr": "Bible de la périodisation"
       },
       "sourceRuleIds": [
         "or.assistance.periodization_bible"
@@ -803,12 +849,16 @@
           "id": "four_day",
           "revision": 1,
           "labels": {
-            "en": "Four day",
-            "fr": "Four day"
+            "en": "Standard",
+            "fr": "Standard"
           },
           "sourceRuleIds": [
             "or.assistance.periodization_bible"
           ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
           "optionSchemaId": {
             "id": "classic_531_options",
             "revision": 1
@@ -816,6 +866,10 @@
           "scheduleIds": [
             {
               "id": "schedule_four_day_fixed",
+              "revision": 1
+            },
+            {
+              "id": "schedule_three_day_rotating",
               "revision": 1
             }
           ],
@@ -883,9 +937,10 @@
     {
       "id": "classic_bodyweight",
       "revision": 1,
+      "surface": "cyclePublic",
       "labels": {
         "en": "Bodyweight assistance",
-        "fr": "Bodyweight assistance"
+        "fr": "Assistance au poids du corps"
       },
       "sourceRuleIds": [
         "or.assistance.bodyweight"
@@ -895,19 +950,27 @@
           "id": "four_day",
           "revision": 1,
           "labels": {
-            "en": "Four day",
-            "fr": "Four day"
+            "en": "Standard",
+            "fr": "Standard"
           },
           "sourceRuleIds": [
             "or.assistance.bodyweight"
           ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
           "optionSchemaId": {
-            "id": "classic_531_options",
+            "id": "classic_bodyweight_options",
             "revision": 1
           },
           "scheduleIds": [
             {
               "id": "schedule_four_day_fixed",
+              "revision": 1
+            },
+            {
+              "id": "schedule_three_day_rotating",
               "revision": 1
             }
           ],

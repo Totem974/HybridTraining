@@ -1,709 +1,857 @@
-﻿{
-    "schemaVersion":  1,
-    "kind":  "templates",
-    "templates":  [
-                      {
-                          "id":  "classic_for_beginners",
-                          "revision":  1,
-                          "labels":  {
-                                         "en":  "5/3/1 for Beginners",
-                                         "fr":  "5/3/1 pour debutants"
-                                     },
-                          "sourceRuleIds":  [
-                                                "or.beginner.full_body"
-                                            ],
-                          "variants":  [
-                                           {
-                                               "id":  "original_progression",
-                                               "revision":  1,
-                                               "labels":  {
-                                                              "en":  "Original progression",
-                                                              "fr":  "Progression originale"
-                                                          },
-                                               "sourceRuleIds":  [
-                                                                     "or.beginner.full_body"
-                                                                 ],
-                                               "weekPlans":  [
-                                                                 {
-                                                                     "weekNumber":  1,
-                                                                     "componentIds":  [
-                                                                                          {
-                                                                                              "id":  "classic_beginner_main_squat_week_1",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_main_deadlift_press_week_1",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_main_bench_week_1",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_supplemental_bench",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_supplemental_squat",
-                                                                                              "revision":  1
-                                                                                          }
-                                                                                      ]
-                                                                 },
-                                                                 {
-                                                                     "weekNumber":  2,
-                                                                     "componentIds":  [
-                                                                                          {
-                                                                                              "id":  "classic_beginner_main_squat_week_2",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_main_deadlift_press_week_2",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_main_bench_week_2",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_supplemental_bench",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_supplemental_squat",
-                                                                                              "revision":  1
-                                                                                          }
-                                                                                      ]
-                                                                 },
-                                                                 {
-                                                                     "weekNumber":  3,
-                                                                     "componentIds":  [
-                                                                                          {
-                                                                                              "id":  "classic_beginner_main_squat_week_3",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_main_deadlift_press_week_3",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_main_bench_week_3",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_supplemental_bench",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_supplemental_squat",
-                                                                                              "revision":  1
-                                                                                          }
-                                                                                      ]
-                                                                 },
-                                                                 {
-                                                                     "weekNumber":  4,
-                                                                     "componentIds":  [
-                                                                                          {
-                                                                                              "id":  "classic_beginner_main_squat_week_4",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_main_deadlift_press_week_4",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_main_bench_week_4",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_supplemental_bench",
-                                                                                              "revision":  1
-                                                                                          },
-                                                                                          {
-                                                                                              "id":  "classic_beginner_supplemental_squat",
-                                                                                              "revision":  1
-                                                                                          }
-                                                                                      ]
-                                                                 }
-                                                             ],
-                                               "optionSchemaId":  {
-                                                                      "id":  "classic_extended_beginner_options",
-                                                                      "revision":  1
-                                                                  },
-                                               "scheduleIds":  [
-                                                                   {
-                                                                       "id":  "classic_extended_three_day_full_body",
-                                                                       "revision":  1
-                                                                   }
-                                                               ],
-                                               "compatibilities":  {
-                                                                       "trainingMaxRequired":  true,
-                                                                       "sessionTargetingRequired":  true,
-                                                                       "requiredMovementIds":  [
-                                                                                                   "back_squat",
-                                                                                                   "bench_press",
-                                                                                                   "deadlift",
-                                                                                                   "overhead_press"
-                                                                                               ]
-                                                                   },
-                                               "validExample":  {
-                                                                    "trainingMaxRatioBasisPoints":  9000,
-                                                                    "scheduleId":  "classic_extended_three_day_full_body",
-                                                                    "supplementalProgression":  "beginner"
-                                                                }
-                                           }
-                                       ]
-                      },
-                      {
-                          "id":  "classic_full_body_phase_1",
-                          "revision":  1,
-                          "labels":  {
-                                         "en":  "5/3/1 Full Body Training - Phase 1",
-                                         "fr":  "5/3/1 Full Body - Phase 1"
-                                     },
-                          "sourceRuleIds":  [
-                                                "or.full_body.phase_1"
-                                            ],
-                          "variants":  [
-                                           {
-                                               "id":  "phase_1",
-                                               "revision":  1,
-                                               "labels":  {
-                                                              "en":  "Phase 1",
-                                                              "fr":  "Phase 1"
-                                                          },
-                                               "sourceRuleIds":  [
-                                                                     "or.full_body.phase_1"
-                                                                 ],
-                                               "phases":  [
-                                                              {
-                                                                  "id":  "phase_1",
-                                                                  "repeatCount":  2,
-                                                                  "weekPlans":  [
-                                                                                    {
-                                                                                        "weekNumber":  1,
-                                                                                        "componentIds":  [
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_squat_week_1",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_bench_week_1",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_press_deadlift_week_1",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_phase_1_extra_squat",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_press",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_row",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_chin_up",
-                                                                                                                 "revision":  1
-                                                                                                             }
-                                                                                                         ]
-                                                                                    },
-                                                                                    {
-                                                                                        "weekNumber":  2,
-                                                                                        "componentIds":  [
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_squat_week_2",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_bench_week_2",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_press_deadlift_week_2",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_phase_1_extra_squat",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_press",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_row",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_chin_up",
-                                                                                                                 "revision":  1
-                                                                                                             }
-                                                                                                         ]
-                                                                                    },
-                                                                                    {
-                                                                                        "weekNumber":  3,
-                                                                                        "componentIds":  [
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_squat_week_3",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_bench_week_3",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_press_deadlift_week_3",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_phase_1_extra_squat",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_press",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_row",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_chin_up",
-                                                                                                                 "revision":  1
-                                                                                                             }
-                                                                                                         ]
-                                                                                    },
-                                                                                    {
-                                                                                        "weekNumber":  4,
-                                                                                        "componentIds":  [
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_squat_week_4",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_bench_week_4",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_press_deadlift_week_4",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_phase_1_extra_squat",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_press",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_row",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_chin_up",
-                                                                                                                 "revision":  1
-                                                                                                             }
-                                                                                                         ]
-                                                                                    }
-                                                                                ]
-                                                              }
-                                                          ],
-                                               "optionSchemaId":  {
-                                                                      "id":  "classic_extended_full_body_options",
-                                                                      "revision":  1
-                                                                  },
-                                               "scheduleIds":  [
-                                                                   {
-                                                                       "id":  "classic_extended_three_day_full_body",
-                                                                       "revision":  1
-                                                                   }
-                                                               ],
-                                               "compatibilities":  {
-                                                                       "trainingMaxRequired":  true,
-                                                                       "sessionTargetingRequired":  true,
-                                                                       "minimumDurationMonths":  2
-                                                                   },
-                                               "validExample":  {
-                                                                    "trainingMaxRatioBasisPoints":  9000,
-                                                                    "scheduleId":  "classic_extended_three_day_full_body",
-                                                                    "phaseRepeatCount":  2
-                                                                }
-                                           }
-                                       ]
-                      },
-                      {
-                          "id":  "classic_full_body_phase_2",
-                          "revision":  1,
-                          "labels":  {
-                                         "en":  "5/3/1 Full Body Training - Phase 2",
-                                         "fr":  "5/3/1 Full Body - Phase 2"
-                                     },
-                          "sourceRuleIds":  [
-                                                "or.full_body.phase_2"
-                                            ],
-                          "variants":  [
-                                           {
-                                               "id":  "phase_2",
-                                               "revision":  1,
-                                               "labels":  {
-                                                              "en":  "Phase 2",
-                                                              "fr":  "Phase 2"
-                                                          },
-                                               "sourceRuleIds":  [
-                                                                     "or.full_body.phase_2"
-                                                                 ],
-                                               "phases":  [
-                                                              {
-                                                                  "id":  "phase_2",
-                                                                  "repeatCount":  2,
-                                                                  "weekPlans":  [
-                                                                                    {
-                                                                                        "weekNumber":  1,
-                                                                                        "componentIds":  [
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_squat_week_1",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_bench_week_1",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_press_deadlift_week_1",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_phase_2_extra_squat",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_press",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_row",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_chin_up",
-                                                                                                                 "revision":  1
-                                                                                                             }
-                                                                                                         ]
-                                                                                    },
-                                                                                    {
-                                                                                        "weekNumber":  2,
-                                                                                        "componentIds":  [
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_squat_week_2",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_bench_week_2",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_press_deadlift_week_2",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_phase_2_extra_squat",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_press",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_row",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_chin_up",
-                                                                                                                 "revision":  1
-                                                                                                             }
-                                                                                                         ]
-                                                                                    },
-                                                                                    {
-                                                                                        "weekNumber":  3,
-                                                                                        "componentIds":  [
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_squat_week_3",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_bench_week_3",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_press_deadlift_week_3",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_phase_2_extra_squat",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_press",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_row",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_chin_up",
-                                                                                                                 "revision":  1
-                                                                                                             }
-                                                                                                         ]
-                                                                                    },
-                                                                                    {
-                                                                                        "weekNumber":  4,
-                                                                                        "componentIds":  [
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_squat_week_4",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_bench_week_4",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_press_deadlift_week_4",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_phase_2_extra_squat",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_press",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_row",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_chin_up",
-                                                                                                                 "revision":  1
-                                                                                                             }
-                                                                                                         ]
-                                                                                    }
-                                                                                ]
-                                                              }
-                                                          ],
-                                               "optionSchemaId":  {
-                                                                      "id":  "classic_extended_full_body_options",
-                                                                      "revision":  1
-                                                                  },
-                                               "scheduleIds":  [
-                                                                   {
-                                                                       "id":  "classic_extended_three_day_full_body",
-                                                                       "revision":  1
-                                                                   }
-                                                               ],
-                                               "compatibilities":  {
-                                                                       "trainingMaxRequired":  true,
-                                                                       "sessionTargetingRequired":  true,
-                                                                       "minimumDurationMonths":  2
-                                                                   },
-                                               "validExample":  {
-                                                                    "trainingMaxRatioBasisPoints":  9000,
-                                                                    "scheduleId":  "classic_extended_three_day_full_body",
-                                                                    "phaseRepeatCount":  2
-                                                                }
-                                           }
-                                       ]
-                      },
-                      {
-                          "id":  "classic_full_body_phase_3",
-                          "revision":  1,
-                          "labels":  {
-                                         "en":  "5/3/1 Full Body Training - Phase 3",
-                                         "fr":  "5/3/1 Full Body - Phase 3"
-                                     },
-                          "sourceRuleIds":  [
-                                                "or.full_body.phase_3"
-                                            ],
-                          "variants":  [
-                                           {
-                                               "id":  "phase_3",
-                                               "revision":  1,
-                                               "labels":  {
-                                                              "en":  "Phase 3",
-                                                              "fr":  "Phase 3"
-                                                          },
-                                               "sourceRuleIds":  [
-                                                                     "or.full_body.phase_3"
-                                                                 ],
-                                               "phases":  [
-                                                              {
-                                                                  "id":  "phase_3",
-                                                                  "repeatCount":  2,
-                                                                  "weekPlans":  [
-                                                                                    {
-                                                                                        "weekNumber":  1,
-                                                                                        "componentIds":  [
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_squat_week_1",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_bench_week_1",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_press_deadlift_week_1",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_phase_3_extra_squat",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_press",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_row",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_chin_up",
-                                                                                                                 "revision":  1
-                                                                                                             }
-                                                                                                         ]
-                                                                                    },
-                                                                                    {
-                                                                                        "weekNumber":  2,
-                                                                                        "componentIds":  [
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_squat_week_2",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_bench_week_2",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_press_deadlift_week_2",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_phase_3_extra_squat",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_press",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_row",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_chin_up",
-                                                                                                                 "revision":  1
-                                                                                                             }
-                                                                                                         ]
-                                                                                    },
-                                                                                    {
-                                                                                        "weekNumber":  3,
-                                                                                        "componentIds":  [
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_squat_week_3",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_bench_week_3",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_press_deadlift_week_3",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_phase_3_extra_squat",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_press",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_row",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_chin_up",
-                                                                                                                 "revision":  1
-                                                                                                             }
-                                                                                                         ]
-                                                                                    },
-                                                                                    {
-                                                                                        "weekNumber":  4,
-                                                                                        "componentIds":  [
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_squat_week_4",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_bench_week_4",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_main_press_deadlift_week_4",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_phase_3_extra_squat",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_press",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_dumbbell_row",
-                                                                                                                 "revision":  1
-                                                                                                             },
-                                                                                                             {
-                                                                                                                 "id":  "classic_full_body_assistance_chin_up",
-                                                                                                                 "revision":  1
-                                                                                                             }
-                                                                                                         ]
-                                                                                    }
-                                                                                ]
-                                                              }
-                                                          ],
-                                               "optionSchemaId":  {
-                                                                      "id":  "classic_extended_full_body_options",
-                                                                      "revision":  1
-                                                                  },
-                                               "scheduleIds":  [
-                                                                   {
-                                                                       "id":  "classic_extended_three_day_full_body",
-                                                                       "revision":  1
-                                                                   }
-                                                               ],
-                                               "compatibilities":  {
-                                                                       "trainingMaxRequired":  true,
-                                                                       "sessionTargetingRequired":  true,
-                                                                       "minimumDurationMonths":  2
-                                                                   },
-                                               "validExample":  {
-                                                                    "trainingMaxRatioBasisPoints":  9000,
-                                                                    "scheduleId":  "classic_extended_three_day_full_body",
-                                                                    "phaseRepeatCount":  2
-                                                                }
-                                           }
-                                       ]
-                      }
-                  ]
+{
+  "schemaVersion": 1,
+  "kind": "templates",
+  "templates": [
+    {
+      "id": "classic_for_beginners",
+      "revision": 1,
+      "surface": "cyclePublic",
+      "labels": {
+        "en": "5/3/1 for Beginners",
+        "fr": "5/3/1 pour debutants"
+      },
+      "sourceRuleIds": [
+        "or.beginner.full_body"
+      ],
+      "variants": [
+        {
+          "id": "original_progression",
+          "revision": 1,
+          "labels": {
+            "en": "Original progression",
+            "fr": "Progression originale"
+          },
+          "sourceRuleIds": [
+            "or.beginner.full_body"
+          ],
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "classic_beginner_main_squat_week_1",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_main_deadlift_press_week_1",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_main_bench_week_1",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_supplemental_bench",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_supplemental_squat",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "classic_beginner_main_squat_week_2",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_main_deadlift_press_week_2",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_main_bench_week_2",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_supplemental_bench",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_supplemental_squat",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "classic_beginner_main_squat_week_3",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_main_deadlift_press_week_3",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_main_bench_week_3",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_supplemental_bench",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_supplemental_squat",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "classic_beginner_main_squat_week_4",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_main_deadlift_press_week_4",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_main_bench_week_4",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_supplemental_bench",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_beginner_supplemental_squat",
+                  "revision": 1
+                }
+              ]
+            }
+          ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
+          "optionSchemaId": {
+            "id": "classic_extended_beginner_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "classic_for_beginners_three_day",
+              "revision": 1
+            }
+          ],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "sessionTargetingRequired": true,
+            "requiredMovementIds": [
+              "back_squat",
+              "bench_press",
+              "deadlift",
+              "overhead_press"
+            ]
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "classic_for_beginners_three_day",
+            "supplementalProgression": "beginner"
+          }
+        }
+      ]
+    },
+    {
+      "id": "classic_full_body",
+      "revision": 1,
+      "surface": "cyclePublic",
+      "labels": {
+        "en": "Full Body",
+        "fr": "Full Body"
+      },
+      "sourceRuleIds": [
+        "or.full_body.phase_1",
+        "or.full_body.phase_2",
+        "or.full_body.phase_3",
+        "app.full_body.updated",
+        "app.full_body.full_boring"
+      ],
+      "variants": [
+        {
+          "id": "original",
+          "revision": 1,
+          "labels": {
+            "en": "Original",
+            "fr": "Original"
+          },
+          "sourceRuleIds": [
+            "or.full_body.phase_1",
+            "or.full_body.phase_2",
+            "or.full_body.phase_3"
+          ],
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "classic_full_body_main_squat_week_1",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_bench_week_1",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_press_deadlift_week_1",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_squat_40x5_50x5_60x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_press",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_row",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_chin_up",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "classic_full_body_main_squat_week_2",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_bench_week_2",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_press_deadlift_week_2",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_squat_40x5_50x5_60x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_press",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_row",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_chin_up",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "classic_full_body_main_squat_week_3",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_bench_week_3",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_press_deadlift_week_3",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_squat_40x5_50x5_60x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_press",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_row",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_chin_up",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "classic_full_body_main_squat_week_4",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_bench_week_4",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_press_deadlift_week_4",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_squat_40x5_50x5_60x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_press",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_row",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_chin_up",
+                  "revision": 1
+                }
+              ]
+            }
+          ],
+          "componentSelections": [
+            {
+              "parameterId": "phase",
+              "targetComponentId": {
+                "id": "classic_full_body_profile_squat_40x5_50x5_60x5",
+                "revision": 1
+              },
+              "choices": [
+                {
+                  "value": "phase_one",
+                  "componentId": {
+                    "id": "classic_full_body_profile_squat_40x5_50x5_60x5",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": "phase_two",
+                  "componentId": {
+                    "id": "classic_full_body_profile_squat_65x3_75x3_85x3",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": "phase_three",
+                  "componentId": {
+                    "id": "classic_full_body_profile_squat_75x3_85x3_95x1",
+                    "revision": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
+          "optionSchemaId": {
+            "id": "classic_full_body_original_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "classic_full_body_three_day",
+              "revision": 1
+            }
+          ],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "sessionTargetingRequired": true,
+            "minimumDurationMonths": 2
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "classic_full_body_three_day",
+            "phase": "phase_one"
+          }
+        },
+        {
+          "id": "updated",
+          "revision": 1,
+          "labels": {
+            "en": "Updated",
+            "fr": "Updated"
+          },
+          "sourceRuleIds": [
+            "app.full_body.updated"
+          ],
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "classic_full_body_main_squat_week_1",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_bench_week_1",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_press_deadlift_week_1",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_squat_65x5_75x5_85x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_press",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_row",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_chin_up",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "classic_full_body_main_squat_week_2",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_bench_week_2",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_press_deadlift_week_2",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_squat_65x5_75x5_85x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_press",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_row",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_chin_up",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "classic_full_body_main_squat_week_3",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_bench_week_3",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_press_deadlift_week_3",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_squat_65x5_75x5_85x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_press",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_row",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_chin_up",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "classic_full_body_main_squat_week_4",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_bench_week_4",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_press_deadlift_week_4",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_squat_65x5_75x5_85x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_press",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_dumbbell_row",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_assistance_chin_up",
+                  "revision": 1
+                }
+              ]
+            }
+          ],
+          "componentSelections": [
+            {
+              "parameterId": "squat_set_profile",
+              "targetComponentId": {
+                "id": "classic_full_body_profile_squat_65x5_75x5_85x5",
+                "revision": 1
+              },
+              "choices": [
+                {
+                  "value": "65x5_75x5_85x5",
+                  "componentId": {
+                    "id": "classic_full_body_profile_squat_65x5_75x5_85x5",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": "70x3_80x3_90x3",
+                  "componentId": {
+                    "id": "classic_full_body_profile_squat_70x3_80x3_90x3",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": "75x5_85x3_95x1",
+                  "componentId": {
+                    "id": "classic_full_body_profile_squat_75x5_85x3_95x1",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": "80x1_90x1_100x1",
+                  "componentId": {
+                    "id": "classic_full_body_profile_squat_80x1_90x1_100x1",
+                    "revision": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
+          "optionSchemaId": {
+            "id": "classic_full_body_updated_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "classic_full_body_three_day",
+              "revision": 1
+            }
+          ],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "sessionTargetingRequired": true
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "classic_full_body_three_day",
+            "squatSetProfile": "65x5_75x5_85x5"
+          }
+        },
+        {
+          "id": "full_boring",
+          "revision": 1,
+          "labels": {
+            "en": "Full Boring",
+            "fr": "Full Boring"
+          },
+          "sourceRuleIds": [
+            "app.full_body.full_boring"
+          ],
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "classic_full_body_main_squat_week_1",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_bench_week_1",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_press_deadlift_week_1",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_squat_65x5_75x5_85x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_bench_65x5_75x5_85x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_deadlift_65x3_75x3_85x3",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "classic_full_body_main_squat_week_2",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_bench_week_2",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_press_deadlift_week_2",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_squat_65x5_75x5_85x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_bench_65x5_75x5_85x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_deadlift_65x3_75x3_85x3",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "classic_full_body_main_squat_week_3",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_bench_week_3",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_press_deadlift_week_3",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_squat_65x5_75x5_85x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_bench_65x5_75x5_85x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_deadlift_65x3_75x3_85x3",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "classic_full_body_main_squat_week_4",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_bench_week_4",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_main_press_deadlift_week_4",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_squat_65x5_75x5_85x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_bench_65x5_75x5_85x5",
+                  "revision": 1
+                },
+                {
+                  "id": "classic_full_body_profile_deadlift_65x3_75x3_85x3",
+                  "revision": 1
+                }
+              ]
+            }
+          ],
+          "componentSelections": [
+            {
+              "parameterId": "squat_set_profile",
+              "targetComponentId": {
+                "id": "classic_full_body_profile_squat_65x5_75x5_85x5",
+                "revision": 1
+              },
+              "choices": [
+                {
+                  "value": "65x5_75x5_85x5",
+                  "componentId": {
+                    "id": "classic_full_body_profile_squat_65x5_75x5_85x5",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": "70x3_80x3_90x3",
+                  "componentId": {
+                    "id": "classic_full_body_profile_squat_70x3_80x3_90x3",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": "75x5_85x3_95x1",
+                  "componentId": {
+                    "id": "classic_full_body_profile_squat_75x5_85x3_95x1",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": "80x1_90x1_100x1",
+                  "componentId": {
+                    "id": "classic_full_body_profile_squat_80x1_90x1_100x1",
+                    "revision": 1
+                  }
+                }
+              ]
+            },
+            {
+              "parameterId": "bench_set_profile",
+              "targetComponentId": {
+                "id": "classic_full_body_profile_bench_65x5_75x5_85x5",
+                "revision": 1
+              },
+              "choices": [
+                {
+                  "value": "65x5_75x5_85x5",
+                  "componentId": {
+                    "id": "classic_full_body_profile_bench_65x5_75x5_85x5",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": "70x3_80x3_90x3",
+                  "componentId": {
+                    "id": "classic_full_body_profile_bench_70x3_80x3_90x3",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": "75x5_85x3_95x1",
+                  "componentId": {
+                    "id": "classic_full_body_profile_bench_75x5_85x3_95x1",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": "80x1_90x1_100x1",
+                  "componentId": {
+                    "id": "classic_full_body_profile_bench_80x1_90x1_100x1",
+                    "revision": 1
+                  }
+                }
+              ]
+            },
+            {
+              "parameterId": "deadlift_set_profile",
+              "targetComponentId": {
+                "id": "classic_full_body_profile_deadlift_65x3_75x3_85x3",
+                "revision": 1
+              },
+              "choices": [
+                {
+                  "value": "65x3_75x3_85x3",
+                  "componentId": {
+                    "id": "classic_full_body_profile_deadlift_65x3_75x3_85x3",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": "70x3_80x3_90x3",
+                  "componentId": {
+                    "id": "classic_full_body_profile_deadlift_70x3_80x3_90x3",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": "75x5_85x3_95x1",
+                  "componentId": {
+                    "id": "classic_full_body_profile_deadlift_75x5_85x3_95x1",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": "80x1_90x1_100x1",
+                  "componentId": {
+                    "id": "classic_full_body_profile_deadlift_80x1_90x1_100x1",
+                    "revision": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
+          "optionSchemaId": {
+            "id": "classic_full_body_full_boring_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "classic_full_body_full_boring_three_day",
+              "revision": 1
+            }
+          ],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "sessionTargetingRequired": true
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "classic_full_body_full_boring_three_day",
+            "squatSetProfile": "65x5_75x5_85x5",
+            "benchSetProfile": "65x5_75x5_85x5",
+            "deadliftSetProfile": "65x3_75x3_85x3"
+          }
+        }
+      ]
+    }
+  ]
 }

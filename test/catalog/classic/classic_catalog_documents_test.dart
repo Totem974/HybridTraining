@@ -11,6 +11,9 @@ void main() {
     final extendedTemplates = _read(
       'catalog_src/classic/extended/templates.json',
     );
+    final templateAliases = _read(
+      'catalog_src/classic/extended/template_aliases.json',
+    );
     final assistance = _read('catalog_src/assistance/plans.v1.json');
     final classicAssistance = _read(
       'catalog_src/classic/library/assistance_plans.v1.json',
@@ -51,6 +54,11 @@ void main() {
         .followedBy(
           (extendedTemplates['templates']! as List).cast<Map>().map(
             (template) => template['id'],
+          ),
+        )
+        .followedBy(
+          (templateAliases['templateAliases']! as List).cast<Map>().map(
+            (alias) => alias['legacyTemplateId'],
           ),
         )
         .toSet();
@@ -104,7 +112,13 @@ void main() {
         }
       }
     }
-    _expectNoPlaceholder([inventory, sources, templates]);
+    _expectNoPlaceholder([
+      inventory,
+      sources,
+      templates,
+      extendedTemplates,
+      templateAliases,
+    ]);
   });
 }
 

@@ -123,6 +123,178 @@
       ]}
     },
     {
+      "id": "warmup_beyond_ramp_upper",
+      "revision": 1,
+      "role": "warm_up",
+      "labels": {"en": "Beyond warm-up ramp, upper body", "fr": "Montée d'échauffement Beyond, haut du corps"},
+      "sourceRuleIds": ["beyond_003"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["original", "beyond"], "movementIds": ["overhead_press", "bench_press"]},
+      "block": {"id": "warm_up", "role": "warm_up", "sets": [
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "unloaded"}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "warm_up_base", "region": "upperBody"}},
+        {"repetitions": {"type": "percentage_thresholds", "thresholds": [
+          {"maximumBasisPoints": 5000, "count": 5},
+          {"maximumBasisPoints": 10000, "count": 3}
+        ]}, "load": {
+          "type": "training_max_ramp",
+          "anchor": "before_main_work",
+          "stepBasisPoints": 1000,
+          "lowerBound": "warm_up_base_plus_step_fraction",
+          "lowerBoundStepFractionBasisPoints": 2500
+        }}
+      ]}
+    },
+    {
+      "id": "warmup_beyond_ramp_lower",
+      "revision": 1,
+      "role": "warm_up",
+      "labels": {"en": "Beyond warm-up ramp, lower body", "fr": "Montée d'échauffement Beyond, bas du corps"},
+      "sourceRuleIds": ["beyond_003"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["original", "beyond"], "movementIds": ["back_squat", "deadlift"]},
+      "block": {"id": "warm_up", "role": "warm_up", "sets": [
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "unloaded"}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "warm_up_base", "region": "lowerBody"}},
+        {"repetitions": {"type": "percentage_thresholds", "thresholds": [
+          {"maximumBasisPoints": 5000, "count": 5},
+          {"maximumBasisPoints": 10000, "count": 3}
+        ]}, "load": {
+          "type": "training_max_ramp",
+          "anchor": "before_main_work",
+          "stepBasisPoints": 1000,
+          "lowerBound": "warm_up_base_plus_step_fraction",
+          "lowerBoundStepFractionBasisPoints": 2500
+        }}
+      ]}
+    },
+    {
+      "id": "deload_type_2_50_60_70",
+      "revision": 1,
+      "role": "deload",
+      "labels": {"en": "Deload 2", "fr": "Deload 2"},
+      "sourceRuleIds": ["beyond_066"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "deload", "setOrder": "declared"},
+      "compatibilities": {"generations": ["original", "beyond"]},
+      "block": {"id": "deload", "role": "deload", "sets": [
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 5000}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 6000}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 7000}}
+      ]}
+    },
+    {
+      "id": "deload_type_3_65_76_85",
+      "revision": 1,
+      "role": "deload",
+      "labels": {"en": "Deload 3", "fr": "Deload 3"},
+      "sourceRuleIds": ["beyond_067"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "deload", "setOrder": "declared"},
+      "compatibilities": {"generations": ["original", "beyond"]},
+      "block": {"id": "deload", "role": "deload", "sets": [
+        {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 6500}},
+        {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 7600}},
+        {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 8500}}
+      ]}
+    },
+    {
+      "id": "deload_type_4_40_50_60",
+      "revision": 1,
+      "role": "deload",
+      "labels": {"en": "Deload 4", "fr": "Deload 4"},
+      "sourceRuleIds": ["beyond_068"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "deload", "setOrder": "declared"},
+      "compatibilities": {"generations": ["original", "beyond"]},
+      "block": {"id": "deload", "role": "deload", "sets": [
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 4000}},
+        {"repetitions": {"type": "fixed", "count": 8}, "load": {"type": "training_max_percentage", "basisPoints": 5000}},
+        {"repetitions": {"type": "fixed", "count": 6}, "load": {"type": "training_max_percentage", "basisPoints": 6000}}
+      ]}
+    },
+    {
+      "id": "deload_type_5_50_60_70",
+      "revision": 1,
+      "role": "deload",
+      "labels": {"en": "Deload 5", "fr": "Deload 5"},
+      "sourceRuleIds": ["beyond_069"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "deload", "setOrder": "declared"},
+      "compatibilities": {"generations": ["original", "beyond"]},
+      "block": {"id": "deload", "role": "deload", "sets": [
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 5000}},
+        {"repetitions": {"type": "fixed", "count": 8}, "load": {"type": "training_max_percentage", "basisPoints": 6000}},
+        {"repetitions": {"type": "fixed", "count": 6}, "load": {"type": "training_max_percentage", "basisPoints": 7000}}
+      ]}
+    },
+    {
+      "id": "deload_high_intensity_lb_upper",
+      "revision": 1,
+      "role": "deload",
+      "labels": {"en": "High Intensity deload, lb upper", "fr": "Deload haute intensité, lb haut"},
+      "sourceRuleIds": ["beyond_071"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "deload", "setOrder": "declared"},
+      "compatibilities": {"movementIds": ["overhead_press", "bench_press"], "units": ["lb"]},
+      "block": {"id": "deload", "role": "deload", "sets": [
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "unloaded"}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "fixed", "centiUnits": 9500, "unit": "lb"}},
+        {"repetitions": {"type": "percentage_thresholds", "thresholds": [{"maximumBasisPoints": 8000, "count": 3}, {"maximumBasisPoints": 10000, "count": 1}]}, "load": {"type": "training_max_ramp", "anchor": "warm_up_base", "anchorMultiplierBasisPoints": 11000, "stepBasisPoints": 1000, "maximumExclusiveBasisPoints": 9500}},
+        {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 10000}}
+      ]}
+    },
+    {
+      "id": "deload_high_intensity_lb_lower",
+      "revision": 1,
+      "role": "deload",
+      "labels": {"en": "High Intensity deload, lb lower", "fr": "Deload haute intensité, lb bas"},
+      "sourceRuleIds": ["beyond_071"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "deload", "setOrder": "declared"},
+      "compatibilities": {"movementIds": ["back_squat", "deadlift"], "units": ["lb"]},
+      "block": {"id": "deload", "role": "deload", "sets": [
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "unloaded"}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "fixed", "centiUnits": 13500, "unit": "lb"}},
+        {"repetitions": {"type": "percentage_thresholds", "thresholds": [{"maximumBasisPoints": 8000, "count": 3}, {"maximumBasisPoints": 10000, "count": 1}]}, "load": {"type": "training_max_ramp", "anchor": "warm_up_base", "anchorMultiplierBasisPoints": 11000, "stepBasisPoints": 1000, "maximumExclusiveBasisPoints": 9500}},
+        {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 10000}}
+      ]}
+    },
+    {
+      "id": "deload_high_intensity_kg_upper",
+      "revision": 1,
+      "role": "deload",
+      "labels": {"en": "High Intensity deload, kg upper", "fr": "Deload haute intensité, kg haut"},
+      "sourceRuleIds": ["beyond_071"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "deload", "setOrder": "declared"},
+      "compatibilities": {"movementIds": ["overhead_press", "bench_press"], "units": ["kg"]},
+      "block": {"id": "deload", "role": "deload", "sets": [
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "unloaded"}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "fixed", "centiUnits": 4500, "unit": "kg"}},
+        {"repetitions": {"type": "percentage_thresholds", "thresholds": [{"maximumBasisPoints": 8000, "count": 3}, {"maximumBasisPoints": 10000, "count": 1}]}, "load": {"type": "training_max_ramp", "anchor": "warm_up_base", "anchorMultiplierBasisPoints": 11000, "stepBasisPoints": 1000, "maximumExclusiveBasisPoints": 9500}},
+        {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 10000}}
+      ]}
+    },
+    {
+      "id": "deload_high_intensity_kg_lower",
+      "revision": 1,
+      "role": "deload",
+      "labels": {"en": "High Intensity deload, kg lower", "fr": "Deload haute intensité, kg bas"},
+      "sourceRuleIds": ["beyond_071"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "deload", "setOrder": "declared"},
+      "compatibilities": {"movementIds": ["back_squat", "deadlift"], "units": ["kg"]},
+      "block": {"id": "deload", "role": "deload", "sets": [
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "unloaded"}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "fixed", "centiUnits": 6000, "unit": "kg"}},
+        {"repetitions": {"type": "percentage_thresholds", "thresholds": [{"maximumBasisPoints": 8000, "count": 3}, {"maximumBasisPoints": 10000, "count": 1}]}, "load": {"type": "training_max_ramp", "anchor": "warm_up_base", "anchorMultiplierBasisPoints": 11000, "stepBasisPoints": 1000, "maximumExclusiveBasisPoints": 9500}},
+        {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 10000}}
+      ]}
+    },
+    {
       "id": "supplemental_bbb_original_5x10_50",
       "revision": 1,
       "role": "supplemental",

@@ -236,7 +236,7 @@ final class SqliteTrainingCatalog
   }
 
   Future<void> installSeed(String json) async {
-    final seed = const CatalogCodec().decode(json);
+    final seed = CatalogCodec().decode(json);
     if (seed.schemaVersion != schemaVersion) {
       throw CatalogFormatException(
         'Unsupported schemaVersion ${seed.schemaVersion}',
@@ -380,6 +380,20 @@ final class SqliteTrainingCatalog
     final summaries = <CycleTemplateSummary>[];
     for (final template in templates) {
       final templateId = template['id']! as String;
+      final definitionRows = await database.query(
+        'catalog_library_entries',
+        columns: ['payload_json'],
+        where: 'version=? AND kind=? AND id=?',
+        whereArgs: [catalogVersion, 'template_definition', templateId],
+        limit: 1,
+      );
+      if (definitionRows.isNotEmpty) {
+        final definition = _jsonMap(
+          definitionRows.single['payload_json']! as String,
+          'template definition',
+        );
+        if (definition['surface'] == 'foreverInternal') continue;
+      }
       final variants = await database.query(
         'catalog_variants',
         where: 'version=? AND template_id=?',
@@ -431,6 +445,13 @@ final class SqliteTrainingCatalog
     required String variantId,
   }) async {
     await _requirePublished(catalogVersion);
+    final selection = await _canonicalSelection(
+      catalogVersion: catalogVersion,
+      templateId: templateId,
+      variantId: variantId,
+    );
+    templateId = selection.templateId;
+    variantId = selection.variantId;
     final metadata = await database.query(
       'catalog_variant_metadata',
       where: 'version=? AND template_id=? AND variant_id=?',
@@ -824,6 +845,19 @@ final class SqliteTrainingCatalog
     required String templateId,
     required String variantId,
   }) async {
+    return resolveWithOptions(
+      catalogVersion: catalogVersion,
+      templateId: templateId,
+      variantId: variantId,
+    );
+  }
+
+  Future<ResolvedCycleDefinition> resolveWithOptions({
+    required int catalogVersion,
+    required String templateId,
+    required String variantId,
+    Map<String, Object?> optionValues = const {},
+  }) async {
     final metadata = await database.query('catalog_metadata', limit: 1);
     final actualSchema = metadata.single['schema_version'] as int;
     if (actualSchema != schemaVersion) {
@@ -842,6 +876,14 @@ final class SqliteTrainingCatalog
     if (versions.single['status'] != 'published') {
       throw CatalogNotPublishedException(catalogVersion);
     }
+    final selection = await _canonicalSelection(
+      catalogVersion: catalogVersion,
+      templateId: templateId,
+      variantId: variantId,
+    );
+    templateId = selection.templateId;
+    variantId = selection.variantId;
+    optionValues = {...selection.optionOverrides, ...optionValues};
     final variants = await database.query(
       'catalog_variants',
       where: 'version=? AND template_id=? AND id=?',
@@ -857,6 +899,7 @@ final class SqliteTrainingCatalog
       templateId: templateId,
       variantId: variantId,
       sourceReference: versions.single['source_reference']! as String,
+      optionValues: optionValues,
     );
     if (declarative != null) return declarative;
     final sessions = await database.query(
@@ -917,6 +960,7 @@ final class SqliteTrainingCatalog
     required String templateId,
     required String variantId,
     required String sourceReference,
+    Map<String, Object?> optionValues = const {},
   }) async {
     final templateRows = await database.query(
       'catalog_library_entries',
@@ -987,6 +1031,23 @@ final class SqliteTrainingCatalog
         ],
       }),
     );
+    final recipeRows = await database.query(
+      'catalog_library_entries',
+      columns: ['payload_json'],
+      where: 'version=? AND kind=?',
+      whereArgs: [catalogVersion, 'cycle_option_recipe'],
+      orderBy: 'id',
+    );
+    final optionRecipes = codec.decodeCycleOptionRecipes(
+      jsonEncode({
+        'schemaVersion': 1,
+        'kind': 'cycleOptionRecipes',
+        'cycleOptionRecipes': [
+          for (final row in recipeRows)
+            jsonDecode(row['payload_json']! as String),
+        ],
+      }),
+    );
     final plan = const CatalogPlanDataResolver().resolve(
       catalogVersion: catalogVersion,
       template: template,
@@ -994,66 +1055,153 @@ final class SqliteTrainingCatalog
       scheduleReference: scheduleReference,
       schedules: schedules,
       components: components,
+      optionRecipes: optionRecipes,
+      optionValues: optionValues,
+      optionDefaults: await _optionDefaults(
+        catalogVersion: catalogVersion,
+        templateId: templateId,
+        variantId: variantId,
+      ),
       sourceReference: sourceReference,
     );
     return const CatalogPlanResolver().resolve(plan);
   }
 
-  static PrescribedSetDefinition _decodeSet(Map<String, Object?> row) {
-    final wrapper = jsonEncode({
-      'schemaVersion': 1,
-      'catalogVersion': 1,
-      'status': 'draft',
-      'sourceReference': 'decoder',
-      'movements': [],
-      'templates': [
-        {
-          'id': 't',
-          'name': 't',
-          'variants': [
-            {
-              'id': 'v',
-              'name': 'v',
-              'schedule': {'type': 'ordered_sessions', 'movementIds': []},
-              'weeks': [
-                {
-                  'number': 1,
-                  'blocks': [
-                    {
-                      'id': 'b',
-                      'role': 'main_work',
-                      'sets': [
-                        {
-                          'repetitions': jsonDecode(
-                            row['repetitions_json']! as String,
-                          ),
-                          'load': jsonDecode(row['load_json']! as String),
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    });
-    return const CatalogCodec()
-        .decode(wrapper)
-        .templates
-        .single
-        .variants
-        .single
-        .weeks
-        .single
-        .blocks
-        .single
-        .sets
-        .single;
+  Future<Map<String, Object?>> _optionDefaults({
+    required int catalogVersion,
+    required String templateId,
+    required String variantId,
+  }) async {
+    final metadata = await database.query(
+      'catalog_variant_metadata',
+      columns: ['option_schema_id'],
+      where: 'version=? AND template_id=? AND variant_id=?',
+      whereArgs: [catalogVersion, templateId, variantId],
+      limit: 1,
+    );
+    if (metadata.isEmpty) return const {};
+    final rows = await database.query(
+      'catalog_option_schemas',
+      columns: ['payload_json'],
+      where: 'version=? AND id=?',
+      whereArgs: [catalogVersion, metadata.single['option_schema_id']],
+      limit: 1,
+    );
+    if (rows.isEmpty) return const {};
+    final schema = _jsonMap(
+      rows.single['payload_json']! as String,
+      'option schema',
+    );
+    final parameters = schema['parameters'];
+    if (parameters is! List<Object?>) {
+      throw const CatalogFormatException('parameters must be a list');
+    }
+    return {
+      for (final raw in parameters)
+        if (_objectMap(raw, 'parameter')['default'] != null)
+          _objectMap(raw, 'parameter')['id']! as String: _objectMap(
+            raw,
+            'parameter',
+          )['default'],
+    };
   }
 
+  Future<_CanonicalSelection> _canonicalSelection({
+    required int catalogVersion,
+    required String templateId,
+    required String variantId,
+  }) async {
+    final rows = await database.query(
+      'catalog_library_entries',
+      columns: ['payload_json'],
+      where: 'version=? AND kind=? AND id=?',
+      whereArgs: [catalogVersion, 'template_alias', '$templateId/$variantId'],
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      return _CanonicalSelection(templateId, variantId, const {});
+    }
+    final alias = _jsonMap(
+      rows.single['payload_json']! as String,
+      'template alias',
+    );
+    return _CanonicalSelection(
+      alias['templateId']! as String,
+      alias['variantId']! as String,
+      Map<String, Object?>.unmodifiable(
+        _objectMap(alias['optionOverrides'], 'option overrides'),
+      ),
+    );
+  }
+
+  static PrescribedSetDefinition _decodeSet(Map<String, Object?> row) =>
+      const CatalogSourceDocumentCodec()
+          .decodeComponents(
+            jsonEncode({
+              'schemaVersion': 1,
+              'kind': 'components',
+              'components': [
+                {
+                  'id': 'sqlite_set_decoder',
+                  'revision': 1,
+                  'role': 'main_work',
+                  'labels': {'en': 'Decoder', 'fr': 'Decoder'},
+                  'sourceRuleIds': <Object?>[],
+                  'parameterSchemaIds': <Object?>[],
+                  'constraints': <String, Object?>{},
+                  'compatibilities': <String, Object?>{},
+                  'block': {
+                    'id': 'sqlite_set_decoder',
+                    'role': 'main_work',
+                    'sets': [
+                      {
+                        'repetitions': jsonDecode(
+                          row['repetitions_json']! as String,
+                        ),
+                        'load': jsonDecode(row['load_json']! as String),
+                      },
+                    ],
+                  },
+                },
+              ],
+            }),
+          )
+          .single
+          .block
+          .sets
+          .single;
+
   static Map<String, Object> _loadJson(LoadPrescription load) => switch (load) {
+    MainWorkSetPlusLoad(:final cumulativeIncreaseBasisPoints) => {
+      'type': 'main_work_set_plus',
+      'cumulativeIncreaseBasisPoints': cumulativeIncreaseBasisPoints,
+    },
+    WarmUpBaseLoad(:final region) => {
+      'type': 'warm_up_base',
+      'region': region.name,
+    },
+    TrainingMaxRampLoad(
+      :final anchor,
+      :final stepBasisPoints,
+      :final lowerBoundStepFractionBasisPoints,
+      :final anchorMultiplierBasisPoints,
+      :final maximumExclusiveBasisPoints,
+    ) =>
+      {
+        'type': 'training_max_ramp',
+        'anchor': switch (anchor) {
+          TrainingMaxRampAnchor.beforeMainWork => 'before_main_work',
+          TrainingMaxRampAnchor.warmUpBase => 'warm_up_base',
+        },
+        'stepBasisPoints': stepBasisPoints,
+        if (lowerBoundStepFractionBasisPoints != null) ...{
+          'lowerBound': 'warm_up_base_plus_step_fraction',
+          'lowerBoundStepFractionBasisPoints':
+              lowerBoundStepFractionBasisPoints,
+        },
+        'anchorMultiplierBasisPoints': ?anchorMultiplierBasisPoints,
+        'maximumExclusiveBasisPoints': ?maximumExclusiveBasisPoints,
+      },
     TrainingMaxPercentageLoad(:final percentage) => {
       'type': 'training_max_percentage',
       'basisPoints': percentage.basisPoints,
@@ -1102,6 +1250,18 @@ final class SqliteTrainingCatalog
         )
         .toList(),
   };
+}
+
+final class _CanonicalSelection {
+  const _CanonicalSelection(
+    this.templateId,
+    this.variantId,
+    this.optionOverrides,
+  );
+
+  final String templateId;
+  final String variantId;
+  final Map<String, Object?> optionOverrides;
 }
 
 Future<SqliteTrainingCatalog> openCatalogDatabase({

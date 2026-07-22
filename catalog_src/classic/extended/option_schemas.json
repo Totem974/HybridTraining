@@ -2,8 +2,324 @@
   "schemaVersion": 1,
   "kind": "optionSchemas",
   "optionSchemas": [
-    {"id":"classic_extended_beginner_options","revision":1,"sourceRuleIds":["or.beginner.full_body"],"parameters":[{"id":"training_max_ratio","type":"percentage","scope":"perMovement","default":9000,"minimum":9000,"maximum":9000,"step":null,"allowedValues":[],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},{"id":"supplemental_progression","type":"enumeration","scope":"global","default":"beginner","minimum":null,"maximum":null,"step":null,"allowedValues":["beginner","intermediate"],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}}]},
-    {"id":"classic_extended_full_body_options","revision":1,"sourceRuleIds":["or.full_body.phase_1","or.full_body.phase_2","or.full_body.phase_3","or.full_body.phase_4"],"parameters":[{"id":"training_max_ratio","type":"percentage","scope":"perMovement","default":9000,"minimum":9000,"maximum":9000,"step":null,"allowedValues":[],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}}]},
-    {"id":"classic_extended_two_day_options","revision":1,"sourceRuleIds":["or.schedule.two_day_option_1","or.schedule.two_day_option_2"],"parameters":[{"id":"training_max_ratio","type":"percentage","scope":"perMovement","default":9000,"minimum":9000,"maximum":9000,"step":null,"allowedValues":[],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},{"id":"schedule_option","type":"enumeration","scope":"global","default":"paired","minimum":null,"maximum":null,"step":null,"allowedValues":["paired","rotating"],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}}]}
+    {
+      "id": "classic_extended_beginner_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "or.beginner.full_body"
+      ],
+      "parameters": [
+        {
+          "id": "training_max_ratio",
+          "type": "percentage",
+          "scope": "perMovement",
+          "default": 9000,
+          "minimum": 9000,
+          "maximum": 9000,
+          "step": null,
+          "allowedValues": [],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        },
+        {
+          "id": "supplemental_progression",
+          "type": "enumeration",
+          "scope": "global",
+          "default": "beginner",
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [
+            "beginner",
+            "intermediate"
+          ],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        }
+      ]
+    },
+    {
+      "id": "classic_extended_two_day_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "or.schedule.two_day_option_1",
+        "or.schedule.two_day_option_2"
+      ],
+      "parameters": [
+        {
+          "id": "training_max_ratio",
+          "type": "percentage",
+          "scope": "perMovement",
+          "default": 9000,
+          "minimum": 9000,
+          "maximum": 9000,
+          "step": null,
+          "allowedValues": [],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        },
+        {
+          "id": "schedule_option",
+          "type": "enumeration",
+          "scope": "global",
+          "default": "paired",
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [
+            "paired",
+            "rotating"
+          ],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        }
+      ]
+    },
+    {
+      "id": "classic_full_body_original_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "or.full_body.phase_1",
+        "or.full_body.phase_2",
+        "or.full_body.phase_3"
+      ],
+      "parameters": [
+        {
+          "id": "training_max_ratio",
+          "type": "percentage",
+          "scope": "global",
+          "default": 9000,
+          "minimum": 9000,
+          "maximum": 9000,
+          "step": null,
+          "allowedValues": [],
+          "presentationGroup": "hidden",
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        },
+        {
+          "id": "phase",
+          "labelEn": "Phase",
+          "labelFr": "Phase",
+          "type": "enumeration",
+          "scope": "global",
+          "default": "phase_one",
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [
+            "phase_one",
+            "phase_two",
+            "phase_three"
+          ],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        }
+      ]
+    },
+    {
+      "id": "classic_full_body_updated_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "app.full_body.updated"
+      ],
+      "parameters": [
+        {
+          "id": "training_max_ratio",
+          "type": "percentage",
+          "scope": "global",
+          "default": 9000,
+          "minimum": 9000,
+          "maximum": 9000,
+          "step": null,
+          "allowedValues": [],
+          "presentationGroup": "hidden",
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        },
+        {
+          "id": "squat_set_profile",
+          "labelEn": "Squat Sets",
+          "labelFr": "Séries de squat",
+          "type": "enumeration",
+          "scope": "global",
+          "default": "65x5_75x5_85x5",
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [
+            "65x5_75x5_85x5",
+            "70x3_80x3_90x3",
+            "75x5_85x3_95x1",
+            "80x1_90x1_100x1"
+          ],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        }
+      ]
+    },
+    {
+      "id": "classic_full_body_full_boring_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "app.full_body.full_boring"
+      ],
+      "parameters": [
+        {
+          "id": "training_max_ratio",
+          "type": "percentage",
+          "scope": "global",
+          "default": 9000,
+          "minimum": 9000,
+          "maximum": 9000,
+          "step": null,
+          "allowedValues": [],
+          "presentationGroup": "hidden",
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        },
+        {
+          "id": "squat_set_profile",
+          "labelEn": "Squat Sets",
+          "labelFr": "Séries de squat",
+          "type": "enumeration",
+          "scope": "global",
+          "default": "65x5_75x5_85x5",
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [
+            "65x5_75x5_85x5",
+            "70x3_80x3_90x3",
+            "75x5_85x3_95x1",
+            "80x1_90x1_100x1"
+          ],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        },
+        {
+          "id": "bench_set_profile",
+          "labelEn": "Bench Sets",
+          "labelFr": "Séries de développé couché",
+          "type": "enumeration",
+          "scope": "global",
+          "default": "65x5_75x5_85x5",
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [
+            "65x5_75x5_85x5",
+            "70x3_80x3_90x3",
+            "75x5_85x3_95x1",
+            "80x1_90x1_100x1"
+          ],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        },
+        {
+          "id": "deadlift_set_profile",
+          "labelEn": "Deadlift Sets",
+          "labelFr": "Séries de soulevé de terre",
+          "type": "enumeration",
+          "scope": "global",
+          "default": "65x3_75x3_85x3",
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [
+            "65x3_75x3_85x3",
+            "70x3_80x3_90x3",
+            "75x5_85x3_95x1",
+            "80x1_90x1_100x1"
+          ],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        }
+      ]
+    }
   ]
 }

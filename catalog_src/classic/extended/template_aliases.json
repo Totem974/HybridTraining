@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "kind": "templateAliases",
+  "templateAliases": [
+    {
+      "legacyTemplateId": "classic_full_body_phase_1",
+      "legacyVariantId": "phase_1",
+      "templateId": "classic_full_body",
+      "variantId": "original",
+      "optionOverrides": {
+        "phase": "phase_one"
+      }
+    },
+    {
+      "legacyTemplateId": "classic_full_body_phase_2",
+      "legacyVariantId": "phase_2",
+      "templateId": "classic_full_body",
+      "variantId": "original",
+      "optionOverrides": {
+        "phase": "phase_two"
+      }
+    },
+    {
+      "legacyTemplateId": "classic_full_body_phase_3",
+      "legacyVariantId": "phase_3",
+      "templateId": "classic_full_body",
+      "variantId": "original",
+      "optionOverrides": {
+        "phase": "phase_three"
+      }
+    }
+  ]
+}

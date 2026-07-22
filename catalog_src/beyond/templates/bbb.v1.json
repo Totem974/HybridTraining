@@ -4,6 +4,7 @@
   "templates": [{
     "id": "beyond_boring_but_big",
     "revision": 1,
+    "surface": "cyclePublic",
     "labels": {"en":"Beyond Boring But Big","fr":"Boring But Big - Beyond"},
     "sourceRuleIds": ["beyond_001", "beyond_015", "beyond_016"],
     "variants": [{

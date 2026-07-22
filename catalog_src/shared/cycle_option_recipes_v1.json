@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "kind": "cycleOptionRecipes",
+  "cycleOptionRecipes": [
+    {
+      "id": "classic_additional_options",
+      "revision": 1,
+      "warmUp": {
+        "original": {
+          "componentIds": [
+            {"id": "warmup_original_40_50_60", "revision": 1}
+          ]
+        },
+        "beyond": {
+          "componentIds": [
+            {"id": "warmup_beyond_ramp_upper", "revision": 1},
+            {"id": "warmup_beyond_ramp_lower", "revision": 1}
+          ]
+        }
+      },
+      "joker": {
+        "blockId": "joker",
+        "steps": [
+          {"cumulativeIncreaseBasisPoints": 500, "repetitions": {"type": "joker"}},
+          {"cumulativeIncreaseBasisPoints": 1000, "repetitions": {"type": "joker"}},
+          {"cumulativeIncreaseBasisPoints": 1500, "repetitions": {"type": "joker"}},
+          {"cumulativeIncreaseBasisPoints": 2000, "repetitions": {"type": "joker"}},
+          {"cumulativeIncreaseBasisPoints": 2500, "repetitions": {"type": "joker"}},
+          {"cumulativeIncreaseBasisPoints": 3000, "repetitions": {"type": "joker"}}
+        ]
+      },
+      "deload": {
+        "type1": {"componentIds": [{"id": "deload_original_40_50_60", "revision": 1}]},
+        "type2": {"componentIds": [{"id": "deload_type_2_50_60_70", "revision": 1}]},
+        "type3": {"componentIds": [{"id": "deload_type_3_65_76_85", "revision": 1}]},
+        "type4": {"componentIds": [{"id": "deload_type_4_40_50_60", "revision": 1}]},
+        "type5": {"componentIds": [{"id": "deload_type_5_50_60_70", "revision": 1}]},
+        "highIntensity": {
+          "byUnit": {
+            "kg": [
+              {"id": "deload_high_intensity_kg_upper", "revision": 1},
+              {"id": "deload_high_intensity_kg_lower", "revision": 1}
+            ],
+            "lb": [
+              {"id": "deload_high_intensity_lb_upper", "revision": 1},
+              {"id": "deload_high_intensity_lb_lower", "revision": 1}
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
