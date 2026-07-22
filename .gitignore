@@ -19,6 +19,7 @@ reference/
 /docs/sources-local/
 /.dart_appdata/
 /.cleanup-backup/
+/.agents/worktrees/
 /local.properties
 /.gradle/
 /.kotlin/
