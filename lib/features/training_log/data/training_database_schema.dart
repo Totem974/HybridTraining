@@ -1,7 +1,9 @@
 import 'package:sqflite_common/sqlite_api.dart';
 
+import '../../forever/data/forever_sqlite_schema.dart';
+
 abstract final class TrainingDatabaseSchema {
-  static const version = 2;
+  static const version = 3;
   static Future<void> create(Database db, int _) async {
     await db.execute('''CREATE TABLE snapshots(
       cycle_id TEXT PRIMARY KEY, schema_version INTEGER NOT NULL CHECK(schema_version = 1),
@@ -28,6 +30,7 @@ abstract final class TrainingDatabaseSchema {
       CHECK(actual_repetitions IS NULL OR actual_repetitions >= 0),
       CHECK(actual_load_centi_units IS NULL OR actual_load_centi_units >= 0),
       CHECK(result_state != 'completed' OR actual_repetitions IS NOT NULL))''');
+    await createForeverTrainingTables(db);
   }
 
   static Future<void> upgrade(
@@ -39,6 +42,9 @@ abstract final class TrainingDatabaseSchema {
       await db.execute(
         "ALTER TABLE blocks ADD COLUMN movement_id TEXT NOT NULL DEFAULT ''",
       );
+    }
+    if (oldVersion < 3 && newVersion >= 3) {
+      await migrateForeverTrainingTables(db, oldVersion, newVersion);
     }
   }
 }

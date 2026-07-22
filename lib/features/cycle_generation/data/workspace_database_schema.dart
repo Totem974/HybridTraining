@@ -1,9 +1,10 @@
 import 'package:sqflite/sqflite.dart';
 
 import 'sqlite_workspace_program_repository.dart';
+import '../../forever/data/forever_sqlite_schema.dart';
 
 abstract final class WorkspaceDatabaseSchema {
-  static const version = 2;
+  static const version = 3;
   static Future<void> create(Database db, int _) async {
     await db.execute(
       '''CREATE TABLE profiles(
@@ -29,6 +30,7 @@ abstract final class WorkspaceDatabaseSchema {
       id TEXT PRIMARY KEY, profile_id TEXT NOT NULL REFERENCES profiles(id),
       request_json TEXT NOT NULL, updated_at TEXT NOT NULL)''');
     await SqliteWorkspaceProgramRepository.createTables(db);
+    await createForeverWorkspaceTables(db);
   }
 
   static Future<void> upgrade(
@@ -38,6 +40,9 @@ abstract final class WorkspaceDatabaseSchema {
   ) async {
     if (oldVersion < 2 && newVersion >= 2) {
       await SqliteWorkspaceProgramRepository.createTables(db);
+    }
+    if (oldVersion < 3 && newVersion >= 3) {
+      await migrateForeverWorkspaceTables(db, oldVersion, newVersion);
     }
   }
 }
