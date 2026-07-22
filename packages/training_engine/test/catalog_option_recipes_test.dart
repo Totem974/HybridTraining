@@ -190,7 +190,7 @@ void main() {
       'parameterSchemaIds': <Object?>[],
       'constraints': {'movementRelation': 'sameAsMain'},
       'compatibilities': {
-        'sessionIds': ['upper'],
+        'movementIds': ['upper'],
       },
       'block': {
         'id': 'beyond-upper',
@@ -317,6 +317,13 @@ void main() {
       3,
       3,
     ]);
+    expect(
+      cycle.weeks.first.sessions.last.blocks.where(
+        (block) => block.role == 'warm_up',
+      ),
+      isEmpty,
+      reason: 'Explicit movement targets override sameAsMain expansion.',
+    );
   });
 }
 

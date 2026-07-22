@@ -77,12 +77,11 @@ final class CatalogPlanDataResolver {
               MovementId(id),
           ],
           movementIds: [
-            for (final id in [
-              ...component.constraints['movementRelation'] == 'sameAsMain'
-                  ? scheduledMovementIds
-                  : _targetIds(component.compatibilities, 'movementIds'),
-              ...movementTargets,
-            ])
+            for (final id in _movementTargetIds(
+              component,
+              scheduledMovementIds,
+              movementTargets,
+            ))
               MovementId(id),
           ],
         ),
@@ -315,6 +314,23 @@ final class CatalogPlanDataResolver {
       throw FormatException('$key must contain strings.');
     }
     return value.cast<String>();
+  }
+
+  List<String> _movementTargetIds(
+    SourceComponent component,
+    List<String> scheduledMovementIds,
+    List<String> variantMovementTargets,
+  ) {
+    final explicit = _targetIds(component.compatibilities, 'movementIds');
+    final componentTargets = explicit.isNotEmpty
+        ? explicit
+        : component.constraints['movementRelation'] == 'sameAsMain'
+        ? scheduledMovementIds
+        : const <String>[];
+    return {
+      ...componentTargets,
+      ...variantMovementTargets,
+    }.toList(growable: false);
   }
 
   bool _same(ComponentReference left, ComponentReference right) =>
