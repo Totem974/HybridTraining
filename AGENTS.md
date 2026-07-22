@@ -1,296 +1,521 @@
 # AGENTS.md — HybridTraining
 
-## 1. Fondation stable
+## 1. Fondation validée
 
-Les éléments suivants existent et ne doivent pas être reconstruits :
+Le checkpoint de référence est la branche :
 
 ```text
-catalog_src → catalog.db
-catalog.db → CatalogResolver
-ResolvedCycleDefinition + CycleRequest → CycleCompiler
-GeneratedCycle → training.db
+codex/cycle-ui-source-parity-v2
 ```
 
-Le POC Forever reste présent mais gelé pendant cette phase.
+avec notamment :
+
+```text
+94b0a25 docs: set cycle UI parity authority
+19bb4fc feat: align cycle generator with source UI
+```
+
+État annoncé et à vérifier localement :
+
+- catalogue exhaustif construit depuis `catalog_src` ;
+- `CatalogResolver` ;
+- `CycleCompiler` pur ;
+- `ForeverComposer` pur ;
+- 23 variantes Cycle compilées ;
+- interface Flutter Web Cycle validée ;
+- 399 tests ;
+- build Web release ;
+- branche poussée et worktree propre.
+
+Cette branche est l’oracle fonctionnel et visuel de migration. Elle ne doit pas être réécrite ni supprimée.
 
 ## 2. Priorité active
 
 ```text
-PARITÉ VISUELLE ET FONCTIONNELLE DE /cycle
-AVANT TOUT NOUVEAU TRAVAIL FOREVER
+EXTRAIRE LE MOTEUR DART EN SDK LOCAL
++
+CRÉER UNE INTERFACE WEB STATIQUE LÉGÈRE POUR /cycle
 ```
 
-La référence visuelle est constituée des captures fournies, du miroir HTML/CSS local et de la page de référence :
+La nouvelle interface Web utilise :
 
 ```text
-https://fivethreeone.app/calculator
+HTML
+CSS
+TypeScript
+Vite
 ```
 
-Les captures fournies ont autorité sur les détails de disposition.
+Elle fonctionne entièrement dans le navigateur.
 
-## 3. Périmètre
+Il n’existe :
 
-Modifier uniquement ce qui est nécessaire à `/cycle` :
+- aucun backend ;
+- aucun serveur applicatif ;
+- aucune API HTTP métier ;
+- aucun compte ;
+- aucun cloud ;
+- aucune synchronisation ;
+- aucun transfert de données personnelles.
 
-- bloc Charges / Weight ;
-- bloc Modèle / Template ;
-- Options supplémentaires ;
-- Plaques et barre ;
-- Planification ;
-- Output ;
-- rendu Programme ;
-- responsive, localisation et accessibilité ;
-- contrats applicatifs strictement nécessaires à ces blocs.
-
-Préserver :
-
-- catalogue ;
-- générateur Cycle ;
-- persistance ;
-- route et page Forever ;
-- navigation Cycle/Macrocycle.
-
-Ne pas développer de nouvelle capacité Forever pendant cette phase.
-
-## 4. Règle d’architecture
-
-L’interface ne contient aucune règle d’entraînement.
+## 3. Architecture cible
 
 ```text
-catalog.db
-→ CycleEditorSchema
-→ CycleEditorState
-→ widgets
-→ CycleRequest
-→ CycleCompiler
+catalog_src
+   ↓ build déterministe
+catalog.db                 catalog.bundle.json
+(native / référence)       (Web statique)
+          \                 /
+           \               /
+        training_engine Dart pur
+                  ↓
+      training_engine_web_bridge
+          Dart compilé en JavaScript
+                  ↓
+      Web HTML/CSS/TypeScript
+                  ↓
+       IndexedDB / export local
 ```
+
+Le catalogue natif et le bundle Web sont produits depuis la même source et doivent partager la même empreinte logique.
+
+## 4. Arborescence cible
+
+```text
+packages/
+  training_engine/
+    pubspec.yaml
+    lib/
+    test/
+
+  training_engine_web_bridge/
+    pubspec.yaml
+    web/
+    test/
+
+contracts/
+  v1/
+    *.schema.json
+    fixtures/
+
+apps/
+  web_generator/
+    package.json
+    vite.config.ts
+    cycle/
+      index.html
+    src/
+      engine/
+      catalog/
+      storage/
+      shared/
+      cycle/
+    public/
+    tests/
+
+legacy/
+  flutter_web_reference/   # uniquement si un déplacement est nécessaire
+```
+
+Le projet Flutter existant peut rester à la racine pendant la migration. Ne pas déplacer tout le dépôt sans nécessité.
+
+## 5. Règle de non-duplication
+
+Il ne doit exister qu’un seul moteur métier.
 
 Interdictions :
 
-```text
-if (templateId == ...)
-switch(templateId)
-liste statique de templates
-pourcentages codés dans les widgets
-schedule codé dans les widgets
-calcul de TM dans les widgets
-calcul de plating dans les widgets
-fallback vers le moteur legacy
-```
+- copier le moteur dans un nouveau dossier en conservant l’ancien actif ;
+- réécrire les calculs en TypeScript ;
+- coder les règles BBB/FSL/Forever dans le front ;
+- conserver deux `CycleCompiler` ;
+- maintenir deux codecs concurrents ;
+- faire du front Web une nouvelle autorité métier.
 
-Une option absente du contrat doit être ajoutée au catalogue ou à une primitive générique, pas simulée dans la présentation.
+Après extraction, Flutter doit lui aussi consommer `packages/training_engine`.
 
-## 5. Langage visuel
+## 6. Contenu de `training_engine`
 
-Reproduire le langage de la référence sans copier son code, ses actifs, sa marque ou sa police archivée.
+Le package est Dart pur.
 
-Cibles :
+Il contient ou expose :
 
-```text
-fond général      #181818
-cartes             #323232
-contrôles          gris moyen
-accent             #2C9EFF
-texte              clair
-largeur max        environ 900 px
-rayon cartes       environ 18 px
-écart sections     environ 24 px
-desktop            deux colonnes
-mobile             une colonne sous environ 771 px
-```
+- modèles du catalogue résolu ;
+- codecs et validations métier ;
+- calcul 1RM / rep-max / TM ;
+- `CycleCompiler` ;
+- `ForeverComposer` ;
+- plating ;
+- schedules ;
+- erreurs et avertissements ;
+- snapshots ;
+- contrats de génération.
 
-Utiliser les tokens Flutter partagés du projet.
+Il ne doit importer :
 
-## 6. Bloc Weight
+- ni Flutter ;
+- ni `sqflite` ;
+- ni `dart:io` ;
+- ni DOM ;
+- ni IndexedDB ;
+- ni code de présentation ;
+- ni moteur legacy.
 
-- Le sélecteur `1 RM / Training Max / Rep Max` occupe toute la largeur intérieure.
-- Les mouvements sont alignés à gauche comme sur la référence.
-- Une ligne contient : repère visuel, nom, répétitions si pertinentes, charge et unité.
-- Mode 1 RM : répétitions fixées à 1.
-- Mode Training Max : saisie directe du TM.
-- Mode Rep Max : répétitions modifiables par mouvement et charge modifiable.
-- Le calcul du 1RM estimé et du TM reste dans le domaine/application.
-- Un seul ratio TM global est affiché pour les mouvements principaux.
-- Aucun ratio TM principal à côté de chaque mouvement.
-- Les ratios propres à un template restent dans le bloc Template/Options.
-- Unité kg/lb en contrôle segmenté.
+Le moteur reçoit des objets ou snapshots résolus. Il ne lit pas directement une base.
 
-## 7. Bloc Template
+## 7. Port local du moteur Web
 
-Présentation en lignes :
+Le bridge Web est une couche très mince.
+
+Il utilise les API modernes :
 
 ```text
-Template     valeur sélectionnée >
-Variante     valeur sélectionnée >
-Option       valeur sélectionnée >
+dart:js_interop
+@JSExport
+Function.toJS
+createJSInteropWrapper
 ```
 
-- libellé à gauche ;
-- valeur et chevron à droite ;
-- options dynamiques sous les deux premières lignes ;
-- aucune grande liste native qui déborde visuellement ;
-- toutes les données viennent du catalogue.
-
-## 8. Additional Options
-
-Desktop : trois colonnes principales exactement :
+Il n’utilise pas :
 
 ```text
-WARM-UP | JOKER SETS | DELOAD
+dart:html
+dart:js
+dart:js_util
+package:js
 ```
 
-Mobile : empilement lisible.
-
-- Warm-up, Joker et Deload sont pilotés par le catalogue.
-- Les champs conditionnels apparaissent sous leur colonne.
-- Assistance et conditioning, lorsqu’ils existent, apparaissent dans une seconde rangée ou une carte dédiée, sans casser les trois colonnes principales.
-- Aucune option visible sans effet métier.
-- Les incompatibilités sont évaluées par le domaine/application.
-
-## 9. Plaques et barre
-
-- Conserver les compteurs `− / quantité / +` pour chaque plaque.
-- Conserver la sélection kg/lb et le profil matériel.
-- Afficher le poids de la barre à gauche dans la ligne inférieure.
-- Afficher le total maximal à droite si disponible.
-- Supprimer le champ utilisateur `Incrément d’arrondi`.
-- Supprimer le champ texte/résumé libre `Plaques par côté`.
-- L’incrément effectif est dérivé du matériel disponible dans l’application/domaine.
-- Le rendu des plaques par série reste un résultat du moteur de plating.
-
-## 10. Planification
-
-Remplacer les champs techniques bruts par des contrôles visuels.
-
-- La fréquence vient du template/schedule.
-- Une fréquence unique est affichée comme valeur verrouillée.
-- Plusieurs fréquences autorisées utilisent un contrôle segmenté.
-- L’ordre est représenté par de petites cases/tokens.
-- Avant les icônes finales, utiliser :
-  - `OP` Overhead Press ;
-  - `BP` Bench Press ;
-  - `SQ` Squat ;
-  - `DL` Deadlift.
-- Pour une séance multi-mouvements, afficher un token de groupe, par exemple `SQ+BP`.
-- Ne permettre que les réordonnancements valides du schedule.
-- Ajouter les options `Bastard work order` et `3/5/1 week order` uniquement lorsqu’elles sont exposées par le catalogue.
-- Conserver une date de départ si le moteur en a besoin, avec un vrai date picker compact.
-- Ne jamais afficher d’IDs ou de listes brutes telles que `1,2,4,5` ou `overhead_press,...`.
-
-## 11. Output
-
-Le bloc contient :
-
-- titre du programme ;
-- option `Show plating / Afficher les plaques` ;
-- autres options uniquement si elles sont réellement supportées ;
-- bouton principal `Générer`.
-
-Ne pas afficher `Générer et sauvegarder`.
-
-La persistance interne existante peut rester, mais le libellé et le parcours Web restent ceux d’un générateur.
-
-## 12. Programme
-
-Le programme doit ressembler à la référence :
+La première cible est JavaScript optimisé :
 
 ```text
-SEMAINE 1
-├── carte séance OP
-├── carte séance DL
-├── carte séance BP
-└── carte séance SQ
+dart compile js -O2
 ```
 
-Chaque carte affiche :
+Wasm est hors périmètre de cette première migration.
 
-- nom utilisateur du mouvement ;
-- date si disponible ;
-- blocs avec titres lisibles ;
-- séries sous la forme `reps × charge` ;
-- plaques en petites pastilles seulement si `Show plating` est actif ;
-- assistance sous forme de nom d’exercice et répétitions.
+## 8. Frontière JSON locale
 
-Interdictions :
+Le bridge n’expose pas d’objets Dart internes.
 
-- objets Dart bruts ;
-- JSON brut ;
-- IDs techniques ;
-- chaînes comme `{type: fixed, count: 5}` ;
-- détails de debug.
-
-Responsive :
-
-- quatre colonnes lorsque la largeur le permet ;
-- réduction progressive ;
-- une colonne lisible sur mobile.
-
-## 13. Travail parallèle
-
-Avant de lancer les agents, le lead :
-
-1. gèle `CycleEditorState` et les intents nécessaires ;
-2. extrait chaque bloc dans un fichier/widget distinct ;
-3. définit les tokens visuels communs ;
-4. attribue des chemins exclusifs.
-
-Aucun fichier modifié simultanément par deux agents.
-
-Répartition :
-
-1. Weight ;
-2. Template ;
-3. Additional Options ;
-4. Plating ;
-5. Scheduling ;
-6. Output + Program ;
-7. responsive + FR/EN + accessibilité ;
-8. intégration + revue read-only.
-
-Le lead possède :
-
-- page de composition ;
-- contrats publics ;
-- design tokens ;
-- composition root ;
-- exports ;
-- commits.
-
-## 14. Validation
-
-Tests ciblés pendant les blocs.
-
-Gate final :
+Toutes les opérations publiques utilisent des chaînes JSON versionnées :
 
 ```text
-flutter pub get
-dart format --set-exit-if-changed .
-flutter analyze
-flutter test
-git diff --check
-flutter build web --release
+initialize(catalogJson) -> EngineInfoJson
+getCatalogIndex(requestJson) -> CatalogIndexJson
+getCycleEditorSchema(requestJson) -> CycleEditorSchemaJson
+validateCycle(requestJson) -> ValidationReportJson
+generateCycle(requestJson) -> CycleResponseJson
+generateMacrocycle(requestJson) -> ForeverResponseJson
 ```
 
-Validation visuelle : 1440 px, 390 px et 320 px dans Chrome.
+`generateMacrocycle` peut être exposé pour stabiliser le SDK, mais aucune nouvelle interface Forever n’est construite pendant cette phase.
 
-Vérifier dans Chrome :
+Chaque réponse contient :
+
+```text
+apiVersion
+engineVersion
+catalogVersion
+catalogHash
+schemaVersion
+```
+
+Les erreurs sont structurées :
+
+```text
+code
+path
+messageKey
+details
+severity
+```
+
+Aucun texte localisé n’est utilisé comme identité.
+
+## 9. Contrats
+
+Les contrats publics sont versionnés dans :
+
+```text
+contracts/v1/
+```
+
+Le format source doit permettre de générer les types TypeScript.
+
+Ne pas maintenir manuellement deux modèles divergents.
+
+Les contrats minimum sont :
+
+- `EngineInfo` ;
+- `CatalogIndex` ;
+- `CycleEditorSchema` ;
+- `CycleRequest` ;
+- `CycleResponse` ;
+- `ForeverRequest` ;
+- `ForeverResponse` ;
+- `ValidationReport` ;
+- `EngineError` ;
+- `EngineWarning` ;
+- `SnapshotEnvelope`.
+
+Les clés inconnues sont refusées à la frontière moteur.
+
+## 10. Catalogue Web
+
+Le Web ne charge pas SQLite/Wasm pendant cette phase.
+
+Il charge un bundle statique :
+
+```text
+catalog.bundle.json
+```
+
+Ce bundle est produit par le même pipeline que `catalog.db`.
+
+Le build doit prouver :
+
+```text
+logicalHash(catalog.db) == logicalHash(catalog.bundle.json)
+```
+
+Le bundle contient uniquement les données nécessaires au runtime Web, sans données utilisateur.
+
+## 11. Stockage Web
+
+### IndexedDB
+
+Utiliser IndexedDB pour :
+
+- brouillon Cycle ;
+- configurations sauvegardées ;
+- snapshots générés ;
+- futur brouillon Forever ;
+- préférences nécessaires.
+
+### localStorage
+
+Réserver localStorage aux préférences minuscules, par exemple :
+
+- langue ;
+- sections repliées ;
+- option d’affichage des plaques.
+
+Le moteur ne connaît ni IndexedDB ni localStorage.
+
+Le front stocke des enveloppes JSON versionnées produites ou validées par le moteur.
+
+## 12. Interface Web
+
+Technologie :
+
+```text
+HTML sémantique
+CSS natif
+TypeScript strict
+Vite
+```
+
+Pas de React, Flutter, Vue ou Svelte dans cette première migration.
+
+Le front utilise des modules et composants DOM légers, avec un store explicite.
+
+La page Cycle reproduit au plus près le rendu validé :
 
 - Weight ;
 - Template ;
 - Additional Options ;
-- Plating ;
+- Plating & Barbell ;
 - Scheduling ;
 - Output ;
 - Program ;
-- changement de plusieurs templates ;
-- génération ;
-- affichage/masquage des plaques ;
-- aucune erreur console.
+- responsive 1440 / 390 / 320 ;
+- FR / EN ;
+- clavier ;
+- accessibilité.
 
-## 15. Git
+Les règles de visibilité et de compatibilité viennent du moteur.
 
-- Préserver les changements utilisateur.
-- Jamais de `git reset --hard`.
-- Jamais de push forcé.
-- Petits commits cohérents par bloc.
-- Aucun push sans autorisation explicite.
+## 13. Deux pages à terme
+
+L’architecture Web doit permettre une application multi-page statique :
+
+```text
+/cycle/
+/forever/
+```
+
+Cette phase livre uniquement `/cycle/`.
+
+Ne pas créer une fausse page Forever ni un placeholder produit.
+
+L’ancienne page Flutter Forever reste disponible comme référence jusqu’au chantier suivant.
+
+## 14. Migration progressive
+
+Ordre obligatoire :
+
+1. geler les résultats de référence ;
+2. extraire le package Dart pur ;
+3. faire consommer ce package par Flutter ;
+4. créer les contrats JSON ;
+5. créer le bridge JS ;
+6. générer le bundle catalogue Web ;
+7. construire la page `/cycle/` statique ;
+8. comparer moteur natif et bridge JS ;
+9. valider la parité visuelle et fonctionnelle ;
+10. préparer le cutover ;
+11. supprimer Flutter Web uniquement après autorisation.
+
+Ne jamais retirer l’oracle avant la parité.
+
+## 15. Parité obligatoire
+
+Pour chaque variante Cycle exécutable :
+
+```text
+même catalogue
++ même CycleRequest
+→ sortie Dart native
+→ sortie bridge JavaScript
+→ JSON canonique identique
+```
+
+La comparaison couvre :
+
+- semaines ;
+- séances ;
+- blocs ;
+- séries ;
+- charges ;
+- plaques ;
+- dates ;
+- avertissements ;
+- snapshot ;
+- hash logique.
+
+Le front TypeScript ne transforme pas le résultat métier, sauf pour la présentation.
+
+## 16. Tests Web
+
+Utiliser :
+
+- tests unitaires TypeScript ;
+- tests DOM ;
+- Playwright ;
+- captures visuelles ;
+- Chrome/Chromium ;
+- mobile émulé ;
+- tests d’absence de réseau externe.
+
+Les tests doivent échouer si l’application appelle une URL externe au chargement ou pendant une génération.
+
+## 17. Build
+
+Scripts reproductibles attendus :
+
+```text
+engine:test
+engine:build
+contracts:generate
+catalog:build:web
+web:typecheck
+web:test
+web:e2e
+web:build
+verify:parity
+```
+
+Le build Web final produit uniquement des fichiers statiques.
+
+Mesurer et rapporter :
+
+- poids brut et gzip du bridge moteur ;
+- poids brut et gzip du JavaScript UI ;
+- poids CSS ;
+- poids du catalogue ;
+- temps de chargement local ;
+- temps de génération de scénarios représentatifs.
+
+Ne pas fixer de budget arbitraire avant la première mesure.
+
+## 18. Travail parallèle
+
+Après gel des contrats et ownership :
+
+1. audit d’extraction moteur ;
+2. package Dart pur ;
+3. contrats + bridge JS ;
+4. export catalogue Web ;
+5. design system + HTML/CSS ;
+6. formulaire Cycle TypeScript ;
+7. stockage local + export ;
+8. parité + Playwright + revue.
+
+Le lead possède :
+
+- contrats publics ;
+- interfaces du package ;
+- scripts de build racine ;
+- intégration ;
+- commits.
+
+Aucun fichier modifié simultanément par deux agents.
+
+## 19. Hors périmètre
+
+- nouvelle interface Forever ;
+- Android natif ;
+- iOS natif ;
+- backend ;
+- API HTTP ;
+- authentification ;
+- synchronisation ;
+- cloud ;
+- suppression immédiate de Flutter ;
+- Wasm ;
+- refonte du catalogue ;
+- nouvelles recettes.
+
+## 20. Validation
+
+Dart :
+
+```text
+dart format --set-exit-if-changed .
+dart analyze
+dart test
+```
+
+Flutter oracle :
+
+```text
+flutter analyze
+flutter test
+flutter build web --release
+```
+
+Web statique :
+
+```text
+npm ci
+npm run typecheck
+npm test
+npm run build
+npm run e2e
+```
+
+Parité :
+
+```text
+verify:parity
+```
+
+## 21. Git
+
+- créer une branche depuis le checkpoint UI validé ;
+- préserver tous les changements utilisateur ;
+- jamais de `git reset --hard` ;
+- jamais de push forcé ;
+- petits commits cohérents ;
+- aucun push sans autorisation explicite ;
+- ne pas supprimer Flutter Web avant validation et autorisation.
