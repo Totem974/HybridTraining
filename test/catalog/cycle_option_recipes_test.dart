@@ -156,7 +156,7 @@ void main() {
       expect(_map(sets[0]['load']), {'type': 'unloaded'});
       expect(_map(sets[1]['repetitions']), {'type': 'fixed', 'count': 5});
       expect(_map(sets[1]['load']), {
-        'type': 'fixed',
+        'type': 'warm_up_base',
         'centiUnits': entry.value.$2,
         'unit': entry.value.$1,
       });

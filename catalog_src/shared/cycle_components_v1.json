@@ -241,7 +241,7 @@
       "compatibilities": {"movementIds": ["overhead_press", "bench_press"], "units": ["lb"]},
       "block": {"id": "deload", "role": "deload", "sets": [
         {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "unloaded"}},
-        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "fixed", "centiUnits": 9500, "unit": "lb"}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "warm_up_base", "centiUnits": 9500, "unit": "lb"}},
         {"repetitions": {"type": "percentage_thresholds", "thresholds": [{"maximumBasisPoints": 8000, "count": 3}, {"maximumBasisPoints": 10000, "count": 1}]}, "load": {"type": "training_max_ramp", "anchor": "warm_up_base", "anchorMultiplierBasisPoints": 11000, "stepBasisPoints": 1000, "maximumExclusiveBasisPoints": 9500}},
         {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 10000}}
       ]}
@@ -257,7 +257,7 @@
       "compatibilities": {"movementIds": ["back_squat", "deadlift"], "units": ["lb"]},
       "block": {"id": "deload", "role": "deload", "sets": [
         {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "unloaded"}},
-        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "fixed", "centiUnits": 13500, "unit": "lb"}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "warm_up_base", "centiUnits": 13500, "unit": "lb"}},
         {"repetitions": {"type": "percentage_thresholds", "thresholds": [{"maximumBasisPoints": 8000, "count": 3}, {"maximumBasisPoints": 10000, "count": 1}]}, "load": {"type": "training_max_ramp", "anchor": "warm_up_base", "anchorMultiplierBasisPoints": 11000, "stepBasisPoints": 1000, "maximumExclusiveBasisPoints": 9500}},
         {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 10000}}
       ]}
@@ -273,7 +273,7 @@
       "compatibilities": {"movementIds": ["overhead_press", "bench_press"], "units": ["kg"]},
       "block": {"id": "deload", "role": "deload", "sets": [
         {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "unloaded"}},
-        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "fixed", "centiUnits": 4500, "unit": "kg"}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "warm_up_base", "centiUnits": 4500, "unit": "kg"}},
         {"repetitions": {"type": "percentage_thresholds", "thresholds": [{"maximumBasisPoints": 8000, "count": 3}, {"maximumBasisPoints": 10000, "count": 1}]}, "load": {"type": "training_max_ramp", "anchor": "warm_up_base", "anchorMultiplierBasisPoints": 11000, "stepBasisPoints": 1000, "maximumExclusiveBasisPoints": 9500}},
         {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 10000}}
       ]}
@@ -289,7 +289,7 @@
       "compatibilities": {"movementIds": ["back_squat", "deadlift"], "units": ["kg"]},
       "block": {"id": "deload", "role": "deload", "sets": [
         {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "unloaded"}},
-        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "fixed", "centiUnits": 6000, "unit": "kg"}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "warm_up_base", "centiUnits": 6000, "unit": "kg"}},
         {"repetitions": {"type": "percentage_thresholds", "thresholds": [{"maximumBasisPoints": 8000, "count": 3}, {"maximumBasisPoints": 10000, "count": 1}]}, "load": {"type": "training_max_ramp", "anchor": "warm_up_base", "anchorMultiplierBasisPoints": 11000, "stepBasisPoints": 1000, "maximumExclusiveBasisPoints": 9500}},
         {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 10000}}
       ]}

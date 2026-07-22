@@ -134,6 +134,7 @@
         },
         {
           "id": "phase",
+          "requestPath": "fullBody.phase",
           "labelEn": "Phase",
           "labelFr": "Phase",
           "type": "enumeration",
@@ -188,6 +189,7 @@
         },
         {
           "id": "squat_set_profile",
+          "requestPath": "fullBody.liftProfiles.squat",
           "labelEn": "Squat Sets",
           "labelFr": "Séries de squat",
           "type": "enumeration",
@@ -243,6 +245,7 @@
         },
         {
           "id": "squat_set_profile",
+          "requestPath": "fullBody.liftProfiles.squat",
           "labelEn": "Squat Sets",
           "labelFr": "Séries de squat",
           "type": "enumeration",
@@ -269,6 +272,7 @@
         },
         {
           "id": "bench_set_profile",
+          "requestPath": "fullBody.liftProfiles.bench",
           "labelEn": "Bench Sets",
           "labelFr": "Séries de développé couché",
           "type": "enumeration",
@@ -295,6 +299,7 @@
         },
         {
           "id": "deadlift_set_profile",
+          "requestPath": "fullBody.liftProfiles.deadlift",
           "labelEn": "Deadlift Sets",
           "labelFr": "Séries de soulevé de terre",
           "type": "enumeration",

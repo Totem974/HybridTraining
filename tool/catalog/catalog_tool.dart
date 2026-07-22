@@ -556,12 +556,16 @@ final class _Catalog {
   List<String> lint() {
     final errors = [...loadErrors];
     final identities = <String>{};
+    final defaultTemplates = <String>[];
     for (final document in documents) {
       for (var i = 0; i < document.records.length; i++) {
         final record = document.records[i];
         final at = '${document.path}:${document.kind}[$i]';
         try {
           _lintRecord(document.kind, record, at);
+          if (document.kind == 'templates' && record['isDefault'] == true) {
+            defaultTemplates.add('${record['id']}@${record['revision']}');
+          }
           _rejectPlaceholder(record, at);
           final identity = document.kind == 'sources'
               ? 'sources:${record['ruleId']}'
@@ -577,6 +581,12 @@ final class _Catalog {
           errors.add('$at: $error');
         }
       }
+    }
+    if (defaultTemplates.length != 1) {
+      errors.add(
+        'templates require exactly one global default, got '
+        '${defaultTemplates.join(', ')}',
+      );
     }
     return errors;
   }
@@ -911,15 +921,24 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
         _strings(sessions[i]['movementIds'], '$at.sessions[$i].movementIds');
       }
     case 'templates':
-      _exact(value, {
-        'id',
-        'revision',
-        'labels',
-        'sourceRuleIds',
-        'variants',
-        'surface',
-      }, at);
+      _exact(
+        value,
+        {
+          'id',
+          'revision',
+          'labels',
+          'sourceRuleIds',
+          'variants',
+          'surface',
+          'isDefault',
+        },
+        at,
+        optional: {'isDefault'},
+      );
       _common(value, at);
+      if (value['isDefault'] != null && value['isDefault'] is! bool) {
+        throw FormatException('$at.isDefault must be a boolean');
+      }
       if (!const {
         'cyclePublic',
         'foreverInternal',
@@ -1298,8 +1317,16 @@ void _parameter(Map<String, Object?> value, String at) {
       'requiredWhen',
     },
     at,
-    optional: {'presentationGroup', 'labelEn', 'labelFr'},
+    optional: {'presentationGroup', 'labelEn', 'labelFr', 'requestPath'},
   );
+  if (value['requestPath'] case final Object requestPath) {
+    if (requestPath is! String ||
+        requestPath.isEmpty ||
+        requestPath.startsWith('options.') ||
+        requestPath.split('.').any((segment) => segment.isEmpty)) {
+      throw FormatException('$at.requestPath must be relative to options');
+    }
+  }
   if (value['presentationGroup'] case final String group
       when !const {
         'hidden',
@@ -1467,11 +1494,28 @@ void _block(Object? raw, String at) {
       case 'bodyweight' || 'unloaded':
         _exact(load, {'type'}, '$at primitive load');
       case 'warm_up_base':
-        _exact(load, {'type', 'region'}, '$at primitive load');
-        if (!const {'upperBody', 'lowerBody'}.contains(load['region'])) {
+        final regional = load.containsKey('region');
+        final fixed =
+            load.containsKey('centiUnits') || load.containsKey('unit');
+        if (regional == fixed) {
           throw FormatException(
-            'unknown warm-up base region ${load['region']}',
+            '$at warm-up base requires exactly one regional or fixed shape',
           );
+        }
+        if (regional) {
+          _exact(load, {'type', 'region'}, '$at primitive load');
+          if (!const {'upperBody', 'lowerBody'}.contains(load['region'])) {
+            throw FormatException(
+              'unknown warm-up base region ${load['region']}',
+            );
+          }
+        } else {
+          _exact(load, {'type', 'centiUnits', 'unit'}, '$at primitive load');
+          if (load['centiUnits'] is! int ||
+              (load['centiUnits']! as int) <= 0 ||
+              !const {'kg', 'lb'}.contains(load['unit'])) {
+            throw FormatException('$at invalid fixed warm-up base');
+          }
         }
       case 'training_max_ramp':
         final anchor = load['anchor'];

@@ -284,6 +284,7 @@
     {
       "id": "classic_boring_but_big",
       "revision": 1,
+      "isDefault": true,
       "surface": "cyclePublic",
       "labels": {
         "en": "Boring But Big",
@@ -297,8 +298,8 @@
           "id": "same_lift_5x10",
           "revision": 1,
           "labels": {
-            "en": "Same lift, 5 x 10 at 50%",
-            "fr": "Même mouvement, 5 × 10 à 50 %"
+            "en": "Original",
+            "fr": "Original"
           },
           "sourceRuleIds": [
             "or.bbb.same_lift"

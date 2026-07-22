@@ -67,6 +67,10 @@ void main() {
           expect(parameter['labelEn'], isNotEmpty);
           expect(parameter['labelFr'], isNotEmpty);
         }
+        if (parameter.containsKey('requestPath')) {
+          expectedKeys.add('requestPath');
+          expect(parameter['requestPath'], startsWith('fullBody.'));
+        }
         expect(parameter.keys.toSet(), expectedKeys);
         expect(parameter['visibleWhen'], {'type': 'always'});
         expect(parameter['enabledWhen'], {'type': 'always'});

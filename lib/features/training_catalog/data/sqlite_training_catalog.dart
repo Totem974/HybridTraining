@@ -348,7 +348,9 @@ final class SqliteTrainingCatalog
                   'repetitions_json': jsonEncode(
                     block.sets[s].repetitions.toJson(),
                   ),
-                  'load_json': jsonEncode(_loadJson(block.sets[s].load)),
+                  'load_json': jsonEncode(
+                    encodeCatalogLoadPrescription(block.sets[s].load),
+                  ),
                 });
               }
             }
@@ -1171,71 +1173,8 @@ final class SqliteTrainingCatalog
           .sets
           .single;
 
-  static Map<String, Object> _loadJson(LoadPrescription load) => switch (load) {
-    MainWorkSetPlusLoad(:final cumulativeIncreaseBasisPoints) => {
-      'type': 'main_work_set_plus',
-      'cumulativeIncreaseBasisPoints': cumulativeIncreaseBasisPoints,
-    },
-    WarmUpBaseLoad(:final region) => {
-      'type': 'warm_up_base',
-      'region': region.name,
-    },
-    TrainingMaxRampLoad(
-      :final anchor,
-      :final stepBasisPoints,
-      :final lowerBoundStepFractionBasisPoints,
-      :final anchorMultiplierBasisPoints,
-      :final maximumExclusiveBasisPoints,
-    ) =>
-      {
-        'type': 'training_max_ramp',
-        'anchor': switch (anchor) {
-          TrainingMaxRampAnchor.beforeMainWork => 'before_main_work',
-          TrainingMaxRampAnchor.warmUpBase => 'warm_up_base',
-        },
-        'stepBasisPoints': stepBasisPoints,
-        if (lowerBoundStepFractionBasisPoints != null) ...{
-          'lowerBound': 'warm_up_base_plus_step_fraction',
-          'lowerBoundStepFractionBasisPoints':
-              lowerBoundStepFractionBasisPoints,
-        },
-        'anchorMultiplierBasisPoints': ?anchorMultiplierBasisPoints,
-        'maximumExclusiveBasisPoints': ?maximumExclusiveBasisPoints,
-      },
-    TrainingMaxPercentageLoad(:final percentage) => {
-      'type': 'training_max_percentage',
-      'basisPoints': percentage.basisPoints,
-    },
-    ParameterizedTrainingMaxPercentageLoad(
-      :final parameterId,
-      :final defaultValue,
-      :final minimum,
-      :final maximum,
-    ) =>
-      {
-        'type': 'parameterized_training_max_percentage',
-        'parameterId': parameterId,
-        'defaultBasisPoints': defaultValue.basisPoints,
-        'minimumBasisPoints': minimum.basisPoints,
-        'maximumBasisPoints': maximum.basisPoints,
-      },
-    OneRepMaxPercentageLoad(:final percentage) => {
-      'type': 'one_rep_max_percentage',
-      'basisPoints': percentage.basisPoints,
-    },
-    FixedLoad(:final weight) => {
-      'type': 'fixed',
-      'centiUnits': weight.centiUnits,
-      'unit': weight.unit.name,
-    },
-    RelativeSetLoad(:final position, :final multiplierBasisPoints) => {
-      'type': 'relative_set',
-      'position': position.name,
-      'multiplierBasisPoints': multiplierBasisPoints,
-    },
-    BodyweightLoad() => {'type': 'bodyweight'},
-    Unloaded() => {'type': 'unloaded'},
-  };
+  static Map<String, Object> _loadJson(LoadPrescription load) =>
+      encodeCatalogLoadPrescription(load);
 
   static Map<String, Object?> _blockJson(BlockDefinition block) => {
     'id': block.id,
@@ -1251,6 +1190,77 @@ final class SqliteTrainingCatalog
         .toList(),
   };
 }
+
+Map<String, Object> encodeCatalogLoadPrescription(LoadPrescription load) =>
+    switch (load) {
+      MainWorkSetPlusLoad(:final cumulativeIncreaseBasisPoints) => {
+        'type': 'main_work_set_plus',
+        'cumulativeIncreaseBasisPoints': cumulativeIncreaseBasisPoints,
+      },
+      WarmUpBaseLoad(:final region, :final fixedWeight) =>
+        fixedWeight != null
+            ? {
+                'type': 'warm_up_base',
+                'centiUnits': fixedWeight.centiUnits,
+                'unit': fixedWeight.unit.name,
+              }
+            : {'type': 'warm_up_base', 'region': region!.name},
+      TrainingMaxRampLoad(
+        :final anchor,
+        :final stepBasisPoints,
+        :final lowerBoundStepFractionBasisPoints,
+        :final anchorMultiplierBasisPoints,
+        :final maximumExclusiveBasisPoints,
+      ) =>
+        {
+          'type': 'training_max_ramp',
+          'anchor': switch (anchor) {
+            TrainingMaxRampAnchor.beforeMainWork => 'before_main_work',
+            TrainingMaxRampAnchor.warmUpBase => 'warm_up_base',
+          },
+          'stepBasisPoints': stepBasisPoints,
+          if (lowerBoundStepFractionBasisPoints != null) ...{
+            'lowerBound': 'warm_up_base_plus_step_fraction',
+            'lowerBoundStepFractionBasisPoints':
+                lowerBoundStepFractionBasisPoints,
+          },
+          'anchorMultiplierBasisPoints': ?anchorMultiplierBasisPoints,
+          'maximumExclusiveBasisPoints': ?maximumExclusiveBasisPoints,
+        },
+      TrainingMaxPercentageLoad(:final percentage) => {
+        'type': 'training_max_percentage',
+        'basisPoints': percentage.basisPoints,
+      },
+      ParameterizedTrainingMaxPercentageLoad(
+        :final parameterId,
+        :final defaultValue,
+        :final minimum,
+        :final maximum,
+      ) =>
+        {
+          'type': 'parameterized_training_max_percentage',
+          'parameterId': parameterId,
+          'defaultBasisPoints': defaultValue.basisPoints,
+          'minimumBasisPoints': minimum.basisPoints,
+          'maximumBasisPoints': maximum.basisPoints,
+        },
+      OneRepMaxPercentageLoad(:final percentage) => {
+        'type': 'one_rep_max_percentage',
+        'basisPoints': percentage.basisPoints,
+      },
+      FixedLoad(:final weight) => {
+        'type': 'fixed',
+        'centiUnits': weight.centiUnits,
+        'unit': weight.unit.name,
+      },
+      RelativeSetLoad(:final position, :final multiplierBasisPoints) => {
+        'type': 'relative_set',
+        'position': position.name,
+        'multiplierBasisPoints': multiplierBasisPoints,
+      },
+      BodyweightLoad() => {'type': 'bodyweight'},
+      Unloaded() => {'type': 'unloaded'},
+    };
 
 final class _CanonicalSelection {
   const _CanonicalSelection(

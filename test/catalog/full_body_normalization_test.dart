@@ -51,6 +51,7 @@ void main() {
       _map(variant('original')['optionSchemaId'])['id'] as String,
     );
     final phase = byId(_maps(originalSchema['parameters']), 'phase');
+    expect(phase['requestPath'], 'fullBody.phase');
     expect(phase['default'], 'phase_one');
     expect(phase['allowedValues'], ['phase_one', 'phase_two', 'phase_three']);
     for (final id in ['updated', 'full_boring']) {
@@ -109,6 +110,10 @@ void main() {
     () {
       final updated = byId(schemas, 'classic_full_body_updated_options');
       expect(
+        byId(_maps(updated['parameters']), 'squat_set_profile')['requestPath'],
+        'fullBody.liftProfiles.squat',
+      );
+      expect(
         byId(
           _maps(updated['parameters']),
           'squat_set_profile',
@@ -121,6 +126,21 @@ void main() {
         ],
       );
       final boring = byId(schemas, 'classic_full_body_full_boring_options');
+      expect(
+        byId(_maps(boring['parameters']), 'squat_set_profile')['requestPath'],
+        'fullBody.liftProfiles.squat',
+      );
+      expect(
+        byId(_maps(boring['parameters']), 'bench_set_profile')['requestPath'],
+        'fullBody.liftProfiles.bench',
+      );
+      expect(
+        byId(
+          _maps(boring['parameters']),
+          'deadlift_set_profile',
+        )['requestPath'],
+        'fullBody.liftProfiles.deadlift',
+      );
       expect(
         byId(
           _maps(boring['parameters']),

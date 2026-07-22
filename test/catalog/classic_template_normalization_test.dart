@@ -13,54 +13,70 @@ void main() {
         (item) => item['id'] == variantId,
       );
 
-  test('classic source-backed families remain separate canonical templates', () {
-    expect(
-      templates.map((item) => item['id']),
-      containsAll(<String>[
+  test(
+    'classic source-backed families remain separate canonical templates',
+    () {
+      expect(
+        templates.map((item) => item['id']),
+        containsAll(<String>[
+          'classic_531',
+          'classic_boring_but_big',
+          'classic_triumvirate',
+          'classic_periodization_bible',
+          'classic_bodyweight',
+          'classic_simplest_strength',
+        ]),
+      );
+      for (final id in <String>[
         'classic_531',
         'classic_boring_but_big',
         'classic_triumvirate',
         'classic_periodization_bible',
         'classic_bodyweight',
         'classic_simplest_strength',
-      ]),
-    );
-    for (final id in <String>[
-      'classic_531',
-      'classic_boring_but_big',
-      'classic_triumvirate',
-      'classic_periodization_bible',
-      'classic_bodyweight',
-      'classic_simplest_strength',
-    ]) {
-      expect(template(id)['sourceRuleIds'], isNotEmpty, reason: id);
-      expect(template(id)['variants'], isNotEmpty, reason: id);
-    }
-  });
+      ]) {
+        expect(template(id)['sourceRuleIds'], isNotEmpty, reason: id);
+        expect(template(id)['variants'], isNotEmpty, reason: id);
+      }
+    },
+  );
 
   test('BBB exposes only the component-backed same-lift recipe', () {
     final bbb = template('classic_boring_but_big');
+    expect(bbb['isDefault'], isTrue);
     expect((bbb['variants']! as List).cast<Map>().map((item) => item['id']), [
       'same_lift_5x10',
     ]);
     final original = variant('classic_boring_but_big', 'same_lift_5x10');
-    expect(original['labels'], {
-      'en': 'Same lift, 5 x 10 at 50%',
-      'fr': 'Même mouvement, 5 × 10 à 50 %',
+    expect(original['labels'], {'en': 'Original', 'fr': 'Original'});
+    expect(_scheduleIds(original), {
+      'schedule_four_day_fixed',
+      'schedule_three_day_rotating',
     });
-    expect(
-      _scheduleIds(original),
-      {'schedule_four_day_fixed', 'schedule_three_day_rotating'},
-    );
     final components = (original['weekPlans']! as List)
         .cast<Map>()
         .expand((week) => (week['componentIds']! as List).cast<Map>())
         .map((reference) => reference['id']);
     expect(components, contains('supplemental_bbb_original_5x10_50'));
-    expect(
-      components.where((id) => '$id'.contains('bbb')).toSet(),
-      {'supplemental_bbb_original_5x10_50'},
-    );
+    expect(components.where((id) => '$id'.contains('bbb')).toSet(), {
+      'supplemental_bbb_original_5x10_50',
+    });
+  });
+
+  test('exactly one catalog template is the declarative default', () {
+    final defaults = Directory('catalog_src')
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((file) => file.path.endsWith('.json'))
+        .expand((file) {
+          final value = _read(file.path);
+          if (value['kind'] != 'templates') return const <Map>[];
+          return (value['templates']! as List).cast<Map>();
+        })
+        .where((item) => item['isDefault'] == true)
+        .toList();
+    expect(defaults, hasLength(1));
+    expect(defaults.single['id'], 'classic_boring_but_big');
   });
 
   test('source-default assistance templates offer three or four days', () {
@@ -69,11 +85,10 @@ void main() {
       ('classic_periodization_bible', 'four_day'),
       ('classic_bodyweight', 'four_day'),
     ]) {
-      expect(
-        _scheduleIds(variant(entry.$1, entry.$2)),
-        {'schedule_four_day_fixed', 'schedule_three_day_rotating'},
-        reason: entry.$1,
-      );
+      expect(_scheduleIds(variant(entry.$1, entry.$2)), {
+        'schedule_four_day_fixed',
+        'schedule_three_day_rotating',
+      }, reason: entry.$1);
     }
   });
 
@@ -96,8 +111,10 @@ void main() {
   });
 }
 
-Set<Object?> _scheduleIds(Map variant) =>
-    (variant['scheduleIds']! as List).cast<Map>().map((item) => item['id']).toSet();
+Set<Object?> _scheduleIds(Map variant) => (variant['scheduleIds']! as List)
+    .cast<Map>()
+    .map((item) => item['id'])
+    .toSet();
 
 Map<String, Object?> _read(String path) =>
     jsonDecode(File(path).readAsStringSync()) as Map<String, Object?>;

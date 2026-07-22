@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/features/training_catalog/data/runtime_catalog_builder.dart';
 import 'package:hybrid_training/features/training_catalog/data/sqlite_training_catalog.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_contract.dart';
+import 'package:training_engine/features/training_catalog/data/catalog_source_document_codec.dart';
 
 void main() {
   late Database database;
@@ -75,6 +77,53 @@ void main() {
       expect(jsonDecode(rows[1]['payload_json']! as String), alias);
     },
   );
+
+  test('fixed high-intensity warm-up base round-trips exclusively', () {
+    final encoded = encodeCatalogLoadPrescription(
+      const WarmUpBaseLoad.fixed(Weight(9500, WeightUnit.lb)),
+    );
+    expect(encoded, {'type': 'warm_up_base', 'centiUnits': 9500, 'unit': 'lb'});
+    expect(encoded, isNot(contains('region')));
+    final decoded =
+        const CatalogSourceDocumentCodec()
+                .decodeComponents(
+                  jsonEncode({
+                    'schemaVersion': 1,
+                    'kind': 'components',
+                    'components': [
+                      {
+                        'id': 'roundtrip',
+                        'revision': 1,
+                        'role': 'warmup',
+                        'labels': {'en': 'Roundtrip', 'fr': 'Roundtrip'},
+                        'sourceRuleIds': <Object?>[],
+                        'parameterSchemaIds': <Object?>[],
+                        'constraints': <String, Object?>{},
+                        'compatibilities': <String, Object?>{},
+                        'block': {
+                          'id': 'roundtrip',
+                          'role': 'warmup',
+                          'sets': [
+                            {
+                              'repetitions': {'type': 'fixed', 'count': 5},
+                              'load': encoded,
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  }),
+                )
+                .single
+                .block
+                .sets
+                .single
+                .load
+            as WarmUpBaseLoad;
+    expect(decoded.region, isNull);
+    expect(decoded.fixedWeight?.centiUnits, 9500);
+    expect(decoded.fixedWeight?.unit, WeightUnit.lb);
+  });
 
   test(
     'index excludes internal templates from persisted surface payload',
