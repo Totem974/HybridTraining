@@ -338,11 +338,24 @@ class _CycleWebPageState extends State<CycleWebPage> {
               _schedulingCard()
             else
               _responsivePair(_schedulingCard(), _outputCard(), desktop),
-            if (!widget.embedded && _generated != null) ...[
+            if (!widget.embedded) ...[
               const SizedBox(height: 24),
               _sectionCard(
                 title: _isFrench ? 'PROGRAMME' : 'PROGRAM',
-                child: _CyclePreview(view: _generated!, isFrench: _isFrench),
+                child: _generated == null
+                    ? Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Text(
+                          _isFrench
+                              ? 'Renseignez vos charges : le programme apparaîtra ici.'
+                              : 'Enter your weights and the program will appear here.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: HybridGeneratorTokens.textMuted,
+                          ),
+                        ),
+                      )
+                    : _CyclePreview(view: _generated!, isFrench: _isFrench),
               ),
             ],
           ],
@@ -371,6 +384,8 @@ class _CycleWebPageState extends State<CycleWebPage> {
             key: const Key('cycle-web-template'),
             initialValue: _state!.templateId,
             isExpanded: true,
+            style: _inputTextStyle,
+            dropdownColor: Colors.white,
             decoration: InputDecoration(
               labelText: _isFrench ? 'Modèle' : 'Template',
             ),
@@ -392,6 +407,8 @@ class _CycleWebPageState extends State<CycleWebPage> {
             key: const Key('cycle-web-variant'),
             initialValue: _state!.variantId,
             isExpanded: true,
+            style: _inputTextStyle,
+            dropdownColor: Colors.white,
             decoration: InputDecoration(
               labelText: _isFrench ? 'Variante' : 'Variant',
             ),
@@ -600,6 +617,8 @@ class _CycleWebPageState extends State<CycleWebPage> {
                 key: const Key('cycle-web-unit'),
                 initialValue: _state!.unit,
                 isExpanded: true,
+                style: _inputTextStyle,
+                dropdownColor: Colors.white,
                 decoration: InputDecoration(
                   labelText: _isFrench ? 'Unité' : 'Unit',
                 ),
@@ -664,6 +683,8 @@ class _CycleWebPageState extends State<CycleWebPage> {
               key: ValueKey('cycle-web-max-kind-$id'),
               initialValue: input.kind,
               isExpanded: true,
+              style: _inputTextStyle,
+              dropdownColor: Colors.white,
               decoration: const InputDecoration(isDense: true),
               items: CycleMaxInputKind.values
                   .map(
@@ -765,28 +786,94 @@ class _CycleWebPageState extends State<CycleWebPage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _numberField(
-          key: 'cycle-web-bar',
-          label: _isFrench ? 'Barre' : 'Bar',
-          value: _state!.barWeightCentiUnits / 100,
-          onValue: (value) => _setState(
-            _state!.copyWith(barWeightCentiUnits: (value * 100).round()),
-          ),
+        Wrap(
+          spacing: 20,
+          runSpacing: 14,
+          children: [
+            for (final plate in _plateChoices)
+              SizedBox(
+                width: 118,
+                child: Column(
+                  children: [
+                    Text(
+                      '${_formatWeight(plate)} ${_state!.unit.name}',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          key: ValueKey('cycle-web-plate-remove-$plate'),
+                          visualDensity: VisualDensity.compact,
+                          tooltip: _isFrench
+                              ? 'Retirer une plaque'
+                              : 'Remove one plate',
+                          onPressed: _plateCount(plate) == 0
+                              ? null
+                              : () => _changePlateCount(plate, -1),
+                          icon: const Icon(Icons.remove_circle_outline),
+                        ),
+                        SizedBox(
+                          width: 22,
+                          child: Text(
+                            '${_plateCount(plate)}',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        IconButton(
+                          key: ValueKey('cycle-web-plate-add-$plate'),
+                          visualDensity: VisualDensity.compact,
+                          tooltip: _isFrench
+                              ? 'Ajouter une plaque'
+                              : 'Add one plate',
+                          onPressed: () => _changePlateCount(plate, 1),
+                          icon: const Icon(Icons.add_circle_outline),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
-        const SizedBox(height: 12),
-        _numberField(
-          key: 'cycle-web-rounding',
-          label: _isFrench ? 'Arrondi' : 'Rounding',
-          value: _state!.roundingIncrementCentiUnits / 100,
-          onValue: (value) => _setState(
-            _state!.copyWith(
-              roundingIncrementCentiUnits: (value * 100).round(),
+        const Divider(height: 28),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            SizedBox(
+              width: 190,
+              child: _numberField(
+                key: 'cycle-web-bar',
+                label: _isFrench ? 'Poids de la barre' : 'Barbell weight',
+                value: _state!.barWeightCentiUnits / 100,
+                onValue: (value) => _setState(
+                  _state!.copyWith(barWeightCentiUnits: (value * 100).round()),
+                ),
+              ),
             ),
-          ),
+            SizedBox(
+              width: 190,
+              child: _numberField(
+                key: 'cycle-web-rounding',
+                label: _isFrench ? 'Incrément d’arrondi' : 'Rounding increment',
+                value: _state!.roundingIncrementCentiUnits / 100,
+                onValue: (value) => _setState(
+                  _state!.copyWith(
+                    roundingIncrementCentiUnits: (value * 100).round(),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         TextFormField(
           key: const Key('cycle-web-plates'),
+          style: _inputTextStyle,
           initialValue: _state!.platesPerSideCentiUnits
               .map((value) => value / 100)
               .join(','),
@@ -808,6 +895,50 @@ class _CycleWebPageState extends State<CycleWebPage> {
     ),
   );
 
+  List<int> get _plateChoices {
+    final defaults = _state!.unit == WeightUnit.kg
+        ? const [
+            5000,
+            2500,
+            2000,
+            1500,
+            1000,
+            500,
+            250,
+            200,
+            150,
+            125,
+            100,
+            75,
+            50,
+            25,
+          ]
+        : const [4500, 3500, 2500, 1000, 500, 250, 125];
+    return {...defaults, ..._state!.platesPerSideCentiUnits}.toList()
+      ..sort((left, right) => right.compareTo(left));
+  }
+
+  int _plateCount(int plate) =>
+      _state!.platesPerSideCentiUnits.where((value) => value == plate).length;
+
+  void _changePlateCount(int plate, int delta) {
+    final plates = [..._state!.platesPerSideCentiUnits];
+    if (delta > 0) {
+      plates.add(plate);
+    } else {
+      plates.remove(plate);
+    }
+    plates.sort((left, right) => right.compareTo(left));
+    _setState(_state!.copyWith(platesPerSideCentiUnits: plates));
+  }
+
+  String _formatWeight(int centiUnits) {
+    final value = centiUnits / 100;
+    return value == value.roundToDouble()
+        ? '${value.round()}'
+        : value.toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '');
+  }
+
   Widget _schedulingCard() => _sectionCard(
     title: _isFrench ? 'PLANIFICATION' : 'SCHEDULING',
     child: Column(
@@ -815,6 +946,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
       children: [
         TextFormField(
           key: const Key('cycle-web-start-date'),
+          style: _inputTextStyle,
           initialValue: _state!.startDate?.toIso8601String().substring(0, 10),
           decoration: InputDecoration(
             labelText: _isFrench ? 'Date de début' : 'Start date',
@@ -827,6 +959,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
         const SizedBox(height: 12),
         TextFormField(
           key: const Key('cycle-web-training-days'),
+          style: _inputTextStyle,
           initialValue: _state!.trainingDays.join(','),
           decoration: InputDecoration(
             labelText: _isFrench ? 'Jours (1–7)' : 'Days (1–7)',
@@ -847,6 +980,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
         const SizedBox(height: 12),
         TextFormField(
           key: const Key('cycle-web-session-order'),
+          style: _inputTextStyle,
           initialValue: _state!.sessionOrder.join(','),
           decoration: InputDecoration(
             labelText: _isFrench ? 'Ordre des séances' : 'Session order',
@@ -868,6 +1002,11 @@ class _CycleWebPageState extends State<CycleWebPage> {
   void _setMovementInput(String id, CycleMovementMaxInput input) =>
       _setState(_state!.copyWith(maxInputs: {..._state!.maxInputs, id: input}));
 
+  TextStyle get _inputTextStyle => const TextStyle(
+    color: HybridGeneratorTokens.background,
+    fontWeight: FontWeight.w600,
+  );
+
   Widget _numberField({
     required String key,
     required String label,
@@ -876,6 +1015,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
   }) => TextFormField(
     key: ValueKey(key),
     initialValue: '$value',
+    style: _inputTextStyle,
     keyboardType: const TextInputType.numberWithOptions(decimal: true),
     decoration: InputDecoration(labelText: label),
     onChanged: (text) {
@@ -931,6 +1071,8 @@ class _CycleWebPageState extends State<CycleWebPage> {
         key: ValueKey('cycle-option-${option.id}'),
         initialValue: value,
         isExpanded: true,
+        style: _inputTextStyle,
+        dropdownColor: Colors.white,
         decoration: InputDecoration(labelText: label),
         items: [
           for (final allowed in option.allowedValues)
@@ -951,6 +1093,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
       initialValue: value is num
           ? '${_optionNumberForDisplay(option, value.toDouble())}'
           : '$value',
+      style: _inputTextStyle,
       enabled: enabled,
       keyboardType: const TextInputType.numberWithOptions(
         decimal: true,

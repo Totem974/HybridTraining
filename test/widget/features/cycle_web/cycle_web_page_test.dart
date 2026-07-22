@@ -16,6 +16,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('HYBRID 5/3/1'), findsOneWidget);
+    expect(find.text('CALCULATOR'), findsOneWidget);
     expect(
       find.byKey(const Key('hybrid-generator-page-toggle')),
       findsOneWidget,
@@ -27,6 +29,26 @@ void main() {
     expect(find.text('ADDITIONAL OPTIONS'), findsOneWidget);
     expect(find.text('PLATING & BARBELL'), findsOneWidget);
     expect(find.text('SCHEDULING'), findsOneWidget);
+
+    final plating = find.ancestor(
+      of: find.byKey(const Key('cycle-web-plates')),
+      matching: find.byType(Card),
+    );
+    expect(plating, findsOneWidget);
+    expect(
+      find.descendant(
+        of: plating,
+        matching: find.byKey(const Key('cycle-web-bar')),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: plating,
+        matching: find.byKey(const Key('cycle-web-rounding')),
+      ),
+      findsOneWidget,
+    );
 
     await tester.enterText(
       find.byKey(const ValueKey('cycle-web-max-weight-squat')),
@@ -48,7 +70,11 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      for (final size in const [Size(1440, 1000), Size(390, 844)]) {
+      for (final size in const [
+        Size(1440, 1000),
+        Size(390, 844),
+        Size(320, 568),
+      ]) {
         tester.view.physicalSize = size;
         tester.view.devicePixelRatio = 1;
         await tester.pumpWidget(
@@ -62,6 +88,9 @@ void main() {
         expect(find.text('PLATING & BARBELL'), findsOneWidget);
         expect(find.text('SCHEDULING'), findsOneWidget);
         expect(find.byType(SingleChildScrollView), findsWidgets);
+        await tester.ensureVisible(find.text('SCHEDULING'));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('cycle-web-generate')), findsOneWidget);
         expect(tester.takeException(), isNull, reason: 'viewport: $size');
       }
     },

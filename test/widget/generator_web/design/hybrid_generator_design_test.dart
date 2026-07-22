@@ -15,6 +15,8 @@ void main() {
       find.byKey(const Key('hybrid-generator-shell')),
     );
     expect(shell.backgroundColor, isNull);
+    expect(find.text('HYBRID 5/3/1'), findsOneWidget);
+    expect(find.text('CALCULATOR'), findsOneWidget);
     expect(find.text('WEIGHT'), findsOneWidget);
     expect(find.text('TEMPLATE'), findsOneWidget);
     final first = tester.getRect(find.byKey(const Key('card-one')));
@@ -37,6 +39,12 @@ void main() {
     final first = tester.getRect(find.byKey(const Key('card-one')));
     final second = tester.getRect(find.byKey(const Key('card-two')));
     expect(second.top, greaterThan(first.bottom));
+    expect(find.text('HYBRID 5/3/1'), findsOneWidget);
+    expect(find.text('CALCULATOR'), findsOneWidget);
+    expect(
+      find.byKey(const Key('hybrid-generator-page-toggle')),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -53,6 +61,28 @@ void main() {
     expect(
       find.byKey(const Key('hybrid-generator-page-toggle')),
       findsOneWidget,
+    );
+    final toggle = tester.widget<SegmentedButton<HybridGeneratorPage>>(
+      find.byKey(const Key('hybrid-generator-page-toggle')),
+    );
+    expect(toggle.selected, {HybridGeneratorPage.cycle});
+  });
+
+  testWidgets('cards retain the validated dark rounded visual language', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app());
+
+    final theme = Theme.of(
+      tester.element(find.byKey(const Key('hybrid-generator-shell'))),
+    );
+    expect(theme.scaffoldBackgroundColor, HybridGeneratorTokens.background);
+    expect(theme.colorScheme.primary, HybridGeneratorTokens.accent);
+    expect(theme.cardTheme.color, HybridGeneratorTokens.surface);
+    final shape = theme.cardTheme.shape! as RoundedRectangleBorder;
+    expect(
+      shape.borderRadius,
+      BorderRadius.circular(HybridGeneratorTokens.radius),
     );
   });
 }

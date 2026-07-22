@@ -39,12 +39,22 @@ abstract final class HybridGeneratorTokens {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
+          side: const BorderSide(color: surfaceMuted),
           borderRadius: BorderRadius.circular(radius),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: background.withValues(alpha: 0.36),
+        fillColor: Colors.white,
+        labelStyle: const TextStyle(color: Color(0xFF3D4652)),
+        floatingLabelStyle: const TextStyle(
+          color: Color(0xFF9ED4FF),
+          backgroundColor: surface,
+          fontWeight: FontWeight.w700,
+        ),
+        hintStyle: const TextStyle(color: Color(0xFF5F6874)),
+        suffixStyle: const TextStyle(color: Color(0xFF3D4652)),
+        prefixStyle: const TextStyle(color: Color(0xFF3D4652)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
           vertical: 12,
@@ -53,6 +63,18 @@ abstract final class HybridGeneratorTokens {
         enabledBorder: border,
         focusedBorder: border.copyWith(
           borderSide: const BorderSide(color: accent, width: 2),
+        ),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? Colors.white
+                : surfaceMuted,
+          ),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected) ? surface : text,
+          ),
         ),
       ),
       dividerColor: surfaceMuted.withValues(alpha: 0.55),
@@ -140,16 +162,58 @@ class HybridGeneratorHeader extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final compact = constraints.maxWidth < 520;
-      final heading = Text(
-        title,
-        key: const Key('hybrid-generator-title'),
-        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.5,
-        ),
+      final branding = Row(
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: HybridGeneratorTokens.accent,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Icon(
+              Icons.fitness_center,
+              color: HybridGeneratorTokens.background,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'HYBRID 5/3/1',
+                  key: Key('hybrid-generator-title'),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const Text(
+                  'CALCULATOR',
+                  style: TextStyle(
+                    color: HybridGeneratorTokens.accent,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 3,
+                  ),
+                ),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: HybridGeneratorTokens.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       );
       final toggle = SegmentedButton<HybridGeneratorPage>(
         key: const Key('hybrid-generator-page-toggle'),
+        expandedInsets: EdgeInsets.zero,
         showSelectedIcon: false,
         segments: const [
           ButtonSegment(value: HybridGeneratorPage.cycle, label: Text('Cycle')),
@@ -174,21 +238,26 @@ class HybridGeneratorHeader extends StatelessWidget {
       return Semantics(
         container: true,
         header: true,
-        child: compact
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  heading,
-                  const SizedBox(height: HybridGeneratorTokens.compactGap),
-                  toggle,
-                ],
-              )
-            : Row(
-                children: [
-                  Expanded(child: heading),
-                  toggle,
-                ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            branding,
+            SizedBox(
+              height: compact
+                  ? HybridGeneratorTokens.compactGap
+                  : HybridGeneratorTokens.gap,
+            ),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: HybridGeneratorTokens.surface,
+                border: Border.all(color: HybridGeneratorTokens.surfaceMuted),
+                borderRadius: BorderRadius.circular(16),
               ),
+              child: toggle,
+            ),
+          ],
+        ),
       );
     },
   );
@@ -266,7 +335,7 @@ class HybridGeneratorCard extends StatelessWidget {
           child: _CardTitle(title, prominent: true),
         ),
         Card(
-          child: Padding(padding: const EdgeInsets.all(18), child: child),
+          child: Padding(padding: const EdgeInsets.all(16), child: child),
         ),
       ],
     );
@@ -283,12 +352,12 @@ class _CardTitle extends StatelessWidget {
     value.toUpperCase(),
     style:
         (prominent
-                ? Theme.of(context).textTheme.headlineSmall
+                ? const TextStyle(fontSize: 22)
                 : Theme.of(context).textTheme.titleMedium)
             ?.copyWith(
               color: HybridGeneratorTokens.text,
-              fontWeight: FontWeight.w800,
-              letterSpacing: prominent ? 1.1 : 0.8,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.8,
             ),
   );
 }
