@@ -411,4 +411,3 @@ final class ForeverArchitecture {
         sourceRuleIds: sourceRuleIds,
       );
 }
-

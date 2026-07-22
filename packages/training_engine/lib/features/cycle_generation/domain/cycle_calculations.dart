@@ -175,4 +175,3 @@ final class PlateCalculator {
 
 int _divideAndRound(int numerator, int denominator) =>
     (numerator + denominator ~/ 2) ~/ denominator;
-

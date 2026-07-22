@@ -115,4 +115,3 @@ final class CatalogVariant {
   final List<WeekDefinition> weeks;
   final Map<int, List<String>> componentIdsByWeek;
 }
-

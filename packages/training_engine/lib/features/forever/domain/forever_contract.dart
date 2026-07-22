@@ -296,4 +296,3 @@ abstract interface class ForeverComposer {
     ForeverRequest request,
   );
 }
-

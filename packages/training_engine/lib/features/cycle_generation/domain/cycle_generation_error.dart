@@ -22,4 +22,3 @@ final class CycleGenerationException implements Exception {
   @override
   String toString() => 'CycleGenerationException(${code.name}): $message';
 }
-

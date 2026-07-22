@@ -1,5 +1,6 @@
 library;
 
+export 'features/cycle_generation/application/catalog_plan_resolver.dart';
 export 'features/cycle_generation/domain/catalog_cycle_primitives.dart';
 export 'features/cycle_generation/domain/cycle_calculations.dart';
 export 'features/cycle_generation/domain/cycle_compiler_impl.dart';
@@ -14,3 +15,5 @@ export 'features/training_catalog/domain/catalog_codec.dart';
 export 'features/training_catalog/domain/catalog_coverage.dart';
 export 'features/training_catalog/domain/catalog_index.dart';
 export 'features/training_catalog/domain/catalog_models.dart';
+export 'features/training_catalog/data/catalog_plan_data_resolver.dart';
+export 'features/training_catalog/data/catalog_source_document_codec.dart';

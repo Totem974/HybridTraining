@@ -370,4 +370,3 @@ final class CatalogCodec {
     }
   }
 }
-

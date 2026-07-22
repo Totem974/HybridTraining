@@ -52,4 +52,3 @@ final class CatalogCoverage {
       placeholderEntries == 0 &&
       compileFailures == 0;
 }
-

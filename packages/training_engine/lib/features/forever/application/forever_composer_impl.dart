@@ -291,4 +291,3 @@ final class ForeverComposerImpl implements ForeverComposer {
   DateTime _dateOnly(DateTime value) =>
       DateTime(value.year, value.month, value.day);
 }
-

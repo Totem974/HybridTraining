@@ -121,4 +121,3 @@ final class CycleEditorSchema {
   final String variantId;
   final List<CycleOptionDefinition> options;
 }
-

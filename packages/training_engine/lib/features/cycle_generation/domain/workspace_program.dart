@@ -330,4 +330,3 @@ final class WorkspaceProgramCodec {
     }
   }
 }
-

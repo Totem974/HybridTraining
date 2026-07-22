@@ -415,4 +415,3 @@ final class CycleCompilerImpl implements CycleCompiler {
     return date.add(Duration(days: days));
   }
 }
-

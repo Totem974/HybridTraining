@@ -49,4 +49,3 @@ final class CycleCatalogIndex {
   final int catalogVersion;
   final List<CycleTemplateSummary> templates;
 }
-
