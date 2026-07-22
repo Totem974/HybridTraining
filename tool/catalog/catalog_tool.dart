@@ -21,6 +21,7 @@ const _documentArrays = <String>{
   'exercises',
   'assistancePlans',
   'conditioningDefinitions',
+  'foreverDefinitions',
 };
 String _arrayName(String kind) => kind == 'inventory' ? 'entries' : kind;
 const _placeholders = <String>{
@@ -108,13 +109,13 @@ Future<void> main(List<String> arguments) async {
           ? arguments[1]
           : 'build/catalog/catalog.db';
       stdout.writeln(await buildCatalogDatabase(outputPath));
-      stdout.writeln(buildCatalogSeed('assets/catalog/catalog_seed.v1.json'));
+      stdout.writeln(buildCatalogSeed('assets/catalog/catalog_seed.v2.json'));
     case 'seed':
       stdout.writeln(
         buildCatalogSeed(
           arguments.length > 1
               ? arguments[1]
-              : 'assets/catalog/catalog_seed.v1.json',
+              : 'assets/catalog/catalog_seed.v2.json',
         ),
       );
   }
@@ -148,7 +149,8 @@ Future<CatalogCompilationReport> verifyCatalogCompilation({
     await buildCatalogDatabase(catalogPath, sourcePath: sourcePath);
     catalogDatabase = await databaseFactoryFfi.openDatabase(catalogPath);
     final catalog = SqliteTrainingCatalog(catalogDatabase);
-    final index = await catalog.loadIndex(catalogVersion: 1);
+    const catalogVersion = 2;
+    final index = await catalog.loadIndex(catalogVersion: catalogVersion);
     trainingFile = SqliteDatabaseFile(
       fileName: 'training.db',
       databasePath: '${directory.path}/training.db',
@@ -167,7 +169,7 @@ Future<CatalogCompilationReport> verifyCatalogCompilation({
             'catalog_variant_metadata',
             columns: ['schedule_ids_json', 'valid_example_json'],
             where: 'version=? AND template_id=? AND variant_id=?',
-            whereArgs: [1, template.id, variantId],
+            whereArgs: [catalogVersion, template.id, variantId],
             limit: 1,
           );
           if (metadata.length != 1) {
@@ -196,7 +198,7 @@ Future<CatalogCompilationReport> verifyCatalogCompilation({
           }
 
           final definition = await catalog.resolve(
-            catalogVersion: 1,
+            catalogVersion: catalogVersion,
             templateId: template.id,
             variantId: variantId,
           );
@@ -574,6 +576,7 @@ final class _Catalog {
       'exercises': byKind['exercises']?.length ?? 0,
       'assistancePlans': byKind['assistancePlans']?.length ?? 0,
       'conditioningDefinitions': byKind['conditioningDefinitions']?.length ?? 0,
+      'foreverDefinitions': byKind['foreverDefinitions']?.length ?? 0,
       'unresolvedCycleEntries': unresolved,
       'missingVariants': missingVariants,
       'missingOptionSchemas': missingOptions,
@@ -589,7 +592,7 @@ final class _Catalog {
 
   Map<String, Object?> buildDocument() => {
     'schemaVersion': 1,
-    'catalogVersion': 1,
+    'catalogVersion': 2,
     'status': 'published',
     'documents': [
       for (final document in documents)
@@ -781,6 +784,60 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
         }
         _object(v['compatibilities'], '$vat.compatibilities');
         _object(v['validExample'], '$vat.validExample');
+      }
+    case 'foreverDefinitions':
+      _exact(value, {
+        'id',
+        'revision',
+        'labels',
+        'sourceRuleIds',
+        'phases',
+        'compatibilities',
+        'editorSchema',
+      }, at);
+      _common(value, at);
+      final phases = _objects(value['phases'], '$at.phases');
+      if (phases.isEmpty) {
+        throw const FormatException('Forever definition requires phases');
+      }
+      for (var i = 0; i < phases.length; i++) {
+        final phase = phases[i];
+        _exact(phase, {
+          'id',
+          'role',
+          'repeatCount',
+          'cycle',
+          'trainingMaxRule',
+        }, '$at.phases[$i]');
+        if (!const {
+          'leader',
+          'anchor',
+          'transition',
+          'deload',
+          'test',
+          'custom',
+        }.contains(phase['role'])) {
+          throw FormatException('Unknown Forever role ${phase['role']}');
+        }
+        final cycle = _object(phase['cycle'], '$at.phases[$i].cycle');
+        _exact(cycle, {
+          'templateId',
+          'templateRevision',
+          'variantId',
+          'variantRevision',
+        }, '$at.phases[$i].cycle');
+        final rule = _object(
+          phase['trainingMaxRule'],
+          '$at.phases[$i].trainingMaxRule',
+        );
+        if (!const {
+          'keep',
+          'add',
+          'multiply',
+          'testThenConfirm',
+        }.contains(rule['type'])) {
+          throw FormatException('Unknown Training Max rule ${rule['type']}');
+        }
       }
     case 'optionSchemas':
       _exact(value, {'id', 'revision', 'sourceRuleIds', 'parameters'}, at);

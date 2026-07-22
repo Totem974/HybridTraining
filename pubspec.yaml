@@ -68,7 +68,7 @@ flutter:
   assets:
     - assets/catalog/standard_531_v1.json
     - assets/catalog/standard_531_bbb_v2.json
-    - assets/catalog/catalog_seed.v1.json
+    - assets/catalog/catalog_seed.v2.json
 
   # To add assets to your application, add an assets section, like this:
   # assets:

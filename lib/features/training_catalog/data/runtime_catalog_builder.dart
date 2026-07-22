@@ -19,10 +19,18 @@ final class RuntimeCatalogPublisher {
       throw const FormatException('documents must be a list.');
     }
 
-    await _populate(database, documents);
+    final version = aggregate['catalogVersion'];
+    if (version is! int || version < 1) {
+      throw const FormatException('A positive catalogVersion is required.');
+    }
+    await _populate(database, version, documents);
   }
 
-  Future<void> _populate(Database db, List<Object?> documentValues) async {
+  Future<void> _populate(
+    Database db,
+    int version,
+    List<Object?> documentValues,
+  ) async {
     final records = <String, List<Map<String, Object?>>>{};
     for (final value in documentValues) {
       final document = _map(value, 'document');
@@ -42,7 +50,6 @@ final class RuntimeCatalogPublisher {
     }
 
     await db.transaction((txn) async {
-      const version = 1;
       final batch = txn.batch();
       batch.insert('catalog_versions', {
         'version': version,
@@ -125,6 +132,7 @@ final class RuntimeCatalogPublisher {
         'exercises',
         'assistancePlans',
         'conditioningDefinitions',
+        'foreverDefinitions',
       ]) {
         for (final entry in records[kind] ?? const []) {
           batch.insert('catalog_library_entries', {

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "kind": "sources",
+  "sources": [
+    {"ruleId":"fv.forever.progression.p3","work":"5/3/1 Forever","edition":"First edition (2017)","section":"p. 3 - post-cycle Training Max progression","reviewStatus":"reviewed"},
+    {"ruleId":"fv.forever.programming.p17_21","work":"5/3/1 Forever","edition":"First edition (2017)","section":"pp. 17-21 - 2 Leader / 1 Anchor model and 7th Week placement","reviewStatus":"reviewed"},
+    {"ruleId":"fv.forever.tm_test.p20_23","work":"5/3/1 Forever","edition":"First edition (2017)","section":"pp. 20-23 - 7th Week Training Max Test","reviewStatus":"reviewed"},
+    {"ruleId":"fv.forever.deload.p21_23","work":"5/3/1 Forever","edition":"First edition (2017)","section":"pp. 21-23 - 7th Week Deload","reviewStatus":"reviewed"},
+    {"ruleId":"fv.forever.bbb_leader.p53_58","work":"5/3/1 Forever","edition":"First edition (2017)","section":"pp. 53-58 - BBB Leader and Anchor transition","reviewStatus":"reviewed"},
+    {"ruleId":"fv.forever.original_anchor.p169_170","work":"5/3/1 Forever","edition":"First edition (2017)","section":"pp. 169-170 - Original 5/3/1 Anchor","reviewStatus":"reviewed"}
+  ]
+}

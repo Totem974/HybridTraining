@@ -21,12 +21,13 @@ void main() {
 
         final database = await databaseFactoryFfi.openDatabase(first);
         final repository = SqliteTrainingCatalog(database);
-        final index = await repository.loadIndex(catalogVersion: 1);
+        final index = await repository.loadIndex(catalogVersion: 2);
         final templateIds = index.templates.map((item) => item.id).toSet();
         expect(templateIds, contains('classic_531'));
         expect(templateIds, contains('beyond_boring_but_big'));
         expect(templateIds, contains('powerlifting_classic_531'));
-        expect(templateIds.where((id) => id.startsWith('forever')), isEmpty);
+        expect(templateIds, contains('forever_bbb_leader'));
+        expect(templateIds, contains('forever_7th_week_protocol'));
         for (final templateId in const [
           'classic_531',
           'beyond_boring_but_big',
@@ -36,7 +37,7 @@ void main() {
             (item) => item.id == templateId,
           );
           final definition = await repository.resolve(
-            catalogVersion: 1,
+            catalogVersion: 2,
             templateId: template.id,
             variantId: template.variantIds.first,
           );
@@ -59,7 +60,7 @@ void main() {
           'classic_full_body_phase_3': 'phase_3',
         }.entries) {
           final definition = await repository.resolve(
-            catalogVersion: 1,
+            catalogVersion: 2,
             templateId: identity.key,
             variantId: identity.value,
           );
@@ -113,7 +114,7 @@ void main() {
             'catalog_templates',
             {'name': 'mutated'},
             where: 'version=?',
-            whereArgs: [1],
+            whereArgs: [2],
           ),
           throwsA(isA<DatabaseException>()),
         );

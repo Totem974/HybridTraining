@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "kind": "foreverDefinitions",
+  "foreverDefinitions": [{
+    "id":"forever_bbb_2_leader_1_anchor","revision":1,
+    "labels":{"en":"BBB: two Leaders, one Anchor","fr":"BBB : deux Leaders, un Anchor"},
+    "sourceRuleIds":["fv.forever.programming.p17_21","fv.forever.bbb_leader.p53_58","fv.forever.original_anchor.p169_170"],
+    "phases":[
+      {"id":"leader","role":"leader","repeatCount":2,"cycle":{"templateId":"forever_bbb_leader","templateRevision":1,"variantId":"fives_pro_5x10_50","variantRevision":1},"trainingMaxRule":{"type":"add","upperBody":5,"lowerBody":10,"unit":"lb","valueState":"projected"}},
+      {"id":"leader_to_anchor_deload","role":"deload","repeatCount":1,"cycle":{"templateId":"forever_7th_week_protocol","templateRevision":1,"variantId":"deload_four_day","variantRevision":1},"trainingMaxRule":{"type":"keep"}},
+      {"id":"anchor","role":"anchor","repeatCount":1,"cycle":{"templateId":"forever_original_531_anchor","templateRevision":1,"variantId":"standard_531","variantRevision":1},"trainingMaxRule":{"type":"add","upperBody":5,"lowerBody":10,"unit":"lb","valueState":"projected"}},
+      {"id":"training_max_test","role":"test","repeatCount":1,"cycle":{"templateId":"forever_7th_week_protocol","templateRevision":1,"variantId":"tm_test_four_day","variantRevision":1},"trainingMaxRule":{"type":"testThenConfirm","projectedValuePolicy":"preserveUntilConfirmed"}}
+    ],
+    "compatibilities":{"scheduleIds":["schedule_four_day_fixed"],"movements":["overhead_press","deadlift","bench_press","squat"]},
+    "editorSchema":{"parameters":[{"id":"initialTrainingMaxes","type":"weight","scope":"perMovement","required":true},{"id":"startDate","type":"date","scope":"global","required":true}]}
+  }]
+}

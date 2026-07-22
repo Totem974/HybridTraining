@@ -2,7 +2,17 @@ import '../../cycle_generation/domain/cycle_contract.dart';
 
 extension type const ForeverDefinitionId(String value) {}
 
-extension type const ForeverDefinitionRevision(int value) {}
+final class ForeverDefinitionRevision {
+  const ForeverDefinitionRevision(this.value) : assert(value >= 1);
+  final int value;
+
+  @override
+  bool operator ==(Object other) =>
+      other is ForeverDefinitionRevision && other.value == value;
+
+  @override
+  int get hashCode => value.hashCode;
+}
 
 enum ForeverPhaseRole { leader, anchor, transition, deload, test, custom }
 
@@ -14,10 +24,17 @@ final class ForeverCycleReference {
   const ForeverCycleReference({
     required this.templateId,
     required this.variantId,
-  });
+    this.templateRevision = 1,
+    this.variantRevision = 1,
+  }) : assert(templateId != ''),
+       assert(variantId != ''),
+       assert(templateRevision >= 1),
+       assert(variantRevision >= 1);
 
   final String templateId;
   final String variantId;
+  final int templateRevision;
+  final int variantRevision;
 
   String get key => '$templateId/$variantId';
 }
@@ -31,13 +48,21 @@ final class KeepTrainingMax extends TrainingMaxRule {
 }
 
 final class AddTrainingMax extends TrainingMaxRule {
-  const AddTrainingMax(this.amounts);
+  const AddTrainingMax(
+    this.amounts, {
+    this.resultKind = TrainingMaxValueKind.projected,
+  });
   final Map<MovementId, Weight> amounts;
+  final TrainingMaxValueKind resultKind;
 }
 
 final class MultiplyTrainingMax extends TrainingMaxRule {
-  const MultiplyTrainingMax(this.ratios);
+  const MultiplyTrainingMax(
+    this.ratios, {
+    this.resultKind = TrainingMaxValueKind.projected,
+  });
   final Map<MovementId, Percentage> ratios;
+  final TrainingMaxValueKind resultKind;
 }
 
 final class TestThenConfirmTrainingMax extends TrainingMaxRule {
@@ -66,7 +91,9 @@ final class ForeverCycleSlot {
     required this.allowedCycles,
     required this.transition,
     this.optional = false,
-  });
+  }) : assert(id != ''),
+       assert(repeatCount >= 1),
+       assert(allowedCycles.length > 0);
 
   final String id;
   final ForeverPhaseRole role;
@@ -78,7 +105,9 @@ final class ForeverCycleSlot {
 }
 
 final class ForeverPhase {
-  const ForeverPhase({required this.id, required this.slots});
+  const ForeverPhase({required this.id, required this.slots})
+    : assert(id != ''),
+      assert(slots.length > 0);
   final String id;
   final List<ForeverCycleSlot> slots;
 }
@@ -104,7 +133,10 @@ final class ResolvedForeverDefinition {
     required this.sourceRuleIds,
     required this.phases,
     required this.editorSchema,
-  });
+  }) : assert(labelEn != ''),
+       assert(labelFr != ''),
+       assert(sourceRuleIds.length > 0),
+       assert(phases.length > 0);
 
   final ForeverDefinitionId id;
   final ForeverDefinitionRevision revision;
@@ -125,7 +157,9 @@ final class ForeverSlotRequest {
     this.percentageParameters = const {},
     this.percentageParametersByMovement = const {},
     this.includeDeload = true,
-  });
+  }) : assert(slotId != ''),
+       assert(trainingDays.length > 0),
+       assert(sessionOrder.length > 0);
 
   final String slotId;
   final ForeverCycleReference cycle;
@@ -148,7 +182,8 @@ final class ForeverRequest {
     required this.unit,
     required this.roundingIncrement,
     required this.barProfile,
-  });
+  }) : assert(macrocycleId != ''),
+       assert(initialTrainingMaxes.length > 0);
 
   final String macrocycleId;
   final ForeverDefinitionId definitionId;

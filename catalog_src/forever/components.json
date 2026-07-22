@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "kind": "components",
+  "components": [
+    {
+      "id": "forever_7th_week_deload",
+      "revision": 1,
+      "role": "deload",
+      "labels": {"en":"7th Week Deload","fr":"Deload de la 7e semaine"},
+      "sourceRuleIds": ["fv.forever.deload.p21_23"],
+      "parameterSchemaIds": [],
+      "constraints": {"supplementalWork":"none","assistance":"limited","setOrder":"declared"},
+      "compatibilities": {"generations":["forever"]},
+      "block": {"id":"main","role":"deload","sets":[
+        {"repetitions":{"type":"fixed","count":5},"load":{"type":"training_max_percentage","basisPoints":7000}},
+        {"repetitions":{"type":"fixed","count":3},"load":{"type":"training_max_percentage","basisPoints":8000}},
+        {"repetitions":{"type":"fixed","count":1},"load":{"type":"training_max_percentage","basisPoints":9000}},
+        {"repetitions":{"type":"fixed","count":1},"load":{"type":"training_max_percentage","basisPoints":10000}}
+      ]}
+    },
+    {
+      "id": "forever_7th_week_tm_test",
+      "revision": 1,
+      "role": "test",
+      "labels": {"en":"7th Week Training Max Test","fr":"Test du Training Max de la 7e semaine"},
+      "sourceRuleIds": ["fv.forever.tm_test.p20_23"],
+      "parameterSchemaIds": [],
+      "constraints": {"supplementalWork":"none","assistance":"limited","finalSet":"stopAfterStrongFastReps"},
+      "compatibilities": {"generations":["forever"]},
+      "block": {"id":"main","role":"test","sets":[
+        {"repetitions":{"type":"fixed","count":5},"load":{"type":"training_max_percentage","basisPoints":7000}},
+        {"repetitions":{"type":"fixed","count":5},"load":{"type":"training_max_percentage","basisPoints":8000}},
+        {"repetitions":{"type":"fixed","count":5},"load":{"type":"training_max_percentage","basisPoints":9000}},
+        {"repetitions":{"type":"range","minimum":3,"maximum":5},"load":{"type":"training_max_percentage","basisPoints":10000}}
+      ]}
+    }
+  ]
+}

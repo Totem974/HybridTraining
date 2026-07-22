@@ -40,6 +40,7 @@ void main() {
       'exercises',
       'assistancePlans',
       'conditioningDefinitions',
+      'foreverDefinitions',
       'unresolvedCycleEntries',
       'missingVariants',
       'missingOptionSchemas',

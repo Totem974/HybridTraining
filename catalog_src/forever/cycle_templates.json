@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "kind": "templates",
+  "templates": [
+    {
+      "id":"forever_bbb_leader","revision":1,
+      "labels":{"en":"Boring But Big Leader","fr":"Boring But Big Leader"},
+      "sourceRuleIds":["fv.forever.bbb_leader.p53_58"],
+      "variants":[{
+        "id":"fives_pro_5x10_50","revision":1,
+        "labels":{"en":"5's Pro and 5x10 at 50%","fr":"5's Pro et 5x10 à 50 %"},
+        "sourceRuleIds":["fv.forever.bbb_leader.p53_58"],
+        "optionSchemaId":{"id":"classic_531_options","revision":1},
+        "scheduleIds":[{"id":"schedule_four_day_fixed","revision":1}],
+        "compatibilities":{"trainingMaxRequired":true,"foreverRoles":["leader"]},
+        "validExample":{"trainingMaxRatioBasisPoints":8500,"scheduleId":"schedule_four_day_fixed","includeWarmUp":true,"includeDeload":false},
+        "weekPlans":[
+          {"weekNumber":1,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_fives_pro_5_week","revision":1},{"id":"supplemental_bbb_original_5x10_50","revision":1}]},
+          {"weekNumber":2,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_fives_pro_3_week","revision":1},{"id":"supplemental_bbb_original_5x10_50","revision":1}]},
+          {"weekNumber":3,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_fives_pro_531_week","revision":1},{"id":"supplemental_bbb_original_5x10_50","revision":1}]}
+        ],
+        "assistancePlanIds":[],"conditioningDefinitionIds":[]
+      }]
+    },
+    {
+      "id":"forever_original_531_anchor","revision":1,
+      "labels":{"en":"Original 5/3/1 Anchor","fr":"5/3/1 Original Anchor"},
+      "sourceRuleIds":["fv.forever.original_anchor.p169_170"],
+      "variants":[{
+        "id":"standard_531","revision":1,
+        "labels":{"en":"Standard 5/3/1 with PR sets","fr":"5/3/1 standard avec séries PR"},
+        "sourceRuleIds":["fv.forever.original_anchor.p169_170"],
+        "optionSchemaId":{"id":"classic_531_options","revision":1},
+        "scheduleIds":[{"id":"schedule_four_day_fixed","revision":1}],
+        "compatibilities":{"trainingMaxRequired":true,"foreverRoles":["anchor"]},
+        "validExample":{"trainingMaxRatioBasisPoints":9000,"scheduleId":"schedule_four_day_fixed","includeWarmUp":true,"includeDeload":false},
+        "weekPlans":[
+          {"weekNumber":1,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_standard_5_week","revision":1}]},
+          {"weekNumber":2,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_standard_3_week","revision":1}]},
+          {"weekNumber":3,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_standard_531_week","revision":1}]}
+        ],
+        "assistancePlanIds":[],"conditioningDefinitionIds":[]
+      }]
+    },
+    {
+      "id":"forever_7th_week_protocol","revision":1,
+      "labels":{"en":"7th Week Protocol","fr":"Protocole de la 7e semaine"},
+      "sourceRuleIds":["fv.forever.tm_test.p20_23","fv.forever.deload.p21_23"],
+      "variants":[
+        {"id":"deload_four_day","revision":1,"labels":{"en":"Deload - four days","fr":"Deload - quatre jours"},"sourceRuleIds":["fv.forever.deload.p21_23"],"optionSchemaId":{"id":"classic_531_options","revision":1},"scheduleIds":[{"id":"schedule_four_day_fixed","revision":1}],"compatibilities":{"trainingMaxRequired":true,"foreverRoles":["deload"]},"validExample":{"trainingMaxRatioBasisPoints":8500,"scheduleId":"schedule_four_day_fixed","includeWarmUp":false,"includeDeload":true},"weekPlans":[{"weekNumber":1,"componentIds":[{"id":"forever_7th_week_deload","revision":1}]}],"assistancePlanIds":[],"conditioningDefinitionIds":[]},
+        {"id":"tm_test_four_day","revision":1,"labels":{"en":"Training Max Test - four days","fr":"Test du Training Max - quatre jours"},"sourceRuleIds":["fv.forever.tm_test.p20_23"],"optionSchemaId":{"id":"classic_531_options","revision":1},"scheduleIds":[{"id":"schedule_four_day_fixed","revision":1}],"compatibilities":{"trainingMaxRequired":true,"foreverRoles":["test"]},"validExample":{"trainingMaxRatioBasisPoints":8500,"scheduleId":"schedule_four_day_fixed","includeWarmUp":false,"includeDeload":false},"weekPlans":[{"weekNumber":1,"componentIds":[{"id":"forever_7th_week_tm_test","revision":1}]}],"assistancePlanIds":[],"conditioningDefinitionIds":[]}
+      ]
+    }
+  ]
+}
