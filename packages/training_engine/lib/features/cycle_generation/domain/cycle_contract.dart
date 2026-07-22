@@ -1,3 +1,5 @@
+import 'cycle_execution_options.dart';
+
 enum WeightUnit { kg, lb }
 
 final class Weight {
@@ -87,6 +89,21 @@ final class AmrapRepetitions extends RepetitionPrescription {
 
 sealed class LoadPrescription {
   const LoadPrescription();
+}
+
+final class MainWorkSetPlusLoad extends LoadPrescription {
+  const MainWorkSetPlusLoad(this.cumulativeIncreaseBasisPoints)
+    : assert(cumulativeIncreaseBasisPoints > 0);
+
+  final int cumulativeIncreaseBasisPoints;
+}
+
+enum WarmUpBodyRegion { upperBody, lowerBody }
+
+final class WarmUpBaseLoad extends LoadPrescription {
+  const WarmUpBaseLoad(this.region);
+
+  final WarmUpBodyRegion region;
 }
 
 final class TrainingMaxPercentageLoad extends LoadPrescription {
@@ -247,6 +264,7 @@ final class ResolvedCycleDefinition {
     required this.sessionMovementIds,
     required this.weeks,
     required this.sourceReference,
+    this.optionRecipes = const ResolvedCycleOptionRecipes(),
   });
   final int catalogVersion;
   final String templateId;
@@ -254,6 +272,7 @@ final class ResolvedCycleDefinition {
   final List<MovementId> sessionMovementIds;
   final List<WeekDefinition> weeks;
   final String sourceReference;
+  final ResolvedCycleOptionRecipes optionRecipes;
 }
 
 final class BarProfile {
@@ -277,6 +296,7 @@ final class CycleRequest {
     required this.roundingIncrement,
     required this.barProfile,
     this.includeDeload = true,
+    this.cycleOptions = const CycleExecutionOptions(),
   });
   final String cycleId;
   final DateTime startDate;
@@ -291,6 +311,7 @@ final class CycleRequest {
   final Weight roundingIncrement;
   final BarProfile barProfile;
   final bool includeDeload;
+  final CycleExecutionOptions cycleOptions;
 }
 
 enum GenerationWarningCode { exactLoadUnavailable, insufficientEquipment }

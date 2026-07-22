@@ -1,5 +1,6 @@
 import 'cycle_calculations.dart';
 import 'cycle_contract.dart';
+import 'cycle_execution_options.dart';
 import 'cycle_generation_error.dart';
 
 final class CycleCompilerImpl implements CycleCompiler {
@@ -19,6 +20,8 @@ final class CycleCompilerImpl implements CycleCompiler {
     CycleRequest request,
   ) {
     _validate(definition, request);
+    final options = request.cycleOptions.normalized();
+    _validateOptions(definition, request, options);
     final requiredMaxes = _requiredMaximums(definition, request);
     final maxes = <MovementId, Weight>{};
     for (final movement in requiredMaxes) {
@@ -52,23 +55,28 @@ final class CycleCompilerImpl implements CycleCompiler {
       final sessions = <GeneratedSession>[];
       for (var index = 0; index < request.sessionOrder.length; index++) {
         final movement = request.sessionOrder[index];
+        final blocks = _effectiveBlocks(
+          definition,
+          week,
+          movement,
+          request,
+          options,
+        );
+        if (blocks.isEmpty) continue;
         cursor = _onOrAfter(cursor, request.trainingDays[index]);
         sessions.add(
           GeneratedSession(
             id: '${request.cycleId}-w${week.number}-s${index + 1}',
             date: cursor,
             movementId: movement,
-            blocks: _compileBlocks(
-              _blocksFor(week, movement),
-              movement,
-              maxes,
-              request,
-            ),
+            blocks: _compileBlocks(blocks, movement, maxes, request),
           ),
         );
         cursor = cursor.add(const Duration(days: 1));
       }
-      weeks.add(GeneratedWeek(number: week.number, sessions: sessions));
+      if (sessions.isNotEmpty) {
+        weeks.add(GeneratedWeek(number: week.number, sessions: sessions));
+      }
     }
     return GeneratedCycle(
       id: request.cycleId,
@@ -89,24 +97,23 @@ final class CycleCompilerImpl implements CycleCompiler {
     CycleRequest request,
   ) => [
     for (final block in definitions)
-      if (request.includeDeload || block.role != 'deload')
-        GeneratedBlock(
-          id: block.id,
-          role: block.role,
-          movementId: block.movementId ?? sessionMovement,
-          sets: [
-            for (var index = 0; index < block.sets.length; index++)
-              _compileSet(
-                index,
-                block.sets[index],
-                definitions,
-                block.movementId ?? sessionMovement,
-                maxes[block.movementId ?? sessionMovement],
-                request.maxInputs[block.movementId ?? sessionMovement],
-                request,
-              ),
-          ],
-        ),
+      GeneratedBlock(
+        id: block.id,
+        role: block.role,
+        movementId: block.movementId ?? sessionMovement,
+        sets: [
+          for (var index = 0; index < block.sets.length; index++)
+            _compileSet(
+              index,
+              block.sets[index],
+              definitions,
+              block.movementId ?? sessionMovement,
+              maxes[block.movementId ?? sessionMovement],
+              request.maxInputs[block.movementId ?? sessionMovement],
+              request,
+            ),
+        ],
+      ),
   ];
 
   GeneratedSet _compileSet(
@@ -189,6 +196,29 @@ final class CycleCompilerImpl implements CycleCompiler {
           trainingMax,
           Percentage(percentage),
         );
+      case MainWorkSetPlusLoad(:final cumulativeIncreaseBasisPoints):
+        if (trainingMax == null) {
+          throw const CycleGenerationException(
+            CycleGenerationErrorCode.missingMaximum,
+            'A training max is required for a Joker load.',
+          );
+        }
+        final target = _heaviestMainWorkTarget(
+          sessionBlocks,
+          movement,
+          request,
+        );
+        percentage = target.basisPoints + cumulativeIncreaseBasisPoints;
+        desired = loadCalculator.percentage(
+          trainingMax,
+          Percentage(percentage),
+        );
+      case WarmUpBaseLoad(:final region):
+        final warmUp = request.cycleOptions.normalized().warmUp;
+        desired = switch (region) {
+          WarmUpBodyRegion.upperBody => warmUp.upperBodyBaseWeight,
+          WarmUpBodyRegion.lowerBody => warmUp.lowerBodyBaseWeight,
+        };
     }
     PlateSelection? selection;
     if (desired != null) {
@@ -279,6 +309,55 @@ final class CycleCompilerImpl implements CycleCompiler {
     };
   }
 
+  Percentage _heaviestMainWorkTarget(
+    List<BlockDefinition> sessionBlocks,
+    MovementId movement,
+    CycleRequest request,
+  ) {
+    final values = <Percentage>[];
+    for (final block in sessionBlocks.where(
+      (block) =>
+          const {'main_work', 'main work'}.contains(block.role) &&
+          (block.movementId == null || block.movementId == movement),
+    )) {
+      for (final set in block.sets) {
+        switch (set.load) {
+          case TrainingMaxPercentageLoad(:final percentage):
+            values.add(percentage);
+          case ParameterizedTrainingMaxPercentageLoad(
+            :final parameterId,
+            :final defaultValue,
+            :final minimum,
+            :final maximum,
+          ):
+            final value =
+                request
+                    .percentageParametersByMovement[movement]?[parameterId] ??
+                request.percentageParameters[parameterId] ??
+                defaultValue;
+            if (value.basisPoints < minimum.basisPoints ||
+                value.basisPoints > maximum.basisPoints) {
+              throw CycleGenerationException(
+                CycleGenerationErrorCode.invalidTrainingMaxRatio,
+                'Parameter $parameterId is outside its declared range.',
+              );
+            }
+            values.add(value);
+          default:
+            break;
+        }
+      }
+    }
+    if (values.isEmpty) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.missingRelativeLoadTarget,
+        'Joker Sets require a TM-percentage main-work set.',
+      );
+    }
+    values.sort((a, b) => b.basisPoints.compareTo(a.basisPoints));
+    return values.first;
+  }
+
   Percentage _percentageParameter(
     CycleRequest request,
     MovementId movement,
@@ -352,14 +431,6 @@ final class CycleCompilerImpl implements CycleCompiler {
         'Session order must contain every definition movement exactly once.',
       );
     }
-    for (final movement in _requiredMaximums(definition, request)) {
-      if (!request.maxInputs.containsKey(movement)) {
-        throw CycleGenerationException(
-          CycleGenerationErrorCode.missingMaximum,
-          'No maximum was supplied for ${movement.value}.',
-        );
-      }
-    }
     if (request.roundingIncrement.centiUnits <= 0) {
       throw const CycleGenerationException(
         CycleGenerationErrorCode.invalidRoundingIncrement,
@@ -380,6 +451,184 @@ final class CycleCompilerImpl implements CycleCompiler {
     }
   }
 
+  void _validateOptions(
+    ResolvedCycleDefinition definition,
+    CycleRequest request,
+    CycleExecutionOptions options,
+  ) {
+    final recipes = definition.optionRecipes;
+    if (options.warmUp.enabled) {
+      final type = options.warmUp.type;
+      if (type == null || !recipes.warmUp.containsKey(type)) {
+        throw const CycleGenerationException(
+          CycleGenerationErrorCode.invalidCycleOptions,
+          'The selected warm-up recipe is not available.',
+        );
+      }
+      if (type == WarmUpType.beyond) {
+        final bases = [
+          options.warmUp.upperBodyBaseWeight,
+          options.warmUp.lowerBodyBaseWeight,
+        ];
+        if (bases.any(
+          (weight) =>
+              weight == null ||
+              weight.centiUnits <= 0 ||
+              weight.unit != request.unit,
+        )) {
+          throw const CycleGenerationException(
+            CycleGenerationErrorCode.invalidCycleOptions,
+            'Beyond warm-up requires positive upper/lower bases in the request unit.',
+          );
+        }
+      }
+      _validateRecipeUnit(recipes.warmUp[type]!, request.unit, 'warm-up');
+    }
+    if (options.joker.enabled) {
+      final ceiling = options.joker.ceilingBasisPoints;
+      final recipe = recipes.joker;
+      if (ceiling == null ||
+          ceiling < 500 ||
+          ceiling > 3000 ||
+          ceiling % 500 != 0 ||
+          recipe == null) {
+        throw const CycleGenerationException(
+          CycleGenerationErrorCode.invalidCycleOptions,
+          'Joker Sets require a recipe and a 5%..30% ceiling.',
+        );
+      }
+      if (recipe.blockId.trim().isEmpty ||
+          recipe.steps.length < ceiling ~/ 500) {
+        throw const CycleGenerationException(
+          CycleGenerationErrorCode.invalidCycleOptions,
+          'The Joker recipe does not cover the selected ceiling.',
+        );
+      }
+      for (var index = 0; index < recipe.steps.length; index++) {
+        if (recipe.steps[index].cumulativeIncreaseBasisPoints !=
+            (index + 1) * 500) {
+          throw const CycleGenerationException(
+            CycleGenerationErrorCode.invalidCycleOptions,
+            'Joker recipe steps must be cumulative 5% increments.',
+          );
+        }
+      }
+    }
+    if (options.deload.enabled) {
+      final type = options.deload.type;
+      if (type == null || !recipes.deload.containsKey(type)) {
+        throw const CycleGenerationException(
+          CycleGenerationErrorCode.invalidCycleOptions,
+          'The selected deload recipe is not available.',
+        );
+      }
+      _validateRecipeUnit(recipes.deload[type]!, request.unit, 'deload');
+    }
+  }
+
+  void _validateRecipeUnit(
+    ResolvedBlockRecipe recipe,
+    WeightUnit unit,
+    String label,
+  ) {
+    if (recipe.overlaysFor(unit).isEmpty) {
+      throw CycleGenerationException(
+        CycleGenerationErrorCode.invalidCycleOptions,
+        'The $label recipe has no ${unit.name} prescription.',
+      );
+    }
+  }
+
+  List<BlockDefinition> _effectiveBlocks(
+    ResolvedCycleDefinition definition,
+    WeekDefinition week,
+    MovementId sessionId,
+    CycleRequest request,
+    CycleExecutionOptions options,
+  ) {
+    final recipes = definition.optionRecipes;
+    var blocks = List<BlockDefinition>.of(_blocksFor(week, sessionId));
+    final isDeloadWeek = blocks.any((block) => block.role == 'deload');
+
+    if (recipes.warmUp.isNotEmpty) {
+      blocks.removeWhere((block) => block.role == 'warm_up');
+      final type = options.warmUp.type;
+      final skip =
+          isDeloadWeek &&
+          options.deload.enabled &&
+          options.deload.type != DeloadType.highIntensity &&
+          options.deload.skipWarmUp;
+      if (options.warmUp.enabled && !skip && type != null) {
+        blocks.insertAll(
+          0,
+          _overlayBlocks(
+            recipes.warmUp[type]!,
+            request.unit,
+            week.number,
+            sessionId,
+          ),
+        );
+      }
+    }
+
+    if (recipes.deload.isNotEmpty) {
+      blocks.removeWhere((block) => block.role == 'deload');
+      final type = options.deload.type;
+      if (options.deload.enabled && type != null) {
+        blocks.addAll(
+          _overlayBlocks(
+            recipes.deload[type]!,
+            request.unit,
+            week.number,
+            sessionId,
+          ),
+        );
+      }
+    } else if (!request.includeDeload) {
+      blocks.removeWhere((block) => block.role == 'deload');
+    }
+
+    if (options.joker.enabled) {
+      final recipe = recipes.joker!;
+      final steps = recipe.steps.take(options.joker.ceilingBasisPoints! ~/ 500);
+      final withJokers = <BlockDefinition>[];
+      for (final block in blocks) {
+        withJokers.add(block);
+        if (const {'main_work', 'main work'}.contains(block.role)) {
+          withJokers.add(
+            BlockDefinition(
+              id: '${recipe.blockId}-${block.id}',
+              role: 'joker',
+              movementId: block.movementId,
+              sets: [
+                for (final step in steps)
+                  PrescribedSetDefinition(
+                    repetitions: step.repetitions,
+                    load: MainWorkSetPlusLoad(
+                      step.cumulativeIncreaseBasisPoints,
+                    ),
+                  ),
+              ],
+            ),
+          );
+        }
+      }
+      blocks = withJokers;
+    }
+    return blocks;
+  }
+
+  List<BlockDefinition> _overlayBlocks(
+    ResolvedBlockRecipe recipe,
+    WeightUnit unit,
+    int weekNumber,
+    MovementId sessionId,
+  ) => [
+    for (final overlay in recipe.overlaysFor(unit))
+      if (overlay.weekNumber == weekNumber && overlay.sessionId == sessionId)
+        ...overlay.blocks,
+  ];
+
   List<BlockDefinition> _blocksFor(WeekDefinition week, MovementId sessionId) {
     if (week.sessions.isEmpty) return week.blocks;
     return week.sessions
@@ -392,15 +641,23 @@ final class CycleCompilerImpl implements CycleCompiler {
     CycleRequest request,
   ) {
     final result = <MovementId>{};
+    final options = request.cycleOptions.normalized();
     for (final week in definition.weeks) {
       for (final sessionId in request.sessionOrder) {
-        for (final block in _blocksFor(week, sessionId)) {
+        for (final block in _effectiveBlocks(
+          definition,
+          week,
+          sessionId,
+          request,
+          options,
+        )) {
           if (block.sets.any(
             (set) =>
                 set.load is TrainingMaxPercentageLoad ||
                 set.load is ParameterizedTrainingMaxPercentageLoad ||
                 set.load is OneRepMaxPercentageLoad ||
-                set.load is RelativeSetLoad,
+                set.load is RelativeSetLoad ||
+                set.load is MainWorkSetPlusLoad,
           )) {
             result.add(block.movementId ?? sessionId);
           }

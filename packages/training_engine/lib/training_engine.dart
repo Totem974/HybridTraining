@@ -5,6 +5,7 @@ export 'features/cycle_generation/domain/catalog_cycle_primitives.dart';
 export 'features/cycle_generation/domain/cycle_calculations.dart';
 export 'features/cycle_generation/domain/cycle_compiler_impl.dart';
 export 'features/cycle_generation/domain/cycle_contract.dart';
+export 'features/cycle_generation/domain/cycle_execution_options.dart';
 export 'features/cycle_generation/domain/cycle_generation_error.dart';
 export 'features/cycle_generation/domain/cycle_option_schema.dart';
 export 'features/cycle_generation/domain/workspace_program.dart';

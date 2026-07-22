@@ -36,6 +36,8 @@ final class SourceVariant {
     required this.weekPlans,
     required this.phases,
     required this.compatibilities,
+    required this.optionSchemaId,
+    this.componentSelections = const [],
   });
   final String id;
   final int revision;
@@ -43,17 +45,58 @@ final class SourceVariant {
   final List<CatalogWeekPlan> weekPlans;
   final List<CatalogPhase> phases;
   final Map<String, Object?> compatibilities;
+  final ComponentReference optionSchemaId;
+  final List<SourceComponentSelection> componentSelections;
 }
+
+final class SourceComponentSelection {
+  const SourceComponentSelection({
+    required this.parameterId,
+    required this.targetComponentId,
+    required this.choices,
+  });
+  final String parameterId;
+  final ComponentReference targetComponentId;
+  final List<SourceComponentSelectionChoice> choices;
+}
+
+final class SourceComponentSelectionChoice {
+  const SourceComponentSelectionChoice({
+    required this.value,
+    required this.componentId,
+  });
+  final Object value;
+  final ComponentReference componentId;
+}
+
+enum TemplateSurface { cyclePublic, foreverInternal }
 
 final class SourceTemplate {
   const SourceTemplate({
     required this.id,
     required this.revision,
     required this.variants,
+    required this.surface,
   });
   final String id;
   final int revision;
   final List<SourceVariant> variants;
+  final TemplateSurface surface;
+}
+
+final class SourceTemplateAlias {
+  const SourceTemplateAlias({
+    required this.legacyTemplateId,
+    required this.legacyVariantId,
+    required this.templateId,
+    required this.variantId,
+    required this.optionOverrides,
+  });
+  final String legacyTemplateId;
+  final String legacyVariantId;
+  final String templateId;
+  final String variantId;
+  final Map<String, Object> optionOverrides;
 }
 
 final class CatalogSourceDocumentCodec {
@@ -125,15 +168,48 @@ final class CatalogSourceDocumentCodec {
             'revision',
             'labels',
             'sourceRuleIds',
+            'surface',
             'variants',
           });
           return SourceTemplate(
             id: _string(map, 'id'),
             revision: _int(map, 'revision'),
+            surface: TemplateSurface.values.byName(_string(map, 'surface')),
             variants: _list(
               map,
               'variants',
             ).map(_variant).toList(growable: false),
+          );
+        })
+        .toList(growable: false);
+  }
+
+  List<SourceTemplateAlias> decodeTemplateAliases(String source) {
+    final root = _root(source, 'templateAliases');
+    return _list(root, 'templateAliases')
+        .map((value) {
+          final map = _map(value, 'templateAlias');
+          _keys(map, const {
+            'legacyTemplateId',
+            'legacyVariantId',
+            'templateId',
+            'variantId',
+            'optionOverrides',
+          });
+          final overrides = _map(map['optionOverrides'], 'optionOverrides');
+          for (final entry in overrides.entries) {
+            if (!_isJsonScalar(entry.value)) {
+              throw FormatException(
+                'Option override ${entry.key} must be a JSON scalar.',
+              );
+            }
+          }
+          return SourceTemplateAlias(
+            legacyTemplateId: _string(map, 'legacyTemplateId'),
+            legacyVariantId: _string(map, 'legacyVariantId'),
+            templateId: _string(map, 'templateId'),
+            variantId: _string(map, 'variantId'),
+            optionOverrides: overrides.cast<String, Object>(),
           );
         })
         .toList(growable: false);
@@ -186,12 +262,14 @@ final class CatalogSourceDocumentCodec {
         'phases',
         'assistancePlanIds',
         'conditioningDefinitionIds',
+        'componentSelections',
       },
       optional: const {
         'weekPlans',
         'phases',
         'assistancePlanIds',
         'conditioningDefinitionIds',
+        'componentSelections',
       },
     );
     if (map.containsKey('weekPlans') == map.containsKey('phases')) {
@@ -202,6 +280,7 @@ final class CatalogSourceDocumentCodec {
     return SourceVariant(
       id: _string(map, 'id'),
       revision: _int(map, 'revision'),
+      optionSchemaId: _reference(_map(map['optionSchemaId'], 'optionSchemaId')),
       scheduleIds: _list(map, 'scheduleIds')
           .map((value) => _reference(_map(value, 'reference')))
           .toList(growable: false),
@@ -222,6 +301,48 @@ final class CatalogSourceDocumentCodec {
                 })
                 .toList(growable: false),
       compatibilities: _map(map['compatibilities'], 'compatibilities'),
+      componentSelections: map['componentSelections'] == null
+          ? const []
+          : _list(map, 'componentSelections')
+                .map((value) {
+                  final selection = _map(value, 'componentSelection');
+                  _keys(selection, const {
+                    'parameterId',
+                    'targetComponentId',
+                    'choices',
+                  });
+                  final choices = _list(selection, 'choices')
+                      .map((value) {
+                        final choice = _map(value, 'componentSelectionChoice');
+                        _keys(choice, const {'value', 'componentId'});
+                        final choiceValue = choice['value'];
+                        if (!_isJsonScalar(choiceValue)) {
+                          throw const FormatException(
+                            'Component choice value must be a JSON scalar.',
+                          );
+                        }
+                        return SourceComponentSelectionChoice(
+                          value: choiceValue!,
+                          componentId: _reference(
+                            _map(choice['componentId'], 'componentId'),
+                          ),
+                        );
+                      })
+                      .toList(growable: false);
+                  if (choices.isEmpty) {
+                    throw const FormatException(
+                      'Component selection requires choices.',
+                    );
+                  }
+                  return SourceComponentSelection(
+                    parameterId: _string(selection, 'parameterId'),
+                    targetComponentId: _reference(
+                      _map(selection['targetComponentId'], 'targetComponentId'),
+                    ),
+                    choices: choices,
+                  );
+                })
+                .toList(growable: false),
     );
   }
 
@@ -366,4 +487,7 @@ final class CatalogSourceDocumentCodec {
       throw FormatException('Missing key ${missing.first}.');
     }
   }
+
+  static bool _isJsonScalar(Object? value) =>
+      value is String || value is num || value is bool;
 }

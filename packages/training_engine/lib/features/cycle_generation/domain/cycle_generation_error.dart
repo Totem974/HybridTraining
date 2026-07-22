@@ -11,6 +11,7 @@ enum CycleGenerationErrorCode {
   invalidEquipment,
   missingRelativeLoadTarget,
   ambiguousRelativeLoadTarget,
+  invalidCycleOptions,
 }
 
 final class CycleGenerationException implements Exception {

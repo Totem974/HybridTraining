@@ -14,6 +14,8 @@ final class CatalogPlanDataResolver {
     required List<SourceSchedule> schedules,
     required List<SourceComponent> components,
     required String sourceReference,
+    Map<String, Object?> optionValues = const {},
+    Map<String, Object?> optionDefaults = const {},
   }) {
     if (!variant.scheduleIds.any((item) => _same(item, scheduleReference))) {
       throw const FormatException(
@@ -34,6 +36,25 @@ final class CatalogPlanDataResolver {
         .toList(growable: false);
     final sessionTargets = _targetIds(variant.compatibilities, 'sessionIds');
     final movementTargets = _targetIds(variant.compatibilities, 'movementIds');
+    final selectedWeekPlans = _applyComponentSelections(
+      variant.weekPlans,
+      variant.componentSelections,
+      optionValues,
+      optionDefaults,
+    );
+    final selectedPhases = [
+      for (final phase in variant.phases)
+        CatalogPhase(
+          id: phase.id,
+          repeatCount: phase.repeatCount,
+          weekPlans: _applyComponentSelections(
+            phase.weekPlans,
+            variant.componentSelections,
+            optionValues,
+            optionDefaults,
+          ),
+        ),
+    ];
     return CatalogPlan(
       catalogVersion: catalogVersion,
       definitionId: template.id,
@@ -69,9 +90,65 @@ final class CatalogPlanDataResolver {
             ],
           ),
       ],
-      weekPlans: variant.weekPlans,
-      phases: variant.phases,
+      weekPlans: selectedWeekPlans,
+      phases: selectedPhases,
     );
+  }
+
+  List<CatalogWeekPlan> _applyComponentSelections(
+    List<CatalogWeekPlan> plans,
+    List<SourceComponentSelection> selections,
+    Map<String, Object?> values,
+    Map<String, Object?> defaults,
+  ) {
+    if (selections.isEmpty) return plans;
+    final replacements = <ComponentReference, ComponentReference>{};
+    for (final selection in selections) {
+      final value = values.containsKey(selection.parameterId)
+          ? values[selection.parameterId]
+          : defaults[selection.parameterId];
+      if (value == null) {
+        throw FormatException(
+          'No value or default for component selection ${selection.parameterId}.',
+        );
+      }
+      final matches = selection.choices
+          .where((choice) => choice.value == value)
+          .toList(growable: false);
+      if (matches.length != 1) {
+        throw FormatException(
+          'Unknown or ambiguous value for component selection ${selection.parameterId}.',
+        );
+      }
+      if (replacements.keys.any(
+        (key) => _same(key, selection.targetComponentId),
+      )) {
+        throw FormatException(
+          'Component ${selection.targetComponentId.id} is selected more than once.',
+        );
+      }
+      replacements[selection.targetComponentId] = matches.single.componentId;
+    }
+    return [
+      for (final plan in plans)
+        CatalogWeekPlan(
+          weekNumber: plan.weekNumber,
+          components: [
+            for (final reference in plan.components)
+              _replacementFor(reference, replacements) ?? reference,
+          ],
+        ),
+    ];
+  }
+
+  ComponentReference? _replacementFor(
+    ComponentReference reference,
+    Map<ComponentReference, ComponentReference> replacements,
+  ) {
+    for (final entry in replacements.entries) {
+      if (_same(entry.key, reference)) return entry.value;
+    }
+    return null;
   }
 
   List<String> _targetIds(Map<String, Object?> map, String key) {

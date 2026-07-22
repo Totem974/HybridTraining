@@ -123,6 +123,10 @@ final class WorkspaceProgramCodec {
       'position': position.name,
       'multiplierBasisPoints': multiplierBasisPoints,
     },
+    MainWorkSetPlusLoad() ||
+    WarmUpBaseLoad() => throw const WorkspaceProgramFormatException(
+      'Resolved option loads cannot be stored in user-defined programs',
+    ),
   };
 
   WeekDefinition _week(Object? value) {
