@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hybrid.training/contracts/v1/forever_response.schema.json",
+  "allOf": [{ "$ref": "common.schema.json#/$defs/envelope" }, { "type": "object", "required": ["macrocycle", "warnings", "snapshot"], "properties": {
+    "apiVersion": true, "schemaVersion": true, "engineVersion": true, "catalogVersion": true, "catalogHash": true,
+    "macrocycle": { "type": "object", "required": ["id", "definitionId", "definitionRevision", "state", "nodes"], "properties": { "id": { "type": "string" }, "definitionId": { "type": "string" }, "definitionRevision": { "type": "integer", "minimum": 1 }, "state": { "enum": ["draft", "scheduled", "active", "completed", "cancelled"] }, "nodes": { "type": "array", "items": { "type": "object", "required": ["index", "slotId", "role", "cycle"], "properties": { "index": { "type": "integer", "minimum": 0 }, "slotId": { "type": "string" }, "role": { "enum": ["leader", "anchor", "transition", "deload", "test", "custom"] }, "cycle": { "$ref": "cycle_response.schema.json#/$defs/cycle" } }, "additionalProperties": false } } }, "additionalProperties": false },
+    "warnings": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/issue" } }, "snapshot": { "$ref": "snapshot_envelope.schema.json" }
+  }, "additionalProperties": false }]
+}

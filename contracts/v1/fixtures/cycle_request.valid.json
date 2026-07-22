@@ -1,0 +1,19 @@
+{
+  "apiVersion": "v1",
+  "schemaVersion": 1,
+  "cycleId": "fixture-cycle",
+  "templateId": "standard_531",
+  "variantId": "four_day",
+  "startDate": "2026-07-27",
+  "trainingDays": [1, 2, 4, 5],
+  "sessionOrder": ["overhead_press", "deadlift", "bench_press", "squat"],
+  "maxInputs": {
+    "overhead_press": { "kind": "oneRepMax", "weightCentiUnits": 6000 },
+    "deadlift": { "kind": "repMax", "weightCentiUnits": 16000, "repetitions": 5 }
+  },
+  "globalTrainingMaxRatioBasisPoints": 9000,
+  "unit": "kg",
+  "barProfile": { "barWeightCentiUnits": 2000, "platesPerSideCentiUnits": [2500, 2000, 1000, 500, 250, 125] },
+  "includeDeload": true,
+  "showPlating": true
+}

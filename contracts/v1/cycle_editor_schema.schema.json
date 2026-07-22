@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hybrid.training/contracts/v1/cycle_editor_schema.schema.json",
+  "allOf": [{ "$ref": "common.schema.json#/$defs/envelope" }, { "type": "object", "required": ["templateId", "variantId", "movementIds", "sessionIds", "fields"], "properties": {
+    "apiVersion": true, "schemaVersion": true, "engineVersion": true, "catalogVersion": true, "catalogHash": true,
+    "templateId": { "type": "string" }, "variantId": { "type": "string" }, "movementIds": { "type": "array", "items": { "type": "string" } }, "sessionIds": { "type": "array", "items": { "type": "string" } },
+    "fields": { "type": "array", "items": { "type": "object", "required": ["id", "kind", "required", "visible"], "properties": { "id": { "type": "string" }, "kind": { "enum": ["boolean", "integer", "decimal", "choice", "movementChoice", "schedule", "text"] }, "required": { "type": "boolean" }, "visible": { "type": "boolean" }, "defaultValue": true, "allowedValues": { "type": "array" } }, "additionalProperties": false } }
+  }, "additionalProperties": false }]
+}

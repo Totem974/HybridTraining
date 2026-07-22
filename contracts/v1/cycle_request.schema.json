@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hybrid.training/contracts/v1/cycle_request.schema.json",
+  "type": "object", "required": ["apiVersion", "schemaVersion", "cycleId", "templateId", "variantId", "startDate", "trainingDays", "sessionOrder", "maxInputs", "globalTrainingMaxRatioBasisPoints", "unit", "barProfile", "includeDeload"],
+  "properties": {
+    "apiVersion": { "const": "v1" }, "schemaVersion": { "const": 1 }, "cycleId": { "type": "string", "minLength": 1 }, "templateId": { "type": "string", "minLength": 1 }, "variantId": { "type": "string", "minLength": 1 },
+    "startDate": { "type": "string", "format": "date" }, "trainingDays": { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 7 }, "minItems": 1, "uniqueItems": true },
+    "sessionOrder": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+    "maxInputs": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "object", "required": ["kind", "weightCentiUnits"], "properties": { "kind": { "enum": ["oneRepMax", "repMax", "directTrainingMax"] }, "weightCentiUnits": { "type": "integer", "minimum": 0 }, "repetitions": { "type": "integer", "minimum": 1 } }, "additionalProperties": false } },
+    "globalTrainingMaxRatioBasisPoints": { "type": "integer", "minimum": 0, "maximum": 20000 },
+    "trainingMaxRatioByMovementBasisPoints": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 20000 } },
+    "options": { "type": "object", "additionalProperties": true }, "unit": { "enum": ["kg", "lb"] },
+    "barProfile": { "type": "object", "required": ["barWeightCentiUnits", "platesPerSideCentiUnits"], "properties": { "barWeightCentiUnits": { "type": "integer", "minimum": 0 }, "platesPerSideCentiUnits": { "type": "array", "items": { "type": "integer", "exclusiveMinimum": 0 } } }, "additionalProperties": false },
+    "includeDeload": { "type": "boolean" }, "programTitle": { "type": "string" }, "showPlating": { "type": "boolean" }
+  }, "additionalProperties": false
+}

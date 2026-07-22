@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hybrid.training/contracts/v1/validation_report.schema.json",
+  "allOf": [{ "$ref": "common.schema.json#/$defs/envelope" }, { "type": "object", "required": ["valid", "errors", "warnings"], "properties": {
+    "apiVersion": true, "schemaVersion": true, "engineVersion": true, "catalogVersion": true, "catalogHash": true,
+    "valid": { "type": "boolean" }, "errors": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/issue" } }, "warnings": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/issue" } }
+  }, "additionalProperties": false }]
+}

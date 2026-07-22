@@ -1,0 +1,1 @@
+{ "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hybrid.training/contracts/v1/engine_error.schema.json", "$ref": "common.schema.json#/$defs/issue" }

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hybrid.training/contracts/v1/engine_info.schema.json",
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/envelope" },
+    {
+      "type": "object",
+      "required": ["capabilities"],
+      "properties": {
+        "apiVersion": true, "schemaVersion": true, "engineVersion": true, "catalogVersion": true, "catalogHash": true,
+        "capabilities": { "type": "array", "items": { "enum": ["catalogIndex", "cycleEditorSchema", "validateCycle", "generateCycle", "generateMacrocycle"] }, "uniqueItems": true }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "apiVersion": "v1",
+  "schemaVersion": 1,
+  "engineVersion": "0.1.0",
+  "catalogVersion": 1,
+  "catalogHash": "sha256:test",
+  "capabilities": ["catalogIndex", "cycleEditorSchema", "validateCycle", "generateCycle", "generateMacrocycle"]
+}

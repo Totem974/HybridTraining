@@ -1,0 +1,15 @@
+name: training_engine_web_bridge
+description: JSON-only JavaScript bridge for the local HybridTraining engine.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  training_engine:
+    path: ../training_engine
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.0

@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hybrid.training/contracts/v1/snapshot_envelope.schema.json",
+  "allOf": [{ "$ref": "common.schema.json#/$defs/envelope" }, { "type": "object", "required": ["kind", "logicalHash", "payload"], "properties": {
+    "apiVersion": true, "schemaVersion": true, "engineVersion": true, "catalogVersion": true, "catalogHash": true,
+    "kind": { "enum": ["cycle", "macrocycle"] }, "logicalHash": { "type": "string", "minLength": 1 }, "payload": { "type": "object", "additionalProperties": true }
+  }, "additionalProperties": false }]
+}

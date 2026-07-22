@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hybrid.training/contracts/v1/catalog_index.schema.json",
+  "allOf": [{ "$ref": "common.schema.json#/$defs/envelope" }, { "type": "object", "required": ["templates"], "properties": {
+    "apiVersion": true, "schemaVersion": true, "engineVersion": true, "catalogVersion": true, "catalogHash": true,
+    "templates": { "type": "array", "items": { "type": "object", "required": ["id", "revision", "labels", "variantIds"], "properties": {
+      "id": { "type": "string", "minLength": 1 }, "revision": { "type": "integer", "minimum": 1 },
+      "labels": { "type": "object", "required": ["en", "fr"], "properties": { "en": { "type": "string" }, "fr": { "type": "string" } }, "additionalProperties": false },
+      "variantIds": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true }
+    }, "additionalProperties": false } }
+  }, "additionalProperties": false }]
+}
