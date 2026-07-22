@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:sqflite_common/sqlite_api.dart';
 
-import '../../cycle_generation/domain/cycle_contract.dart';
-import '../domain/forever_contract.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_contract.dart';
+import 'package:training_engine/features/forever/domain/forever_contract.dart';
 
 final class SqliteForeverDefinitionRepository
     implements ForeverDefinitionRepository {

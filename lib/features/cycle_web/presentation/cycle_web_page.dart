@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../cycle_generation/domain/cycle_contract.dart';
-import '../../cycle_generation/domain/cycle_option_schema.dart';
-import '../../training_catalog/domain/catalog_index.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_contract.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_option_schema.dart';
+import 'package:training_engine/features/training_catalog/domain/catalog_index.dart';
 import '../../generator_web/design/hybrid_generator_design.dart';
 import '../application/cycle_option_condition_evaluator.dart';
 import '../application/cycle_web_contract.dart';

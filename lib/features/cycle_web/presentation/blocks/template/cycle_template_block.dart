@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../training_catalog/domain/catalog_index.dart';
+import 'package:training_engine/features/training_catalog/domain/catalog_index.dart';
 import '../../../../generator_web/design/hybrid_generator_design.dart';
 import '../../../application/cycle_web_contract.dart';
 

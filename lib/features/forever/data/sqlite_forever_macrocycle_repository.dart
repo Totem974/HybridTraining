@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:hybrid_training/core/storage/sqlite_database_file.dart';
-import 'package:hybrid_training/features/cycle_generation/domain/cycle_contract.dart';
-import 'package:hybrid_training/features/forever/domain/forever_contract.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_contract.dart';
+import 'package:training_engine/features/forever/domain/forever_contract.dart';
 import 'package:sqflite_common/sqlite_api.dart';
 
 import 'forever_draft_payload.dart';

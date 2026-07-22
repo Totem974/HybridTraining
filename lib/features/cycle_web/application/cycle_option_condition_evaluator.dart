@@ -1,4 +1,4 @@
-import '../../cycle_generation/domain/cycle_option_schema.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_option_schema.dart';
 
 abstract final class CycleOptionConditionEvaluator {
   static bool evaluate(

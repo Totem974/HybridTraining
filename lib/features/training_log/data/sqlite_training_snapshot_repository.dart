@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:hybrid_training/core/storage/sqlite_database_file.dart';
-import 'package:hybrid_training/features/cycle_generation/domain/cycle_contract.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_contract.dart';
 import 'package:hybrid_training/features/training_log/application/training_snapshot_repository.dart';
 import 'package:hybrid_training/features/training_log/domain/training_snapshot.dart';
 

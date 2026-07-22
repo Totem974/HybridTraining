@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'package:sqflite_common/sqlite_api.dart';
 
 import '../../cycle_generation/application/catalog_plan_resolver.dart';
-import '../../cycle_generation/domain/cycle_contract.dart';
-import '../../cycle_generation/domain/cycle_option_schema.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_contract.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_option_schema.dart';
 import '../application/catalog_repository.dart';
-import '../domain/catalog_codec.dart';
-import '../domain/catalog_index.dart';
-import '../domain/catalog_models.dart';
+import 'package:training_engine/features/training_catalog/domain/catalog_codec.dart';
+import 'package:training_engine/features/training_catalog/domain/catalog_index.dart';
+import 'package:training_engine/features/training_catalog/domain/catalog_models.dart';
 import 'catalog_plan_data_resolver.dart';
 import 'catalog_source_document_codec.dart';
 

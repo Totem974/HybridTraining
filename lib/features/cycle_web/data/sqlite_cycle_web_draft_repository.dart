@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 
 import '../../../core/storage/sqlite_database_file.dart';
-import '../../cycle_generation/domain/cycle_contract.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_contract.dart';
 import '../application/cycle_web_contract.dart';
 import '../application/cycle_web_draft_repository.dart';
 

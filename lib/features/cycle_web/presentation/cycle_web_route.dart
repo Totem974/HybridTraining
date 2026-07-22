@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../cycle_generation/domain/cycle_option_schema.dart';
-import '../../training_catalog/domain/catalog_index.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_option_schema.dart';
+import 'package:training_engine/features/training_catalog/domain/catalog_index.dart';
 import '../application/cycle_web_contract.dart';
 import 'cycle_web_page.dart';
 

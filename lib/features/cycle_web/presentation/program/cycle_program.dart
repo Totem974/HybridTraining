@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../cycle_generation/domain/cycle_contract.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_contract.dart';
 import '../../../generator_web/design/hybrid_generator_design.dart';
 import '../../application/cycle_web_contract.dart';
 

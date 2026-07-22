@@ -1,6 +1,6 @@
-import '../../cycle_generation/domain/cycle_contract.dart';
-import '../../cycle_generation/domain/cycle_option_schema.dart';
-import '../../training_catalog/domain/catalog_index.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_contract.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_option_schema.dart';
+import 'package:training_engine/features/training_catalog/domain/catalog_index.dart';
 import '../../training_log/domain/training_snapshot.dart';
 
 final class CycleEditorState {

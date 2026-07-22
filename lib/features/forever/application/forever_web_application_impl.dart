@@ -1,13 +1,14 @@
-import '../../cycle_generation/domain/cycle_contract.dart';
-import '../../cycle_generation/domain/cycle_option_schema.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_contract.dart';
+import 'package:training_engine/features/cycle_generation/domain/cycle_option_schema.dart';
+import 'package:training_engine/features/forever/domain/forever_architecture.dart'
+    as architecture;
+import 'package:training_engine/features/forever/domain/forever_contract.dart';
 import '../../cycle_web/application/cycle_web_contract.dart';
 import '../../training_catalog/application/catalog_repository.dart';
 import '../data/forever_draft_payload.dart';
 import '../data/forever_json_export.dart';
 import '../data/sqlite_forever_draft_repository.dart';
 import '../data/sqlite_forever_macrocycle_repository.dart';
-import '../domain/forever_contract.dart';
-import '../domain/forever_architecture.dart' as architecture;
 import '../presentation/forever_web_contract.dart';
 
 final class CatalogForeverCycleResolver

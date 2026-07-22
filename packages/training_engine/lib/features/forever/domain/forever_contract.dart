@@ -300,7 +300,6 @@ abstract interface class ForeverComposer {
     ForeverRequest request,
   );
 }
-
 abstract interface class SyncForeverComposer {
   GeneratedMacrocycle composeSync(
     ResolvedForeverDefinition definition,
