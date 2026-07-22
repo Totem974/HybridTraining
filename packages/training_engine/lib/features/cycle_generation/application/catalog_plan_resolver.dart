@@ -124,7 +124,9 @@ final class CatalogPlanResolver {
       }
       final targets = component.movementIds.isEmpty
           ? component.block.movementId == null
-                ? <MovementId>[session.id]
+                ? session.movementIds.isEmpty
+                      ? <MovementId>[session.id]
+                      : session.movementIds
                 : <MovementId>[component.block.movementId!]
           : component.movementIds
                 .where(session.movementIds.contains)

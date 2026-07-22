@@ -4,6 +4,103 @@ import 'package:test/test.dart';
 import 'package:training_engine/training_engine.dart';
 
 void main() {
+  test('paired sessions compile blocks against actual movement maximums', () {
+    const movements = [
+      MovementId('squat'),
+      MovementId('bench_press'),
+      MovementId('deadlift'),
+      MovementId('overhead_press'),
+    ];
+    const reference = ComponentReference('main', 1);
+    final definition = const CatalogPlanResolver().resolve(
+      const CatalogPlan(
+        catalogVersion: 1,
+        definitionId: 'template',
+        variantId: 'paired',
+        sourceReference: 'test',
+        sessions: [
+          PlanSession(
+            id: MovementId('day_one'),
+            movementIds: [MovementId('squat'), MovementId('bench_press')],
+          ),
+          PlanSession(
+            id: MovementId('day_two'),
+            movementIds: [MovementId('deadlift'), MovementId('overhead_press')],
+          ),
+        ],
+        components: [
+          PlanComponent(
+            reference: reference,
+            block: BlockDefinition(
+              id: 'main',
+              role: 'main_work',
+              sets: [
+                PrescribedSetDefinition(
+                  repetitions: FixedRepetitions(5),
+                  load: TrainingMaxPercentageLoad(Percentage(8000)),
+                ),
+              ],
+            ),
+          ),
+        ],
+        weekPlans: [
+          CatalogWeekPlan(weekNumber: 1, components: [reference]),
+        ],
+      ),
+    );
+    final cycle = const CycleCompilerImpl().compile(
+      definition,
+      CycleRequest(
+        cycleId: 'paired',
+        startDate: DateTime(2026, 1, 5),
+        trainingDays: const [1, 4],
+        sessionOrder: const [MovementId('day_one'), MovementId('day_two')],
+        maxInputs: const {
+          MovementId('squat'): DirectTrainingMaxInput(
+            Weight(10000, WeightUnit.kg),
+          ),
+          MovementId('bench_press'): DirectTrainingMaxInput(
+            Weight(8000, WeightUnit.kg),
+          ),
+          MovementId('deadlift'): DirectTrainingMaxInput(
+            Weight(12000, WeightUnit.kg),
+          ),
+          MovementId('overhead_press'): DirectTrainingMaxInput(
+            Weight(6000, WeightUnit.kg),
+          ),
+        },
+        globalTrainingMaxRatio: Percentage(10000),
+        unit: WeightUnit.kg,
+        roundingIncrement: Weight(100, WeightUnit.kg),
+        barProfile: BarProfile(
+          weight: Weight(0, WeightUnit.kg),
+          platesPerSide: [
+            Weight(100, WeightUnit.kg),
+            Weight(200, WeightUnit.kg),
+            Weight(400, WeightUnit.kg),
+            Weight(800, WeightUnit.kg),
+            Weight(1600, WeightUnit.kg),
+            Weight(3200, WeightUnit.kg),
+          ],
+        ),
+      ),
+    );
+    final sessions = cycle.weeks.single.sessions;
+    expect(sessions[0].blocks.map((block) => block.movementId.value), [
+      'squat',
+      'bench_press',
+    ]);
+    expect(sessions[1].blocks.map((block) => block.movementId.value), [
+      'deadlift',
+      'overhead_press',
+    ]);
+    expect(
+      cycle.effectiveTrainingMaxes.keys,
+      containsAll(movements.map((id) => id.value)),
+    );
+    expect(cycle.effectiveTrainingMaxes, isNot(contains('day_one')));
+  });
+
   test('source codec preserves fixed and parameterized load primitives', () {
     Map<String, Object?> component(String id, Map<String, Object?> load) => {
       'id': id,
