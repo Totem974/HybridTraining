@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#181818" />
+    <meta
+      name="description"
+      content="A private, browser-based training cycle generator."
+    />
+    <title>Cycle generator</title>
+    <link rel="stylesheet" href="../styles/cycle.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#cycle-editor">Skip to the cycle editor</a>
+
+    <header class="site-header" aria-labelledby="page-title">
+      <div class="brand-lockup">
+        <span class="brand-mark" aria-hidden="true">HT</span>
+        <div>
+          <p class="eyebrow">Training tools</p>
+          <h1 id="page-title">Cycle generator</h1>
+          <p class="header-summary" id="page-summary">
+            Configure and generate a training cycle locally in your browser.
+          </p>
+        </div>
+      </div>
+
+      <nav class="page-switcher" aria-label="Training generator">
+        <a href="./" aria-current="page">Cycle</a>
+      </nav>
+    </header>
+
+    <main id="cycle-editor" class="page-shell" aria-describedby="page-summary">
+      <div
+        id="engine-status"
+        class="status-banner"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        data-cycle-region="status"
+      >
+        Loading the cycle generator…
+      </div>
+
+      <form id="cycle-form" novalidate data-cycle-form>
+        <div class="editor-grid">
+          <section
+            id="weight"
+            class="editor-section"
+            aria-labelledby="weight-heading"
+            data-cycle-region="weight"
+          >
+            <h2 id="weight-heading">Weight</h2>
+            <div class="panel" data-cycle-mount="weight"></div>
+          </section>
+
+          <section
+            id="template"
+            class="editor-section"
+            aria-labelledby="template-heading"
+            data-cycle-region="template"
+          >
+            <h2 id="template-heading">Template</h2>
+            <div class="panel" data-cycle-mount="template"></div>
+          </section>
+        </div>
+
+        <section
+          id="additional-options"
+          class="editor-section"
+          aria-labelledby="additional-options-heading"
+          data-cycle-region="additional-options"
+        >
+          <h2 id="additional-options-heading">Additional options</h2>
+          <div class="panel" data-cycle-mount="additional-options"></div>
+        </section>
+
+        <div class="editor-grid">
+          <section
+            id="plating"
+            class="editor-section"
+            aria-labelledby="plating-heading"
+            data-cycle-region="plating"
+          >
+            <h2 id="plating-heading">Plating &amp; barbell</h2>
+            <div class="panel" data-cycle-mount="plating"></div>
+          </section>
+
+          <section
+            id="scheduling"
+            class="editor-section"
+            aria-labelledby="scheduling-heading"
+            data-cycle-region="scheduling"
+          >
+            <h2 id="scheduling-heading">Scheduling</h2>
+            <div class="panel" data-cycle-mount="scheduling"></div>
+          </section>
+        </div>
+
+        <section
+          id="output"
+          class="editor-section"
+          aria-labelledby="output-heading"
+          data-cycle-region="output"
+        >
+          <h2 id="output-heading">Output</h2>
+          <div class="panel" data-cycle-mount="output"></div>
+        </section>
+      </form>
+
+      <section
+        id="program"
+        class="program-section"
+        aria-labelledby="program-heading"
+        aria-live="polite"
+        data-cycle-region="program"
+      >
+        <h2 id="program-heading">Program</h2>
+        <div data-cycle-mount="program"></div>
+      </section>
+    </main>
+
+    <noscript>
+      <p class="noscript-message">
+        JavaScript is required to run the cycle generator. Your data stays in
+        this browser.
+      </p>
+    </noscript>
+    <script type="module" src="../src/main.ts"></script>
+  </body>
+</html>
