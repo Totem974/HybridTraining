@@ -1,7 +1,14 @@
 import { renderCycleForm, localized, type CycleEditorSchema, type CycleFormIntent, type JsonValue } from './cycle/form';
 import { renderProgram, type CycleResponseLike } from './cycle/program';
 import { EngineClient } from './engine';
+import {
+  exportConfiguration,
+  exportProgram,
+  importValidatedArtifact,
+  type LocalArtifact,
+} from './storage';
 import { PreferencesStore, type Locale } from './storage/preferences';
+import type { CycleResponse, ValidationReport } from '../../../contracts/v1/generated/contracts';
 
 interface CatalogIndex {
   readonly templates: readonly {
@@ -21,6 +28,8 @@ let catalog: CatalogIndex;
 let schema: CycleEditorSchema;
 let values: Record<string, JsonValue> = {};
 let disposeForm: (() => void) | undefined;
+let lastRequest: object | undefined;
+let lastResponse: CycleResponse | undefined;
 
 async function start(): Promise<void> {
   try {
@@ -38,12 +47,18 @@ async function start(): Promise<void> {
   }
 }
 
-async function loadSchema(templateId: string, variantId: string, preserve: boolean): Promise<void> {
+async function loadSchema(
+  templateId: string,
+  variantId: string,
+  preserve: boolean,
+  scheduleId?: string,
+): Promise<void> {
   const next = client.cycleEditorSchema<CycleEditorSchema>({
     apiVersion: 'v1',
     schemaVersion: 1,
     templateId,
     variantId,
+    ...(scheduleId ? { scheduleId } : {}),
   });
   const previous = preserve ? values : {};
   schema = {
@@ -52,7 +67,7 @@ async function loadSchema(templateId: string, variantId: string, preserve: boole
       ...field,
       value: field.path === 'showPlating'
         ? preferences.read().showPlating
-        : ['templateId', 'variantId', 'sessionOrder'].includes(field.path)
+        : ['templateId', 'variantId', 'scheduleId', 'sessionOrder'].includes(field.path)
           ? field.value
           : previous[field.path] ?? field.value,
     })),
@@ -70,6 +85,7 @@ function renderEditor(): void {
     locale,
     dispatch: handleIntent,
   });
+  installTransferControls();
 }
 
 async function handleIntent(intent: CycleFormIntent): Promise<void> {
@@ -88,6 +104,10 @@ async function handleIntent(intent: CycleFormIntent): Promise<void> {
     await loadSchema(String(values.templateId), intent.value, true);
     return;
   }
+  if (intent.path === 'scheduleId' && typeof intent.value === 'string') {
+    await loadSchema(String(values.templateId), String(values.variantId), true, intent.value);
+    return;
+  }
   schema = {
     ...schema,
     fields: schema.fields.map((field) => field.path === intent.path ? { ...field, value: intent.value! } : field),
@@ -104,11 +124,16 @@ async function handleIntent(intent: CycleFormIntent): Promise<void> {
 }
 
 function generate(): void {
+  generateRequest(buildCycleRequest());
+}
+
+function generateRequest(request: object): void {
   try {
-    const request = buildCycleRequest();
-    const cycle = client.generateCycle<CycleResponseLike>(request);
+    const response = client.generateCycle<CycleResponse>(request);
+    lastRequest = request;
+    lastResponse = response;
     if (!program) throw new Error('PROGRAM_MOUNT_MISSING');
-    renderProgram(program, cycle, {
+    renderProgram(program, response.cycle as CycleResponseLike, {
       showPlating: Boolean(values.showPlating),
       labels: {
         week: locale === 'fr' ? 'SEMAINE' : 'WEEK',
@@ -129,6 +154,71 @@ function generate(): void {
   } catch (error) {
     if (status) status.textContent = message(error);
   }
+}
+
+function installTransferControls(): void {
+  const mount = document.querySelector<HTMLElement>('[data-cycle-mount="output"]');
+  if (!mount || mount.querySelector('[data-transfer-controls]')) return;
+  const controls = document.createElement('div');
+  controls.className = 'transfer-actions';
+  controls.dataset.transferControls = '';
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json,.json';
+  input.className = 'visually-hidden';
+  input.addEventListener('change', async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      const imported = await importValidatedArtifact(
+        await file.text(),
+        'configuration',
+        (candidate) => client.validateCycle<ValidationReport>(candidate.payload as object),
+      );
+      generateRequest(imported.payload as object);
+    } catch (error) {
+      if (status) status.textContent = message(error);
+    } finally {
+      input.value = '';
+    }
+  });
+  controls.append(
+    transferButton(locale === 'fr' ? 'Exporter la configuration' : 'Export configuration', () => {
+      const request = lastRequest ?? buildCycleRequest();
+      download('cycle-configuration.json', exportConfiguration(artifact('configuration', request)));
+    }),
+    transferButton(locale === 'fr' ? 'Exporter le programme' : 'Export program', () => {
+      if (!lastResponse) throw new Error('GENERATE_BEFORE_EXPORT');
+      download('cycle-program.json', exportProgram(artifact('program', lastResponse)));
+    }),
+    transferButton(locale === 'fr' ? 'Importer' : 'Import', () => input.click()),
+    input,
+  );
+  mount.append(controls);
+}
+
+function transferButton(label: string, action: () => void): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'secondary-action';
+  button.textContent = label;
+  button.addEventListener('click', () => {
+    try { action(); } catch (error) { if (status) status.textContent = message(error); }
+  });
+  return button;
+}
+
+function artifact<T>(artifactKind: 'configuration' | 'program', payload: T): LocalArtifact<T> {
+  return { ...client.contractMetadata(), artifactKind, payload };
+}
+
+function download(fileName: string, content: string): void {
+  const url = URL.createObjectURL(new Blob([content], { type: 'application/json' }));
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.click();
+  URL.revokeObjectURL(url);
 }
 
 function buildCycleRequest(): object {
@@ -159,7 +249,6 @@ function buildCycleRequest(): object {
     .flatMap(([path, count]) => Array.from({ length: Math.round(count as number) }, () => ({
       centiUnits: Math.round(Number(path.slice('plates.'.length)) * 100), unit,
     })));
-  const smallest = Math.min(...platesPerSide.map((plate) => plate.centiUnits));
   const percentageParameters = Object.fromEntries(
     schema.fields
       .filter((field) => field.path.startsWith('options.') && field.kind === 'percentage')
@@ -169,14 +258,14 @@ function buildCycleRequest(): object {
     apiVersion: 'v1', schemaVersion: 1,
     cycleId: `cycle-${Date.now()}`,
     templateId: String(values.templateId), variantId: String(values.variantId),
+    scheduleId: String(values.scheduleId),
     startDate: `${String(values.startDate)}T00:00:00.000`,
-    trainingDays: order.map((_, index) => index + 1), sessionOrder: order,
+    sessionOrder: order,
     maxInputs,
     globalTrainingMaxRatioBasisPoints: Math.round(numberValue('globalTrainingMaxRatioBasisPoints', 9000)),
     trainingMaxRatioByMovement: {}, percentageParameters, percentageParametersByMovement: {},
     options: Object.fromEntries(Object.entries(values).filter(([path]) => path.startsWith('options.'))),
     unit,
-    roundingIncrement: { centiUnits: Number.isFinite(smallest) ? smallest * 2 : 250, unit },
     barProfile: {
       weight: { centiUnits: Math.round(numberValue('barWeight', 20) * 100), unit },
       platesPerSide,

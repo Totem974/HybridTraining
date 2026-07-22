@@ -11,7 +11,6 @@ import type {
   CycleEditorField,
   CycleFormIntentHandler,
   CycleFormRegion,
-  JsonPrimitive,
   JsonValue,
   RenderCycleFormOptions,
 } from "./types";
@@ -57,7 +56,6 @@ function applyCommonInput(
 ): void {
   input.id = safeId(field.id);
   input.name = field.path;
-  input.required = field.required ?? false;
   input.disabled = !enabled;
   if (field.minimum !== undefined) input.min = String(field.minimum);
   if (field.maximum !== undefined) input.max = String(field.maximum);
@@ -69,7 +67,7 @@ function primitiveFromInput(field: CycleEditorField, input: HTMLInputElement): J
   if (field.kind === "integer") {
     return Number.isFinite(input.valueAsNumber) ? input.valueAsNumber : null;
   }
-  if (["number", "percentage", "weight"].includes(field.kind)) {
+  if (["decimal", "percentage", "weight"].includes(field.kind)) {
     return Number.isFinite(input.valueAsNumber) ? input.valueAsNumber : null;
   }
   return input.value;
@@ -79,8 +77,8 @@ function choiceValue(choice: CycleEditorChoice): string {
   return JSON.stringify(choice.value);
 }
 
-function parseChoice(value: string): JsonPrimitive {
-  return JSON.parse(value) as JsonPrimitive;
+function parseChoice(value: string): JsonValue {
+  return JSON.parse(value) as JsonValue;
 }
 
 function renderSegmented(
@@ -102,7 +100,7 @@ function renderSegmented(
     input.name = field.path;
     input.value = choiceValue(choice);
     input.checked = JSON.stringify(field.value) === input.value;
-    input.disabled = !enabled || (choice.disabled ?? false);
+    input.disabled = !enabled;
     input.addEventListener("change", () => {
       if (input.checked) emitChange(dispatch, schemaId, field, parseChoice(input.value));
     });
@@ -145,13 +143,11 @@ function renderSelect(
   const select = element("select");
   select.id = safeId(field.id);
   select.name = field.path;
-  select.required = field.required ?? false;
   select.disabled = !enabled;
   for (const choice of field.choices ?? []) {
     const option = element("option");
     option.value = choiceValue(choice);
     option.textContent = localized(choice.label, locale);
-    option.disabled = choice.disabled ?? false;
     option.selected = JSON.stringify(field.value) === option.value;
     select.append(option);
   }
@@ -175,18 +171,7 @@ function renderScalar(
   input.type = field.kind === "date" ? "date" : field.kind === "text" ? "text" : "number";
   applyCommonInput(input, field, enabled);
   input.value = field.value === null ? "" : String(field.value);
-  if (field.description) {
-    const description = element("small");
-    description.id = `${safeId(field.id)}-description`;
-    description.textContent = localized(field.description, locale);
-    input.setAttribute("aria-describedby", description.id);
-    wrapper.append(label, input, description);
-  } else {
-    wrapper.append(label, input);
-  }
-  if (field.suffix) {
-    input.setAttribute("aria-label", `${localized(field.label, locale)} (${localized(field.suffix, locale)})`);
-  }
+  wrapper.append(label, input);
   input.addEventListener("change", () =>
     emitChange(dispatch, schemaId, field, primitiveFromInput(field, input)),
   );
@@ -219,12 +204,8 @@ function renderPlateCounter(
     button.setAttribute(
       "aria-label",
       delta < 0
-        ? field.decreaseLabel
-          ? localized(field.decreaseLabel, locale)
-          : `− ${localized(field.label, locale)}`
-        : field.increaseLabel
-          ? localized(field.increaseLabel, locale)
-          : `+ ${localized(field.label, locale)}`,
+        ? `− ${localized(field.label, locale)}`
+        : `+ ${localized(field.label, locale)}`,
     );
     button.addEventListener("click", () => {
       const current = Number(amount.textContent);

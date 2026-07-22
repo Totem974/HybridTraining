@@ -17,11 +17,7 @@ async function openIntegratedCycle(page: Page): Promise<string[]> {
     await route.continue();
   });
   await page.goto('/cycle/');
-  const ready = await page.locator('[data-cycle-ready="true"]').count();
-  test.skip(
-    ready === 0,
-    'Static Cycle application is not integrated yet: missing data-cycle-ready="true"; scenario was not simulated.',
-  );
+  await expect(page.locator('[data-cycle-ready="true"]')).toHaveCount(1);
   return externalRequests;
 }
 
@@ -109,6 +105,23 @@ test('FR and EN labels switch locally', async ({ page }) => {
   await expect(page.getByRole('button', { name: /générer/i })).toBeVisible();
   await page.getByRole('button', { name: /^english$/i }).click();
   await expect(page.getByRole('button', { name: /generate/i })).toBeVisible();
+  expect(external).toEqual([]);
+});
+
+test('configuration import and configuration/program exports stay local', async ({ page }) => {
+  const external = await openIntegratedCycle(page);
+  const configurationDownload = page.waitForEvent('download');
+  await page.getByRole('button', { name: /export.*configuration|exporter.*configuration/i }).click();
+  const configuration = await configurationDownload;
+  const configurationPath = await configuration.path();
+  expect(configurationPath).toBeTruthy();
+  await page.locator('input[type="file"]').setInputFiles(configurationPath!);
+  await expect(page.locator('#engine-status')).toContainText(/generated|généré/i);
+
+  const programDownload = page.waitForEvent('download');
+  await page.getByRole('button', { name: /export.*program|exporter.*programme/i }).click();
+  const exportedProgram = await programDownload;
+  expect(await exportedProgram.path()).toBeTruthy();
   expect(external).toEqual([]);
 });
 

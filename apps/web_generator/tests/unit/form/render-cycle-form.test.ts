@@ -28,10 +28,14 @@ function shell(): HTMLElement {
 const schema: CycleEditorSchema = {
   apiVersion: "v1",
   engineVersion: "test",
-  catalogVersion: "test",
+  catalogVersion: 1,
   catalogHash: "hash",
-  schemaVersion: "v1",
+  schemaVersion: 1,
   id: "editor",
+  templateId: "alpha",
+  variantId: "default",
+  movementIds: [],
+  sessionIds: [],
   fields: [
     {
       id: "template",

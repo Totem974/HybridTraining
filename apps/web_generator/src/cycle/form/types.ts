@@ -1,84 +1,19 @@
-export type CycleFormRegion =
-  | "weight"
-  | "template"
-  | "additional-options"
-  | "plating"
-  | "scheduling"
-  | "output";
+import type {
+  CycleEditorSchema as ContractCycleEditorSchema,
+  CycleEditorSchemaChoice as ContractCycleEditorChoice,
+  CycleEditorSchemaCondition as ContractCycleEditorCondition,
+  CycleEditorSchemaField as ContractCycleEditorField,
+  CycleEditorSchemaLocalizedText as ContractLocalizedText,
+} from "../../../../../contracts/v1/generated/contracts";
 
-export type LocalizedText = string | Readonly<Record<string, string>>;
+export type CycleEditorSchema = ContractCycleEditorSchema;
+export type CycleEditorChoice = ContractCycleEditorChoice;
+export type CycleEditorCondition = ContractCycleEditorCondition;
+export type CycleEditorField = ContractCycleEditorField;
+export type LocalizedText = ContractLocalizedText;
+export type CycleFormRegion = ContractCycleEditorField["region"];
 export type JsonPrimitive = string | number | boolean | null;
-export type JsonValue =
-  | JsonPrimitive
-  | readonly JsonValue[]
-  | { readonly [key: string]: JsonValue };
-
-export interface CycleEditorChoice {
-  readonly value: JsonPrimitive;
-  readonly label: LocalizedText;
-  readonly disabled?: boolean;
-}
-
-export interface CycleEditorCondition {
-  readonly path: string;
-  readonly operator:
-    | "equals"
-    | "notEquals"
-    | "present"
-    | "in"
-    | "greaterThanOrEqual"
-    | "lessThanOrEqual";
-  readonly value?: JsonValue;
-}
-
-export interface CycleEditorField {
-  readonly id: string;
-  readonly path: string;
-  readonly region: CycleFormRegion;
-  readonly group?: string;
-  readonly groupLabel?: LocalizedText;
-  readonly label: LocalizedText;
-  readonly description?: LocalizedText;
-  readonly kind:
-    | "boolean"
-    | "choice"
-    | "segmented"
-    | "integer"
-    | "number"
-    | "percentage"
-    | "weight"
-    | "text"
-    | "date"
-    | "token-order"
-    | "plate-counter"
-    | "action";
-  readonly value: JsonValue;
-  readonly choices?: readonly CycleEditorChoice[];
-  readonly minimum?: number;
-  readonly maximum?: number;
-  readonly step?: number;
-  readonly suffix?: LocalizedText;
-  readonly required?: boolean;
-  readonly readOnly?: boolean;
-  readonly visibleWhen?: readonly CycleEditorCondition[];
-  readonly enabledWhen?: readonly CycleEditorCondition[];
-  readonly metadata?: Readonly<Record<string, JsonValue>>;
-  readonly action?: string;
-  readonly decreaseLabel?: LocalizedText;
-  readonly increaseLabel?: LocalizedText;
-}
-
-/** Public browser representation returned by getCycleEditorSchema. */
-export interface CycleEditorSchema {
-  readonly apiVersion: string;
-  readonly engineVersion: string;
-  readonly catalogVersion: string;
-  readonly catalogHash: string;
-  readonly schemaVersion: string;
-  readonly id: string;
-  readonly fields: readonly CycleEditorField[];
-  readonly labels?: Readonly<Record<string, LocalizedText>>;
-}
+export type JsonValue = unknown;
 
 export interface CycleFormIntent {
   readonly type: "cycle.field.changed" | "cycle.action.requested";

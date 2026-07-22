@@ -19,7 +19,11 @@ void main() {
         report.databasePath,
       );
 
-      expect(logicalJsonHash(bundle), report.logicalHash);
+      final logicalBundle = Map<String, Object?>.from(
+        bundle as Map<String, Object?>,
+      )..remove('contentHash');
+      expect(bundle['contentHash'], report.logicalHash);
+      expect(logicalJsonHash(logicalBundle), report.logicalHash);
       expect(databaseHash, report.logicalHash);
       expect(manifest['contentHash'], report.logicalHash);
       expect(manifest['catalogVersion'], 2);

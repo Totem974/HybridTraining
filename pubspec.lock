@@ -459,6 +459,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  training_engine_web_bridge:
+    dependency: "direct dev"
+    description:
+      path: "packages/training_engine_web_bridge"
+      relative: true
+    source: path
+    version: "0.1.0"
   typed_data:
     dependency: transitive
     description:

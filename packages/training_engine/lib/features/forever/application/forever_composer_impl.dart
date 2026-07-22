@@ -356,6 +356,7 @@ final class ForeverComposerImpl
   DateTime _dateOnly(DateTime value) =>
       DateTime(value.year, value.month, value.day);
 }
+
 final class _CompositionStep {
   const _CompositionStep(this.slot, this.request, this.repetition);
 

@@ -1,3 +1,5 @@
+import type { ContractMetadata } from '../../../../contracts/v1/generated/contracts';
+
 export interface EngineBridge {
   initialize(catalogJson: string): string;
   engineInfo(): string;
@@ -15,7 +17,10 @@ declare global {
 }
 
 export class EngineClient {
-  private constructor(private readonly bridge: EngineBridge) {}
+  private constructor(
+    private readonly bridge: EngineBridge,
+    private readonly metadata: ContractMetadata,
+  ) {}
 
   static async initialize(catalogUrl = '../catalog.bundle.json'): Promise<EngineClient> {
     const bridge = window.hybridTrainingEngine;
@@ -26,12 +31,17 @@ export class EngineClient {
     }
     const response = await fetch(resolvedCatalogUrl, { credentials: 'same-origin' });
     if (!response.ok) throw new Error(`CATALOG_LOAD_FAILED:${response.status}`);
-    bridge.initialize(await response.text());
-    return new EngineClient(bridge);
+    const initialized = parseObject(bridge.initialize(await response.text()));
+    const metadata = requireMetadata(initialized);
+    return new EngineClient(bridge, metadata);
   }
 
   engineInfo<T>(): T {
     return this.parse<T>(this.bridge.engineInfo());
+  }
+
+  contractMetadata(): ContractMetadata {
+    return { ...this.metadata };
   }
 
   catalogIndex<T>(request: object): T {
@@ -59,10 +69,32 @@ export class EngineClient {
   }
 
   private parse<T>(json: string): T {
-    const value: unknown = JSON.parse(json);
-    if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-      throw new Error('ENGINE_RESPONSE_OBJECT_REQUIRED');
-    }
+    const value = parseObject(json);
+    const metadata = requireMetadata(value);
+    if (
+      metadata.engineVersion !== this.metadata.engineVersion ||
+      metadata.catalogVersion !== this.metadata.catalogVersion ||
+      metadata.catalogHash !== this.metadata.catalogHash
+    ) throw new Error('ENGINE_RESPONSE_VERSION_MISMATCH');
     return value as T;
   }
+}
+
+function parseObject(json: string): Record<string, unknown> {
+  const value: unknown = JSON.parse(json);
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('ENGINE_RESPONSE_OBJECT_REQUIRED');
+  }
+  return value as Record<string, unknown>;
+}
+
+function requireMetadata(value: Record<string, unknown>): ContractMetadata {
+  if (
+    value.apiVersion !== 'v1' ||
+    value.schemaVersion !== 1 ||
+    typeof value.engineVersion !== 'string' ||
+    typeof value.catalogVersion !== 'number' ||
+    typeof value.catalogHash !== 'string'
+  ) throw new Error('ENGINE_CONTRACT_VERSION_UNSUPPORTED');
+  return value as unknown as ContractMetadata;
 }

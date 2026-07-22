@@ -14,7 +14,19 @@ def load(name):
 def validator(name):
     schema = load(name)
     Draft202012Validator.check_schema(schema)
-    return Draft202012Validator(schema, resolver=RefResolver(ROOT.as_uri() + "/", schema))
+    documents = {
+        path.name: json.loads(path.read_text(encoding="utf-8"))
+        for path in ROOT.glob("*.schema.json")
+    }
+    store = {}
+    for file_name, document in documents.items():
+        store[(ROOT / file_name).as_uri()] = document
+        if "$id" in document:
+            store[document["$id"]] = document
+    return Draft202012Validator(
+        schema,
+        resolver=RefResolver.from_schema(schema, store=store),
+    )
 
 
 def assert_valid(schema_name, fixture_name):

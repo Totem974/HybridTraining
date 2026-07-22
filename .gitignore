@@ -18,6 +18,8 @@ reference/
 /captures/
 /docs/sources-local/
 /.dart_appdata/
+**/.dart_appdata/
+**/.dart_localappdata/
 /.cleanup-backup/
 /.agents/worktrees/
 /local.properties
@@ -44,6 +46,18 @@ reference/
 .pub/
 /build/
 /coverage/
+
+# Static Web generator build/test dependencies and reports
+/apps/web_generator/node_modules/
+/apps/web_generator/dist/
+/apps/web_generator/test-results/
+/apps/web_generator/playwright-report/
+/apps/web_generator/public/engine/*.deps
+/apps/web_generator/public/engine/*.map
+
+# Dart JS compiler sidecars; the public runtime artifact is versioned separately.
+/packages/training_engine_web_bridge/web/*.deps
+/packages/training_engine_web_bridge/web/*.map
 
 # Symbolication related
 app.*.symbols

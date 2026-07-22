@@ -44,6 +44,8 @@ dependencies:
   sqflite_common_ffi_web: ^1.1.2
 
 dev_dependencies:
+  training_engine_web_bridge:
+    path: packages/training_engine_web_bridge
   flutter_test:
     sdk: flutter
   integration_test:

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:training_engine_web_bridge/training_engine_web_bridge.dart';
 import '../oracles/generate_engine_v1_fixtures.dart';
 
 Future<void> main(List<String> arguments) async {
@@ -72,7 +73,7 @@ Future<void> main(List<String> arguments) async {
   );
   report['status'] = failed ? 'failed' : (skipped ? 'partial' : 'passed');
   stdout.writeln(const JsonEncoder.withIndent('  ').convert(report));
-  if (failed) exitCode = 1;
+  if (failed || skipped) exitCode = 1;
 }
 
 void _validateContracts(Directory root, List<Object?> failures) {
@@ -133,11 +134,26 @@ void _compareFixtureTrees(
 
 Future<Map<String, Object?>> _runBridge(Directory fixtures) async {
   final runner = File('tool/parity/bridge_runner.mjs');
+  final nativeForever = File(
+    '${Directory.systemTemp.path}${Platform.pathSeparator}hybrid_forever_native_${DateTime.now().microsecondsSinceEpoch}.json',
+  );
   late final ProcessResult result;
   try {
+    final service = BridgeService(LocalTrainingEngineBindings());
+    service.initialize(
+      File('apps/web_generator/public/catalog.bundle.json').readAsStringSync(),
+    );
+    nativeForever.writeAsStringSync(
+      service.generateMacrocycle(
+        File(
+          'contracts/v1/fixtures/forever_request.valid.json',
+        ).readAsStringSync(),
+      ),
+    );
     result = await Process.run(Platform.isWindows ? 'node.exe' : 'node', [
       runner.path,
       fixtures.path,
+      nativeForever.path,
     ]);
   } on ProcessException catch (error) {
     return {
@@ -146,6 +162,7 @@ Future<Map<String, Object?>> _runBridge(Directory fixtures) async {
           'Node.js is unavailable (${error.message}); bridge parity was not simulated.',
     };
   }
+  if (nativeForever.existsSync()) nativeForever.deleteSync();
   final output = '${result.stdout}'.trim();
   if (output.isEmpty) {
     return {

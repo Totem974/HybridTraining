@@ -31,6 +31,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       'status',
       'coverage',
       'documents',
+      'contentHash',
     });
     final documents = _list(root, 'documents')
         .map((item) {
@@ -40,7 +41,9 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
         })
         .toList(growable: false);
     _catalogVersion = _integer(root, 'catalogVersion');
-    _catalogHash = _fnv1a64(_canonicalJson(root));
+    _catalogHash = root['contentHash'] is String
+        ? root['contentHash']! as String
+        : _fnv1a64(_canonicalJson(root));
     _templates = [
       for (final document in documents.where(
         (item) => item['kind'] == 'templates',
@@ -115,7 +118,16 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   }
 
   @override
-  String engineInfo() => jsonEncode(_metadata());
+  String engineInfo() => jsonEncode({
+    ..._metadata(),
+    'capabilities': const [
+      'catalogIndex',
+      'cycleEditorSchema',
+      'validateCycle',
+      'generateCycle',
+      'generateMacrocycle',
+    ],
+  });
 
   @override
   String catalogIndex(String requestJson) {

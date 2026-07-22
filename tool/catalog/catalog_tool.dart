@@ -395,7 +395,12 @@ Future<CatalogArtifactReport> buildCatalogArtifacts(
       '${directory.path}${Platform.pathSeparator}catalog.manifest.json';
 
   await buildCatalogDatabase(databasePath, sourcePath: sourcePath);
-  _writeDeterministicJson(File(bundlePath), aggregate);
+  _writeDeterministicJson(File(bundlePath), {
+    ...aggregate,
+    // Self-describing metadata. The logical hash covers the catalog payload
+    // above and therefore remains identical to the value stored in SQLite.
+    'contentHash': logicalHash,
+  });
   final databaseHash = await readCatalogDatabaseLogicalHash(databasePath);
   if (databaseHash != logicalHash) {
     throw StateError(

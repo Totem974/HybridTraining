@@ -1,0 +1,17 @@
+{
+  "name": "hybrid-training-workspace",
+  "private": true,
+  "scripts": {
+    "engine:test": "dart test packages/training_engine && dart test packages/training_engine_web_bridge",
+    "engine:build": "dart compile js -O2 packages/training_engine_web_bridge/web/main.dart -o apps/web_generator/public/engine/hybrid_training_engine.js",
+    "contracts:generate": "node contracts/generate-types.mjs",
+    "contracts:test": "python -m pytest contracts/test_contracts.py",
+    "catalog:build:web": "dart run tool/catalog/catalog_tool.dart build-web apps/web_generator/public",
+    "web:typecheck": "npm --prefix apps/web_generator run typecheck",
+    "web:test": "npm --prefix apps/web_generator test",
+    "web:build": "npm --prefix apps/web_generator run build",
+    "web:e2e": "npm --prefix apps/web_generator run e2e",
+    "web:measure": "node tool/measure/web_performance.mjs",
+    "verify:parity": "dart run tool/parity/verify_parity.dart"
+  }
+}

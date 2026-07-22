@@ -21,8 +21,8 @@ void main() {
       expect(actualFiles, orderedEquals(expectedFiles));
       for (final path in expectedFiles) {
         expect(
-          File('${temporary.path}/$path').readAsStringSync(),
-          File('${checkedIn.path}/$path').readAsStringSync(),
+          jsonDecode(File('${temporary.path}/$path').readAsStringSync()),
+          jsonDecode(File('${checkedIn.path}/$path').readAsStringSync()),
           reason: path,
         );
       }
