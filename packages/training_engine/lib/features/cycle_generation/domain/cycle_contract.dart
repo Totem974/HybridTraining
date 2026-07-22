@@ -134,9 +134,11 @@ final class MainWorkSetPlusLoad extends LoadPrescription {
 enum WarmUpBodyRegion { upperBody, lowerBody }
 
 final class WarmUpBaseLoad extends LoadPrescription {
-  const WarmUpBaseLoad(this.region);
+  const WarmUpBaseLoad(this.region) : fixedWeight = null;
+  const WarmUpBaseLoad.fixed(this.fixedWeight) : region = null;
 
-  final WarmUpBodyRegion region;
+  final WarmUpBodyRegion? region;
+  final Weight? fixedWeight;
 }
 
 enum TrainingMaxRampAnchor { beforeMainWork, warmUpBase }

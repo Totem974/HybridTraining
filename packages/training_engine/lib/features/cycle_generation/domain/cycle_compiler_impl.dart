@@ -180,11 +180,7 @@ final class CycleCompilerImpl implements CycleCompiler {
         'A TM ramp requires exactly one warm-up base in its block.',
       );
     }
-    final warmUp = request.cycleOptions.normalized().warmUp;
-    final base = switch (baseLoads.single.region) {
-      WarmUpBodyRegion.upperBody => warmUp.upperBodyBaseWeight,
-      WarmUpBodyRegion.lowerBody => warmUp.lowerBodyBaseWeight,
-    };
+    final base = _warmUpBaseWeight(baseLoads.single, request);
     if (base == null) {
       throw const CycleGenerationException(
         CycleGenerationErrorCode.invalidCycleOptions,
@@ -267,6 +263,24 @@ final class CycleCompilerImpl implements CycleCompiler {
       CycleGenerationErrorCode.invalidCycleOptions,
       'Ramp repetition thresholds do not cover the generated load.',
     );
+  }
+
+  Weight? _warmUpBaseWeight(WarmUpBaseLoad load, CycleRequest request) {
+    final fixed = load.fixedWeight;
+    if (fixed != null) {
+      if (fixed.unit != request.unit) {
+        throw const CycleGenerationException(
+          CycleGenerationErrorCode.unitMismatch,
+          'A fixed warm-up base must use the request unit.',
+        );
+      }
+      return fixed;
+    }
+    final warmUp = request.cycleOptions.normalized().warmUp;
+    return switch (load.region!) {
+      WarmUpBodyRegion.upperBody => warmUp.upperBodyBaseWeight,
+      WarmUpBodyRegion.lowerBody => warmUp.lowerBodyBaseWeight,
+    };
   }
 
   GeneratedSet _compileSet(
@@ -366,12 +380,8 @@ final class CycleCompilerImpl implements CycleCompiler {
           trainingMax,
           Percentage(percentage),
         );
-      case WarmUpBaseLoad(:final region):
-        final warmUp = request.cycleOptions.normalized().warmUp;
-        desired = switch (region) {
-          WarmUpBodyRegion.upperBody => warmUp.upperBodyBaseWeight,
-          WarmUpBodyRegion.lowerBody => warmUp.lowerBodyBaseWeight,
-        };
+      case final WarmUpBaseLoad warmUpBase:
+        desired = _warmUpBaseWeight(warmUpBase, request);
       case TrainingMaxRampLoad():
         throw const CycleGenerationException(
           CycleGenerationErrorCode.invalidCycleOptions,

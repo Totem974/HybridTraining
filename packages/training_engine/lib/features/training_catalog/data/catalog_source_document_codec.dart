@@ -633,10 +633,31 @@ final class CatalogSourceDocumentCodec {
           multiplierBasisPoints: _int(map, 'multiplierBasisPoints'),
         );
       case 'warm_up_base':
-        _keys(map, const {'type', 'region'});
-        return WarmUpBaseLoad(
-          WarmUpBodyRegion.values.byName(_string(map, 'region')),
+        _keys(
+          map,
+          const {'type', 'region', 'centiUnits', 'unit'},
+          optional: const {'region', 'centiUnits', 'unit'},
         );
+        final hasRegion = map.containsKey('region');
+        final hasFixed =
+            map.containsKey('centiUnits') || map.containsKey('unit');
+        if (hasRegion == hasFixed ||
+            (hasFixed &&
+                (!map.containsKey('centiUnits') || !map.containsKey('unit')))) {
+          throw const FormatException(
+            'warm_up_base requires exactly region or centiUnits/unit.',
+          );
+        }
+        return hasRegion
+            ? WarmUpBaseLoad(
+                WarmUpBodyRegion.values.byName(_string(map, 'region')),
+              )
+            : WarmUpBaseLoad.fixed(
+                Weight(
+                  _positiveInt(map, 'centiUnits'),
+                  WeightUnit.values.byName(_string(map, 'unit')),
+                ),
+              );
       case 'main_work_set_plus':
         _keys(map, const {'type', 'cumulativeIncreaseBasisPoints'});
         return MainWorkSetPlusLoad(

@@ -46,6 +46,16 @@ void main() {
             'type': 'main_work_set_plus',
             'cumulativeIncreaseBasisPoints': 500,
           }),
+          component('warm-fixed-kg', {
+            'type': 'warm_up_base',
+            'centiUnits': 4500,
+            'unit': 'kg',
+          }),
+          component('warm-fixed-lb', {
+            'type': 'warm_up_base',
+            'centiUnits': 9500,
+            'unit': 'lb',
+          }),
         ],
       }),
     );
@@ -55,6 +65,34 @@ void main() {
       isA<ParameterizedTrainingMaxPercentageLoad>(),
     );
     expect(decoded[2].block.sets.single.load, isA<MainWorkSetPlusLoad>());
+    final kgBase = decoded[3].block.sets.single.load as WarmUpBaseLoad;
+    final lbBase = decoded[4].block.sets.single.load as WarmUpBaseLoad;
+    expect(kgBase.region, isNull);
+    expect(kgBase.fixedWeight?.centiUnits, 4500);
+    expect(kgBase.fixedWeight?.unit, WeightUnit.kg);
+    expect(lbBase.fixedWeight?.centiUnits, 9500);
+    expect(lbBase.fixedWeight?.unit, WeightUnit.lb);
+    for (final invalidLoad in [
+      <String, Object?>{'type': 'warm_up_base'},
+      <String, Object?>{
+        'type': 'warm_up_base',
+        'region': 'upperBody',
+        'centiUnits': 4500,
+        'unit': 'kg',
+      },
+      <String, Object?>{'type': 'warm_up_base', 'centiUnits': 4500},
+    ]) {
+      expect(
+        () => const CatalogSourceDocumentCodec().decodeComponents(
+          jsonEncode({
+            'schemaVersion': 1,
+            'kind': 'components',
+            'components': [component('invalid', invalidLoad)],
+          }),
+        ),
+        throwsFormatException,
+      );
+    }
   });
 
   test('source recipes resolve and compile across weeks and sessions', () {

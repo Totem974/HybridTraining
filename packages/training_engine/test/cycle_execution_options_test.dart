@@ -277,6 +277,87 @@ void main() {
       );
     });
 
+    test('highIntensity ramp uses its fixed catalog base', () {
+      final definition = _definition(
+        deloadBase: true,
+        warmUp: {
+          WarmUpType.original: _recipe(WeightUnit.kg, [
+            _block('warm', 'warm_up', const Unloaded()),
+          ]),
+        },
+        deload: {
+          DeloadType.highIntensity: _recipe(WeightUnit.kg, [
+            BlockDefinition(
+              id: 'high',
+              role: 'deload',
+              sets: [
+                PrescribedSetDefinition(
+                  repetitions: FixedRepetitions(5),
+                  load: WarmUpBaseLoad.fixed(Weight(4500, WeightUnit.kg)),
+                ),
+                PrescribedSetDefinition(
+                  repetitions: PercentageThresholdRepetitions([
+                    PercentageRepetitionThreshold(
+                      maximumBasisPoints: 8000,
+                      count: 3,
+                    ),
+                    PercentageRepetitionThreshold(
+                      maximumBasisPoints: 20000,
+                      count: 1,
+                    ),
+                  ]),
+                  load: TrainingMaxRampLoad(
+                    anchor: TrainingMaxRampAnchor.warmUpBase,
+                    anchorMultiplierBasisPoints: 11000,
+                    stepBasisPoints: 1000,
+                    maximumExclusiveBasisPoints: 9500,
+                  ),
+                ),
+                PrescribedSetDefinition(
+                  repetitions: FixedRepetitions(1),
+                  load: TrainingMaxPercentageLoad(Percentage(10000)),
+                ),
+              ],
+            ),
+          ]),
+        },
+      );
+      final cycle = _compile(
+        definition: definition,
+        options: const CycleExecutionOptions(
+          warmUp: WarmUpExecutionOptions(
+            enabled: true,
+            type: WarmUpType.original,
+          ),
+          deload: DeloadExecutionOptions(
+            enabled: true,
+            type: DeloadType.highIntensity,
+          ),
+        ),
+      );
+      final high = cycle.weeks.single.sessions.single.blocks.singleWhere(
+        (block) => block.id == 'high',
+      );
+      expect(high.sets.map((set) => set.plannedLoad?.centiUnits), [
+        4500,
+        5000,
+        6000,
+        7000,
+        8000,
+        9000,
+        10000,
+      ]);
+      expect(high.sets.map((set) => set.repetitions['count']), [
+        5,
+        3,
+        3,
+        3,
+        3,
+        1,
+        1,
+      ]);
+    });
+
     for (final type in DeloadType.values) {
       test('${type.name} applies its resolved prescription', () {
         final prescription = _deloadPrescription(type);
