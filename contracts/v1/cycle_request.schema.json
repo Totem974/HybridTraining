@@ -15,7 +15,7 @@
     "trainingMaxRatioByMovement": { "type": "object", "additionalProperties": { "$ref": "#/$defs/basisPoints" } },
     "percentageParameters": { "type": "object", "additionalProperties": { "$ref": "#/$defs/basisPoints" } },
     "percentageParametersByMovement": { "type": "object", "additionalProperties": { "type": "object", "additionalProperties": { "$ref": "#/$defs/basisPoints" } } },
-    "options": { "type": "object", "additionalProperties": true },
+    "options": { "$ref": "#/$defs/cycleOptions" },
     "unit": { "enum": ["kg", "lb"] },
     "roundingIncrement": { "$ref": "common.schema.json#/$defs/weight" },
     "barProfile": { "type": "object", "required": ["weight", "platesPerSide"], "properties": { "weight": { "$ref": "common.schema.json#/$defs/weight" }, "platesPerSide": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/weight" } } }, "additionalProperties": false },
@@ -24,6 +24,51 @@
   "additionalProperties": false,
   "$defs": {
     "basisPoints": { "type": "integer", "minimum": 0, "maximum": 20000 },
-    "maxInput": { "type": "object", "required": ["type", "weight"], "properties": { "type": { "enum": ["oneRepMax", "repMax", "directTrainingMax"] }, "weight": { "$ref": "common.schema.json#/$defs/weight" }, "repetitions": { "type": "integer", "minimum": 1 }, "formula": { "type": "string" } }, "additionalProperties": false }
+    "maxInput": { "type": "object", "required": ["type", "weight"], "properties": { "type": { "enum": ["oneRepMax", "repMax", "directTrainingMax"] }, "weight": { "$ref": "common.schema.json#/$defs/weight" }, "repetitions": { "type": "integer", "minimum": 1 }, "formula": { "type": "string" } }, "additionalProperties": false },
+    "cycleOptions": {
+      "type": "object",
+      "properties": {
+        "warmUp": { "$ref": "#/$defs/warmUpOptions" },
+        "joker": { "$ref": "#/$defs/jokerOptions" },
+        "deload": { "$ref": "#/$defs/deloadOptions" },
+        "fullBody": { "$ref": "#/$defs/fullBodyOptions" }
+      },
+      "additionalProperties": false
+    },
+    "warmUpOptions": {
+      "oneOf": [
+        { "type": "object", "required": ["enabled"], "properties": { "enabled": { "const": false } }, "additionalProperties": false },
+        { "type": "object", "required": ["enabled", "type"], "properties": { "enabled": { "const": true }, "type": { "const": "original" } }, "additionalProperties": false },
+        { "type": "object", "required": ["enabled", "type", "bases"], "properties": { "enabled": { "const": true }, "type": { "const": "beyond" }, "bases": { "$ref": "#/$defs/warmUpBases" } }, "additionalProperties": false }
+      ]
+    },
+    "warmUpBases": {
+      "type": "object",
+      "required": ["lowerBody", "upperBody"],
+      "properties": { "lowerBody": { "$ref": "common.schema.json#/$defs/weight" }, "upperBody": { "$ref": "common.schema.json#/$defs/weight" } },
+      "additionalProperties": false
+    },
+    "jokerOptions": {
+      "oneOf": [
+        { "type": "object", "required": ["enabled"], "properties": { "enabled": { "const": false } }, "additionalProperties": false },
+        { "type": "object", "required": ["enabled", "ceilingBasisPoints"], "properties": { "enabled": { "const": true }, "ceilingBasisPoints": { "enum": [500, 1000, 1500, 2000, 2500, 3000] } }, "additionalProperties": false }
+      ]
+    },
+    "deloadOptions": {
+      "oneOf": [
+        { "type": "object", "required": ["enabled"], "properties": { "enabled": { "const": false } }, "additionalProperties": false },
+        { "type": "object", "required": ["enabled", "type", "skipWarmUp"], "properties": { "enabled": { "const": true }, "type": { "enum": ["deload1", "deload2", "deload3", "deload4", "deload5"] }, "skipWarmUp": { "type": "boolean" } }, "additionalProperties": false },
+        { "type": "object", "required": ["enabled", "type"], "properties": { "enabled": { "const": true }, "type": { "const": "highIntensity" } }, "additionalProperties": false }
+      ]
+    },
+    "fullBodyOptions": {
+      "oneOf": [
+        { "type": "object", "required": ["profile", "phase"], "properties": { "profile": { "const": "original" }, "phase": { "enum": ["phase_one", "phase_two", "phase_three"] } }, "additionalProperties": false },
+        { "type": "object", "required": ["profile", "liftProfiles"], "properties": { "profile": { "const": "updated" }, "liftProfiles": { "type": "object", "required": ["squat"], "properties": { "squat": { "$ref": "#/$defs/fullBodyLiftProfile" } }, "additionalProperties": false } }, "additionalProperties": false },
+        { "type": "object", "required": ["profile", "liftProfiles"], "properties": { "profile": { "const": "full_boring" }, "liftProfiles": { "type": "object", "required": ["bench", "squat", "deadlift"], "properties": { "bench": { "$ref": "#/$defs/fullBodyLiftProfile" }, "squat": { "$ref": "#/$defs/fullBodyLiftProfile" }, "deadlift": { "$ref": "#/$defs/fullBodyDeadliftProfile" } }, "additionalProperties": false } }, "additionalProperties": false }
+      ]
+    },
+    "fullBodyLiftProfile": { "enum": ["65x5_75x5_85x5", "70x3_80x3_90x3", "75x5_85x3_95x1", "80x1_90x1_100x1"] },
+    "fullBodyDeadliftProfile": { "enum": ["65x3_75x3_85x3", "70x3_80x3_90x3", "75x5_85x3_95x1", "80x1_90x1_100x1"] }
   }
 }

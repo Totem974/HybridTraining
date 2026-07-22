@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:training_engine/training_engine.dart';
 
 import 'bridge_service.dart';
+import 'cycle_request_normalizer.dart';
 
 final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   final CatalogSourceDocumentCodec _codec = const CatalogSourceDocumentCodec();
@@ -19,6 +20,8 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   List<Map<String, Object?>> _rawOptionSchemas = const [];
   List<Map<String, Object?>> _rawScheduleRecords = const [];
   List<Map<String, Object?>> _rawForeverDefinitions = const [];
+  List<Map<String, Object?>> _rawTemplateAliases = const [];
+  List<SourceCycleOptionRecipe> _optionRecipes = const [];
   Map<String, Map<String, String>> _movementLabels = const {};
   Map<String, String> _movementPatterns = const {};
 
@@ -87,6 +90,19 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       ))
         for (final item in _list(document, 'foreverDefinitions'))
           _map(item, 'forever definition'),
+    ];
+    _rawTemplateAliases = [
+      for (final document in documents.where(
+        (item) => item['kind'] == 'templateAliases',
+      ))
+        for (final item in _list(document, 'templateAliases'))
+          _map(item, 'template alias'),
+    ];
+    _optionRecipes = [
+      for (final document in documents.where(
+        (item) => item['kind'] == 'cycleOptionRecipes',
+      ))
+        ..._codec.decodeCycleOptionRecipes(jsonEncode(document)),
     ];
     _movementLabels = {
       for (final document in documents.where(
@@ -734,7 +750,10 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   }
 
   GeneratedCycle _generate(String requestJson) {
-    final json = _map(jsonDecode(requestJson), 'cycle request');
+    final json = normalizeCycleRequest(
+      _map(jsonDecode(requestJson), 'cycle request'),
+    );
+    _resolveTemplateAliasAndFullBody(json);
     _rejectUnknown(json, const {
       'apiVersion',
       'schemaVersion',
@@ -776,6 +795,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       variantId,
       sessionOrder,
       scheduleId: selectedSchedule.reference.id,
+      optionValues: _catalogOptionValues(_map(json['options'], 'options')),
     );
     final ratioByMovement = _optionalMap(
       json['trainingMaxRatioByMovement'] ??
@@ -858,6 +878,63 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
         roundingIncrement: rounding,
         barProfile: BarProfile(weight: barWeight, platesPerSide: plates),
         includeDeload: json['includeDeload'] as bool? ?? true,
+        cycleOptions: _cycleOptions(_map(json['options'], 'options'), unit),
+      ),
+    );
+  }
+
+  CycleExecutionOptions _cycleOptions(
+    Map<String, Object?> options,
+    WeightUnit unit,
+  ) {
+    final warmUp = _optionalMap(options['warmUp']);
+    final joker = _optionalMap(options['joker']);
+    final deload = _optionalMap(options['deload']);
+    final warmUpEnabled = warmUp['enabled'] as bool? ?? false;
+    final warmUpType = warmUpEnabled
+        ? WarmUpType.values.byName(_string(warmUp, 'type'))
+        : null;
+    final bases = warmUpType == WarmUpType.beyond
+        ? _map(warmUp['bases'], 'warm-up bases')
+        : const <String, Object?>{};
+    final deloadEnabled = deload['enabled'] as bool? ?? false;
+    final deloadType = deloadEnabled
+        ? switch (_string(deload, 'type')) {
+            'deload1' => DeloadType.type1,
+            'deload2' => DeloadType.type2,
+            'deload3' => DeloadType.type3,
+            'deload4' => DeloadType.type4,
+            'deload5' => DeloadType.type5,
+            'highIntensity' => DeloadType.highIntensity,
+            final value => throw FormatException('UNKNOWN_DELOAD_TYPE:$value'),
+          }
+        : null;
+    Weight? baseWeight(String key) {
+      if (warmUpType != WarmUpType.beyond) return null;
+      final value = _weight(_map(bases[key], 'warm-up $key base'));
+      if (value.unit != unit) {
+        throw FormatException('WARM_UP_BASE_UNIT_MISMATCH:$key');
+      }
+      return value;
+    }
+
+    return CycleExecutionOptions(
+      warmUp: WarmUpExecutionOptions(
+        enabled: warmUpEnabled,
+        type: warmUpType,
+        lowerBodyBaseWeight: baseWeight('lowerBody'),
+        upperBodyBaseWeight: baseWeight('upperBody'),
+      ),
+      joker: JokerExecutionOptions(
+        enabled: joker['enabled'] as bool? ?? false,
+        ceilingBasisPoints: joker['enabled'] == true
+            ? _integer(joker, 'ceilingBasisPoints')
+            : null,
+      ),
+      deload: DeloadExecutionOptions(
+        enabled: deloadEnabled,
+        type: deloadType,
+        skipWarmUp: deload['skipWarmUp'] as bool? ?? false,
       ),
     );
   }
@@ -867,6 +944,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     String variantId,
     List<String> requestedOrder, {
     String? scheduleId,
+    Map<String, Object?> optionValues = const {},
   }) {
     final template = _templates.singleWhere((item) => item.id == templateId);
     final variant = template.variants.singleWhere(
@@ -886,9 +964,88 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
         scheduleReference: schedule.reference,
         schedules: _schedules,
         components: _components,
+        optionRecipes: _optionRecipes,
+        optionValues: optionValues,
+        optionDefaults: _optionDefaults(templateId, variantId),
         sourceReference: 'catalog.bundle.json:$templateId/$variantId',
       ),
     );
+  }
+
+  void _resolveTemplateAliasAndFullBody(Map<String, Object?> request) {
+    final alias = _rawTemplateAliases
+        .where(
+          (item) =>
+              item['legacyTemplateId'] == request['templateId'] &&
+              item['legacyVariantId'] == request['variantId'],
+        )
+        .firstOrNull;
+    final options = _map(request['options'], 'options');
+    if (alias != null) {
+      request['templateId'] = _string(alias, 'templateId');
+      request['variantId'] = _string(alias, 'variantId');
+      final overrides = _map(alias['optionOverrides'], 'option overrides');
+      options['fullBody'] = {'profile': request['variantId'], ...overrides};
+    }
+    final fullBody = options['fullBody'];
+    if (fullBody == null) return;
+    final selection = _map(fullBody, 'options.fullBody');
+    final profile = _string(selection, 'profile');
+    final template = _rawTemplateRecords
+        .where(
+          (item) =>
+              item['id'] == request['templateId'] &&
+              _list(
+                item,
+                'variants',
+              ).any((candidate) => _map(candidate, 'variant')['id'] == profile),
+        )
+        .firstOrNull;
+    if (template == null) {
+      throw FormatException('FULL_BODY_PROFILE_NOT_AVAILABLE:$profile');
+    }
+    request['variantId'] = profile;
+  }
+
+  Map<String, Object?> _catalogOptionValues(Map<String, Object?> options) {
+    final fullBody = options['fullBody'];
+    if (fullBody == null) return const {};
+    final selection = _map(fullBody, 'options.fullBody');
+    final values = <String, Object?>{};
+    if (selection['phase'] != null) values['phase'] = selection['phase'];
+    if (selection['liftProfiles'] case final Object rawProfiles) {
+      final profiles = _map(rawProfiles, 'options.fullBody.liftProfiles');
+      for (final entry in profiles.entries) {
+        values['${entry.key}_set_profile'] = entry.value;
+      }
+    }
+    return values;
+  }
+
+  Map<String, Object?> _optionDefaults(String templateId, String variantId) {
+    final template = _rawTemplateRecords.singleWhere(
+      (item) => item['id'] == templateId,
+    );
+    final rawVariant = _list(template, 'variants')
+        .map((item) => _map(item, 'variant'))
+        .singleWhere((item) => item['id'] == variantId);
+    final reference = _map(
+      rawVariant['optionSchemaId'],
+      'option schema reference',
+    );
+    final schema = _rawOptionSchemas.singleWhere(
+      (item) =>
+          item['id'] == reference['id'] &&
+          item['revision'] == reference['revision'],
+    );
+    return {
+      for (final raw in _list(schema, 'parameters'))
+        if (_map(raw, 'parameter')['default'] != null)
+          _string(_map(raw, 'parameter'), 'id'): _map(
+            raw,
+            'parameter',
+          )['default'],
+    };
   }
 
   SourceSchedule _selectSchedule(

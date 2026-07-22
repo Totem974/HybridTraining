@@ -51,6 +51,43 @@ def test_unknown_key_is_rejected():
     assert list(validator("cycle_request.schema.json").iter_errors(value))
 
 
+def test_unknown_nested_option_key_is_rejected():
+    value = load("fixtures/cycle_request.valid.json")
+    value["options"]["joker"]["unexpected"] = True
+    assert list(validator("cycle_request.schema.json").iter_errors(value))
+
+
+def test_inactive_option_children_are_rejected():
+    value = load("fixtures/cycle_request.valid.json")
+    value["options"]["joker"] = {"enabled": False, "ceilingBasisPoints": 1000}
+    assert list(validator("cycle_request.schema.json").iter_errors(value))
+
+
+def test_high_intensity_deload_rejects_skip_warm_up():
+    value = load("fixtures/cycle_request.valid.json")
+    value["options"]["deload"] = {
+        "enabled": True,
+        "type": "highIntensity",
+        "skipWarmUp": True,
+    }
+    assert list(validator("cycle_request.schema.json").iter_errors(value))
+
+
+def test_full_body_profiles_are_conditional():
+    value = load("fixtures/cycle_request.valid.json")
+    value["options"]["fullBody"] = {
+        "profile": "full_boring",
+        "liftProfiles": {
+            "bench": "65x5_75x5_85x5",
+            "squat": "70x3_80x3_90x3",
+            "deadlift": "75x5_85x3_95x1",
+        },
+    }
+    assert not list(validator("cycle_request.schema.json").iter_errors(value))
+    del value["options"]["fullBody"]["liftProfiles"]["deadlift"]
+    assert list(validator("cycle_request.schema.json").iter_errors(value))
+
+
 def test_unknown_enum_is_rejected():
     value = load("fixtures/cycle_request.valid.json")
     value["unit"] = "stone"

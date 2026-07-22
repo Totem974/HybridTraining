@@ -18,7 +18,11 @@
   "trainingMaxRatioByMovement": {},
   "percentageParameters": {},
   "percentageParametersByMovement": {},
-  "options": {},
+  "options": {
+    "warmUp": { "enabled": true, "type": "beyond", "bases": { "lowerBody": { "centiUnits": 2000, "unit": "kg" }, "upperBody": { "centiUnits": 1000, "unit": "kg" } } },
+    "joker": { "enabled": true, "ceilingBasisPoints": 1000 },
+    "deload": { "enabled": true, "type": "deload1", "skipWarmUp": false }
+  },
   "barProfile": { "weight": { "centiUnits": 2000, "unit": "kg" }, "platesPerSide": [{ "centiUnits": 2500, "unit": "kg" }, { "centiUnits": 2000, "unit": "kg" }, { "centiUnits": 1000, "unit": "kg" }, { "centiUnits": 500, "unit": "kg" }, { "centiUnits": 250, "unit": "kg" }, { "centiUnits": 125, "unit": "kg" }] },
   "includeDeload": true,
   "showPlating": true

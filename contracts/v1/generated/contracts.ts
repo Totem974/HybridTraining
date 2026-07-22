@@ -24,7 +24,23 @@ export type CycleRequestBasisPoints = number;
 
 export type CycleRequestMaxInput = { readonly "type": "oneRepMax" | "repMax" | "directTrainingMax"; readonly "weight": Weight; readonly "repetitions"?: number; readonly "formula"?: string; };
 
-export type CycleRequest = { readonly "apiVersion": "v1"; readonly "schemaVersion": 1; readonly "cycleId": string; readonly "templateId": string; readonly "variantId": string; readonly "scheduleId"?: string; readonly "startDate": string; readonly "trainingDays"?: ReadonlyArray<number>; readonly "sessionOrder": ReadonlyArray<string>; readonly "maxInputs": { readonly [key: string]: CycleRequestMaxInput; }; readonly "globalTrainingMaxRatioBasisPoints": CycleRequestBasisPoints; readonly "trainingMaxRatioByMovement"?: { readonly [key: string]: CycleRequestBasisPoints; }; readonly "percentageParameters"?: { readonly [key: string]: CycleRequestBasisPoints; }; readonly "percentageParametersByMovement"?: { readonly [key: string]: { readonly [key: string]: CycleRequestBasisPoints; }; }; readonly "options"?: { readonly [key: string]: unknown; }; readonly "unit": "kg" | "lb"; readonly "roundingIncrement"?: Weight; readonly "barProfile": { readonly "weight": Weight; readonly "platesPerSide": ReadonlyArray<Weight>; }; readonly "includeDeload": boolean; readonly "programTitle"?: string; readonly "showPlating"?: boolean; };
+export type CycleRequestCycleOptions = { readonly "warmUp"?: CycleRequestWarmUpOptions; readonly "joker"?: CycleRequestJokerOptions; readonly "deload"?: CycleRequestDeloadOptions; readonly "fullBody"?: CycleRequestFullBodyOptions; };
+
+export type CycleRequestWarmUpOptions = { readonly "enabled": false; } | { readonly "enabled": true; readonly "type": "original"; } | { readonly "enabled": true; readonly "type": "beyond"; readonly "bases": CycleRequestWarmUpBases; };
+
+export type CycleRequestWarmUpBases = { readonly "lowerBody": Weight; readonly "upperBody": Weight; };
+
+export type CycleRequestJokerOptions = { readonly "enabled": false; } | { readonly "enabled": true; readonly "ceilingBasisPoints": 500 | 1000 | 1500 | 2000 | 2500 | 3000; };
+
+export type CycleRequestDeloadOptions = { readonly "enabled": false; } | { readonly "enabled": true; readonly "type": "deload1" | "deload2" | "deload3" | "deload4" | "deload5"; readonly "skipWarmUp": boolean; } | { readonly "enabled": true; readonly "type": "highIntensity"; };
+
+export type CycleRequestFullBodyOptions = { readonly "profile": "original"; readonly "phase": "phase_one" | "phase_two" | "phase_three"; } | { readonly "profile": "updated"; readonly "liftProfiles": { readonly "squat": CycleRequestFullBodyLiftProfile; }; } | { readonly "profile": "full_boring"; readonly "liftProfiles": { readonly "bench": CycleRequestFullBodyLiftProfile; readonly "squat": CycleRequestFullBodyLiftProfile; readonly "deadlift": CycleRequestFullBodyDeadliftProfile; }; };
+
+export type CycleRequestFullBodyLiftProfile = "65x5_75x5_85x5" | "70x3_80x3_90x3" | "75x5_85x3_95x1" | "80x1_90x1_100x1";
+
+export type CycleRequestFullBodyDeadliftProfile = "65x3_75x3_85x3" | "70x3_80x3_90x3" | "75x5_85x3_95x1" | "80x1_90x1_100x1";
+
+export type CycleRequest = { readonly "apiVersion": "v1"; readonly "schemaVersion": 1; readonly "cycleId": string; readonly "templateId": string; readonly "variantId": string; readonly "scheduleId"?: string; readonly "startDate": string; readonly "trainingDays"?: ReadonlyArray<number>; readonly "sessionOrder": ReadonlyArray<string>; readonly "maxInputs": { readonly [key: string]: CycleRequestMaxInput; }; readonly "globalTrainingMaxRatioBasisPoints": CycleRequestBasisPoints; readonly "trainingMaxRatioByMovement"?: { readonly [key: string]: CycleRequestBasisPoints; }; readonly "percentageParameters"?: { readonly [key: string]: CycleRequestBasisPoints; }; readonly "percentageParametersByMovement"?: { readonly [key: string]: { readonly [key: string]: CycleRequestBasisPoints; }; }; readonly "options"?: CycleRequestCycleOptions; readonly "unit": "kg" | "lb"; readonly "roundingIncrement"?: Weight; readonly "barProfile": { readonly "weight": Weight; readonly "platesPerSide": ReadonlyArray<Weight>; }; readonly "includeDeload": boolean; readonly "programTitle"?: string; readonly "showPlating"?: boolean; };
 
 export type CycleResponseCycle = { readonly "schemaVersion": 1; readonly "id": string; readonly "catalogVersion": number; readonly "templateId": string; readonly "variantId": string; readonly "effectiveTrainingMaxes": { readonly [key: string]: Weight; }; readonly "weeks": ReadonlyArray<CycleResponseWeek>; };
 

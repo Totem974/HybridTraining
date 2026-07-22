@@ -5,18 +5,17 @@ import 'package:test/test.dart';
 import 'package:training_engine_web_bridge/training_engine_web_bridge.dart';
 
 void main() {
-  late BridgeService service;
-
-  setUp(() {
-    service = BridgeService(LocalTrainingEngineBindings());
-    service.initialize(
-      File(
-        '../../apps/web_generator/public/catalog.bundle.json',
-      ).readAsStringSync(),
-    );
-  });
+  BridgeService initializedService() {
+    final service = BridgeService(LocalTrainingEngineBindings());
+    final catalogPath =
+        Platform.environment['TRAINING_ENGINE_CATALOG_BUNDLE'] ??
+        '../../apps/web_generator/public/catalog.bundle.json';
+    service.initialize(File(catalogPath).readAsStringSync());
+    return service;
+  }
 
   test('generateCycle returns the complete v1 response envelope', () {
+    final service = initializedService();
     final response =
         jsonDecode(service.generateCycle(jsonEncode(_cycleRequest)))
             as Map<String, Object?>;
@@ -26,9 +25,30 @@ void main() {
     expect((response['snapshot'] as Map<String, Object?>)['kind'], 'cycle');
   });
 
+  test('generateCycle resolves and applies the catalog option recipe', () {
+    final service = initializedService();
+    final response =
+        jsonDecode(
+              service.generateCycle(
+                jsonEncode({
+                  ..._cycleRequest,
+                  'includeDeload': false,
+                  'options': {
+                    'warmUp': {'enabled': false},
+                    'joker': {'enabled': true, 'ceilingBasisPoints': 500},
+                    'deload': {'enabled': false},
+                  },
+                }),
+              ),
+            )
+            as Map<String, Object?>;
+    expect(jsonEncode(response['cycle']), contains('"role":"joker"'));
+  });
+
   test(
     'generateMacrocycle resolves catalog definition and composes every node',
     () {
+      final service = initializedService();
       final response =
           jsonDecode(service.generateMacrocycle(jsonEncode(_foreverRequest)))
               as Map<String, Object?>;
@@ -44,10 +64,76 @@ void main() {
   );
 
   test('generateMacrocycle rejects unknown public keys', () {
+    final service = initializedService();
     expect(
       () => service.generateMacrocycle(
         jsonEncode({..._foreverRequest, 'unexpected': true}),
       ),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
+  test(
+    'normalizer migrates legacy option ids and removes inactive children',
+    () {
+      final normalized = normalizeCycleRequest({
+        ..._cycleRequest,
+        'options': {
+          'warmup': 1,
+          'lowerBase': 40,
+          'upperBase': 20,
+          'jokerMax': 0,
+          'deload': 5,
+          'deloadSkipWarmup': true,
+        },
+      });
+      expect(normalized['options'], {
+        'warmUp': {
+          'enabled': true,
+          'type': 'beyond',
+          'bases': {
+            'lowerBody': {'centiUnits': 4000, 'unit': 'lb'},
+            'upperBody': {'centiUnits': 2000, 'unit': 'lb'},
+          },
+        },
+        'joker': {'enabled': false},
+        'deload': {'enabled': true, 'type': 'highIntensity'},
+      });
+      expect(normalized['includeDeload'], true);
+    },
+  );
+
+  test('normalizer migrates legacy Full Body option ids and profiles', () {
+    final normalized = normalizeCycleRequest({
+      ..._cycleRequest,
+      'templateId': 'fullBody',
+      'variantId': 'legacy',
+      'options': {
+        'option': 0,
+        'phase': 2,
+        'ratios': [0, 0, 0],
+      },
+    });
+    expect(normalized['templateId'], 'fullBody');
+    expect(normalized['variantId'], 'legacy');
+    expect((normalized['options'] as Map)['fullBody'], {
+      'profile': 'original',
+      'phase': 'phase_three',
+    });
+  });
+
+  test('normalizer rejects unknown nested option keys', () {
+    expect(
+      () => normalizeCycleRequest({
+        ..._cycleRequest,
+        'options': {
+          'joker': {
+            'enabled': true,
+            'ceilingBasisPoints': 500,
+            'unexpected': true,
+          },
+        },
+      }),
       throwsA(isA<FormatException>()),
     );
   });
