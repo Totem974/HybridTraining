@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../cycle_generation/domain/cycle_contract.dart';
 import '../../cycle_generation/domain/cycle_option_schema.dart';
 import '../../training_catalog/domain/catalog_index.dart';
+import '../../generator_web/design/hybrid_generator_design.dart';
 import '../application/cycle_option_condition_evaluator.dart';
 import '../application/cycle_web_contract.dart';
 
@@ -10,11 +12,17 @@ class CycleWebPage extends StatefulWidget {
   const CycleWebPage({
     required this.application,
     this.foreverRoute = '/forever',
+    this.initialState,
+    this.onStateChanged,
+    this.embedded = false,
     super.key,
   });
 
   final CycleWebApplication application;
   final String foreverRoute;
+  final CycleEditorState? initialState;
+  final ValueChanged<CycleEditorState>? onStateChanged;
+  final bool embedded;
 
   @override
   State<CycleWebPage> createState() => _CycleWebPageState();
@@ -43,7 +51,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
       if (index.templates.isEmpty) {
         throw StateError('The Cycle catalogue is empty.');
       }
-      final draft = await widget.application.loadDraft();
+      final draft = widget.initialState ?? await widget.application.loadDraft();
       final selection = _validSelection(index, draft);
       final schema = await widget.application.loadEditorSchema(
         templateId: selection.templateId,
@@ -97,6 +105,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
         );
         _busy = false;
       });
+      widget.onStateChanged?.call(_state!);
     } on Object catch (error) {
       if (mounted) {
         setState(() {
@@ -239,6 +248,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
       _state = state;
       _generated = null;
     });
+    widget.onStateChanged?.call(state);
     try {
       await widget.application.saveDraft(state);
     } on Object catch (error) {
@@ -270,21 +280,40 @@ class _CycleWebPageState extends State<CycleWebPage> {
     }
   }
 
+  Future<void> _export() async {
+    if (widget.application is! CycleWebExportApplication) return;
+    final application = widget.application as CycleWebExportApplication;
+    final source = _generated == null
+        ? await application.exportCycleDraft(_state!)
+        : await application.exportGeneratedCycle(_generated!);
+    await Clipboard.setData(ClipboardData(text: source));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_isFrench ? 'Export copié.' : 'Export copied.')),
+      );
+    }
+  }
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-    key: const Key('cycle-web-page'),
-    appBar: AppBar(
-      title: Text(_isFrench ? 'Générateur de cycle' : 'Cycle generator'),
-      actions: [
-        TextButton(
-          key: const Key('cycle-web-forever'),
-          onPressed: () => Navigator.of(context).pushNamed(widget.foreverRoute),
-          child: const Text('FOREVER'),
-        ),
-      ],
-    ),
-    body: SafeArea(child: _body()),
-  );
+  Widget build(BuildContext context) => widget.embedded
+      ? SingleChildScrollView(
+          key: const Key('cycle-editor-panel'),
+          padding: const EdgeInsets.all(HybridGeneratorTokens.mobilePadding),
+          child: _body(),
+        )
+      : KeyedSubtree(
+          key: const Key('cycle-web-page'),
+          child: HybridGeneratorShell(
+            page: HybridGeneratorPage.cycle,
+            title: _isFrench ? 'Générateur de cycle' : 'Cycle generator',
+            onNavigate: (page) {
+              if (page == HybridGeneratorPage.forever) {
+                Navigator.of(context).pushReplacementNamed(widget.foreverRoute);
+              }
+            },
+            child: _body(),
+          ),
+        );
 
   Widget _body() {
     if (_busy && _state == null) {
@@ -295,139 +324,147 @@ class _CycleWebPageState extends State<CycleWebPage> {
     }
     return LayoutBuilder(
       builder: (context, constraints) {
-        final selection = _selectionCard();
-        final editor = _editorCard();
-        final content = constraints.maxWidth >= 900
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(width: 320, child: selection),
-                  const SizedBox(width: 20),
-                  Expanded(child: editor),
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [selection, const SizedBox(height: 16), editor],
-              );
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1100),
-              child: content,
-            ),
-          ),
+        final desktop = constraints.maxWidth >= 770;
+        final content = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _responsivePair(_weightCard(), _selectionCard(), desktop),
+            const SizedBox(height: 24),
+            _optionsCard(),
+            const SizedBox(height: 24),
+            _platingCard(),
+            const SizedBox(height: 24),
+            if (widget.embedded)
+              _schedulingCard()
+            else
+              _responsivePair(_schedulingCard(), _outputCard(), desktop),
+            if (!widget.embedded && _generated != null) ...[
+              const SizedBox(height: 24),
+              _sectionCard(
+                title: _isFrench ? 'PROGRAMME' : 'PROGRAM',
+                child: _CyclePreview(view: _generated!, isFrench: _isFrench),
+              ),
+            ],
+          ],
         );
+        return content;
       },
     );
   }
+
+  Widget _responsivePair(Widget left, Widget right, bool desktop) =>
+      HybridGeneratorGrid(children: [left, right]);
+
+  Widget _sectionCard({required String title, required Widget child}) =>
+      HybridGeneratorCard(title: title, child: child);
 
   Widget _selectionCard() {
     final selectedTemplate = _index!.templates.singleWhere(
       (item) => item.id == _state!.templateId,
     );
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              _isFrench ? 'Programme' : 'Program',
-              style: Theme.of(context).textTheme.titleLarge,
+    return _sectionCard(
+      title: _isFrench ? 'MODÈLE' : 'TEMPLATE',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          DropdownButtonFormField<String>(
+            key: const Key('cycle-web-template'),
+            initialValue: _state!.templateId,
+            decoration: InputDecoration(
+              labelText: _isFrench ? 'Modèle' : 'Template',
             ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              key: const Key('cycle-web-template'),
-              initialValue: _state!.templateId,
-              decoration: InputDecoration(
-                labelText: _isFrench ? 'Modèle' : 'Template',
-              ),
-              items: [
-                for (final template in _index!.templates)
-                  DropdownMenuItem(
-                    value: template.id,
-                    child: Text(_templateLabel(template)),
-                  ),
-              ],
-              onChanged: _busy
-                  ? null
-                  : (value) {
-                      if (value != null) _selectTemplate(value);
-                    },
+            items: [
+              for (final template in _index!.templates)
+                DropdownMenuItem(
+                  value: template.id,
+                  child: Text(_templateLabel(template)),
+                ),
+            ],
+            onChanged: _busy
+                ? null
+                : (value) {
+                    if (value != null) _selectTemplate(value);
+                  },
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            key: const Key('cycle-web-variant'),
+            initialValue: _state!.variantId,
+            decoration: InputDecoration(
+              labelText: _isFrench ? 'Variante' : 'Variant',
             ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              key: const Key('cycle-web-variant'),
-              initialValue: _state!.variantId,
-              decoration: InputDecoration(
-                labelText: _isFrench ? 'Variante' : 'Variant',
-              ),
-              items: [
-                for (final id in selectedTemplate.variantIds)
-                  DropdownMenuItem(value: id, child: Text(_humanize(id))),
-              ],
-              onChanged: _busy
-                  ? null
-                  : (value) {
-                      if (value != null) _selectVariant(value);
-                    },
-            ),
-          ],
-        ),
+            items: [
+              for (final id in selectedTemplate.variantIds)
+                DropdownMenuItem(value: id, child: Text(_humanize(id))),
+            ],
+            onChanged: _busy
+                ? null
+                : (value) {
+                    if (value != null) _selectVariant(value);
+                  },
+          ),
+        ],
       ),
     );
   }
 
-  Widget _editorCard() => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            _isFrench ? 'Configuration' : 'Configuration',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 16),
-          _requestFields(),
-          const SizedBox(height: 20),
-          for (final option in _schema!.options)
-            if (CycleOptionConditionEvaluator.evaluate(
-              option.visibleWhen,
-              _state!.values,
-            )) ...[
-              _optionField(option),
-              const SizedBox(height: 12),
-            ],
-          if (_error != null) ...[
-            Text(
-              '$_error',
-              key: const Key('cycle-web-error'),
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
+  Widget _optionsCard() => _sectionCard(
+    title: _isFrench ? 'OPTIONS SUPPLÉMENTAIRES' : 'ADDITIONAL OPTIONS',
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final option in _schema!.options)
+          if (CycleOptionConditionEvaluator.evaluate(
+            option.visibleWhen,
+            _state!.values,
+          )) ...[
+            _optionField(option),
             const SizedBox(height: 12),
           ],
-          FilledButton.icon(
-            key: const Key('cycle-web-generate'),
-            onPressed: _busy || !_valuesValid ? null : _generate,
-            icon: _busy
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.auto_awesome),
-            label: Text(
-              _isFrench ? 'Générer et sauvegarder' : 'Generate and save',
-            ),
+      ],
+    ),
+  );
+
+  Widget _outputCard() => _sectionCard(
+    title: 'OUTPUT',
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          '${_humanize(_state!.variantId)} · ${_movementIds.length} ${_isFrench ? 'mouvements' : 'movements'}',
+        ),
+        const SizedBox(height: 16),
+        if (_error != null) ...[
+          Text(
+            '$_error',
+            key: const Key('cycle-web-error'),
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
-          if (_generated case final generated?) ...[
-            const SizedBox(height: 20),
-            _CyclePreview(view: generated, isFrench: _isFrench),
-          ],
+          const SizedBox(height: 12),
         ],
-      ),
+        FilledButton.icon(
+          key: const Key('cycle-web-generate'),
+          onPressed: _busy || !_valuesValid ? null : _generate,
+          icon: _busy
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.auto_awesome),
+          label: Text(
+            _isFrench ? 'Générer et sauvegarder' : 'Generate and save',
+          ),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          key: const Key('cycle-web-export'),
+          onPressed: widget.application is CycleWebExportApplication
+              ? _export
+              : null,
+          icon: const Icon(Icons.download),
+          label: Text(_isFrench ? 'Exporter' : 'Export'),
+        ),
+      ],
     ),
   );
 
@@ -462,130 +499,41 @@ class _CycleWebPageState extends State<CycleWebPage> {
         (id) => (_state!.maxInputs[id]?.weightCentiUnits ?? 0) > 0,
       );
 
-  Widget _requestFields() => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Text(
-        _isFrench ? 'Max et matériel' : 'Maxes and equipment',
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-      const SizedBox(height: 12),
-      DropdownButtonFormField<WeightUnit>(
-        key: const Key('cycle-web-unit'),
-        initialValue: _state!.unit,
-        decoration: InputDecoration(labelText: _isFrench ? 'Unité' : 'Unit'),
-        items: WeightUnit.values
-            .map(
-              (unit) => DropdownMenuItem(value: unit, child: Text(unit.name)),
-            )
-            .toList(),
-        onChanged: (unit) {
-          if (unit != null) _setState(_state!.copyWith(unit: unit));
-        },
-      ),
-      const SizedBox(height: 12),
-      TextFormField(
-        key: const Key('cycle-web-start-date'),
-        initialValue: _state!.startDate?.toIso8601String().substring(0, 10),
-        decoration: InputDecoration(
-          labelText: _isFrench ? 'Date de début' : 'Start date',
+  Widget _weightCard() => _sectionCard(
+    title: _isFrench ? 'CHARGES' : 'WEIGHT',
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DropdownButtonFormField<WeightUnit>(
+          key: const Key('cycle-web-unit'),
+          initialValue: _state!.unit,
+          decoration: InputDecoration(labelText: _isFrench ? 'Unité' : 'Unit'),
+          items: WeightUnit.values
+              .map(
+                (unit) => DropdownMenuItem(value: unit, child: Text(unit.name)),
+              )
+              .toList(),
+          onChanged: (unit) {
+            if (unit != null) _setState(_state!.copyWith(unit: unit));
+          },
         ),
-        onChanged: (text) {
-          final date = DateTime.tryParse(text);
-          if (date != null) _setState(_state!.copyWith(startDate: date));
-        },
-      ),
-      const SizedBox(height: 12),
-      TextFormField(
-        key: const Key('cycle-web-training-days'),
-        initialValue: _state!.trainingDays.join(','),
-        decoration: InputDecoration(
-          labelText: _isFrench ? 'Jours (1–7)' : 'Days (1–7)',
-          helperText: _isFrench
-              ? 'Séparés par des virgules'
-              : 'Comma separated',
-        ),
-        onChanged: (text) {
-          final days = text
-              .split(',')
-              .map((v) => int.tryParse(v.trim()))
-              .whereType<int>()
-              .where((v) => v >= 1 && v <= 7)
-              .toList();
-          _setState(_state!.copyWith(trainingDays: days));
-        },
-      ),
-      const SizedBox(height: 12),
-      TextFormField(
-        key: const Key('cycle-web-session-order'),
-        initialValue: _state!.sessionOrder.join(','),
-        decoration: InputDecoration(
-          labelText: _isFrench ? 'Ordre des séances' : 'Session order',
-          helperText: _movementIds.join(', '),
-        ),
-        onChanged: (text) {
-          final order = text
-              .split(',')
-              .map((value) => value.trim())
-              .where(_movementIds.contains)
-              .toList();
-          _setState(_state!.copyWith(sessionOrder: order));
-        },
-      ),
-      const SizedBox(height: 12),
-      for (final movementId in _movementIds) ...[
-        _movementMaxFields(movementId),
         const SizedBox(height: 12),
+        for (final movementId in _movementIds) ...[
+          _movementMaxFields(movementId),
+          const SizedBox(height: 12),
+        ],
+        _numberField(
+          key: 'cycle-web-global-ratio',
+          label: _isFrench ? 'Ratio TM global (%)' : 'Global TM ratio (%)',
+          value: _state!.globalTrainingMaxRatioBasisPoints / 100,
+          onValue: (value) => _setState(
+            _state!.copyWith(
+              globalTrainingMaxRatioBasisPoints: (value * 100).round(),
+            ),
+          ),
+        ),
       ],
-      _numberField(
-        key: 'cycle-web-global-ratio',
-        label: _isFrench ? 'Ratio TM global (%)' : 'Global TM ratio (%)',
-        value: _state!.globalTrainingMaxRatioBasisPoints / 100,
-        onValue: (value) => _setState(
-          _state!.copyWith(
-            globalTrainingMaxRatioBasisPoints: (value * 100).round(),
-          ),
-        ),
-      ),
-      const SizedBox(height: 12),
-      _numberField(
-        key: 'cycle-web-bar',
-        label: _isFrench ? 'Barre' : 'Bar',
-        value: _state!.barWeightCentiUnits / 100,
-        onValue: (value) => _setState(
-          _state!.copyWith(barWeightCentiUnits: (value * 100).round()),
-        ),
-      ),
-      const SizedBox(height: 12),
-      _numberField(
-        key: 'cycle-web-rounding',
-        label: _isFrench ? 'Arrondi' : 'Rounding',
-        value: _state!.roundingIncrementCentiUnits / 100,
-        onValue: (value) => _setState(
-          _state!.copyWith(roundingIncrementCentiUnits: (value * 100).round()),
-        ),
-      ),
-      const SizedBox(height: 12),
-      TextFormField(
-        key: const Key('cycle-web-plates'),
-        initialValue: _state!.platesPerSideCentiUnits
-            .map((v) => v / 100)
-            .join(','),
-        decoration: InputDecoration(
-          labelText: _isFrench ? 'Plaques par côté' : 'Plates per side',
-        ),
-        onChanged: (text) => _setState(
-          _state!.copyWith(
-            platesPerSideCentiUnits: text
-                .split(',')
-                .map((v) => double.tryParse(v.trim()))
-                .whereType<double>()
-                .map((v) => (v * 100).round())
-                .toList(),
-          ),
-        ),
-      ),
-    ],
+    ),
   );
 
   Widget _movementMaxFields(String id) {
@@ -677,6 +625,111 @@ class _CycleWebPageState extends State<CycleWebPage> {
       ],
     );
   }
+
+  Widget _platingCard() => _sectionCard(
+    title: _isFrench ? 'PLAQUES ET BARRE' : 'PLATING & BARBELL',
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _numberField(
+          key: 'cycle-web-bar',
+          label: _isFrench ? 'Barre' : 'Bar',
+          value: _state!.barWeightCentiUnits / 100,
+          onValue: (value) => _setState(
+            _state!.copyWith(barWeightCentiUnits: (value * 100).round()),
+          ),
+        ),
+        const SizedBox(height: 12),
+        _numberField(
+          key: 'cycle-web-rounding',
+          label: _isFrench ? 'Arrondi' : 'Rounding',
+          value: _state!.roundingIncrementCentiUnits / 100,
+          onValue: (value) => _setState(
+            _state!.copyWith(
+              roundingIncrementCentiUnits: (value * 100).round(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          key: const Key('cycle-web-plates'),
+          initialValue: _state!.platesPerSideCentiUnits
+              .map((value) => value / 100)
+              .join(','),
+          decoration: InputDecoration(
+            labelText: _isFrench ? 'Plaques par côté' : 'Plates per side',
+          ),
+          onChanged: (text) => _setState(
+            _state!.copyWith(
+              platesPerSideCentiUnits: text
+                  .split(',')
+                  .map((value) => double.tryParse(value.trim()))
+                  .whereType<double>()
+                  .map((value) => (value * 100).round())
+                  .toList(),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _schedulingCard() => _sectionCard(
+    title: _isFrench ? 'PLANIFICATION' : 'SCHEDULING',
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextFormField(
+          key: const Key('cycle-web-start-date'),
+          initialValue: _state!.startDate?.toIso8601String().substring(0, 10),
+          decoration: InputDecoration(
+            labelText: _isFrench ? 'Date de début' : 'Start date',
+          ),
+          onChanged: (text) {
+            final date = DateTime.tryParse(text);
+            if (date != null) _setState(_state!.copyWith(startDate: date));
+          },
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          key: const Key('cycle-web-training-days'),
+          initialValue: _state!.trainingDays.join(','),
+          decoration: InputDecoration(
+            labelText: _isFrench ? 'Jours (1–7)' : 'Days (1–7)',
+            helperText: _isFrench
+                ? 'Séparés par des virgules'
+                : 'Comma separated',
+          ),
+          onChanged: (text) {
+            final days = text
+                .split(',')
+                .map((value) => int.tryParse(value.trim()))
+                .whereType<int>()
+                .where((value) => value >= 1 && value <= 7)
+                .toList();
+            _setState(_state!.copyWith(trainingDays: days));
+          },
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          key: const Key('cycle-web-session-order'),
+          initialValue: _state!.sessionOrder.join(','),
+          decoration: InputDecoration(
+            labelText: _isFrench ? 'Ordre des séances' : 'Session order',
+            helperText: _state!.sessionOrder.join(', '),
+          ),
+          onChanged: (text) {
+            final order = text
+                .split(',')
+                .map((value) => value.trim())
+                .where(_state!.sessionOrder.contains)
+                .toList();
+            _setState(_state!.copyWith(sessionOrder: order));
+          },
+        ),
+      ],
+    ),
+  );
 
   void _setMovementInput(String id, CycleMovementMaxInput input) =>
       _setState(_state!.copyWith(maxInputs: {..._state!.maxInputs, id: input}));
@@ -789,6 +842,31 @@ class _CycleWebPageState extends State<CycleWebPage> {
         ? value
         : '${spaced[0].toUpperCase()}${spaced.substring(1)}';
   }
+}
+
+/// The catalogue-driven Cycle editor used by both generator pages.
+///
+/// It deliberately excludes the page shell and generation actions. Every
+/// change is persisted through [application] and reported through [onChanged].
+class CycleEditorPanel extends StatelessWidget {
+  const CycleEditorPanel({
+    required this.application,
+    required this.initialState,
+    required this.onChanged,
+    super.key,
+  });
+
+  final CycleWebApplication application;
+  final CycleEditorState initialState;
+  final ValueChanged<CycleEditorState> onChanged;
+
+  @override
+  Widget build(BuildContext context) => CycleWebPage(
+    application: application,
+    initialState: initialState,
+    onStateChanged: onChanged,
+    embedded: true,
+  );
 }
 
 class _CyclePreview extends StatelessWidget {

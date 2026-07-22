@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../cycle_generation/domain/cycle_contract.dart';
 import '../../cycle_generation/domain/cycle_option_schema.dart';
 import '../../training_catalog/application/catalog_repository.dart';
@@ -31,7 +33,8 @@ final class CycleWebGenerationContext {
   final String cycleId;
 }
 
-final class CycleWebApplicationImpl implements CycleWebApplication {
+final class CycleWebApplicationImpl
+    implements CycleWebApplication, CycleWebExportApplication {
   const CycleWebApplicationImpl({
     required this.catalogVersion,
     required this.catalogQuery,
@@ -127,6 +130,39 @@ final class CycleWebApplicationImpl implements CycleWebApplication {
     }
     return GeneratedCycleView(cycle, persistedSnapshot: persisted);
   }
+
+  @override
+  Future<String> exportCycleDraft(CycleEditorState state) async {
+    await saveDraft(state);
+    return jsonEncode({
+      'schema': 'hybrid-training.cycle',
+      'schemaVersion': 1,
+      'kind': 'configuration',
+      'templateId': state.templateId,
+      'variantId': state.variantId,
+      'values': state.values,
+      'startDate': state.startDate?.toUtc().toIso8601String(),
+      'trainingDays': state.trainingDays,
+      'sessionOrder': state.sessionOrder,
+      'globalTrainingMaxRatioBasisPoints':
+          state.globalTrainingMaxRatioBasisPoints,
+      'trainingMaxRatioByMovementBasisPoints':
+          state.trainingMaxRatioByMovementBasisPoints,
+      'unit': state.unit.name,
+      'roundingIncrementCentiUnits': state.roundingIncrementCentiUnits,
+      'barWeightCentiUnits': state.barWeightCentiUnits,
+      'platesPerSideCentiUnits': state.platesPerSideCentiUnits,
+    });
+  }
+
+  @override
+  Future<String> exportGeneratedCycle(GeneratedCycleView view) async =>
+      jsonEncode({
+        'schema': 'hybrid-training.cycle',
+        'schemaVersion': 1,
+        'kind': 'result',
+        'snapshot': view.cycle.toJson(),
+      });
 
   CycleRequest _request(
     CycleEditorState state,

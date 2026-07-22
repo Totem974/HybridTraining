@@ -17,6 +17,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Catalogue Program'), findsOneWidget);
+    expect(find.text('WEIGHT'), findsOneWidget);
+    expect(find.text('TEMPLATE'), findsOneWidget);
+    expect(find.text('ADDITIONAL OPTIONS'), findsOneWidget);
+    expect(find.text('PLATING & BARBELL'), findsOneWidget);
+    expect(find.text('SCHEDULING'), findsOneWidget);
+    expect(find.text('OUTPUT'), findsOneWidget);
     expect(find.text('Advanced load'), findsNothing);
     await tester.ensureVisible(
       find.byKey(const ValueKey('cycle-option-advanced')),
@@ -62,6 +68,33 @@ void main() {
       'second_variant',
     ));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('embedded editor reuses fields without page generation actions', (
+    tester,
+  ) async {
+    final application = _FakeCycleWebApplication();
+    CycleEditorState? changed;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: CycleEditorPanel(
+            application: application,
+            initialState: const CycleEditorState(
+              templateId: 'catalogue_program',
+              variantId: 'first_variant',
+            ),
+            onChanged: (state) => changed = state,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('cycle-editor-panel')), findsOneWidget);
+    expect(find.byKey(const Key('cycle-web-generate')), findsNothing);
+    expect(find.byKey(const Key('cycle-web-template')), findsOneWidget);
+    expect(changed?.templateId, 'catalogue_program');
   });
 }
 

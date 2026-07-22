@@ -133,3 +133,8 @@ abstract interface class CycleWebApplication {
   Future<void> saveDraft(CycleEditorState state);
   Future<GeneratedCycleView> generate(CycleEditorState state);
 }
+
+abstract interface class CycleWebExportApplication {
+  Future<String> exportCycleDraft(CycleEditorState state);
+  Future<String> exportGeneratedCycle(GeneratedCycleView view);
+}
