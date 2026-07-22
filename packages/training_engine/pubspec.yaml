@@ -1,0 +1,11 @@
+name: training_engine
+description: Pure Dart training engine shared by Flutter and static web.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.12.2
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.26.0
