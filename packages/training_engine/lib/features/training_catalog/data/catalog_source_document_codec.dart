@@ -585,9 +585,31 @@ final class CatalogSourceDocumentCodec {
       case 'training_max_percentage':
         _keys(map, const {'type', 'basisPoints'});
         return TrainingMaxPercentageLoad(Percentage(_int(map, 'basisPoints')));
+      case 'parameterized_training_max_percentage':
+        _keys(map, const {
+          'type',
+          'parameterId',
+          'defaultBasisPoints',
+          'minimumBasisPoints',
+          'maximumBasisPoints',
+        });
+        return ParameterizedTrainingMaxPercentageLoad(
+          parameterId: _nonEmptyString(map, 'parameterId'),
+          defaultValue: Percentage(_int(map, 'defaultBasisPoints')),
+          minimum: Percentage(_int(map, 'minimumBasisPoints')),
+          maximum: Percentage(_int(map, 'maximumBasisPoints')),
+        );
       case 'one_rep_max_percentage':
         _keys(map, const {'type', 'basisPoints'});
         return OneRepMaxPercentageLoad(Percentage(_int(map, 'basisPoints')));
+      case 'fixed':
+        _keys(map, const {'type', 'centiUnits', 'unit'});
+        return FixedLoad(
+          Weight(
+            _int(map, 'centiUnits'),
+            WeightUnit.values.byName(_string(map, 'unit')),
+          ),
+        );
       case 'bodyweight':
         _keys(map, const {'type'});
         return const BodyweightLoad();
@@ -604,6 +626,11 @@ final class CatalogSourceDocumentCodec {
         _keys(map, const {'type', 'region'});
         return WarmUpBaseLoad(
           WarmUpBodyRegion.values.byName(_string(map, 'region')),
+        );
+      case 'main_work_set_plus':
+        _keys(map, const {'type', 'cumulativeIncreaseBasisPoints'});
+        return MainWorkSetPlusLoad(
+          _positiveInt(map, 'cumulativeIncreaseBasisPoints'),
         );
       case 'training_max_ramp':
         _keys(

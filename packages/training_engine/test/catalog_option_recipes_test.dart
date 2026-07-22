@@ -4,6 +4,59 @@ import 'package:test/test.dart';
 import 'package:training_engine/training_engine.dart';
 
 void main() {
+  test('source codec preserves fixed and parameterized load primitives', () {
+    Map<String, Object?> component(String id, Map<String, Object?> load) => {
+      'id': id,
+      'revision': 1,
+      'role': 'supplemental',
+      'labels': {'en': id, 'fr': id},
+      'sourceRuleIds': ['rule'],
+      'parameterSchemaIds': <Object?>[],
+      'constraints': <String, Object?>{},
+      'compatibilities': <String, Object?>{},
+      'block': {
+        'id': id,
+        'role': 'supplemental',
+        'sets': [
+          {
+            'repetitions': {'type': 'fixed', 'count': 1},
+            'load': load,
+          },
+        ],
+      },
+    };
+    final decoded = const CatalogSourceDocumentCodec().decodeComponents(
+      jsonEncode({
+        'schemaVersion': 1,
+        'kind': 'components',
+        'components': [
+          component('fixed', {
+            'type': 'fixed',
+            'centiUnits': 1250,
+            'unit': 'kg',
+          }),
+          component('parameterized', {
+            'type': 'parameterized_training_max_percentage',
+            'parameterId': 'intensity',
+            'defaultBasisPoints': 8000,
+            'minimumBasisPoints': 5000,
+            'maximumBasisPoints': 10000,
+          }),
+          component('main-plus', {
+            'type': 'main_work_set_plus',
+            'cumulativeIncreaseBasisPoints': 500,
+          }),
+        ],
+      }),
+    );
+    expect(decoded[0].block.sets.single.load, isA<FixedLoad>());
+    expect(
+      decoded[1].block.sets.single.load,
+      isA<ParameterizedTrainingMaxPercentageLoad>(),
+    );
+    expect(decoded[2].block.sets.single.load, isA<MainWorkSetPlusLoad>());
+  });
+
   test('source recipes resolve and compile across weeks and sessions', () {
     const codec = CatalogSourceDocumentCodec();
     final components = codec.decodeComponents(jsonEncode(_componentsDocument));
