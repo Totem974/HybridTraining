@@ -11,6 +11,17 @@ enum CycleOptionType {
 
 enum CycleOptionScope { global, perMovement, perSession }
 
+enum CycleOptionPresentationGroup {
+  hidden,
+  template,
+  warmup,
+  joker,
+  deload,
+  supplemental,
+  assistance,
+  conditioning,
+}
+
 sealed class CycleOptionCondition {
   const CycleOptionCondition();
 }
@@ -76,6 +87,9 @@ final class CycleOptionDefinition {
     this.visibleWhen = const AlwaysCondition(true),
     this.enabledWhen = const AlwaysCondition(true),
     this.requiredWhen = const AlwaysCondition(false),
+    this.presentationGroup = CycleOptionPresentationGroup.supplemental,
+    this.labelEn = '',
+    this.labelFr = '',
   });
 
   final String id;
@@ -89,6 +103,9 @@ final class CycleOptionDefinition {
   final CycleOptionCondition visibleWhen;
   final CycleOptionCondition enabledWhen;
   final CycleOptionCondition requiredWhen;
+  final CycleOptionPresentationGroup presentationGroup;
+  final String labelEn;
+  final String labelFr;
 }
 
 final class CycleEditorSchema {

@@ -18,6 +18,8 @@ final class CycleEditorState {
     this.roundingIncrementCentiUnits = 250,
     this.barWeightCentiUnits = 2000,
     this.platesPerSideCentiUnits = const [],
+    this.programTitle = '',
+    this.showPlating = true,
     this.cycleId = '',
   });
 
@@ -34,6 +36,8 @@ final class CycleEditorState {
   final int roundingIncrementCentiUnits;
   final int barWeightCentiUnits;
   final List<int> platesPerSideCentiUnits;
+  final String programTitle;
+  final bool showPlating;
   final String cycleId;
 
   CycleEditorState copyWith({
@@ -50,6 +54,8 @@ final class CycleEditorState {
     int? roundingIncrementCentiUnits,
     int? barWeightCentiUnits,
     List<int>? platesPerSideCentiUnits,
+    String? programTitle,
+    bool? showPlating,
     String? cycleId,
   }) => CycleEditorState(
     templateId: templateId ?? this.templateId,
@@ -71,6 +77,8 @@ final class CycleEditorState {
     barWeightCentiUnits: barWeightCentiUnits ?? this.barWeightCentiUnits,
     platesPerSideCentiUnits:
         platesPerSideCentiUnits ?? this.platesPerSideCentiUnits,
+    programTitle: programTitle ?? this.programTitle,
+    showPlating: showPlating ?? this.showPlating,
     cycleId: cycleId ?? this.cycleId,
   );
 }

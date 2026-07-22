@@ -221,7 +221,7 @@ final class CycleWebApplicationImpl
       percentageParameters: percentages,
       percentageParametersByMovement: percentagesByMovement,
       unit: state.unit,
-      roundingIncrement: Weight(state.roundingIncrementCentiUnits, state.unit),
+      roundingIncrement: Weight(_roundingIncrement(state), state.unit),
       barProfile: BarProfile(
         weight: Weight(state.barWeightCentiUnits, state.unit),
         platesPerSide: state.platesPerSideCentiUnits
@@ -230,6 +230,17 @@ final class CycleWebApplicationImpl
       ),
       includeDeload: includeDeload,
     );
+  }
+
+  int _roundingIncrement(CycleEditorState state) {
+    final positivePlates = state.platesPerSideCentiUnits.where(
+      (plate) => plate > 0,
+    );
+    if (positivePlates.isEmpty) {
+      return generationContext.roundingIncrement.centiUnits;
+    }
+    return positivePlates.reduce((left, right) => left < right ? left : right) *
+        2;
   }
 
   TrainingMaxInput _maxInput(CycleMovementMaxInput input, WeightUnit unit) {

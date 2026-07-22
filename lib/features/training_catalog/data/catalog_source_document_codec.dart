@@ -146,19 +146,23 @@ final class CatalogSourceDocumentCodec {
           final map = _map(value, 'optionSchema');
           _keys(map, const {'id', 'revision', 'sourceRuleIds', 'parameters'});
           for (final value in _list(map, 'parameters')) {
-            _keys(_map(value, 'parameter'), const {
-              'id',
-              'type',
-              'scope',
-              'default',
-              'minimum',
-              'maximum',
-              'step',
-              'allowedValues',
-              'visibleWhen',
-              'enabledWhen',
-              'requiredWhen',
-            });
+            _keys(
+              _map(value, 'parameter'),
+              const {
+                'id',
+                'type',
+                'scope',
+                'default',
+                'minimum',
+                'maximum',
+                'step',
+                'allowedValues',
+                'visibleWhen',
+                'enabledWhen',
+                'requiredWhen',
+              },
+              optional: const {'presentationGroup', 'labelEn', 'labelFr'},
+            );
           }
           return map;
         })
@@ -352,7 +356,8 @@ final class CatalogSourceDocumentCodec {
     Set<String> allowed, {
     Set<String> optional = const {},
   }) {
-    final unknown = map.keys.toSet().difference(allowed);
+    final allAllowed = {...allowed, ...optional};
+    final unknown = map.keys.toSet().difference(allAllowed);
     if (unknown.isNotEmpty) {
       throw FormatException('Unknown key ${unknown.first}.');
     }

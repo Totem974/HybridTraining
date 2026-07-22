@@ -973,19 +973,37 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
 }
 
 void _parameter(Map<String, Object?> value, String at) {
-  _exact(value, {
-    'id',
-    'type',
-    'scope',
-    'default',
-    'minimum',
-    'maximum',
-    'step',
-    'allowedValues',
-    'visibleWhen',
-    'enabledWhen',
-    'requiredWhen',
-  }, at);
+  _exact(
+    value,
+    {
+      'id',
+      'type',
+      'scope',
+      'default',
+      'minimum',
+      'maximum',
+      'step',
+      'allowedValues',
+      'visibleWhen',
+      'enabledWhen',
+      'requiredWhen',
+    },
+    at,
+    optional: {'presentationGroup', 'labelEn', 'labelFr'},
+  );
+  if (value['presentationGroup'] case final String group
+      when !const {
+        'hidden',
+        'template',
+        'warmup',
+        'joker',
+        'deload',
+        'supplemental',
+        'assistance',
+        'conditioning',
+      }.contains(group)) {
+    throw FormatException('unknown presentation group $group');
+  }
   if (!const {
     'boolean',
     'enumeration',
@@ -1169,7 +1187,7 @@ void _exact(
   String at, {
   Set<String> optional = const {},
 }) {
-  final allowed = keys.whereType<String>().toSet();
+  final allowed = {...keys.whereType<String>(), ...optional};
   final unknown = value.keys.where((k) => !allowed.contains(k));
   if (unknown.isNotEmpty) {
     throw FormatException('$at unknown key ${unknown.first}');

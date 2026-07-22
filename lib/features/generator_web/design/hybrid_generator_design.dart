@@ -215,6 +215,10 @@ class HybridGeneratorHeader extends StatelessWidget {
         key: const Key('hybrid-generator-page-toggle'),
         expandedInsets: EdgeInsets.zero,
         showSelectedIcon: false,
+        style: const ButtonStyle(
+          padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 8)),
+          visualDensity: VisualDensity.compact,
+        ),
         segments: const [
           ButtonSegment(value: HybridGeneratorPage.cycle, label: Text('Cycle')),
           ButtonSegment(

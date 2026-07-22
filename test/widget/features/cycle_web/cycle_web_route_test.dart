@@ -51,7 +51,6 @@ void main() {
 
     expect(application.savedStates, hasLength(1));
     expect(application.generatedStates, hasLength(1));
-    expect(find.text('Saved preview'), findsOneWidget);
   });
 
   test('route delegates Forever and contains no programme IDs or lists', () {

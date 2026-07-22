@@ -7,6 +7,13 @@ import '../../training_catalog/domain/catalog_index.dart';
 import '../../generator_web/design/hybrid_generator_design.dart';
 import '../application/cycle_option_condition_evaluator.dart';
 import '../application/cycle_web_contract.dart';
+import 'blocks/additional_options/additional_options_block.dart';
+import 'blocks/output/cycle_output_block.dart';
+import 'blocks/plating/cycle_plating_block.dart';
+import 'blocks/scheduling/cycle_scheduling_block.dart';
+import 'blocks/template/cycle_template_block.dart';
+import 'blocks/weight/cycle_weight_block.dart';
+import 'program/cycle_program.dart';
 
 class CycleWebPage extends StatefulWidget {
   const CycleWebPage({
@@ -99,6 +106,8 @@ class _CycleWebPageState extends State<CycleWebPage> {
               draft?.roundingIncrementCentiUnits ?? 250,
           barWeightCentiUnits: draft?.barWeightCentiUnits ?? 2000,
           platesPerSideCentiUnits: draft?.platesPerSideCentiUnits ?? const [],
+          programTitle: draft?.programTitle ?? '',
+          showPlating: draft?.showPlating ?? true,
           cycleId:
               draft?.cycleId ??
               'cycle-${DateTime.now().toUtc().microsecondsSinceEpoch}',
@@ -183,6 +192,8 @@ class _CycleWebPageState extends State<CycleWebPage> {
         roundingIncrementCentiUnits: _state?.roundingIncrementCentiUnits ?? 250,
         barWeightCentiUnits: _state?.barWeightCentiUnits ?? 2000,
         platesPerSideCentiUnits: _state?.platesPerSideCentiUnits ?? const [],
+        programTitle: _state?.programTitle ?? '',
+        showPlating: _state?.showPlating ?? true,
         cycleId: 'cycle-${DateTime.now().toUtc().microsecondsSinceEpoch}',
       );
       await widget.application.saveDraft(state);
@@ -328,16 +339,16 @@ class _CycleWebPageState extends State<CycleWebPage> {
         final content = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _responsivePair(_weightCard(), _selectionCard(), desktop),
+            _responsivePair(_newWeightCard(), _newSelectionCard(), desktop),
             const SizedBox(height: 24),
-            _optionsCard(),
+            _newOptionsCard(),
             const SizedBox(height: 24),
-            _platingCard(),
+            _newPlatingCard(),
             const SizedBox(height: 24),
             if (widget.embedded)
-              _schedulingCard()
+              _newSchedulingCard()
             else
-              _responsivePair(_schedulingCard(), _outputCard(), desktop),
+              _responsivePair(_newSchedulingCard(), _newOutputCard(), desktop),
             if (!widget.embedded) ...[
               const SizedBox(height: 24),
               _sectionCard(
@@ -355,7 +366,12 @@ class _CycleWebPageState extends State<CycleWebPage> {
                           ),
                         ),
                       )
-                    : _CyclePreview(view: _generated!, isFrench: _isFrench),
+                    : CycleProgram(
+                        view: _generated!,
+                        labelFor: _humanize,
+                        showPlating: _state!.showPlating,
+                        isFrench: _isFrench,
+                      ),
               ),
             ],
           ],
@@ -371,6 +387,180 @@ class _CycleWebPageState extends State<CycleWebPage> {
   Widget _sectionCard({required String title, required Widget child}) =>
       HybridGeneratorCard(title: title, child: child);
 
+  Widget _newWeightCard() => HybridGeneratorCard(
+    title: _isFrench ? 'CHARGES' : 'WEIGHT',
+    child: CycleWeightBlock(
+      state: _state!,
+      movementIds: _movementIds,
+      onMaxInputKindChanged: (kind) {
+        final inputs = <String, CycleMovementMaxInput>{
+          for (final movement in _movementIds)
+            movement: CycleMovementMaxInput(
+              kind: kind,
+              weightCentiUnits:
+                  _state!.maxInputs[movement]?.weightCentiUnits ?? 0,
+              repetitions: kind == CycleMaxInputKind.repMax
+                  ? (_state!.maxInputs[movement]?.repetitions ?? 1)
+                  : null,
+            ),
+        };
+        _setState(_state!.copyWith(maxInputs: inputs));
+      },
+      onMovementInputChanged: _setMovementInput,
+      onGlobalTrainingMaxRatioChanged: (ratio) =>
+          _setState(_state!.copyWith(globalTrainingMaxRatioBasisPoints: ratio)),
+      onUnitChanged: (unit) => _setState(_state!.copyWith(unit: unit)),
+    ),
+  );
+
+  Widget _newSelectionCard() => CycleTemplateBlock(
+    index: _index!,
+    state: _state!,
+    enabled: !_busy,
+    isFrench: _isFrench,
+    templateLabelBuilder: _templateLabel,
+    variantLabelBuilder: _humanize,
+    onTemplateSelected: _selectTemplate,
+    onVariantSelected: _selectVariant,
+    options: _templateOptions(),
+  );
+
+  Widget? _templateOptions() {
+    final options = _visibleOptions(
+      CycleOptionPresentationGroup.template,
+    ).toList();
+    if (options.isEmpty) return null;
+    return Column(children: options.map(_optionField).toList());
+  }
+
+  Iterable<CycleOptionDefinition> _visibleOptions(
+    CycleOptionPresentationGroup group,
+  ) => _schema!.options.where(
+    (option) =>
+        option.presentationGroup == group &&
+        CycleOptionConditionEvaluator.evaluate(
+          option.visibleWhen,
+          _state!.values,
+        ),
+  );
+
+  Widget _newOptionsCard() {
+    AdditionalOptionGroup? group(
+      CycleOptionPresentationGroup kind,
+      String label,
+    ) {
+      final options = _visibleOptions(kind).toList();
+      if (options.isEmpty) return null;
+      return AdditionalOptionGroup(
+        id: kind.name,
+        label: label,
+        children: options.map(_optionField).toList(),
+      );
+    }
+
+    final primary = [
+      group(CycleOptionPresentationGroup.warmup, 'WARM-UP'),
+      group(CycleOptionPresentationGroup.joker, 'JOKER SETS'),
+      group(CycleOptionPresentationGroup.deload, 'DELOAD'),
+    ].whereType<AdditionalOptionGroup>().toList();
+    final secondary = [
+      group(
+        CycleOptionPresentationGroup.supplemental,
+        _isFrench ? 'SUPPLÉMENTAIRE' : 'SUPPLEMENTAL',
+      ),
+      group(CycleOptionPresentationGroup.assistance, 'ASSISTANCE'),
+      group(CycleOptionPresentationGroup.conditioning, 'CONDITIONING'),
+    ].whereType<AdditionalOptionGroup>().toList();
+    return AdditionalOptionsBlock(
+      title: _isFrench ? 'OPTIONS SUPPLÉMENTAIRES' : 'ADDITIONAL OPTIONS',
+      primaryGroups: primary,
+      secondaryGroups: secondary,
+      emptyLabel: _isFrench
+          ? 'Aucune option supplémentaire pour ce modèle.'
+          : 'No additional options for this template.',
+    );
+  }
+
+  Widget _newPlatingCard() {
+    final maximum =
+        _state!.barWeightCentiUnits +
+        2 * _state!.platesPerSideCentiUnits.fold<int>(0, (a, b) => a + b);
+    return CyclePlatingBlock(
+      title: _isFrench ? 'PLAQUES ET BARRE' : 'PLATING & BARBELL',
+      denominations: [
+        for (final plate in _plateChoices)
+          CyclePlateDenominationView(
+            centiUnits: plate,
+            label: '${_formatWeight(plate)} ${_state!.unit.name}',
+            count: _plateCount(plate),
+          ),
+      ],
+      barWeightCaption: _isFrench ? 'Poids de la barre' : 'Barbell weight',
+      barWeightLabel:
+          '${_formatWeight(_state!.barWeightCentiUnits)} ${_state!.unit.name}',
+      maximumWeightCaption: _isFrench
+          ? 'Poids total maximal'
+          : 'Maximum total weight',
+      maximumWeightLabel: '${_formatWeight(maximum)} ${_state!.unit.name}',
+      onCountChanged: (plate, count) {
+        final current = _plateCount(plate);
+        _changePlateCount(plate, count - current);
+      },
+    );
+  }
+
+  Widget _newSchedulingCard() {
+    final order = _state!.sessionOrder;
+    return CycleSchedulingBlock(
+      viewModel: CycleSchedulingViewModel(
+        frequency: order.length,
+        allowedFrequencies: [
+          CycleFrequencyView(value: order.length, label: '${order.length}'),
+        ],
+        sessions: [
+          for (final session in order)
+            CycleSessionTokenView(key: session, label: _humanize(session)),
+        ],
+        startDate: _state!.startDate,
+        canMoveSessionLeft: order.skip(1).toSet(),
+        canMoveSessionRight: order.take(order.length - 1).toSet(),
+      ),
+      title: _isFrench ? 'PLANIFICATION' : 'SCHEDULING',
+      frequencyLabel: _isFrench ? 'Jours par semaine' : 'Days a week',
+      sessionOrderLabel: _isFrench ? 'Ordre des séances' : 'Lifts order',
+      startDateLabel: _isFrench ? 'Date de début' : 'Start date',
+      onStartDateChanged: (date) =>
+          _setState(_state!.copyWith(startDate: date)),
+      onMoveSessionLeft: (id) => _moveSession(id, -1),
+      onMoveSessionRight: (id) => _moveSession(id, 1),
+    );
+  }
+
+  void _moveSession(String id, int delta) {
+    final order = [..._state!.sessionOrder];
+    final index = order.indexOf(id);
+    final target = index + delta;
+    if (index < 0 || target < 0 || target >= order.length) return;
+    final item = order.removeAt(index);
+    order.insert(target, item);
+    _setState(_state!.copyWith(sessionOrder: order));
+  }
+
+  Widget _newOutputCard() => CycleOutputBlock(
+    programTitle: _state!.programTitle,
+    showPlating: _state!.showPlating,
+    busy: _busy,
+    enabled: _valuesValid,
+    isFrench: _isFrench,
+    onProgramTitleChanged: (title) =>
+        _setState(_state!.copyWith(programTitle: title)),
+    onShowPlatingChanged: (value) =>
+        _setState(_state!.copyWith(showPlating: value)),
+    onGenerate: _generate,
+    onExport: widget.application is CycleWebExportApplication ? _export : null,
+  );
+
+  // ignore: unused_element
   Widget _selectionCard() {
     final selectedTemplate = _index!.templates.singleWhere(
       (item) => item.id == _state!.templateId,
@@ -427,6 +617,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
     );
   }
 
+  // ignore: unused_element
   Widget _optionsCard() {
     final visible = _schema!.options
         .where(
@@ -481,6 +672,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
     );
   }
 
+  // ignore: unused_element
   Widget _outputCard() => _sectionCard(
     title: 'OUTPUT',
     child: Column(
@@ -555,6 +747,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
         (id) => (_state!.maxInputs[id]?.weightCentiUnits ?? 0) > 0,
       );
 
+  // ignore: unused_element
   Widget _weightCard() => _sectionCard(
     title: _isFrench ? 'CHARGES' : 'WEIGHT',
     child: Column(
@@ -781,6 +974,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
     );
   }
 
+  // ignore: unused_element
   Widget _platingCard() => _sectionCard(
     title: _isFrench ? 'PLAQUES ET BARRE' : 'PLATING & BARBELL',
     child: Column(
@@ -939,6 +1133,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
         : value.toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '');
   }
 
+  // ignore: unused_element
   Widget _schedulingCard() => _sectionCard(
     title: _isFrench ? 'PLANIFICATION' : 'SCHEDULING',
     child: Column(
@@ -1030,7 +1225,10 @@ class _CycleWebPageState extends State<CycleWebPage> {
       _state!.values,
     );
     final value = _state!.values[option.id] ?? option.defaultValue;
-    final label = _humanize(option.id);
+    final localizedLabel = _isFrench ? option.labelFr : option.labelEn;
+    final label = localizedLabel.isEmpty
+        ? _humanize(option.id)
+        : localizedLabel;
     if (option.scope == CycleOptionScope.perMovement) {
       final values = value as Map<Object?, Object?>;
       return Column(
@@ -1181,6 +1379,7 @@ class CycleEditorPanel extends StatelessWidget {
   );
 }
 
+// ignore: unused_element
 class _CyclePreview extends StatelessWidget {
   const _CyclePreview({required this.view, required this.isFrench});
   final GeneratedCycleView view;

@@ -98,6 +98,11 @@ void main() {
         isA<RepMaxInput>(),
       );
       expect(compiler.request!.unit, WeightUnit.lb);
+      expect(
+        compiler.request!.roundingIncrement.centiUnits,
+        5000,
+        reason: 'rounding follows the smallest available plate per side',
+      );
       expect(compiler.request!.barProfile.weight.centiUnits, 4500);
       expect(
         compiler

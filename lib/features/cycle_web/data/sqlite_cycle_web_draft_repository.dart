@@ -77,6 +77,8 @@ final class SqliteCycleWebDraftRepository implements CycleWebDraftRepository {
           requestMap?['roundingIncrementCentiUnits'] as int? ?? 250,
       barWeightCentiUnits: requestMap?['barWeightCentiUnits'] as int? ?? 2000,
       platesPerSideCentiUnits: _intList(requestMap?['platesPerSideCentiUnits']),
+      programTitle: requestMap?['programTitle'] as String? ?? '',
+      showPlating: requestMap?['showPlating'] as bool? ?? true,
       cycleId: requestMap?['cycleId'] as String? ?? '',
     );
   }
@@ -118,6 +120,8 @@ final class SqliteCycleWebDraftRepository implements CycleWebDraftRepository {
           'roundingIncrementCentiUnits': state.roundingIncrementCentiUnits,
           'barWeightCentiUnits': state.barWeightCentiUnits,
           'platesPerSideCentiUnits': state.platesPerSideCentiUnits,
+          'programTitle': state.programTitle,
+          'showPlating': state.showPlating,
           'cycleId': state.cycleId,
         },
       }),

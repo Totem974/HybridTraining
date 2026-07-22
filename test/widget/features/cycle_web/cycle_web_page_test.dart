@@ -30,25 +30,9 @@ void main() {
     expect(find.text('PLATING & BARBELL'), findsOneWidget);
     expect(find.text('SCHEDULING'), findsOneWidget);
 
-    final plating = find.ancestor(
-      of: find.byKey(const Key('cycle-web-plates')),
-      matching: find.byType(Card),
-    );
-    expect(plating, findsOneWidget);
-    expect(
-      find.descendant(
-        of: plating,
-        matching: find.byKey(const Key('cycle-web-bar')),
-      ),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(
-        of: plating,
-        matching: find.byKey(const Key('cycle-web-rounding')),
-      ),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('cycle-web-plates')), findsNothing);
+    expect(find.byKey(const Key('cycle-web-rounding')), findsNothing);
+    expect(find.byKey(const Key('cycle-plating-bar-weight')), findsOneWidget);
 
     await tester.enterText(
       find.byKey(const ValueKey('cycle-web-max-weight-squat')),
@@ -131,8 +115,7 @@ void main() {
     await tester.tap(find.byKey(const Key('cycle-web-generate')));
     await tester.pumpAndSettle();
     expect(application.generatedStates, hasLength(1));
-    expect(find.text('Saved preview'), findsOneWidget);
-    expect(find.byKey(const ValueKey('cycle-preview-week-1')), findsOneWidget);
+    expect(find.byKey(const ValueKey('cycle-program-week-1')), findsOneWidget);
   });
 
   testWidgets('switches variants through index data and stays responsive', (

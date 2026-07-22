@@ -628,19 +628,23 @@ final class SqliteTrainingCatalog
   }
 
   static CycleOptionDefinition _decodeOption(Map<String, Object?> map) {
-    _exactKeys(map, const {
-      'id',
-      'type',
-      'scope',
-      'default',
-      'minimum',
-      'maximum',
-      'step',
-      'allowedValues',
-      'visibleWhen',
-      'enabledWhen',
-      'requiredWhen',
-    });
+    _exactKeys(
+      map,
+      const {
+        'id',
+        'type',
+        'scope',
+        'default',
+        'minimum',
+        'maximum',
+        'step',
+        'allowedValues',
+        'visibleWhen',
+        'enabledWhen',
+        'requiredWhen',
+      },
+      optional: const {'presentationGroup', 'labelEn', 'labelFr'},
+    );
     final allowed = map['allowedValues'];
     if (allowed is! List<Object?>) {
       throw const CatalogFormatException('allowedValues must be a list');
@@ -663,6 +667,11 @@ final class SqliteTrainingCatalog
       requiredWhen: _decodeCondition(
         _objectMap(map['requiredWhen'], 'requiredWhen'),
       ),
+      presentationGroup: CycleOptionPresentationGroup.values.byName(
+        map['presentationGroup'] as String? ?? 'supplemental',
+      ),
+      labelEn: map['labelEn'] as String? ?? '',
+      labelFr: map['labelFr'] as String? ?? '',
     );
   }
 
@@ -729,8 +738,13 @@ final class SqliteTrainingCatalog
       ? value
       : throw CatalogFormatException('$label must be an object');
 
-  static void _exactKeys(Map<String, Object?> map, Set<String> expected) {
-    if (map.keys.toSet().difference(expected).isNotEmpty ||
+  static void _exactKeys(
+    Map<String, Object?> map,
+    Set<String> expected, {
+    Set<String> optional = const {},
+  }) {
+    final allowed = {...expected, ...optional};
+    if (map.keys.toSet().difference(allowed).isNotEmpty ||
         expected.difference(map.keys.toSet()).isNotEmpty) {
       throw const CatalogFormatException('Unexpected object keys');
     }

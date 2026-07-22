@@ -4,8 +4,8 @@
   "optionSchemas": [{
     "id":"beyond_main_variation_options","revision":1,"sourceRuleIds":["beyond_004","beyond_005","beyond_063"],
     "parameters":[
-      {"id":"training_max_ratio","type":"percentage","scope":"global","default":9000,"minimum":8500,"maximum":9000,"step":500,"allowedValues":[8500,9000],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
-      {"id":"include_deload","type":"boolean","scope":"global","default":true,"minimum":null,"maximum":null,"step":null,"allowedValues":[true],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}}
+      {"id":"training_max_ratio","presentationGroup":"hidden","type":"percentage","scope":"global","default":9000,"minimum":8500,"maximum":9000,"step":500,"allowedValues":[8500,9000],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
+      {"id":"include_deload","presentationGroup":"deload","labelEn":"Deload after cycle","labelFr":"Deload après le cycle","type":"boolean","scope":"global","default":true,"minimum":null,"maximum":null,"step":null,"allowedValues":[true],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}}
     ]
   }]
 }
