@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:test/test.dart';
 import 'package:training_engine/training_engine.dart';
 
@@ -173,6 +175,108 @@ void main() {
   });
 
   group('catalog-driven deload', () {
+    test('matrix has 12 distinct output fingerprints', () {
+      final recipes = {
+        for (final type in DeloadType.values)
+          type: _recipe(WeightUnit.kg, [
+            BlockDefinition(
+              id: 'deload',
+              role: 'deload',
+              sets: [
+                for (final item in _deloadPrescription(type))
+                  PrescribedSetDefinition(
+                    repetitions: FixedRepetitions(item.$2),
+                    load: TrainingMaxPercentageLoad(Percentage(item.$1)),
+                  ),
+              ],
+            ),
+          ]),
+      };
+      final definition = _definition(
+        deloadBase: true,
+        warmUp: {
+          WarmUpType.original: _recipe(WeightUnit.kg, [
+            _block('warm', 'warm_up', const Unloaded()),
+          ]),
+        },
+        deload: recipes,
+      );
+      final fingerprints = <String>{
+        _fingerprint(
+          _compile(
+            definition: definition,
+            options: const CycleExecutionOptions(
+              warmUp: WarmUpExecutionOptions(
+                enabled: true,
+                type: WarmUpType.original,
+              ),
+            ),
+          ),
+        ),
+      };
+      for (final type in DeloadType.values) {
+        final skipValues = type == DeloadType.highIntensity
+            ? const [false]
+            : const [false, true];
+        for (final skip in skipValues) {
+          fingerprints.add(
+            _fingerprint(
+              _compile(
+                definition: definition,
+                options: CycleExecutionOptions(
+                  warmUp: const WarmUpExecutionOptions(
+                    enabled: true,
+                    type: WarmUpType.original,
+                  ),
+                  deload: DeloadExecutionOptions(
+                    enabled: true,
+                    type: type,
+                    skipWarmUp: skip,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+      }
+      expect(fingerprints, hasLength(12));
+    });
+
+    test('selected overlay identifies deload context for skipWarmUp', () {
+      final definition = _definition(
+        warmUp: {
+          WarmUpType.original: _recipe(WeightUnit.kg, [
+            _block('warm', 'warm_up', const Unloaded()),
+          ]),
+        },
+        deload: {
+          DeloadType.type1: _recipe(WeightUnit.kg, [
+            _block('deload', 'deload', const Unloaded()),
+          ]),
+        },
+      );
+      final cycle = _compile(
+        definition: definition,
+        options: const CycleExecutionOptions(
+          warmUp: WarmUpExecutionOptions(
+            enabled: true,
+            type: WarmUpType.original,
+          ),
+          deload: DeloadExecutionOptions(
+            enabled: true,
+            type: DeloadType.type1,
+            skipWarmUp: true,
+          ),
+        ),
+      );
+      expect(
+        cycle.weeks.single.sessions.single.blocks.where(
+          (block) => block.role == 'warm_up',
+        ),
+        isEmpty,
+      );
+    });
+
     for (final type in DeloadType.values) {
       test('${type.name} applies its resolved prescription', () {
         final prescription = _deloadPrescription(type);
@@ -261,6 +365,27 @@ void main() {
     });
   });
 }
+
+String _fingerprint(GeneratedCycle cycle) => jsonEncode([
+  for (final week in cycle.weeks)
+    [
+      for (final session in week.sessions)
+        [
+          for (final block in session.blocks)
+            {
+              'role': block.role,
+              'sets': [
+                for (final set in block.sets)
+                  {
+                    'repetitions': set.repetitions,
+                    'percentageBasisPoints': set.percentageBasisPoints,
+                    'plannedLoad': set.plannedLoad?.centiUnits,
+                  },
+              ],
+            },
+        ],
+    ],
+]);
 
 List<(int, int)> _deloadPrescription(DeloadType type) => switch (type) {
   DeloadType.type1 => const [(4000, 5), (5000, 5), (6000, 5)],

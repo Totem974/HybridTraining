@@ -707,7 +707,18 @@ final class CycleCompilerImpl implements CycleCompiler {
   ) {
     final recipes = definition.optionRecipes;
     var blocks = List<BlockDefinition>.of(_blocksFor(week, sessionId));
-    final isDeloadWeek = blocks.any((block) => block.role == 'deload');
+    final deloadType = options.deload.type;
+    final selectedDeloadBlocks = options.deload.enabled && deloadType != null
+        ? _overlayBlocks(
+            recipes.deload[deloadType]!,
+            request.unit,
+            week.number,
+            sessionId,
+          )
+        : const <BlockDefinition>[];
+    final isDeloadWeek =
+        blocks.any((block) => block.role == 'deload') ||
+        selectedDeloadBlocks.isNotEmpty;
 
     if (recipes.warmUp.isNotEmpty) {
       blocks.removeWhere((block) => block.role == 'warm_up');
@@ -732,16 +743,8 @@ final class CycleCompilerImpl implements CycleCompiler {
 
     if (recipes.deload.isNotEmpty) {
       blocks.removeWhere((block) => block.role == 'deload');
-      final type = options.deload.type;
-      if (options.deload.enabled && type != null) {
-        blocks.addAll(
-          _overlayBlocks(
-            recipes.deload[type]!,
-            request.unit,
-            week.number,
-            sessionId,
-          ),
-        );
+      if (options.deload.enabled && deloadType != null) {
+        blocks.addAll(selectedDeloadBlocks);
       }
     } else if (!request.includeDeload) {
       blocks.removeWhere((block) => block.role == 'deload');
