@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hybrid_training/core/storage/sqlite_database_file.dart';
 import 'package:hybrid_training/features/cycle_generation/domain/cycle_contract.dart';
 import 'package:hybrid_training/features/forever/data/forever_sqlite_schema.dart';
+import 'package:hybrid_training/features/forever/data/forever_json_export.dart';
 import 'package:hybrid_training/features/forever/data/sqlite_forever_draft_repository.dart';
 import 'package:hybrid_training/features/forever/data/sqlite_forever_macrocycle_repository.dart';
 import 'package:hybrid_training/features/forever/domain/forever_contract.dart';
@@ -24,8 +25,9 @@ void main() {
         definitionId: 'five-three-one-forever',
         definitionRevision: 1,
         payload: const {
-          'slots': {'leader': 'bbb'},
-          'maxes': {'squat': 10000},
+          'startDate': '2026-07-22T00:00:00.000Z',
+          'selectedCycles': {'leader': 'classic_531/standard'},
+          'trainingMaxes': {'squat': 10000},
         },
         updatedAt: DateTime.utc(2026, 7, 22),
       );
@@ -53,6 +55,7 @@ void main() {
     expect(after.logicalHash, before.logicalHash);
     expect(after.nodes.map((node) => node['slotId']), ['leader', 'anchor']);
     expect(after.snapshot, before.snapshot);
+    expect(ForeverJsonExport.result(after), ForeverJsonExport.result(before));
   });
 
   test(
@@ -79,6 +82,14 @@ void main() {
       final cancelled = await repository.load(original.id);
       expect(cancelled.state, MacrocycleState.cancelled);
       expect(cancelled.nodes, hasLength(2));
+      await expectLater(
+        repository.cancel(original.id, DateTime.utc(2026, 7, 25)),
+        throwsStateError,
+      );
+      await expectLater(
+        repository.completeNode(original.id, 1),
+        throwsStateError,
+      );
     },
   );
 }

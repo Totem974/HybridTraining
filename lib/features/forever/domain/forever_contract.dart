@@ -156,6 +156,8 @@ final class ForeverSlotRequest {
     this.enabled = true,
     this.percentageParameters = const {},
     this.percentageParametersByMovement = const {},
+    this.globalTrainingMaxRatio = const Percentage(10000),
+    this.trainingMaxRatioByMovement = const {},
     this.includeDeload = true,
   }) : assert(slotId != ''),
        assert(trainingDays.length > 0),
@@ -168,6 +170,8 @@ final class ForeverSlotRequest {
   final bool enabled;
   final Map<String, Percentage> percentageParameters;
   final Map<MovementId, Map<String, Percentage>> percentageParametersByMovement;
+  final Percentage globalTrainingMaxRatio;
+  final Map<MovementId, Percentage> trainingMaxRatioByMovement;
   final bool includeDeload;
 }
 

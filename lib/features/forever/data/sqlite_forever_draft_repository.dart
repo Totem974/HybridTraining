@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:hybrid_training/core/storage/sqlite_database_file.dart';
 import 'package:sqflite_common/sqlite_api.dart';
 
+import 'forever_draft_payload.dart';
+
 final class StoredForeverDraft {
   const StoredForeverDraft({
     required this.id,
@@ -24,17 +26,50 @@ final class SqliteForeverDraftRepository {
   const SqliteForeverDraftRepository(this.databaseFile);
   final SqliteDatabaseFile databaseFile;
 
+  Future<void> savePayload({
+    required String id,
+    required String definitionId,
+    required int definitionRevision,
+    required ForeverDraftPayload payload,
+    required DateTime updatedAt,
+  }) => save(
+    StoredForeverDraft(
+      id: id,
+      payloadVersion: ForeverDraftPayload.currentVersion,
+      definitionId: definitionId,
+      definitionRevision: definitionRevision,
+      payload: payload.toJson(),
+      updatedAt: updatedAt,
+    ),
+  );
+
+  Future<ForeverDraftPayload?> loadPayload(String id) async {
+    final stored = await load(id);
+    if (stored == null) return null;
+    return ForeverDraftPayload.decode(
+      payloadVersion: stored.payloadVersion,
+      definitionId: stored.definitionId,
+      payload: stored.payload,
+    );
+  }
+
   Future<void> save(StoredForeverDraft draft) async {
     if (draft.payloadVersion < 1 || draft.definitionRevision < 1) {
       throw ArgumentError('Positive payload and definition versions required.');
     }
+    // Validate before touching storage and reject unknown future payloads.
+    ForeverDraftPayload.decode(
+      payloadVersion: draft.payloadVersion,
+      definitionId: draft.definitionId,
+      payload: draft.payload,
+    );
     final db = await databaseFile.open();
     await db.insert('forever_drafts', {
       'draft_id': draft.id,
       'payload_version': draft.payloadVersion,
       'definition_id': draft.definitionId,
       'definition_revision': draft.definitionRevision,
-      'payload_json': jsonEncode(draft.payload),
+      'payload_json': canonicalJson(draft.payload),
       'updated_at': draft.updatedAt.toUtc().toIso8601String(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }

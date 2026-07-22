@@ -5,6 +5,8 @@ import 'package:hybrid_training/features/cycle_generation/domain/cycle_contract.
 import 'package:hybrid_training/features/forever/domain/forever_contract.dart';
 import 'package:sqflite_common/sqlite_api.dart';
 
+import 'forever_draft_payload.dart';
+
 final class StoredMacrocycle {
   const StoredMacrocycle({
     required this.id,
@@ -37,6 +39,19 @@ final class SqliteForeverMacrocycleRepository {
     final hash = logicalHash(canonical);
     final db = await databaseFile.open();
     await db.transaction((tx) async {
+      final macrocycleRows = await tx.query(
+        'macrocycles',
+        columns: ['state', 'logical_hash'],
+        where: 'id = ?',
+        whereArgs: [macrocycle.id],
+        limit: 1,
+      );
+      if (macrocycleRows case [final existing]
+          when existing['state'] == 'completed' ||
+              existing['state'] == 'cancelled') {
+        if (existing['logical_hash'] == hash) return;
+        throw StateError('Terminal macrocycle ${macrocycle.id} is immutable.');
+      }
       final existing = await tx.query(
         'macrocycle_nodes',
         columns: ['node_index', 'state', 'snapshot_json'],
@@ -146,13 +161,27 @@ final class SqliteForeverMacrocycleRepository {
 
   Future<void> completeNode(String macrocycleId, int nodeIndex) async {
     final db = await databaseFile.open();
-    final count = await db.update(
-      'macrocycle_nodes',
-      {'state': 'completed'},
-      where: 'macrocycle_id = ? AND node_index = ?',
-      whereArgs: [macrocycleId, nodeIndex],
-    );
-    if (count != 1) throw StateError('Macrocycle node not found.');
+    await db.transaction((tx) async {
+      final parents = await tx.query(
+        'macrocycles',
+        columns: ['state'],
+        where: 'id = ?',
+        whereArgs: [macrocycleId],
+        limit: 1,
+      );
+      if (parents.isEmpty ||
+          parents.single['state'] == 'cancelled' ||
+          parents.single['state'] == 'completed') {
+        throw StateError('Macrocycle does not accept node changes.');
+      }
+      final count = await tx.update(
+        'macrocycle_nodes',
+        {'state': 'completed'},
+        where: 'macrocycle_id = ? AND node_index = ?',
+        whereArgs: [macrocycleId, nodeIndex],
+      );
+      if (count != 1) throw StateError('Macrocycle node not found.');
+    });
   }
 
   Future<void> cancel(String macrocycleId, DateTime occurredAt) async {
@@ -164,8 +193,8 @@ final class SqliteForeverMacrocycleRepository {
           'state': 'cancelled',
           'updated_at': occurredAt.toUtc().toIso8601String(),
         },
-        where: 'id = ? AND state <> ?',
-        whereArgs: [macrocycleId, 'completed'],
+        where: 'id = ? AND state IN (?, ?, ?)',
+        whereArgs: [macrocycleId, 'draft', 'scheduled', 'active'],
       );
       if (count != 1) throw StateError('Macrocycle cannot be cancelled.');
       await tx.insert('macrocycle_events', {
@@ -244,14 +273,5 @@ Map<String, Object?> _weightsJson(Map<MovementId, Weight> values) => {
 };
 
 String _canonicalJson(Object? value) {
-  Object? sort(Object? input) {
-    if (input is Map) {
-      final keys = input.keys.map((key) => key.toString()).toList()..sort();
-      return {for (final key in keys) key: sort(input[key])};
-    }
-    if (input is List) return input.map(sort).toList(growable: false);
-    return input;
-  }
-
-  return jsonEncode(sort(value));
+  return canonicalJson(value);
 }

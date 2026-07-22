@@ -69,7 +69,9 @@ final class ForeverComposerImpl implements ForeverComposer {
                 for (final entry in currentMaxes.entries)
                   entry.key: DirectTrainingMaxInput(entry.value),
               },
-              globalTrainingMaxRatio: const Percentage(10000),
+              globalTrainingMaxRatio: slotRequest.globalTrainingMaxRatio,
+              trainingMaxRatioByMovement:
+                  slotRequest.trainingMaxRatioByMovement,
               percentageParameters: slotRequest.percentageParameters,
               percentageParametersByMovement:
                   slotRequest.percentageParametersByMovement,
