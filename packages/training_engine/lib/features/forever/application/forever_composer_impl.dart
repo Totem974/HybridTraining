@@ -23,13 +23,22 @@ final class ForeverCompositionException implements Exception {
   String toString() => 'ForeverCompositionException(${code.name}): $message';
 }
 
-final class ForeverComposerImpl implements ForeverComposer {
+final class ForeverComposerImpl
+    implements ForeverComposer, SyncForeverComposer {
   const ForeverComposerImpl({
     required this.cycleDefinitionResolver,
     required this.cycleCompiler,
+    this.syncCycleDefinitionResolver,
   });
 
-  final ForeverCycleDefinitionResolver cycleDefinitionResolver;
+  const ForeverComposerImpl.sync({
+    required SyncForeverCycleDefinitionResolver cycleDefinitionResolver,
+    required this.cycleCompiler,
+  }) : cycleDefinitionResolver = null,
+       syncCycleDefinitionResolver = cycleDefinitionResolver;
+
+  final ForeverCycleDefinitionResolver? cycleDefinitionResolver;
+  final SyncForeverCycleDefinitionResolver? syncCycleDefinitionResolver;
   final CycleCompiler cycleCompiler;
 
   @override
@@ -37,7 +46,71 @@ final class ForeverComposerImpl implements ForeverComposer {
     ResolvedForeverDefinition definition,
     ForeverRequest request,
   ) async {
+    final resolver = cycleDefinitionResolver;
+    if (resolver == null) {
+      throw StateError('compose requires a ForeverCycleDefinitionResolver.');
+    }
+    final steps = _plan(definition, request);
+    final resolvedSteps = <_ResolvedCompositionStep>[];
+    for (final step in steps) {
+      resolvedSteps.add(
+        _ResolvedCompositionStep(
+          step,
+          await resolver.resolve(step.request.cycle),
+        ),
+      );
+    }
+    return _composeResolved(definition, request, resolvedSteps);
+  }
+
+  @override
+  GeneratedMacrocycle composeSync(
+    ResolvedForeverDefinition definition,
+    ForeverRequest request,
+  ) {
+    final resolver = syncCycleDefinitionResolver;
+    if (resolver == null) {
+      throw StateError(
+        'composeSync requires a SyncForeverCycleDefinitionResolver.',
+      );
+    }
+    final steps = _plan(definition, request);
+    return _composeResolved(definition, request, [
+      for (final step in steps)
+        _ResolvedCompositionStep(
+          step,
+          resolver.resolveSync(step.request.cycle),
+        ),
+    ]);
+  }
+
+  List<_CompositionStep> _plan(
+    ResolvedForeverDefinition definition,
+    ForeverRequest request,
+  ) {
     _validateDefinitionAndRequest(definition, request);
+    final steps = <_CompositionStep>[];
+    for (final phase in definition.phases) {
+      for (final slot in phase.slots) {
+        final slotRequest = request.slotRequests[slot.id]!;
+        if (!slotRequest.enabled) continue;
+        _validateCycleChoice(slot, slotRequest.cycle);
+        for (var repetition = 0; repetition < slot.repeatCount; repetition++) {
+          steps.add(_CompositionStep(slot, slotRequest, repetition));
+        }
+      }
+    }
+    return steps;
+  }
+
+  GeneratedMacrocycle _composeResolved(
+    ResolvedForeverDefinition definition,
+    ForeverRequest request,
+    List<_ResolvedCompositionStep> steps,
+  ) {
+    for (final step in steps) {
+      _validateResolvedCycle(step.request.cycle, step.resolved);
+    }
 
     var nextStart = _dateOnly(request.startDate);
     var currentMaxes = Map<MovementId, Weight>.unmodifiable(
@@ -46,68 +119,60 @@ final class ForeverComposerImpl implements ForeverComposer {
     var currentKind = TrainingMaxValueKind.confirmed;
     final nodes = <GeneratedMacrocycleNode>[];
 
-    for (final phase in definition.phases) {
-      for (final slot in phase.slots) {
-        final slotRequest = request.slotRequests[slot.id]!;
-        if (!slotRequest.enabled) continue;
-        _validateCycleChoice(slot, slotRequest.cycle);
-
-        for (var repetition = 0; repetition < slot.repeatCount; repetition++) {
-          final resolved = await cycleDefinitionResolver.resolve(
-            slotRequest.cycle,
-          );
-          _validateResolvedCycle(slotRequest.cycle, resolved);
-          final nodeIndex = nodes.length;
-          final cycle = cycleCompiler.compile(
-            resolved,
-            CycleRequest(
-              cycleId: '${request.macrocycleId}-${slot.id}-${repetition + 1}',
-              startDate: nextStart,
-              trainingDays: slotRequest.trainingDays,
-              sessionOrder: slotRequest.sessionOrder,
-              maxInputs: {
-                for (final entry in currentMaxes.entries)
-                  entry.key: DirectTrainingMaxInput(entry.value),
-              },
-              globalTrainingMaxRatio: slotRequest.globalTrainingMaxRatio,
-              trainingMaxRatioByMovement:
-                  slotRequest.trainingMaxRatioByMovement,
-              percentageParameters: slotRequest.percentageParameters,
-              percentageParametersByMovement:
-                  slotRequest.percentageParametersByMovement,
-              unit: request.unit,
-              roundingIncrement: request.roundingIncrement,
-              barProfile: request.barProfile,
-              includeDeload: slotRequest.includeDeload,
-            ),
-          );
-          final lastDate = _lastSessionDate(cycle);
-          final before = TrainingMaxSnapshot(
-            values: currentMaxes,
-            kind: currentKind,
-          );
-          final transition = _applyRule(
-            currentMaxes,
-            currentKind,
-            slot.transition,
-            request.unit,
-          );
-          currentMaxes = transition.values;
-          currentKind = transition.kind;
-          nodes.add(
-            GeneratedMacrocycleNode(
-              index: nodeIndex,
-              slotId: slot.id,
-              role: slot.role,
-              cycleReference: slotRequest.cycle,
-              cycle: cycle,
-              trainingMaxesBefore: before,
-              trainingMaxesAfter: transition,
-            ),
-          );
-          nextStart = _dateOnly(lastDate.add(const Duration(days: 1)));
-        }
-      }
+    for (final resolvedStep in steps) {
+      final step = resolvedStep.step;
+      final slot = step.slot;
+      final slotRequest = step.request;
+      final repetition = step.repetition;
+      final resolved = resolvedStep.resolved;
+      final nodeIndex = nodes.length;
+      final cycle = cycleCompiler.compile(
+        resolved,
+        CycleRequest(
+          cycleId: '${request.macrocycleId}-${slot.id}-${repetition + 1}',
+          startDate: nextStart,
+          trainingDays: slotRequest.trainingDays,
+          sessionOrder: slotRequest.sessionOrder,
+          maxInputs: {
+            for (final entry in currentMaxes.entries)
+              entry.key: DirectTrainingMaxInput(entry.value),
+          },
+          globalTrainingMaxRatio: slotRequest.globalTrainingMaxRatio,
+          trainingMaxRatioByMovement: slotRequest.trainingMaxRatioByMovement,
+          percentageParameters: slotRequest.percentageParameters,
+          percentageParametersByMovement:
+              slotRequest.percentageParametersByMovement,
+          unit: request.unit,
+          roundingIncrement: request.roundingIncrement,
+          barProfile: request.barProfile,
+          includeDeload: slotRequest.includeDeload,
+        ),
+      );
+      final lastDate = _lastSessionDate(cycle);
+      final before = TrainingMaxSnapshot(
+        values: currentMaxes,
+        kind: currentKind,
+      );
+      final transition = _applyRule(
+        currentMaxes,
+        currentKind,
+        slot.transition,
+        request.unit,
+      );
+      currentMaxes = transition.values;
+      currentKind = transition.kind;
+      nodes.add(
+        GeneratedMacrocycleNode(
+          index: nodeIndex,
+          slotId: slot.id,
+          role: slot.role,
+          cycleReference: slotRequest.cycle,
+          cycle: cycle,
+          trainingMaxesBefore: before,
+          trainingMaxesAfter: transition,
+        ),
+      );
+      nextStart = _dateOnly(lastDate.add(const Duration(days: 1)));
     }
 
     return GeneratedMacrocycle(
@@ -290,4 +355,21 @@ final class ForeverComposerImpl implements ForeverComposer {
 
   DateTime _dateOnly(DateTime value) =>
       DateTime(value.year, value.month, value.day);
+}
+
+final class _CompositionStep {
+  const _CompositionStep(this.slot, this.request, this.repetition);
+
+  final ForeverCycleSlot slot;
+  final ForeverSlotRequest request;
+  final int repetition;
+}
+
+final class _ResolvedCompositionStep {
+  const _ResolvedCompositionStep(this.step, this.resolved);
+
+  final _CompositionStep step;
+  final ResolvedCycleDefinition resolved;
+
+  ForeverSlotRequest get request => step.request;
 }

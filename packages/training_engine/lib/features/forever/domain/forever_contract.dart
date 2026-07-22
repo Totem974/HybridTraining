@@ -290,8 +290,19 @@ abstract interface class ForeverCycleDefinitionResolver {
   Future<ResolvedCycleDefinition> resolve(ForeverCycleReference reference);
 }
 
+abstract interface class SyncForeverCycleDefinitionResolver {
+  ResolvedCycleDefinition resolveSync(ForeverCycleReference reference);
+}
+
 abstract interface class ForeverComposer {
   Future<GeneratedMacrocycle> compose(
+    ResolvedForeverDefinition definition,
+    ForeverRequest request,
+  );
+}
+
+abstract interface class SyncForeverComposer {
+  GeneratedMacrocycle composeSync(
     ResolvedForeverDefinition definition,
     ForeverRequest request,
   );
