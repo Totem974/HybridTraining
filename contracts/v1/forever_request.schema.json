@@ -1,6 +1,53 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hybrid.training/contracts/v1/forever_request.schema.json",
-  "type": "object", "required": ["apiVersion", "schemaVersion", "macrocycleId", "definitionId", "definitionRevision", "startDate", "initialTrainingMaxes", "slotRequests", "unit", "barProfile"],
-  "properties": { "apiVersion": { "const": "v1" }, "schemaVersion": { "const": 1 }, "macrocycleId": { "type": "string", "minLength": 1 }, "definitionId": { "type": "string", "minLength": 1 }, "definitionRevision": { "type": "integer", "minimum": 1 }, "startDate": { "type": "string", "format": "date" }, "initialTrainingMaxes": { "type": "object", "minProperties": 1, "additionalProperties": { "$ref": "common.schema.json#/$defs/weight" } }, "slotRequests": { "type": "object", "additionalProperties": { "type": "object", "required": ["slotId", "templateId", "variantId", "trainingDays", "sessionOrder", "enabled"], "properties": { "slotId": { "type": "string" }, "templateId": { "type": "string" }, "variantId": { "type": "string" }, "trainingDays": { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 7 } }, "sessionOrder": { "type": "array", "items": { "type": "string" } }, "enabled": { "type": "boolean" }, "options": { "type": "object", "additionalProperties": true } }, "additionalProperties": false } }, "unit": { "enum": ["kg", "lb"] }, "barProfile": { "type": "object", "required": ["barWeightCentiUnits", "platesPerSideCentiUnits"], "properties": { "barWeightCentiUnits": { "type": "integer", "minimum": 0 }, "platesPerSideCentiUnits": { "type": "array", "items": { "type": "integer", "exclusiveMinimum": 0 } } }, "additionalProperties": false } },
-  "additionalProperties": false
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hybrid.training/contracts/v1/forever_request.schema.json",
+  "type": "object",
+  "required": ["apiVersion", "schemaVersion", "macrocycleId", "definitionId", "definitionRevision", "startDate", "initialTrainingMaxes", "slotRequests", "unit", "roundingIncrement", "barProfile"],
+  "properties": {
+    "apiVersion": { "const": "v1" }, "schemaVersion": { "const": 1 },
+    "macrocycleId": { "type": "string", "minLength": 1 },
+    "definitionId": { "type": "string", "minLength": 1 },
+    "definitionRevision": { "type": "integer", "minimum": 1 },
+    "startDate": { "type": "string", "format": "date-time" },
+    "initialTrainingMaxes": { "type": "object", "minProperties": 1, "additionalProperties": { "$ref": "common.schema.json#/$defs/weight" } },
+    "slotRequests": { "type": "object", "minProperties": 1, "additionalProperties": { "$ref": "#/$defs/slotRequest" } },
+    "unit": { "enum": ["kg", "lb"] },
+    "roundingIncrement": { "$ref": "common.schema.json#/$defs/weight" },
+    "barProfile": { "$ref": "#/$defs/barProfile" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "basisPoints": { "type": "integer", "minimum": 0, "maximum": 20000 },
+    "cycleReference": {
+      "type": "object", "required": ["templateId", "variantId", "templateRevision", "variantRevision"],
+      "properties": { "templateId": { "type": "string", "minLength": 1 }, "variantId": { "type": "string", "minLength": 1 }, "templateRevision": { "type": "integer", "minimum": 1 }, "variantRevision": { "type": "integer", "minimum": 1 } },
+      "additionalProperties": false
+    },
+    "trainingMaxRule": {
+      "oneOf": [
+        { "type": "object", "required": ["type"], "properties": { "type": { "const": "keep" } }, "additionalProperties": false },
+        { "type": "object", "required": ["type", "values", "resultKind"], "properties": { "type": { "const": "add" }, "values": { "type": "object", "additionalProperties": { "$ref": "common.schema.json#/$defs/weight" } }, "resultKind": { "enum": ["projected", "confirmed"] } }, "additionalProperties": false },
+        { "type": "object", "required": ["type", "values", "resultKind"], "properties": { "type": { "const": "multiply" }, "values": { "type": "object", "additionalProperties": { "$ref": "#/$defs/basisPoints" } }, "resultKind": { "enum": ["projected", "confirmed"] } }, "additionalProperties": false },
+        { "type": "object", "required": ["type", "projectedRule"], "properties": { "type": { "const": "testThenConfirm" }, "projectedRule": { "$ref": "#/$defs/trainingMaxRule" } }, "additionalProperties": false }
+      ]
+    },
+    "transition": { "type": "object", "required": ["rule", "requiresConfirmation"], "properties": { "rule": { "$ref": "#/$defs/trainingMaxRule" }, "requiresConfirmation": { "type": "boolean" } }, "additionalProperties": false },
+    "slot": {
+      "type": "object", "required": ["id", "role", "repeatCount", "defaultCycle", "allowedCycles", "transition", "optional"],
+      "properties": { "id": { "type": "string", "minLength": 1 }, "role": { "enum": ["leader", "anchor", "transition", "deload", "test", "custom"] }, "repeatCount": { "type": "integer", "minimum": 1 }, "defaultCycle": { "$ref": "#/$defs/cycleReference" }, "allowedCycles": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/cycleReference" } }, "transition": { "$ref": "#/$defs/transition" }, "optional": { "type": "boolean" } },
+      "additionalProperties": false
+    },
+    "phase": { "type": "object", "required": ["id", "slots"], "properties": { "id": { "type": "string", "minLength": 1 }, "slots": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/slot" } } }, "additionalProperties": false },
+    "definition": {
+      "type": "object", "required": ["id", "revision", "labelEn", "labelFr", "sourceRuleIds", "phases"],
+      "properties": { "id": { "type": "string", "minLength": 1 }, "revision": { "type": "integer", "minimum": 1 }, "labelEn": { "type": "string", "minLength": 1 }, "labelFr": { "type": "string", "minLength": 1 }, "sourceRuleIds": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }, "phases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/phase" } } },
+      "additionalProperties": false
+    },
+    "slotRequest": {
+      "type": "object", "required": ["slotId", "cycle", "trainingDays", "sessionOrder", "enabled", "percentageParameters", "percentageParametersByMovement", "globalTrainingMaxRatioBasisPoints", "trainingMaxRatioByMovementBasisPoints", "includeDeload"],
+      "properties": { "slotId": { "type": "string", "minLength": 1 }, "cycle": { "$ref": "#/$defs/cycleReference" }, "trainingDays": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "integer", "minimum": 1, "maximum": 7 } }, "sessionOrder": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }, "enabled": { "type": "boolean" }, "percentageParameters": { "type": "object", "additionalProperties": { "$ref": "#/$defs/basisPoints" } }, "percentageParametersByMovement": { "type": "object", "additionalProperties": { "type": "object", "additionalProperties": { "$ref": "#/$defs/basisPoints" } } }, "globalTrainingMaxRatioBasisPoints": { "$ref": "#/$defs/basisPoints" }, "trainingMaxRatioByMovementBasisPoints": { "type": "object", "additionalProperties": { "$ref": "#/$defs/basisPoints" } }, "includeDeload": { "type": "boolean" } },
+      "additionalProperties": false
+    },
+    "barProfile": { "type": "object", "required": ["weight", "platesPerSide"], "properties": { "weight": { "$ref": "common.schema.json#/$defs/weight" }, "platesPerSide": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/weight" } } }, "additionalProperties": false }
+  }
 }

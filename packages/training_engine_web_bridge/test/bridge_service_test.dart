@@ -39,6 +39,7 @@ final class _Bindings implements TrainingEngineJsonBindings {
     lastRequest = requestJson;
     return '{"ok":true}';
   }
+
   @override
   String generateMacrocycle(String requestJson) => '{"ok":true}';
 }

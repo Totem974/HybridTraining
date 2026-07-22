@@ -13,8 +13,7 @@ final class HybridTrainingEngineJsApi {
 
   String initialize(String catalogJson) => _service.initialize(catalogJson);
   String engineInfo() => _service.engineInfo();
-  String catalogIndex(String requestJson) =>
-      _service.catalogIndex(requestJson);
+  String catalogIndex(String requestJson) => _service.catalogIndex(requestJson);
   String cycleEditorSchema(String requestJson) =>
       _service.cycleEditorSchema(requestJson);
   String validateCycle(String requestJson) =>
@@ -25,11 +24,8 @@ final class HybridTrainingEngineJsApi {
       _service.generateMacrocycle(requestJson);
 }
 
-/// Supplied by the integration layer once the package API is frozen.
 TrainingEngineJsonBindings createTrainingEngineBindings() =>
-    throw UnsupportedError(
-      'INTEGRATION_REQUIRED: bind training_engine v1 JSON codecs',
-    );
+    LocalTrainingEngineBindings();
 
 void main() {
   final api = HybridTrainingEngineJsApi(

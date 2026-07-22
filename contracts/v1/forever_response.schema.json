@@ -1,8 +1,23 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hybrid.training/contracts/v1/forever_response.schema.json",
-  "allOf": [{ "$ref": "common.schema.json#/$defs/envelope" }, { "type": "object", "required": ["macrocycle", "warnings", "snapshot"], "properties": {
-    "apiVersion": true, "schemaVersion": true, "engineVersion": true, "catalogVersion": true, "catalogHash": true,
-    "macrocycle": { "type": "object", "required": ["id", "definitionId", "definitionRevision", "state", "nodes"], "properties": { "id": { "type": "string" }, "definitionId": { "type": "string" }, "definitionRevision": { "type": "integer", "minimum": 1 }, "state": { "enum": ["draft", "scheduled", "active", "completed", "cancelled"] }, "nodes": { "type": "array", "items": { "type": "object", "required": ["index", "slotId", "role", "cycle"], "properties": { "index": { "type": "integer", "minimum": 0 }, "slotId": { "type": "string" }, "role": { "enum": ["leader", "anchor", "transition", "deload", "test", "custom"] }, "cycle": { "$ref": "cycle_response.schema.json#/$defs/cycle" } }, "additionalProperties": false } } }, "additionalProperties": false },
-    "warnings": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/issue" } }, "snapshot": { "$ref": "snapshot_envelope.schema.json" }
-  }, "additionalProperties": false }]
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hybrid.training/contracts/v1/forever_response.schema.json",
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/envelope" },
+    {
+      "type": "object", "required": ["macrocycle", "warnings", "snapshot"],
+      "properties": {
+        "apiVersion": true, "schemaVersion": true, "engineVersion": true, "catalogVersion": true, "catalogHash": true,
+        "macrocycle": { "$ref": "#/$defs/macrocycle" },
+        "warnings": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/issue" } },
+        "snapshot": { "$ref": "snapshot_envelope.schema.json" }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "trainingMaxSnapshot": { "type": "object", "required": ["kind", "values"], "properties": { "kind": { "enum": ["projected", "confirmed"] }, "values": { "type": "object", "additionalProperties": { "$ref": "common.schema.json#/$defs/weight" } } }, "additionalProperties": false },
+    "cycleReference": { "type": "object", "required": ["templateId", "variantId", "templateRevision", "variantRevision"], "properties": { "templateId": { "type": "string" }, "variantId": { "type": "string" }, "templateRevision": { "type": "integer" }, "variantRevision": { "type": "integer" } }, "additionalProperties": false },
+    "node": { "type": "object", "required": ["index", "slotId", "role", "cycleReference", "cycle", "trainingMaxesBefore", "trainingMaxesAfter"], "properties": { "index": { "type": "integer", "minimum": 0 }, "slotId": { "type": "string" }, "role": { "enum": ["leader", "anchor", "transition", "deload", "test", "custom"] }, "cycleReference": { "$ref": "#/$defs/cycleReference" }, "cycle": { "$ref": "cycle_response.schema.json#/$defs/cycle" }, "trainingMaxesBefore": { "$ref": "#/$defs/trainingMaxSnapshot" }, "trainingMaxesAfter": { "$ref": "#/$defs/trainingMaxSnapshot" } }, "additionalProperties": false },
+    "macrocycle": { "type": "object", "required": ["id", "definitionId", "definitionRevision", "state", "nodes", "initialTrainingMaxes", "projectedTrainingMaxes"], "properties": { "id": { "type": "string" }, "definitionId": { "type": "string" }, "definitionRevision": { "type": "integer", "minimum": 1 }, "state": { "enum": ["draft", "scheduled", "active", "completed", "cancelled"] }, "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" } }, "initialTrainingMaxes": { "type": "object", "additionalProperties": { "$ref": "common.schema.json#/$defs/weight" } }, "projectedTrainingMaxes": { "type": "object", "additionalProperties": { "$ref": "common.schema.json#/$defs/weight" } } }, "additionalProperties": false }
+  }
 }

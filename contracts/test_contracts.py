@@ -30,6 +30,7 @@ def test_all_schemas_are_draft_2020_12():
 def test_valid_fixtures():
     assert_valid("engine_info.schema.json", "engine_info.valid.json")
     assert_valid("cycle_request.schema.json", "cycle_request.valid.json")
+    assert_valid("forever_request.schema.json", "forever_request.valid.json")
 
 
 def test_unknown_key_is_rejected():

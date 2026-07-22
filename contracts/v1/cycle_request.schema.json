@@ -1,15 +1,29 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hybrid.training/contracts/v1/cycle_request.schema.json",
-  "type": "object", "required": ["apiVersion", "schemaVersion", "cycleId", "templateId", "variantId", "startDate", "trainingDays", "sessionOrder", "maxInputs", "globalTrainingMaxRatioBasisPoints", "unit", "barProfile", "includeDeload"],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hybrid.training/contracts/v1/cycle_request.schema.json",
+  "type": "object",
+  "required": ["apiVersion", "schemaVersion", "cycleId", "templateId", "variantId", "startDate", "sessionOrder", "maxInputs", "globalTrainingMaxRatioBasisPoints", "unit", "barProfile", "includeDeload"],
   "properties": {
-    "apiVersion": { "const": "v1" }, "schemaVersion": { "const": 1 }, "cycleId": { "type": "string", "minLength": 1 }, "templateId": { "type": "string", "minLength": 1 }, "variantId": { "type": "string", "minLength": 1 },
-    "startDate": { "type": "string", "format": "date" }, "trainingDays": { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 7 }, "minItems": 1, "uniqueItems": true },
+    "apiVersion": { "const": "v1" }, "schemaVersion": { "const": 1 },
+    "cycleId": { "type": "string", "minLength": 1 }, "templateId": { "type": "string", "minLength": 1 }, "variantId": { "type": "string", "minLength": 1 },
+    "scheduleId": { "type": "string", "minLength": 1 },
+    "startDate": { "type": "string", "format": "date-time" },
+    "trainingDays": { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 7 }, "minItems": 1, "uniqueItems": true },
     "sessionOrder": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
-    "maxInputs": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "object", "required": ["kind", "weightCentiUnits"], "properties": { "kind": { "enum": ["oneRepMax", "repMax", "directTrainingMax"] }, "weightCentiUnits": { "type": "integer", "minimum": 0 }, "repetitions": { "type": "integer", "minimum": 1 } }, "additionalProperties": false } },
-    "globalTrainingMaxRatioBasisPoints": { "type": "integer", "minimum": 0, "maximum": 20000 },
-    "trainingMaxRatioByMovementBasisPoints": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 20000 } },
-    "options": { "type": "object", "additionalProperties": true }, "unit": { "enum": ["kg", "lb"] },
-    "barProfile": { "type": "object", "required": ["barWeightCentiUnits", "platesPerSideCentiUnits"], "properties": { "barWeightCentiUnits": { "type": "integer", "minimum": 0 }, "platesPerSideCentiUnits": { "type": "array", "items": { "type": "integer", "exclusiveMinimum": 0 } } }, "additionalProperties": false },
+    "maxInputs": { "type": "object", "minProperties": 1, "additionalProperties": { "$ref": "#/$defs/maxInput" } },
+    "globalTrainingMaxRatioBasisPoints": { "$ref": "#/$defs/basisPoints" },
+    "trainingMaxRatioByMovement": { "type": "object", "additionalProperties": { "$ref": "#/$defs/basisPoints" } },
+    "percentageParameters": { "type": "object", "additionalProperties": { "$ref": "#/$defs/basisPoints" } },
+    "percentageParametersByMovement": { "type": "object", "additionalProperties": { "type": "object", "additionalProperties": { "$ref": "#/$defs/basisPoints" } } },
+    "options": { "type": "object", "additionalProperties": true },
+    "unit": { "enum": ["kg", "lb"] },
+    "roundingIncrement": { "$ref": "common.schema.json#/$defs/weight" },
+    "barProfile": { "type": "object", "required": ["weight", "platesPerSide"], "properties": { "weight": { "$ref": "common.schema.json#/$defs/weight" }, "platesPerSide": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/weight" } } }, "additionalProperties": false },
     "includeDeload": { "type": "boolean" }, "programTitle": { "type": "string" }, "showPlating": { "type": "boolean" }
-  }, "additionalProperties": false
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "basisPoints": { "type": "integer", "minimum": 0, "maximum": 20000 },
+    "maxInput": { "type": "object", "required": ["type", "weight"], "properties": { "type": { "enum": ["oneRepMax", "repMax", "directTrainingMax"] }, "weight": { "$ref": "common.schema.json#/$defs/weight" }, "repetitions": { "type": "integer", "minimum": 1 }, "formula": { "type": "string" } }, "additionalProperties": false }
+  }
 }

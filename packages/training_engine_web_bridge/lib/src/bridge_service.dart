@@ -36,11 +36,8 @@ final class BridgeService {
   String catalogIndex(String requestJson) =>
       _invoke('catalogIndex', requestJson, _bindings.catalogIndex);
 
-  String cycleEditorSchema(String requestJson) => _invoke(
-    'cycleEditorSchema',
-    requestJson,
-    _bindings.cycleEditorSchema,
-  );
+  String cycleEditorSchema(String requestJson) =>
+      _invoke('cycleEditorSchema', requestJson, _bindings.cycleEditorSchema);
 
   String validateCycle(String requestJson) =>
       _invoke('validateCycle', requestJson, _bindings.validateCycle);

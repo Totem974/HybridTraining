@@ -1,8 +1,64 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://hybrid.training/contracts/v1/cycle_editor_schema.schema.json",
-  "allOf": [{ "$ref": "common.schema.json#/$defs/envelope" }, { "type": "object", "required": ["templateId", "variantId", "movementIds", "sessionIds", "fields"], "properties": {
-    "apiVersion": true, "schemaVersion": true, "engineVersion": true, "catalogVersion": true, "catalogHash": true,
-    "templateId": { "type": "string" }, "variantId": { "type": "string" }, "movementIds": { "type": "array", "items": { "type": "string" } }, "sessionIds": { "type": "array", "items": { "type": "string" } },
-    "fields": { "type": "array", "items": { "type": "object", "required": ["id", "kind", "required", "visible"], "properties": { "id": { "type": "string" }, "kind": { "enum": ["boolean", "integer", "decimal", "choice", "movementChoice", "schedule", "text"] }, "required": { "type": "boolean" }, "visible": { "type": "boolean" }, "defaultValue": true, "allowedValues": { "type": "array" } }, "additionalProperties": false } }
-  }, "additionalProperties": false }]
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hybrid.training/contracts/v1/cycle_editor_schema.schema.json",
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/envelope" },
+    {
+      "type": "object",
+      "required": ["id", "templateId", "variantId", "movementIds", "sessionIds", "fields"],
+      "properties": {
+        "apiVersion": true, "schemaVersion": true, "engineVersion": true, "catalogVersion": true, "catalogHash": true,
+        "id": { "type": "string", "minLength": 1 },
+        "templateId": { "type": "string", "minLength": 1 },
+        "variantId": { "type": "string", "minLength": 1 },
+        "movementIds": { "type": "array", "items": { "type": "string" } },
+        "sessionIds": { "type": "array", "items": { "type": "string" } },
+        "fields": { "type": "array", "items": { "$ref": "#/$defs/field" } }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "localizedText": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } }
+      ]
+    },
+    "choice": {
+      "type": "object", "required": ["value", "label"],
+      "properties": { "value": true, "label": { "$ref": "#/$defs/localizedText" } },
+      "additionalProperties": false
+    },
+    "condition": {
+      "type": "object", "required": ["path", "operator"],
+      "properties": {
+        "path": { "type": "string" },
+        "operator": { "enum": ["equals", "notEquals", "present", "in", "greaterThanOrEqual", "lessThanOrEqual"] },
+        "value": true
+      },
+      "additionalProperties": false
+    },
+    "field": {
+      "type": "object",
+      "required": ["id", "path", "region", "kind", "label", "value"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "region": { "enum": ["weight", "template", "additional-options", "plating", "scheduling", "output"] },
+        "group": { "type": "string" },
+        "groupLabel": { "$ref": "#/$defs/localizedText" },
+        "kind": { "enum": ["boolean", "integer", "decimal", "percentage", "weight", "choice", "segmented", "plate-counter", "token-order", "date", "text", "action"] },
+        "label": { "$ref": "#/$defs/localizedText" },
+        "value": true,
+        "choices": { "type": "array", "items": { "$ref": "#/$defs/choice" } },
+        "minimum": { "type": "number" }, "maximum": { "type": "number" }, "step": { "type": "number", "exclusiveMinimum": 0 },
+        "readOnly": { "type": "boolean" },
+        "visibleWhen": { "type": "array", "items": { "$ref": "#/$defs/condition" } },
+        "enabledWhen": { "type": "array", "items": { "$ref": "#/$defs/condition" } },
+        "action": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
 }

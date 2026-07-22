@@ -1,0 +1,58 @@
+{
+  "apiVersion": "v1",
+  "schemaVersion": 1,
+  "macrocycleId": "fixture-forever",
+  "definitionId": "forever_bbb_2_leader_1_anchor",
+  "definitionRevision": 1,
+  "startDate": "2026-07-27T00:00:00.000Z",
+  "initialTrainingMaxes": {
+    "overhead_press": { "centiUnits": 10000, "unit": "lb" },
+    "deadlift": { "centiUnits": 20000, "unit": "lb" },
+    "bench_press": { "centiUnits": 12000, "unit": "lb" },
+    "squat": { "centiUnits": 18000, "unit": "lb" }
+  },
+  "slotRequests": {
+    "leader": {
+      "slotId": "leader",
+      "cycle": { "templateId": "forever_bbb_leader", "variantId": "fives_pro_5x10_50", "templateRevision": 1, "variantRevision": 1 },
+      "trainingDays": [1, 2, 4, 5],
+      "sessionOrder": ["overhead_press", "deadlift", "bench_press", "squat"],
+      "enabled": true,
+      "percentageParameters": {},
+      "percentageParametersByMovement": {},
+      "globalTrainingMaxRatioBasisPoints": 10000,
+      "trainingMaxRatioByMovementBasisPoints": {},
+      "includeDeload": true
+    },
+    "leader_to_anchor_deload": {
+      "slotId": "leader_to_anchor_deload",
+      "cycle": { "templateId": "forever_7th_week_protocol", "variantId": "deload_four_day", "templateRevision": 1, "variantRevision": 1 },
+      "trainingDays": [1, 2, 4, 5], "sessionOrder": ["overhead_press", "deadlift", "bench_press", "squat"], "enabled": true,
+      "percentageParameters": {}, "percentageParametersByMovement": {}, "globalTrainingMaxRatioBasisPoints": 10000, "trainingMaxRatioByMovementBasisPoints": {}, "includeDeload": true
+    },
+    "anchor": {
+      "slotId": "anchor",
+      "cycle": { "templateId": "forever_original_531_anchor", "variantId": "standard_531", "templateRevision": 1, "variantRevision": 1 },
+      "trainingDays": [1, 2, 4, 5], "sessionOrder": ["overhead_press", "deadlift", "bench_press", "squat"], "enabled": true,
+      "percentageParameters": {}, "percentageParametersByMovement": {}, "globalTrainingMaxRatioBasisPoints": 10000, "trainingMaxRatioByMovementBasisPoints": {}, "includeDeload": true
+    },
+    "training_max_test": {
+      "slotId": "training_max_test",
+      "cycle": { "templateId": "forever_7th_week_protocol", "variantId": "tm_test_four_day", "templateRevision": 1, "variantRevision": 1 },
+      "trainingDays": [1, 2, 4, 5], "sessionOrder": ["overhead_press", "deadlift", "bench_press", "squat"], "enabled": true,
+      "percentageParameters": {}, "percentageParametersByMovement": {}, "globalTrainingMaxRatioBasisPoints": 10000, "trainingMaxRatioByMovementBasisPoints": {}, "includeDeload": true
+    }
+  },
+  "unit": "lb",
+  "roundingIncrement": { "centiUnits": 500, "unit": "lb" },
+  "barProfile": {
+    "weight": { "centiUnits": 4500, "unit": "lb" },
+    "platesPerSide": [
+      { "centiUnits": 4500, "unit": "lb" },
+      { "centiUnits": 2500, "unit": "lb" },
+      { "centiUnits": 1000, "unit": "lb" },
+      { "centiUnits": 500, "unit": "lb" },
+      { "centiUnits": 250, "unit": "lb" }
+    ]
+  }
+}
