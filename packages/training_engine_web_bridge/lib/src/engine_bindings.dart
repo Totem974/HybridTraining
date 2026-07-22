@@ -51,7 +51,9 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       for (final document in documents.where(
         (item) => item['kind'] == 'templates',
       ))
-        ..._codec.decodeTemplates(jsonEncode(document)),
+        ..._codec.decodeTemplates(
+          jsonEncode(_engineTemplateDocument(document)),
+        ),
     ];
     _schedules = [
       for (final document in documents.where(
@@ -150,10 +152,20 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     final request = _map(jsonDecode(requestJson), 'request');
     _keys(request, const {'apiVersion', 'schemaVersion'});
     _requireV1(request);
+    final defaults = _rawTemplateRecords
+        .where((template) => template['isDefault'] == true)
+        .toList(growable: false);
+    if (defaults.length > 1) {
+      throw const FormatException('MULTIPLE_DEFAULT_TEMPLATES');
+    }
+    final orderedTemplates = [
+      ...defaults,
+      ..._rawTemplateRecords.where((template) => template['isDefault'] != true),
+    ];
     return jsonEncode({
       ..._metadata(),
       'templates': [
-        for (final template in _rawTemplateRecords)
+        for (final template in orderedTemplates)
           {
             'id': template['id'],
             'revision': template['revision'],
@@ -177,8 +189,16 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       'variantId',
       'scheduleId',
     });
-    final templateId = _string(request, 'templateId');
-    final variantId = _string(request, 'variantId');
+    var templateId = _string(request, 'templateId');
+    var variantId = _string(request, 'variantId');
+    final alias = _templateAlias(templateId, variantId);
+    final optionOverrides = alias == null
+        ? const <String, Object?>{}
+        : _map(alias['optionOverrides'], 'option overrides');
+    if (alias != null) {
+      templateId = _string(alias, 'templateId');
+      variantId = _string(alias, 'variantId');
+    }
     final rawTemplate = _rawTemplateRecords.singleWhere(
       (item) => item['id'] == templateId,
     );
@@ -195,6 +215,15 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
           item['id'] == optionReference['id'] &&
           item['revision'] == optionReference['revision'],
     );
+    final optionParameters = [
+      for (final item in _list(optionSchema, 'parameters'))
+        _map(item, 'parameter'),
+    ];
+    final optionRequestPaths = {
+      for (final parameter in optionParameters)
+        _string(parameter, 'id'):
+            parameter['requestPath'] as String? ?? _string(parameter, 'id'),
+    };
     final defaultScheduleReference =
         rawVariant['validExample'] is Map<String, Object?>
         ? _map(rawVariant['validExample'], 'example')['scheduleId'] as String?
@@ -216,12 +245,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     final schemaSchedule = _schedules.firstWhere(
       (item) => item.reference.id == selectedScheduleId,
     );
-    final resolved = _resolve(
-      templateId,
-      variantId,
-      const [],
-      scheduleId: selectedScheduleId,
-    );
+    _resolve(templateId, variantId, const [], scheduleId: selectedScheduleId);
     final movements = schemaSchedule.sessions
         .expand((session) => session.movementIds)
         .toSet()
@@ -356,9 +380,9 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
           ],
         ),
       ],
-      for (final item in _list(optionSchema, 'parameters'))
-        if (_map(item, 'parameter')['presentationGroup'] != 'hidden')
-          _optionField(_map(item, 'parameter')),
+      for (final parameter in optionParameters)
+        if (parameter['presentationGroup'] != 'hidden')
+          _optionField(parameter, optionRequestPaths, optionOverrides),
       _field(
         id: 'bar-weight',
         path: 'barWeight',
@@ -403,10 +427,10 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
         region: 'scheduling',
         kind: 'token-order',
         label: const {'en': 'Session order', 'fr': 'Ordre des séances'},
-        value: [for (final id in resolved.sessionMovementIds) id.value],
+        value: [for (final session in schemaSchedule.sessions) session.id],
         choices: [
-          for (final id in resolved.sessionMovementIds)
-            {'value': id.value, 'label': _movementTokenLabel(id.value)},
+          for (final session in schemaSchedule.sessions)
+            {'value': session.id, 'label': _movementTokenLabel(session.id)},
         ],
       ),
       _field(
@@ -440,8 +464,8 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       'id': '$templateId/$variantId',
       'templateId': templateId,
       'variantId': variantId,
-      'movementIds': [for (final id in resolved.sessionMovementIds) id.value],
-      'sessionIds': [for (final id in resolved.sessionMovementIds) id.value],
+      'movementIds': movements,
+      'sessionIds': [for (final session in schemaSchedule.sessions) session.id],
       'fields': fields,
     });
   }
@@ -973,13 +997,10 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   }
 
   void _resolveTemplateAliasAndFullBody(Map<String, Object?> request) {
-    final alias = _rawTemplateAliases
-        .where(
-          (item) =>
-              item['legacyTemplateId'] == request['templateId'] &&
-              item['legacyVariantId'] == request['variantId'],
-        )
-        .firstOrNull;
+    final alias = _templateAlias(
+      request['templateId'] as String,
+      request['variantId'] as String,
+    );
     final options = _map(request['options'], 'options');
     if (alias != null) {
       request['templateId'] = _string(alias, 'templateId');
@@ -1006,6 +1027,15 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     }
     request['variantId'] = profile;
   }
+
+  Map<String, Object?>? _templateAlias(String templateId, String variantId) =>
+      _rawTemplateAliases
+          .where(
+            (item) =>
+                item['legacyTemplateId'] == templateId &&
+                item['legacyVariantId'] == variantId,
+          )
+          .firstOrNull;
 
   Map<String, Object?> _catalogOptionValues(Map<String, Object?> options) {
     final fullBody = options['fullBody'];
@@ -1112,18 +1142,23 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     'severity': 'error',
   };
 
-  Map<String, Object?> _optionField(Map<String, Object?> parameter) {
+  Map<String, Object?> _optionField(
+    Map<String, Object?> parameter,
+    Map<String, String> requestPaths,
+    Map<String, Object?> optionOverrides,
+  ) {
     final type = parameter['type'] as String;
     final kind = switch (type) {
       'boolean' => 'boolean',
       'integer' => 'integer',
       'percentage' => 'percentage',
-      'choice' => 'choice',
+      'choice' || 'enumeration' => 'choice',
+      'weight' => 'weight',
       _ => 'text',
     };
     return _field(
       id: parameter['id'] as String,
-      path: 'options.${parameter['id']}',
+      path: 'options.${requestPaths[_string(parameter, 'id')]}',
       region: 'additional-options',
       group: parameter['presentationGroup'] as String?,
       groupLabel: _optionGroupLabel(parameter['presentationGroup'] as String?),
@@ -1132,7 +1167,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
         'en': parameter['labelEn'] ?? parameter['id'],
         'fr': parameter['labelFr'] ?? parameter['labelEn'] ?? parameter['id'],
       },
-      value: parameter['default'],
+      value: optionOverrides[parameter['id']] ?? parameter['default'],
       minimum: parameter['minimum'] as num?,
       maximum: parameter['maximum'] as num?,
       step: parameter['step'] as num?,
@@ -1141,8 +1176,72 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
             in (parameter['allowedValues'] as List<Object?>? ?? const []))
           {'value': value, 'label': value.toString()},
       ],
+      visibleWhen: _editorConditions(parameter['visibleWhen'], requestPaths),
+      enabledWhen: _editorConditions(parameter['enabledWhen'], requestPaths),
     );
   }
+}
+
+Map<String, Object?> _engineTemplateDocument(Map<String, Object?> document) {
+  final copy = _map(jsonDecode(jsonEncode(document)), 'template document');
+  for (final raw in _list(copy, 'templates')) {
+    _map(raw, 'template').remove('isDefault');
+  }
+  return copy;
+}
+
+List<Map<String, Object?>> _editorConditions(
+  Object? raw,
+  Map<String, String> requestPaths,
+) {
+  if (raw == null) return const [];
+  final condition = _map(raw, 'option condition');
+  final type = _string(condition, 'type');
+  String path() {
+    final optionId =
+        condition['parameterId'] as String? ?? condition['optionId'] as String?;
+    if (optionId == null) {
+      throw const FormatException('CONDITION_PARAMETER_ID_REQUIRED');
+    }
+    final requestPath = requestPaths[optionId];
+    if (requestPath == null) {
+      throw FormatException('UNKNOWN_CONDITION_OPTION:$optionId');
+    }
+    return 'options.$requestPath';
+  }
+
+  return switch (type) {
+    'always' =>
+      condition['value'] as bool? ?? true
+          ? const []
+          : throw const FormatException('ALWAYS_FALSE_EDITOR_CONDITION'),
+    'present' => [
+      {'path': path(), 'operator': 'present'},
+    ],
+    'equals' => [
+      {'path': path(), 'operator': 'equals', 'value': condition['value']},
+    ],
+    'in' => [
+      {'path': path(), 'operator': 'in', 'value': condition['values']},
+    ],
+    'range' => [
+      {
+        'path': path(),
+        'operator': 'greaterThanOrEqual',
+        'value': condition['minimum'],
+      },
+      {
+        'path': path(),
+        'operator': 'lessThanOrEqual',
+        'value': condition['maximum'],
+      },
+    ],
+    'all' => [
+      for (final child in _list(condition, 'conditions'))
+        ..._editorConditions(child, requestPaths),
+    ],
+    final value => throw FormatException('UNSUPPORTED_EDITOR_CONDITION:$value'),
+  };
 }
 
 Map<String, String>? _optionGroupLabel(String? group) => switch (group) {
@@ -1233,6 +1332,7 @@ Map<String, Object?> _field({
   String? action,
   bool? readOnly,
   Object? visibleWhen,
+  Object? enabledWhen,
 }) => {
   'id': id,
   'path': path,
@@ -1249,6 +1349,7 @@ Map<String, Object?> _field({
   'action': ?action,
   'readOnly': ?readOnly,
   'visibleWhen': ?visibleWhen,
+  'enabledWhen': ?enabledWhen,
 };
 
 Map<String, Object?> _map(Object? value, String label) =>

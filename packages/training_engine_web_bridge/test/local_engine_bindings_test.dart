@@ -10,7 +10,25 @@ void main() {
     final catalogPath =
         Platform.environment['TRAINING_ENGINE_CATALOG_BUNDLE'] ??
         '../../apps/web_generator/public/catalog.bundle.json';
-    service.initialize(File(catalogPath).readAsStringSync());
+    final bundle = jsonDecode(File(catalogPath).readAsStringSync()) as Map;
+    for (final document in (bundle['documents'] as List).cast<Map>()) {
+      final path = document['path'];
+      if (path == 'classic/option_schemas.json' ||
+          path == 'classic/extended/option_schemas.json') {
+        document['content'] = jsonDecode(
+          File('../../catalog_src/$path').readAsStringSync(),
+        );
+      }
+      final content = document['content'] as Map;
+      if (content['kind'] == 'templates') {
+        for (final template in (content['templates'] as List).cast<Map>()) {
+          if (template['id'] == 'classic_boring_but_big') {
+            template['isDefault'] = true;
+          }
+        }
+      }
+    }
+    service.initialize(jsonEncode(bundle));
     return service;
   }
 
@@ -23,6 +41,19 @@ void main() {
     expect(response['cycle'], isA<Map<String, Object?>>());
     expect(response['warnings'], isEmpty);
     expect((response['snapshot'] as Map<String, Object?>)['kind'], 'cycle');
+  });
+
+  test('catalogIndex places the unique catalog default first', () {
+    final service = initializedService();
+    final index =
+        jsonDecode(
+              service.catalogIndex(
+                jsonEncode({'apiVersion': 'v1', 'schemaVersion': 1}),
+              ),
+            )
+            as Map<String, Object?>;
+    final templates = (index['templates'] as List).cast<Map<String, Object?>>();
+    expect(templates.first['id'], 'classic_boring_but_big');
   });
 
   test('generateCycle resolves and applies the catalog option recipe', () {
@@ -44,6 +75,135 @@ void main() {
             as Map<String, Object?>;
     expect(jsonEncode(response['cycle']), contains('"role":"joker"'));
   });
+
+  test('Full Body editor uses requestPath while preserving parameter id', () {
+    final service = initializedService();
+    final schema =
+        jsonDecode(
+              service.cycleEditorSchema(
+                jsonEncode({
+                  'apiVersion': 'v1',
+                  'schemaVersion': 1,
+                  'templateId': 'classic_full_body',
+                  'variantId': 'original',
+                }),
+              ),
+            )
+            as Map<String, Object?>;
+    final fields = (schema['fields'] as List).cast<Map<String, Object?>>();
+    expect((schema['movementIds'] as List).toSet(), {
+      'back_squat',
+      'bench_press',
+      'deadlift',
+      'overhead_press',
+    });
+    expect(schema['sessionIds'], ['monday', 'wednesday', 'friday']);
+    final sessionOrder = fields.singleWhere(
+      (field) => field['id'] == 'session-order',
+    );
+    expect(sessionOrder['value'], schema['sessionIds']);
+    final phase = fields.singleWhere((field) => field['id'] == 'phase');
+    expect(phase['path'], 'options.fullBody.phase');
+    expect(phase['kind'], 'choice');
+    expect(
+      (phase['choices'] as List).cast<Map<String, Object?>>().map(
+        (choice) => choice['value'],
+      ),
+      ['phase_one', 'phase_two', 'phase_three'],
+    );
+  });
+
+  test('legacy Full Body editor applies catalog alias overrides', () {
+    final service = initializedService();
+    final schema =
+        jsonDecode(
+              service.cycleEditorSchema(
+                jsonEncode({
+                  'apiVersion': 'v1',
+                  'schemaVersion': 1,
+                  'templateId': 'classic_full_body_phase_2',
+                  'variantId': 'phase_2',
+                }),
+              ),
+            )
+            as Map<String, Object?>;
+    expect(schema['templateId'], 'classic_full_body');
+    expect(schema['variantId'], 'original');
+    final fields = (schema['fields'] as List).cast<Map<String, Object?>>();
+    final phase = fields.singleWhere((field) => field['id'] == 'phase');
+    expect(phase['path'], 'options.fullBody.phase');
+    expect(phase['value'], 'phase_two');
+  });
+
+  test('legacy Full Body request validates and generates canonically', () {
+    final service = initializedService();
+    final legacyRequest = {
+      ..._cycleRequest,
+      'templateId': 'classic_full_body_phase_2',
+      'variantId': 'phase_2',
+      'scheduleId': 'classic_full_body_three_day',
+      'trainingDays': [1, 3, 5],
+      'sessionOrder': ['monday', 'wednesday', 'friday'],
+      'maxInputs': {
+        'back_squat': {'type': 'oneRepMax', 'weight': _weight},
+        'bench_press': {'type': 'oneRepMax', 'weight': _weight},
+        'deadlift': {'type': 'oneRepMax', 'weight': _weight},
+        'overhead_press': {'type': 'oneRepMax', 'weight': _weight},
+      },
+      'options': <String, Object?>{},
+      'includeDeload': false,
+    };
+    final validation =
+        jsonDecode(service.validateCycle(jsonEncode(legacyRequest)))
+            as Map<String, Object?>;
+    expect(validation['valid'], true, reason: jsonEncode(validation['errors']));
+    final response =
+        jsonDecode(service.generateCycle(jsonEncode(legacyRequest)))
+            as Map<String, Object?>;
+    final cycle = response['cycle'] as Map<String, Object?>;
+    expect(cycle['templateId'], 'classic_full_body');
+    expect(cycle['variantId'], 'original');
+  });
+
+  test(
+    'crosscut editor conditions use canonical request paths recursively',
+    () {
+      final service = initializedService();
+      final schema =
+          jsonDecode(
+                service.cycleEditorSchema(
+                  jsonEncode({
+                    'apiVersion': 'v1',
+                    'schemaVersion': 1,
+                    'templateId': 'classic_531',
+                    'variantId': 'four_day',
+                  }),
+                ),
+              )
+              as Map<String, Object?>;
+      final fields = (schema['fields'] as List).cast<Map<String, Object?>>();
+      final warmUpType = fields.singleWhere(
+        (field) => field['id'] == 'warmUp.type',
+      );
+      expect(warmUpType['path'], 'options.warmUp.type');
+      expect(warmUpType['visibleWhen'], [
+        {'path': 'options.warmUp.enabled', 'operator': 'equals', 'value': true},
+      ]);
+      final lowerBase = fields.singleWhere(
+        (field) => field['id'] == 'warmUp.bases.lowerBody',
+      );
+      expect(lowerBase['kind'], 'weight');
+      expect(lowerBase['visibleWhen'], [
+        {'path': 'options.warmUp.enabled', 'operator': 'equals', 'value': true},
+        {
+          'path': 'options.warmUp.type',
+          'operator': 'equals',
+          'value': 'beyond',
+        },
+      ]);
+      expect(lowerBase['enabledWhen'], lowerBase['visibleWhen']);
+    },
+  );
 
   test(
     'generateMacrocycle resolves catalog definition and composes every node',
