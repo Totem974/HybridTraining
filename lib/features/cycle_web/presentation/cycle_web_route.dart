@@ -11,7 +11,7 @@ abstract final class CycleWebRoute {
   static Route<void>? build({
     required RouteSettings settings,
     required CycleWebApplication application,
-    String foreverRoute = '/poc/531/generator?mode=forever',
+    String foreverRoute = '/forever',
   }) {
     final uri = Uri.tryParse(settings.name ?? '');
     if (uri == null || uri.path != path) return null;

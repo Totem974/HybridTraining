@@ -18,7 +18,7 @@ import '../../features/training_log/data/training_database_schema.dart';
 
 Future<CycleWebApplication> createCycleWebApplication() async {
   final decoded = jsonDecode(
-    await rootBundle.loadString('assets/catalog/catalog_seed.v1.json'),
+    await rootBundle.loadString('assets/catalog/catalog_seed.v2.json'),
   );
   if (decoded is! Map<String, Object?>) {
     throw const FormatException('Invalid published Cycle catalogue seed.');
@@ -56,7 +56,7 @@ Future<CycleWebApplication> createCycleWebApplication() async {
     'catalog_versions',
     columns: ['version'],
     where: 'version = ?',
-    whereArgs: const [1],
+    whereArgs: const [2],
     limit: 1,
   );
   if (publishedVersions.isEmpty) {
@@ -77,7 +77,7 @@ Future<CycleWebApplication> createCycleWebApplication() async {
 
   final catalog = SqliteTrainingCatalog(catalogDatabase);
   return CycleWebApplicationImpl(
-    catalogVersion: 1,
+    catalogVersion: 2,
     catalogQuery: catalog,
     catalogRepository: catalog,
     draftRepository: SqliteCycleWebDraftRepository(

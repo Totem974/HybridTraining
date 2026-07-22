@@ -9,7 +9,7 @@ import '../application/cycle_web_contract.dart';
 class CycleWebPage extends StatefulWidget {
   const CycleWebPage({
     required this.application,
-    this.foreverRoute = '/poc/531/generator?mode=forever',
+    this.foreverRoute = '/forever',
     super.key,
   });
 
