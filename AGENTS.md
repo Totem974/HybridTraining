@@ -1,346 +1,383 @@
 # AGENTS.md — HybridTraining
 
-## 1. Objectif produit
+## 1. Fondation stable
 
-HybridTraining est une application locale-first de programmation et de suivi d'entraînement.
+Le catalogue, le générateur Cycle et le premier compositeur Forever sont des fondations existantes.
 
-La chaîne Cycle, désormais fondation stable, est :
+Chaîne Cycle :
 
 ```text
-catalog.db publié
+catalog.db
 + choix utilisateur
-+ 1RM / rep-max / Training Max
-+ ratio TM
-+ schedule
-+ matériel
-+ assistance / conditioning
-= GeneratedCycle
+→ CatalogResolver
+→ CycleCompiler pur
+→ GeneratedCycle
 ```
 
-La chaîne Forever à construire est :
+Chaîne Forever :
 
 ```text
-ForeverDefinition publiée
-+ choix utilisateur
-+ Training Max initiaux
-= liste ordonnée de CycleRequest
+ForeverDefinition
++ configurations de nœuds
+→ ForeverComposer
+→ CycleRequest[]
 → même CycleCompiler
 → GeneratedMacrocycle
 ```
 
-L'interface ne contient aucune règle d'entraînement.
+Ne pas reconstruire le catalogue ou le moteur Cycle. Toute évolution doit rester générique et rétrocompatible.
 
-## 2. État de référence
+## 2. Périmètre Web actuel
 
-Le POC Cycle catalogue-first est la fondation officielle.
+Le produit Web comporte exactement deux pages principales :
 
-Il comprend :
+```text
+/cycle
+/forever
+```
 
-- source déclarative `catalog_src` ;
-- `catalog.db` runtime publié ;
-- `CatalogResolver` ;
-- `CycleCompiler` pur ;
-- `/cycle` ;
-- brouillons dans `workspace.db` ;
-- snapshots et résultats dans `training.db` ;
-- compilation exhaustive des variantes Cycle déclarées.
+Une bascule commune permet de passer de l’une à l’autre.
 
-Ne pas reconstruire cette chaîne.
+Hors périmètre Web actuel :
 
-Une modification du Cycle est autorisée uniquement pour :
+- séance du jour ;
+- suivi d’exécution ;
+- recommandations automatiques ;
+- statistiques ;
+- génération automatique du prochain cycle ;
+- génération automatique du prochain macrocycle ;
+- continuité pilotée par les résultats ;
+- application Android produit.
 
-- corriger une régression démontrée ;
-- ajouter une primitive générique indispensable à Forever ;
-- renforcer une interface publique sans branchement par template.
+Le Web génère un cycle ou un macrocycle autonome. Lors d’une prochaine utilisation, l’utilisateur ressaisit ou recharge ses max et crée une nouvelle génération indépendante.
 
 ## 3. Priorité active
 
 ```text
-1. FIGER ET SAUVEGARDER LE POC CYCLE
-2. CONSTRUIRE LE POC FOREVER GÉNÉRIQUE
-3. RACCORDER /forever
-4. VALIDER UN MACROCYCLE DE BOUT EN BOUT
+1. REFAIRE L’INTERFACE WEB CYCLE
+2. REFAIRE LE CONFIGURATEUR WEB FOREVER
+3. ÉTENDRE FOREVER AUX PRESETS ET ARCHITECTURES PERSONNALISÉES
+4. VALIDER LES DEUX PAGES
 ```
 
-Les travaux de statistiques, synchronisation distante, comptes, paiement, Android produit et refonte visuelle restent hors périmètre.
+La lisibilité et la conformité visuelle à la référence fournie sont des critères bloquants.
 
-## 4. Trois bases
+## 4. Référence visuelle
 
-### `catalog.db`
+Utiliser les captures et le miroir HTML/CSS fournis comme référence de mise en page et d’interaction.
 
-Contient :
+Caractéristiques cibles :
 
-- définitions Cycle publiées ;
-- composants partagés ;
-- mouvements et exercices ;
-- schedules ;
-- assistance et conditioning ;
-- définitions Forever ;
-- rôles Leader/Anchor ;
-- transitions ;
-- protocoles de deload/test ;
-- règles d'évolution du Training Max.
+- fond `#181818` ;
+- contenu centré d’environ 900 px ;
+- cartes `#323232` ;
+- rayon d’environ 18 px ;
+- texte clair ;
+- accent bleu proche de `#2C9EFF` ;
+- espacements de 24 px ;
+- deux colonnes sur desktop ;
+- une colonne sous environ 770 px ;
+- sections larges et repliables ;
+- contrôles compacts ;
+- programme généré lisible par semaines et séances.
 
-Une version publiée est immuable.
+Ne pas copier :
 
-### `workspace.db`
+- code React/minifié ;
+- marque ;
+- logo ;
+- actifs ;
+- police archivée.
 
-Contient :
+Utiliser les composants, icônes, traductions et polices déjà autorisés dans le projet.
 
-- profil ;
-- max et ratios ;
+## 5. Structure commune des deux pages
+
+```text
+HEADER
+titre + bascule [Cycle | Forever]
+
+FORMULAIRE
+sections en cartes
+
+OUTPUT
+résumé + actions
+
+PROGRAM
+résultat généré
+```
+
+Conserver un langage visuel identique entre `/cycle` et `/forever`.
+
+## 6. Page `/cycle`
+
+Disposition desktop :
+
+```text
+WEIGHT                    TEMPLATE
+ADDITIONAL OPTIONS
+PLATING & BARBELL
+SCHEDULING                OUTPUT
+PROGRAM
+```
+
+La page réutilise le moteur et les contrats existants :
+
+```text
+CycleCatalogIndex
+CycleEditorSchema
+CycleEditorState
+CycleEditorIntent
+CycleRequest
+GeneratedCycleView
+```
+
+Aucune règle métier dans les widgets.
+
+Toutes les options visibles proviennent du catalogue.
+
+## 7. Page `/forever`
+
+Disposition desktop :
+
+```text
+WEIGHT                    MACROCYCLE
+GLOBAL OPTIONS
+PLATING & BARBELL
+CYCLES
+TIMELINE                  OUTPUT
+PROGRAM
+```
+
+### Choix du macrocycle
+
+Deux modes :
+
+```text
+Programme prédéfini
+Architecture personnalisée
+```
+
+Un preset publié charge une architecture et des contraintes sourcées.
+
+Une architecture personnalisée est `userDefined`.
+
+### Nœuds
+
+Nœuds minimum :
+
+```text
+leader
+anchor
+transition
+deload
+test
+custom
+```
+
+Affichage compact d’un cycle :
+
+```text
+C1 — Leader
+Template [select]
+Variante [select]
+[Configurer]
+Résumé des options
+```
+
+### Configuration détaillée
+
+Le bouton `Configurer` réutilise l’éditeur Cycle existant :
+
+- modal ou panneau sur desktop ;
+- plein écran sur mobile.
+
+Ne jamais créer un second moteur ou recopier les règles Cycle.
+
+## 8. Macrocycle autonome
+
+Le Web génère un macrocycle fini et autonome.
+
+Il accepte :
+
+- max saisis ou chargés ;
+- architecture ;
+- configurations des cycles ;
 - matériel ;
-- préférences ;
-- brouillon Cycle ;
-- brouillon Forever ;
-- configurations enregistrées ;
-- définitions personnalisées.
+- date ;
+- options.
 
-### `training.db`
+Il produit :
 
-Contient :
+- timeline ;
+- cycles enfants ;
+- TM projetés à l’intérieur du macrocycle ;
+- charges et plaques ;
+- snapshot ;
+- export/sauvegarde.
 
-- snapshots Cycle ;
-- macrocycles ;
-- ordre des cycles ;
-- snapshots enfants ;
-- états ;
-- résultats ;
-- événements ;
-- données nécessaires aux statistiques futures.
-
-Aucune clé étrangère inter-base.
-
-## 5. Architecture du domaine
+Ne pas implémenter dans cette phase :
 
 ```text
-presentation → application → domain
-data/infrastructure → ports application/domain
+previousMacrocycleId
+nextMacrocycleId
+Générer le macrocycle suivant
+recommandation depuis les résultats
+mise à jour automatique des max
 ```
 
-Les domaines Cycle et Forever sont en Dart pur, sans Flutter, SQLite ou legacy.
+Ces fonctions appartiendront à l’application d’entraînement future.
 
-Le nouveau code métier utilise des noms génériques et ne doit pas être ajouté sous `poc_531`.
+## 9. Preset et architecture personnalisée
 
-## 6. CycleCompiler gelé
+### Preset
 
-Contrat :
+- sélectionner un preset publié ;
+- afficher sa structure ;
+- verrouiller les éléments canoniques ;
+- permettre uniquement les modifications déclarées.
+
+### Architecture personnalisée
+
+Permettre :
+
+- ajouter un Leader ;
+- ajouter un Anchor ;
+- ajouter un protocole ;
+- supprimer un nœud non obligatoire ;
+- réordonner ;
+- dupliquer un cycle ;
+- copier une configuration ;
+- enregistrer le brouillon.
+
+Contraintes minimum :
+
+- séquence non vide ;
+- cycle configuré ;
+- protocole non orphelin ;
+- rôle compatible ;
+- macrocycle fini.
+
+## 10. Configuration par nœud
+
+Chaque nœud Cycle référence une configuration complète :
 
 ```text
-ResolvedCycleDefinition
-+ CycleRequest
-= GeneratedCycle
+template
+variant
+parameters
+warm-up
+Joker
+deload
+supplemental
+assistance
+conditioning
+schedule
+ordre des séances
+ratios
+matériel
 ```
 
-Interdictions :
-
-- calcul de séries dans Forever ;
-- compilateur spécialisé Leader ou Anchor ;
-- `switch(templateId)` ;
-- `if (templateId == ...)` ;
-- appel au moteur legacy ;
-- requête SQLite dans le compilateur ;
-- dépendance Flutter dans le domaine.
-
-Forever doit appeler le même `CycleCompiler` pour chaque cycle.
-
-## 7. Modèle Forever
-
-Une définition Forever est déclarative et versionnée.
-
-Elle décrit au minimum :
-
-- identité et révision ;
-- source et références ;
-- phases ordonnées ;
-- rôles `leader`, `anchor`, `transition`, `deload`, `test` ou `custom` ;
-- nombre de répétitions d'une phase ;
-- définition Cycle ou protocole référencé ;
-- paramètres par défaut ;
-- paramètres modifiables ;
-- contraintes de compatibilité ;
-- règles de Training Max ;
-- règles de passage au nœud suivant ;
-- options d'assistance et conditioning ;
-- schéma d'éditeur Web.
-
-Une définition ne contient pas de séries copiées. Elle référence des définitions Cycle ou des protocoles compilables par le moteur Cycle.
-
-## 8. ForeverComposer
-
-Contrat conceptuel :
+Résolution :
 
 ```text
-ResolvedForeverDefinition
-+ ForeverRequest
-+ InitialTrainingMaxes
-= GeneratedMacrocycle
+defaults globaux
+→ defaults du preset
+→ defaults du rôle
+→ configuration du nœud
 ```
+
+Aucune valeur incompatible n’est supprimée silencieusement.
+
+## 11. ForeverComposer
 
 Le compositeur :
 
-- est pur et déterministe ;
+- reste pur et déterministe ;
 - ne lit pas SQLite ;
-- reçoit explicitement la date de départ ;
-- résout une séquence finie ;
-- produit un `CycleRequest` par cycle ou protocole ;
-- appelle `CycleCompiler` ;
-- transporte les Training Max entre les cycles ;
-- distingue valeurs projetées et confirmées ;
-- conserve l'identité et le snapshot de chaque cycle ;
-- ne modifie jamais un cycle terminé ;
-- produit un macrocycle à la fois.
+- ne dépend pas de Flutter ou du legacy ;
+- ne calcule aucune série ;
+- produit un macrocycle fini ;
+- appelle `CycleCompiler` pour chaque cycle ;
+- applique les règles TM uniquement à l’intérieur du macrocycle ;
+- préserve les snapshots enfants.
 
-## 9. Training Max dans Forever
-
-Les règles doivent être explicites et versionnées :
-
-- conserver ;
-- ajouter une valeur ;
-- multiplier ;
-- tester puis confirmer ;
-- valeur projetée ;
-- valeur confirmée.
-
-Une évolution s'applique à partir d'un nœud précis.
-
-Une valeur projetée ne doit pas écraser silencieusement un résultat confirmé.
-
-## 10. Persistance Forever
-
-`training.db` doit permettre :
+Interdictions :
 
 ```text
-macrocycle
-├── définition et version
-├── snapshot global
-├── cycles enfants ordonnés
-├── Training Max projetés
-├── Training Max confirmés
-├── transitions
-└── état
+LeaderCompiler
+AnchorCompiler
+switch(templateId)
+if (templateId == ...)
+calcul de séries dans Forever
+règles métier dans les widgets
 ```
 
-Chaque cycle enfant conserve son snapshot autonome.
+## 12. Persistance Web
 
-États minimum :
+### `workspace.db`
 
-```text
-draft
-scheduled
-active
-completed
-cancelled
-```
+Conserve :
 
-Un cycle enfant terminé est immuable.
+- brouillon Cycle ;
+- brouillon Forever ;
+- mode preset/custom ;
+- architecture ;
+- réglages globaux ;
+- configurations des nœuds ;
+- max ;
+- matériel ;
+- version du payload.
 
-## 11. POC Web Forever
+### `training.db`
 
-Créer ou raccorder `/forever`.
+Conserve le cycle ou macrocycle généré et ses snapshots.
 
-Réutiliser sélectivement l'interface Forever existante :
+Aucune logique de recommandation du prochain programme.
 
-- timeline ;
-- cartes ;
-- responsive ;
-- accessibilité ;
-- traductions ;
-- contrôles de choix.
+## 13. Export
 
-Supprimer ou éviter :
+Les deux pages doivent pouvoir au minimum :
 
-- logique par semaine codée en dur ;
-- séries calculées dans les widgets ;
-- anciens Maps ou codecs concurrents ;
-- branchement sur une recette ;
-- moteur Forever historique dans le chemin de production.
-
-Le parcours doit permettre :
-
-- choisir une définition Forever publiée ;
-- voir sa structure Leader/Anchor/transition ;
-- choisir les variantes Cycle autorisées ;
-- saisir ou reprendre les Training Max ;
-- configurer les options exposées ;
-- prévisualiser la timeline ;
-- générer le macrocycle ;
 - sauvegarder ;
 - recharger ;
-- ouvrir chaque cycle dans le format Cycle existant.
+- exporter la configuration ou le résultat dans le format prévu par le projet.
 
-L'onglet `/cycle` ne doit pas régresser.
+L’import dans l’application d’entraînement future ne doit pas imposer aujourd’hui son workflow Android.
 
-## 12. Première preuve fonctionnelle
+## 14. Provenance
 
-Commencer par une seule recette Forever entièrement vérifiée dans les sources et audits existants.
+- Preset canonique : référence au livre.
+- Architecture libre : `userDefined`.
+- Observation de référence : `referenceAppObserved`.
+- Ne jamais inventer une architecture canonique ou une compatibilité.
 
-Candidat attendu : une structure finie de type :
+## 15. Agents parallèles
 
-```text
-Leader
-→ Leader
-→ 7th Week Deload
-→ Anchor
-→ TM Test
-```
+Utiliser tous les slots disponibles avec chemins exclusifs :
 
-Ne pas supposer ce candidat correct : vérifier la définition exacte avant implémentation.
+1. audit visuel et design system Web ;
+2. refonte `/cycle` ;
+3. modèle Forever preset/custom ;
+4. éditeur Cycle embarqué ;
+5. refonte `/forever` ;
+6. persistance/export ;
+7. responsive, FR/EN, accessibilité ;
+8. tests et revue architecturale.
 
-Une fois le compositeur prouvé, ajouter les autres définitions Forever entièrement sourcées sans modifier le moteur.
+Le lead possède les contrats publics, migrations partagées, composition root et intégration.
 
-Les entrées documentaires restent dans l'inventaire mais ne sont pas visibles comme programmes désactivés.
+## 16. Efficacité
 
-## 13. Validation du POC Cycle avant Forever
-
-Avant la nouvelle branche Forever :
-
-- vérifier les commits locaux ;
-- exécuter les tests ciblés Cycle ;
-- confirmer les compteurs de couverture ;
-- effectuer un parcours Chrome manuel documenté si l'automatisation complète reste bloquée ;
-- ne pas passer plus d'un lot borné à contourner WebDriver.
-
-Une limitation du pilote navigateur n'autorise pas à déclarer un E2E automatisé passant, mais ne doit pas bloquer indéfiniment Forever si le parcours manuel et les tests de couches sont verts.
-
-## 14. Agents parallèles
-
-Utiliser tous les slots disponibles avec chemins exclusifs.
-
-Répartition recommandée :
-
-1. audit et normalisation des définitions Forever ;
-2. domaine `ForeverRequest` / `GeneratedMacrocycle` ;
-3. `ForeverComposer` et TM ;
-4. persistance `training.db` / `workspace.db` ;
-5. `/forever` et view-model ;
-6. tests goldens et intégration ;
-7. validation navigateur et accessibilité ;
-8. revue architecturale read-only.
-
-Le lead possède :
-
-- contrats publics ;
-- migrations partagées ;
-- composition root ;
-- intégration ;
-- commits.
-
-## 15. Efficacité
-
-- Ne pas refaire l'audit Cycle.
-- Ne pas renormaliser les 354 entrées Cycle.
-- Ne pas reconstruire `/cycle`.
-- Ne pas créer de nouveau moteur par recette.
-- Ne pas développer toutes les entrées Forever avant la première preuve.
+- Ne pas refaire le catalogue.
+- Ne pas refaire le moteur Cycle.
+- Ne pas préparer l’application Android.
+- Ne pas implémenter la suite automatique.
+- Ne pas boucler sur WebDriver.
 - Ne pas écrire de longs ADR.
-- Ne pas ajouter de sécurité spéculative.
 - Tests ciblés pendant les lots ; suite complète aux gates.
-- Ne pas boucler indéfiniment sur WebDriver.
 
-## 16. Validation
-
-À chaque gate :
+## 17. Validation
 
 ```text
 flutter pub get
@@ -348,31 +385,24 @@ dart format --set-exit-if-changed .
 flutter analyze
 flutter test
 git diff --check
-```
-
-Pour les changements Web :
-
-```text
 flutter build web --release
 ```
 
-Validation finale :
+Validation visuelle réelle :
 
-- Cycle inchangé et vert ;
-- définition Forever chargée depuis `catalog.db` ;
-- chaque cycle du macrocycle généré par `CycleCompiler` ;
-- TM transportés correctement ;
-- snapshots sauvegardés et relus ;
-- `/forever` fonctionnel ;
-- parcours navigateur réel documenté ;
-- worktree propre.
+- `/cycle` desktop et mobile ;
+- `/forever` desktop et mobile ;
+- FR et EN ;
+- clavier et accessibilité ;
+- génération ;
+- sauvegarde/rechargement ;
+- export ;
+- aucune erreur console.
 
-## 17. Git
+## 18. Git
 
 - Préserver les changements utilisateur.
-- Ne jamais utiliser `git reset --hard`.
-- Ne jamais forcer un push.
-- Créer une branche Forever depuis le HEAD Cycle validé.
+- Jamais de `git reset --hard`.
+- Jamais de push forcé.
 - Petits commits cohérents.
-- Diff et tests avant commit.
 - Aucun push sans autorisation explicite.
