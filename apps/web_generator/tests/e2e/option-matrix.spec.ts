@@ -120,6 +120,38 @@ test('legacy Full Body ID imports as canonical Original plus phase', async ({ pa
   expect(external).toEqual([]);
 });
 
+test('configuration import restores nested non-default options', async ({ page }) => {
+  await openCycle(page);
+  await setSwitch(page, 'warmUp.enabled', true);
+  await setChoice(page.getByTestId('warmUp.type'), 'beyond');
+  await page.getByTestId('warmUp.bases.lowerBody').fill('142');
+  await page.getByTestId('warmUp.bases.upperBody').fill('102');
+  await setSwitch(page, 'joker.enabled', true);
+  await setChoice(page.getByTestId('joker.ceilingBasisPoints'), 3000);
+  await setSwitch(page, 'deload.enabled', true);
+  await setChoice(page.getByTestId('deload.type'), 'deload5');
+  await setSwitch(page, 'deload.skipWarmUp', true);
+  const exported = await configuration(page);
+
+  await setSwitch(page, 'warmUp.enabled', false);
+  await setSwitch(page, 'joker.enabled', false);
+  await setSwitch(page, 'deload.enabled', false);
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'nested-options.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(exported)),
+  });
+
+  await expect(page.getByTestId('warmUp.enabled')).toBeChecked();
+  await expect(page.getByTestId('warmUp.type')).toHaveValue(JSON.stringify('beyond'));
+  await expect(page.getByTestId('warmUp.bases.lowerBody')).toHaveValue('142');
+  await expect(page.getByTestId('warmUp.bases.upperBody')).toHaveValue('102');
+  await expect(page.getByTestId('joker.enabled')).toBeChecked();
+  await expect(page.getByTestId('joker.ceilingBasisPoints')).toHaveValue(JSON.stringify(3000));
+  await expect(page.getByTestId('deload.type')).toHaveValue(JSON.stringify('deload5'));
+  await expect(page.getByTestId('deload.skipWarmUp')).toBeChecked();
+});
+
 test('Beyond warm-up toggles conditional bases and preserves numeric defaults across kg/lb', async ({ page }) => {
   const external = await openCycle(page);
   await setSwitch(page, 'warmUp.enabled', true);

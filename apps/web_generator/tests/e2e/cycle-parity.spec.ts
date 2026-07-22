@@ -22,8 +22,7 @@ async function openIntegratedCycle(page: Page): Promise<string[]> {
 }
 
 async function awaitGeneratedProgram(page: Page) {
-  const engineStatus = await page.locator('#engine-status').textContent();
-  expect(engineStatus, 'engine status after generation').not.toMatch(/error|required|invalid|exception/i);
+  await expect(page.locator('#engine-status')).toContainText(/generated|généré/i);
   await expect(page.locator('[data-cycle-region="program"]')).toContainText(
     /week 1|semaine 1/i,
   );
@@ -49,8 +48,9 @@ test('BBB exposes catalog options and changes the generated assistance work', as
 
 test('Two Days renders only valid schedule tokens and generates', async ({ page }) => {
   const external = await openIntegratedCycle(page);
-  await page.getByTestId('template-row').getByRole('combobox').selectOption({ label: 'Classic 5/3/1' });
-  await page.getByTestId('variant-row').getByRole('combobox').selectOption({ label: 'Two-day rotation' });
+  await page.getByTestId('template-row').getByRole('combobox').selectOption(JSON.stringify('classic_531'));
+  await page.getByTestId('variant-row').getByRole('combobox').selectOption(JSON.stringify('two_day_rotation'));
+  await page.getByRole('radio', { name: /paired lifts|deux mouvements/i }).check();
   const schedule = page.locator('[data-cycle-region="scheduling"]');
   await expect(schedule).toContainText(/SQ\+BP/);
   await expect(schedule).toContainText(/DL\+OP/);
@@ -70,7 +70,9 @@ test('rep-max mode accepts repetitions and load before generation', async ({ pag
   ] as const;
   for (const [movement, repetitions, load] of inputs) {
     await page.getByTestId(`max-repetitions-${movement}`).fill(repetitions);
+    await page.getByTestId(`max-repetitions-${movement}`).blur();
     await page.getByTestId(`max-load-${movement}`).fill(load);
+    await page.getByTestId(`max-load-${movement}`).blur();
   }
   for (const [movement, repetitions] of inputs) {
     await expect(page.getByTestId(`max-repetitions-${movement}`)).toHaveValue(repetitions);
@@ -83,8 +85,8 @@ test('catalog-driven options remain effective after template changes', async ({ 
   const external = await openIntegratedCycle(page);
   const options = page.locator('[data-cycle-region="additional-options"]');
   await expect(options.getByRole('group', { name: /warm-up|échauffement/i })).toBeVisible();
-  await options.getByRole('checkbox', { name: /warm-up|échauffement/i }).uncheck();
-  await options.getByRole('checkbox', { name: /deload/i }).uncheck();
+  await page.getByTestId('warmUp.enabled').uncheck();
+  await page.getByTestId('deload.enabled').uncheck();
   await awaitGeneratedProgram(page);
   expect(external).toEqual([]);
 });

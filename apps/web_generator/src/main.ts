@@ -401,7 +401,7 @@ function requestValues(request: Record<string, unknown>): Record<string, JsonVal
     }
   }
   const optionValues = record(request.options);
-  for (const [id, value] of Object.entries(optionValues)) result[`options.${id}`] = value;
+  flattenOptionValues(optionValues, 'options', result);
   for (const [id, value] of Object.entries(record(request.percentageParameters))) {
     result[`options.${id}`] = value;
   }
@@ -419,6 +419,33 @@ function requestValues(request: Record<string, unknown>): Record<string, JsonVal
   }
   for (const [denomination, count] of plateCounts) result[`plates.${denomination}`] = count;
   return result;
+}
+
+function flattenOptionValues(
+  source: Record<string, JsonValue>,
+  prefix: string,
+  target: Record<string, JsonValue>,
+): void {
+  for (const [key, value] of Object.entries(source)) {
+    const path = `${prefix}.${key}`;
+    if (isPlainRecord(value) && !isWeightValue(value)) {
+      flattenOptionValues(value, path, target);
+    } else {
+      target[path] = isPlainRecord(value) && isWeightValue(value)
+        ? value.centiUnits / 100
+        : structuredClone(value);
+    }
+  }
+}
+
+function isPlainRecord(value: unknown): value is Record<string, JsonValue> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isWeightValue(
+  value: Record<string, JsonValue>,
+): value is Record<string, JsonValue> & { centiUnits: number; unit: 'kg' | 'lb' } {
+  return typeof value.centiUnits === 'number' && (value.unit === 'kg' || value.unit === 'lb');
 }
 
 function record(value: unknown): Record<string, JsonValue> {
