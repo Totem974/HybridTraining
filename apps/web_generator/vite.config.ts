@@ -1,5 +1,8 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const rootDirectory = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({
   base: './',
@@ -8,7 +11,7 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        cycle: resolve(import.meta.dirname, 'cycle/index.html'),
+        cycle: resolve(rootDirectory, 'cycle/index.html'),
       },
     },
   },

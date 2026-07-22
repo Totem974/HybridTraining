@@ -91,7 +91,9 @@ function renderBlock(block: BlockLike, options: ProgramRenderOptions): HTMLEleme
     if (options.showPlating && set.platesPerSide?.length) {
       const plates = element("span", "set-row__plates");
       for (const plate of set.platesPerSide) {
-        plates.append(element("span", "plate-chip", formatWeight(plate)));
+        const chip = element("span", "plate-chip", formatWeight(plate));
+        chip.dataset.plate = "";
+        plates.append(chip);
       }
       row.append(plates);
     }

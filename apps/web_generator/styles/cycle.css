@@ -49,18 +49,18 @@ a {
 .skip-link {
   position: fixed;
   z-index: 100;
-  top: var(--space-3);
+  top: 0;
   left: var(--space-3);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-control);
   background: var(--color-accent);
   color: var(--color-accent-ink);
   font-weight: 800;
-  transform: translateY(-180%);
+  transform: translateY(-100%);
 }
 
 .skip-link:focus {
-  transform: translateY(0);
+  transform: translateY(var(--space-3));
 }
 
 .site-header,
@@ -72,7 +72,7 @@ a {
 .site-header {
   display: grid;
   gap: var(--space-5);
-  padding-block: var(--space-6) var(--space-5);
+  padding-block: var(--space-7) var(--space-5);
 }
 
 .brand-lockup {
@@ -110,7 +110,7 @@ h2 {
 }
 
 h1 {
-  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  font-size: clamp(2.25rem, 5vw, 3.625rem);
   font-weight: 950;
   letter-spacing: -0.035em;
   line-height: 1.08;
@@ -172,7 +172,7 @@ h1 {
 .editor-section > h2,
 .program-section > h2 {
   margin: 0 0 var(--space-2) var(--space-1);
-  font-size: var(--text-xl);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
   font-weight: 950;
   letter-spacing: 0.035em;
   line-height: 1.2;
@@ -182,7 +182,7 @@ h1 {
 .panel {
   min-height: 5rem;
   padding: var(--panel-padding);
-  border: var(--border-subtle);
+  border: 1px solid color-mix(in srgb, var(--color-border) 24%, transparent);
   border-radius: var(--radius-card);
   background: var(--color-surface);
 }
@@ -241,6 +241,18 @@ h1 {
 
   .header-summary {
     display: none;
+  }
+}
+
+@media (max-width: 460px) {
+  :root {
+    --page-gutter: 1rem;
+  }
+}
+
+@media (max-width: 365px) {
+  :root {
+    --panel-padding: 0.875rem;
   }
 }
 

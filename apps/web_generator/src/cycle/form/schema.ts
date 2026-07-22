@@ -34,7 +34,7 @@ export function readPath(
     if (cursor === null || typeof cursor !== "object" || Array.isArray(cursor)) {
       return undefined;
     }
-    cursor = cursor[part];
+    cursor = (cursor as Readonly<Record<string, JsonValue>>)[part];
   }
   return cursor;
 }

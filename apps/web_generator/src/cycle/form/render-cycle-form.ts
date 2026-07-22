@@ -140,7 +140,7 @@ function renderSelect(
   schemaId: string,
   dispatch: CycleFormIntentHandler,
 ): HTMLElement {
-  const wrapper = element("div", "field");
+  const wrapper = element("div", "field selection-field");
   const label = labelText(field, locale);
   const select = element("select");
   select.id = safeId(field.id);
@@ -200,7 +200,7 @@ function renderPlateCounter(
   schemaId: string,
   dispatch: CycleFormIntentHandler,
 ): HTMLElement {
-  const wrapper = element("div", "field");
+  const wrapper = element("div", "field plate-counter");
   const title = element("span", "field-label");
   title.id = `${safeId(field.id)}-label`;
   title.textContent = localized(field.label, locale);
@@ -252,12 +252,16 @@ function renderTokenOrder(
   const list = element("ol", "token-list");
   const values = Array.isArray(field.value) ? [...field.value] : [];
   values.forEach((value, index) => {
+    const choice = field.choices?.find(
+      (candidate) => JSON.stringify(candidate.value) === JSON.stringify(value),
+    );
+    const tokenLabel = choice ? localized(choice.label, locale) : String(value);
     const item = element("li");
     const button = element("button", "token");
     button.type = "button";
     button.disabled = !enabled;
-    button.textContent = String(value);
-    button.setAttribute("aria-label", `${String(value)}, position ${index + 1}`);
+    button.textContent = tokenLabel;
+    button.setAttribute("aria-label", `${tokenLabel}, position ${index + 1}`);
     button.addEventListener("click", () => {
       if (index === 0) return;
       const previous = values[index - 1];
@@ -303,13 +307,28 @@ function renderField(
   schemaId: string,
   dispatch: CycleFormIntentHandler,
 ): HTMLElement {
-  if (field.kind === "boolean") return renderBoolean(field, locale, enabled, schemaId, dispatch);
-  if (field.kind === "segmented") return renderSegmented(field, locale, enabled, schemaId, dispatch);
-  if (field.kind === "choice") return renderSelect(field, locale, enabled, schemaId, dispatch);
-  if (field.kind === "plate-counter") return renderPlateCounter(field, locale, enabled, schemaId, dispatch);
-  if (field.kind === "token-order") return renderTokenOrder(field, locale, enabled, schemaId, dispatch);
-  if (field.kind === "action") return renderAction(field, locale, enabled, schemaId, dispatch);
-  return renderScalar(field, locale, enabled, schemaId, dispatch);
+  const rendered = field.kind === "boolean"
+    ? renderBoolean(field, locale, enabled, schemaId, dispatch)
+    : field.kind === "segmented"
+      ? renderSegmented(field, locale, enabled, schemaId, dispatch)
+      : field.kind === "choice"
+        ? renderSelect(field, locale, enabled, schemaId, dispatch)
+        : field.kind === "plate-counter"
+          ? renderPlateCounter(field, locale, enabled, schemaId, dispatch)
+          : field.kind === "token-order"
+            ? renderTokenOrder(field, locale, enabled, schemaId, dispatch)
+            : field.kind === "action"
+              ? renderAction(field, locale, enabled, schemaId, dispatch)
+              : renderScalar(field, locale, enabled, schemaId, dispatch);
+  if (field.id === "template" || field.id === "variant") {
+    rendered.dataset.testid = `${field.id}-row`;
+  } else if (field.kind === "action") {
+    rendered.dataset.testid = field.id;
+  } else {
+    const control = rendered.querySelector<HTMLElement>('input, select, button');
+    if (control) control.dataset.testid = field.id;
+  }
+  return rendered;
 }
 
 function renderRegion(
