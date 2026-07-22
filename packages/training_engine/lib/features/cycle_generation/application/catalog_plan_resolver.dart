@@ -1,5 +1,6 @@
 import '../domain/catalog_cycle_primitives.dart';
 import '../domain/cycle_contract.dart';
+import '../domain/cycle_execution_options.dart';
 
 final class PlanSession {
   const PlanSession({required this.id, required this.movementIds});
@@ -32,6 +33,7 @@ final class CatalogPlan {
     required this.components,
     this.weekPlans = const [],
     this.phases = const [],
+    this.optionRecipes = const ResolvedCycleOptionRecipes(),
   });
 
   final int catalogVersion;
@@ -42,6 +44,7 @@ final class CatalogPlan {
   final List<PlanComponent> components;
   final List<CatalogWeekPlan> weekPlans;
   final List<CatalogPhase> phases;
+  final ResolvedCycleOptionRecipes optionRecipes;
 }
 
 final class CatalogPlanResolver {
@@ -98,6 +101,7 @@ final class CatalogPlanResolver {
           ),
       ],
       sourceReference: plan.sourceReference,
+      optionRecipes: plan.optionRecipes,
     );
   }
 

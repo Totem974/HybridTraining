@@ -1,6 +1,7 @@
 import '../../cycle_generation/application/catalog_plan_resolver.dart';
 import '../../cycle_generation/domain/catalog_cycle_primitives.dart';
 import '../../cycle_generation/domain/cycle_contract.dart';
+import '../../cycle_generation/domain/cycle_execution_options.dart';
 import 'catalog_source_document_codec.dart';
 
 final class CatalogPlanDataResolver {
@@ -16,6 +17,7 @@ final class CatalogPlanDataResolver {
     required String sourceReference,
     Map<String, Object?> optionValues = const {},
     Map<String, Object?> optionDefaults = const {},
+    List<SourceCycleOptionRecipe> optionRecipes = const [],
   }) {
     if (!variant.scheduleIds.any((item) => _same(item, scheduleReference))) {
       throw const FormatException(
@@ -55,45 +57,200 @@ final class CatalogPlanDataResolver {
           ),
         ),
     ];
+    final planSessions = [
+      for (final session in schedule.single.sessions)
+        PlanSession(
+          id: MovementId(session.id),
+          movementIds: [for (final id in session.movementIds) MovementId(id)],
+        ),
+    ];
+    final planComponents = [
+      for (final component in components)
+        PlanComponent(
+          reference: component.reference,
+          block: component.block,
+          sessionIds: [
+            for (final id in [
+              ..._targetIds(component.compatibilities, 'sessionIds'),
+              ...sessionTargets,
+            ])
+              MovementId(id),
+          ],
+          movementIds: [
+            for (final id in [
+              ...component.constraints['movementRelation'] == 'sameAsMain'
+                  ? scheduledMovementIds
+                  : _targetIds(component.compatibilities, 'movementIds'),
+              ...movementTargets,
+            ])
+              MovementId(id),
+          ],
+        ),
+    ];
     return CatalogPlan(
       catalogVersion: catalogVersion,
       definitionId: template.id,
       variantId: variant.id,
       sourceReference: sourceReference,
-      sessions: [
-        for (final session in schedule.single.sessions)
-          PlanSession(
-            id: MovementId(session.id),
-            movementIds: [for (final id in session.movementIds) MovementId(id)],
-          ),
-      ],
-      components: [
-        for (final component in components)
-          PlanComponent(
-            reference: component.reference,
-            block: component.block,
-            sessionIds: [
-              for (final id in [
-                ..._targetIds(component.compatibilities, 'sessionIds'),
-                ...sessionTargets,
-              ])
-                MovementId(id),
-            ],
-            movementIds: [
-              for (final id in [
-                ...component.constraints['movementRelation'] == 'sameAsMain'
-                    ? scheduledMovementIds
-                    : _targetIds(component.compatibilities, 'movementIds'),
-                ...movementTargets,
-              ])
-                MovementId(id),
-            ],
-          ),
-      ],
+      sessions: planSessions,
+      components: planComponents,
       weekPlans: selectedWeekPlans,
       phases: selectedPhases,
+      optionRecipes: _resolveOptionRecipes(
+        variant,
+        optionRecipes,
+        planSessions,
+        planComponents,
+        selectedWeekPlans,
+        selectedPhases,
+      ),
     );
   }
+
+  ResolvedCycleOptionRecipes _resolveOptionRecipes(
+    SourceVariant variant,
+    List<SourceCycleOptionRecipe> recipes,
+    List<PlanSession> sessions,
+    List<PlanComponent> components,
+    List<CatalogWeekPlan> weekPlans,
+    List<CatalogPhase> phases,
+  ) {
+    final reference = variant.optionRecipeId;
+    if (reference == null) return const ResolvedCycleOptionRecipes();
+    final matches = recipes
+        .where((recipe) => _same(recipe.reference, reference))
+        .toList(growable: false);
+    if (matches.length != 1) {
+      throw const FormatException(
+        'Option recipe reference must resolve exactly once.',
+      );
+    }
+    final recipe = matches.single;
+    final expanded = phases.isEmpty
+        ? [
+            for (final week in weekPlans)
+              ExpandedWeekPlan(
+                number: week.weekNumber,
+                phaseId: 'cycle',
+                phaseIteration: 1,
+                sourceWeekNumber: week.weekNumber,
+                components: week.components,
+              ),
+          ]
+        : const PhaseExpander().expand(phases);
+    return ResolvedCycleOptionRecipes(
+      warmUp: {
+        for (final entry in recipe.warmUp.entries)
+          entry.key: _resolveBlockRecipe(
+            entry.value,
+            expanded,
+            sessions,
+            components,
+            deloadOnly: false,
+          ),
+      },
+      joker: recipe.joker,
+      deload: {
+        for (final entry in recipe.deload.entries)
+          entry.key: _resolveBlockRecipe(
+            entry.value,
+            expanded,
+            sessions,
+            components,
+            deloadOnly: true,
+          ),
+      },
+    );
+  }
+
+  ResolvedBlockRecipe _resolveBlockRecipe(
+    SourceBlockRecipe recipe,
+    List<ExpandedWeekPlan> weeks,
+    List<PlanSession> sessions,
+    List<PlanComponent> components, {
+    required bool deloadOnly,
+  }) => ResolvedBlockRecipe(
+    unitIndependent: recipe.componentIds.isEmpty
+        ? const []
+        : _expandRecipeReferences(
+            recipe.componentIds,
+            weeks,
+            sessions,
+            components,
+            deloadOnly: deloadOnly,
+          ),
+    byUnit: {
+      for (final entry in recipe.byUnit.entries)
+        entry.key: _expandRecipeReferences(
+          entry.value,
+          weeks,
+          sessions,
+          components,
+          deloadOnly: deloadOnly,
+        ),
+    },
+  );
+
+  List<ResolvedBlockOverlay> _expandRecipeReferences(
+    List<ComponentReference> references,
+    List<ExpandedWeekPlan> weeks,
+    List<PlanSession> sessions,
+    List<PlanComponent> components, {
+    required bool deloadOnly,
+  }) {
+    final byReference = <String, PlanComponent>{
+      for (final component in components) _key(component.reference): component,
+    };
+    final recipeComponents = [
+      for (final reference in references)
+        byReference[_key(reference)] ??
+            (throw FormatException(
+              'Unknown option recipe component ${_key(reference)}.',
+            )),
+    ];
+    return [
+      for (final week in weeks)
+        for (final session in sessions)
+          if (_isApplicableRecipeSession(
+            week,
+            session,
+            byReference,
+            deloadOnly: deloadOnly,
+          ))
+            ResolvedBlockOverlay(
+              weekNumber: week.number,
+              sessionId: session.id,
+              blocks: [
+                for (final component in recipeComponents)
+                  if (_targetsSession(component, session)) component.block,
+              ],
+            ),
+    ];
+  }
+
+  bool _isApplicableRecipeSession(
+    ExpandedWeekPlan week,
+    PlanSession session,
+    Map<String, PlanComponent> components, {
+    required bool deloadOnly,
+  }) {
+    final base = [
+      for (final reference in week.components)
+        if (components[_key(reference)] case final component?)
+          if (_targetsSession(component, session)) component,
+    ];
+    if (deloadOnly) return base.any((item) => item.block.role == 'deload');
+    return base.any((item) => item.block.role != 'warm_up');
+  }
+
+  bool _targetsSession(PlanComponent component, PlanSession session) =>
+      (component.sessionIds.isEmpty ||
+          component.sessionIds.contains(session.id)) &&
+      (component.movementIds.isEmpty ||
+          component.movementIds.any(session.movementIds.contains));
+
+  String _key(ComponentReference reference) =>
+      '${reference.id}@${reference.revision}';
 
   List<CatalogWeekPlan> _applyComponentSelections(
     List<CatalogWeekPlan> plans,

@@ -87,6 +87,39 @@ final class AmrapRepetitions extends RepetitionPrescription {
   Map<String, Object> toJson() => {'type': 'amrap', 'minimum': ?minimum};
 }
 
+final class JokerRepetitions extends RepetitionPrescription {
+  const JokerRepetitions();
+  @override
+  Map<String, Object> toJson() => const {'type': 'joker'};
+}
+
+final class PercentageRepetitionThreshold {
+  const PercentageRepetitionThreshold({
+    required this.maximumBasisPoints,
+    required this.count,
+  }) : assert(maximumBasisPoints > 0),
+       assert(count > 0);
+  final int maximumBasisPoints;
+  final int count;
+}
+
+final class PercentageThresholdRepetitions extends RepetitionPrescription {
+  const PercentageThresholdRepetitions(this.thresholds)
+    : assert(thresholds.length > 0);
+  final List<PercentageRepetitionThreshold> thresholds;
+  @override
+  Map<String, Object> toJson() => {
+    'type': 'percentage_thresholds',
+    'thresholds': [
+      for (final threshold in thresholds)
+        {
+          'maximumBasisPoints': threshold.maximumBasisPoints,
+          'count': threshold.count,
+        },
+    ],
+  };
+}
+
 sealed class LoadPrescription {
   const LoadPrescription();
 }
@@ -104,6 +137,24 @@ final class WarmUpBaseLoad extends LoadPrescription {
   const WarmUpBaseLoad(this.region);
 
   final WarmUpBodyRegion region;
+}
+
+enum TrainingMaxRampAnchor { beforeMainWork, warmUpBase }
+
+final class TrainingMaxRampLoad extends LoadPrescription {
+  const TrainingMaxRampLoad({
+    required this.anchor,
+    required this.stepBasisPoints,
+    this.lowerBoundStepFractionBasisPoints,
+    this.anchorMultiplierBasisPoints,
+    this.maximumExclusiveBasisPoints,
+  });
+
+  final TrainingMaxRampAnchor anchor;
+  final int stepBasisPoints;
+  final int? lowerBoundStepFractionBasisPoints;
+  final int? anchorMultiplierBasisPoints;
+  final int? maximumExclusiveBasisPoints;
 }
 
 final class TrainingMaxPercentageLoad extends LoadPrescription {

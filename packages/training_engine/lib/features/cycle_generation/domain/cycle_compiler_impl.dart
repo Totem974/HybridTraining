@@ -101,20 +101,173 @@ final class CycleCompilerImpl implements CycleCompiler {
         id: block.id,
         role: block.role,
         movementId: block.movementId ?? sessionMovement,
-        sets: [
-          for (var index = 0; index < block.sets.length; index++)
-            _compileSet(
-              index,
-              block.sets[index],
-              definitions,
-              block.movementId ?? sessionMovement,
-              maxes[block.movementId ?? sessionMovement],
-              request.maxInputs[block.movementId ?? sessionMovement],
-              request,
-            ),
-        ],
+        sets: _compileSets(
+          block,
+          definitions,
+          block.movementId ?? sessionMovement,
+          maxes[block.movementId ?? sessionMovement],
+          request.maxInputs[block.movementId ?? sessionMovement],
+          request,
+        ),
       ),
   ];
+
+  List<GeneratedSet> _compileSets(
+    BlockDefinition block,
+    List<BlockDefinition> sessionBlocks,
+    MovementId movement,
+    Weight? trainingMax,
+    TrainingMaxInput? maxInput,
+    CycleRequest request,
+  ) {
+    final result = <GeneratedSet>[];
+    for (final definition in block.sets) {
+      if (definition.load case final TrainingMaxRampLoad ramp) {
+        result.addAll(
+          _compileRampSets(
+            ramp,
+            definition.repetitions,
+            block,
+            sessionBlocks,
+            movement,
+            trainingMax,
+            maxInput,
+            request,
+            result.length,
+          ),
+        );
+      } else {
+        result.add(
+          _compileSet(
+            result.length,
+            definition,
+            sessionBlocks,
+            movement,
+            trainingMax,
+            maxInput,
+            request,
+          ),
+        );
+      }
+    }
+    return result;
+  }
+
+  List<GeneratedSet> _compileRampSets(
+    TrainingMaxRampLoad ramp,
+    RepetitionPrescription repetitions,
+    BlockDefinition block,
+    List<BlockDefinition> sessionBlocks,
+    MovementId movement,
+    Weight? trainingMax,
+    TrainingMaxInput? maxInput,
+    CycleRequest request,
+    int startIndex,
+  ) {
+    if (trainingMax == null || repetitions is! PercentageThresholdRepetitions) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.invalidCycleOptions,
+        'A TM ramp requires a training max and percentage thresholds.',
+      );
+    }
+    final baseLoads = block.sets
+        .where((set) => set.load is WarmUpBaseLoad)
+        .map((set) => set.load as WarmUpBaseLoad)
+        .toList(growable: false);
+    if (baseLoads.length != 1) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.invalidCycleOptions,
+        'A TM ramp requires exactly one warm-up base in its block.',
+      );
+    }
+    final warmUp = request.cycleOptions.normalized().warmUp;
+    final base = switch (baseLoads.single.region) {
+      WarmUpBodyRegion.upperBody => warmUp.upperBodyBaseWeight,
+      WarmUpBodyRegion.lowerBody => warmUp.lowerBodyBaseWeight,
+    };
+    if (base == null) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.invalidCycleOptions,
+        'A TM ramp requires its declared warm-up base.',
+      );
+    }
+    final step = loadCalculator.percentage(
+      trainingMax,
+      Percentage(ramp.stepBasisPoints),
+    );
+    final desiredLoads = <Weight>[];
+    switch (ramp.anchor) {
+      case TrainingMaxRampAnchor.beforeMainWork:
+        final main = loadCalculator.percentage(
+          trainingMax,
+          _heaviestMainWorkTarget(
+            sessionBlocks,
+            movement,
+            request,
+            roles: const {'main_work', 'main work', 'deload'},
+          ),
+        );
+        var current = main.centiUnits - step.centiUnits;
+        final lower =
+            base.centiUnits +
+            (step.centiUnits * ramp.lowerBoundStepFractionBasisPoints! +
+                    5000) ~/
+                10000;
+        while (current > lower) {
+          desiredLoads.add(Weight(current, request.unit));
+          current -= step.centiUnits;
+        }
+        desiredLoads.sort(
+          (left, right) => left.centiUnits.compareTo(right.centiUnits),
+        );
+      case TrainingMaxRampAnchor.warmUpBase:
+        var current =
+            (base.centiUnits * ramp.anchorMultiplierBasisPoints! + 5000) ~/
+            10000;
+        final maximum =
+            (trainingMax.centiUnits * ramp.maximumExclusiveBasisPoints! +
+                5000) ~/
+            10000;
+        while (current < maximum) {
+          desiredLoads.add(Weight(current, request.unit));
+          current += step.centiUnits;
+        }
+    }
+    return [
+      for (var offset = 0; offset < desiredLoads.length; offset++)
+        _compileSet(
+          startIndex + offset,
+          PrescribedSetDefinition(
+            repetitions: FixedRepetitions(
+              _rampRepetitions(desiredLoads[offset], trainingMax, repetitions),
+            ),
+            load: FixedLoad(desiredLoads[offset]),
+          ),
+          sessionBlocks,
+          movement,
+          trainingMax,
+          maxInput,
+          request,
+        ),
+    ];
+  }
+
+  int _rampRepetitions(
+    Weight desired,
+    Weight trainingMax,
+    PercentageThresholdRepetitions prescription,
+  ) {
+    for (final threshold in prescription.thresholds) {
+      final maximum =
+          (trainingMax.centiUnits * threshold.maximumBasisPoints + 5000) ~/
+          10000;
+      if (desired.centiUnits <= maximum) return threshold.count;
+    }
+    throw const CycleGenerationException(
+      CycleGenerationErrorCode.invalidCycleOptions,
+      'Ramp repetition thresholds do not cover the generated load.',
+    );
+  }
 
   GeneratedSet _compileSet(
     int index,
@@ -219,6 +372,11 @@ final class CycleCompilerImpl implements CycleCompiler {
           WarmUpBodyRegion.upperBody => warmUp.upperBodyBaseWeight,
           WarmUpBodyRegion.lowerBody => warmUp.lowerBodyBaseWeight,
         };
+      case TrainingMaxRampLoad():
+        throw const CycleGenerationException(
+          CycleGenerationErrorCode.invalidCycleOptions,
+          'TM ramps must be expanded at block level.',
+        );
     }
     PlateSelection? selection;
     if (desired != null) {
@@ -312,12 +470,13 @@ final class CycleCompilerImpl implements CycleCompiler {
   Percentage _heaviestMainWorkTarget(
     List<BlockDefinition> sessionBlocks,
     MovementId movement,
-    CycleRequest request,
-  ) {
+    CycleRequest request, {
+    Set<String> roles = const {'main_work', 'main work'},
+  }) {
     final values = <Percentage>[];
     for (final block in sessionBlocks.where(
       (block) =>
-          const {'main_work', 'main work'}.contains(block.role) &&
+          roles.contains(block.role) &&
           (block.movementId == null || block.movementId == movement),
     )) {
       for (final set in block.sets) {
@@ -657,7 +816,8 @@ final class CycleCompilerImpl implements CycleCompiler {
                 set.load is ParameterizedTrainingMaxPercentageLoad ||
                 set.load is OneRepMaxPercentageLoad ||
                 set.load is RelativeSetLoad ||
-                set.load is MainWorkSetPlusLoad,
+                set.load is MainWorkSetPlusLoad ||
+                set.load is TrainingMaxRampLoad,
           )) {
             result.add(block.movementId ?? sessionId);
           }

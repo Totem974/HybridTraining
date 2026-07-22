@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../cycle_generation/domain/catalog_cycle_primitives.dart';
 import '../../cycle_generation/domain/cycle_contract.dart';
+import '../../cycle_generation/domain/cycle_execution_options.dart';
 
 final class SourceComponent {
   const SourceComponent({
@@ -38,6 +39,7 @@ final class SourceVariant {
     required this.compatibilities,
     required this.optionSchemaId,
     this.componentSelections = const [],
+    this.optionRecipeId,
   });
   final String id;
   final int revision;
@@ -47,6 +49,29 @@ final class SourceVariant {
   final Map<String, Object?> compatibilities;
   final ComponentReference optionSchemaId;
   final List<SourceComponentSelection> componentSelections;
+  final ComponentReference? optionRecipeId;
+}
+
+final class SourceBlockRecipe {
+  const SourceBlockRecipe({
+    this.componentIds = const [],
+    this.byUnit = const {},
+  });
+  final List<ComponentReference> componentIds;
+  final Map<WeightUnit, List<ComponentReference>> byUnit;
+}
+
+final class SourceCycleOptionRecipe {
+  const SourceCycleOptionRecipe({
+    required this.reference,
+    this.warmUp = const {},
+    this.joker,
+    this.deload = const {},
+  });
+  final ComponentReference reference;
+  final Map<WarmUpType, SourceBlockRecipe> warmUp;
+  final ResolvedJokerRecipe? joker;
+  final Map<DeloadType, SourceBlockRecipe> deload;
 }
 
 final class SourceComponentSelection {
@@ -215,6 +240,119 @@ final class CatalogSourceDocumentCodec {
         .toList(growable: false);
   }
 
+  List<SourceCycleOptionRecipe> decodeCycleOptionRecipes(String source) {
+    final root = _root(source, 'cycleOptionRecipes');
+    return _list(root, 'cycleOptionRecipes')
+        .map((value) {
+          final map = _map(value, 'cycleOptionRecipe');
+          _keys(
+            map,
+            const {'id', 'revision', 'warmUp', 'joker', 'deload'},
+            optional: const {'warmUp', 'joker', 'deload'},
+          );
+          final warmUp = <WarmUpType, SourceBlockRecipe>{};
+          if (map['warmUp'] != null) {
+            final recipes = _map(map['warmUp'], 'warmUp');
+            _enumKeys(
+              recipes,
+              WarmUpType.values.map((value) => value.name).toSet(),
+            );
+            for (final entry in recipes.entries) {
+              warmUp[WarmUpType.values.byName(entry.key)] = _blockRecipe(
+                _map(entry.value, 'warmUp.${entry.key}'),
+              );
+            }
+          }
+          final deload = <DeloadType, SourceBlockRecipe>{};
+          if (map['deload'] != null) {
+            final recipes = _map(map['deload'], 'deload');
+            _enumKeys(
+              recipes,
+              DeloadType.values.map((value) => value.name).toSet(),
+            );
+            for (final entry in recipes.entries) {
+              deload[DeloadType.values.byName(entry.key)] = _blockRecipe(
+                _map(entry.value, 'deload.${entry.key}'),
+              );
+            }
+          }
+          return SourceCycleOptionRecipe(
+            reference: _recordReference(map),
+            warmUp: Map.unmodifiable(warmUp),
+            joker: map['joker'] == null
+                ? null
+                : _jokerRecipe(_map(map['joker'], 'joker')),
+            deload: Map.unmodifiable(deload),
+          );
+        })
+        .toList(growable: false);
+  }
+
+  SourceBlockRecipe _blockRecipe(Map<String, Object?> map) {
+    _keys(
+      map,
+      const {'componentIds', 'byUnit'},
+      optional: const {'componentIds', 'byUnit'},
+    );
+    if (map.containsKey('componentIds') == map.containsKey('byUnit')) {
+      throw const FormatException(
+        'Option recipe requires exactly one of componentIds or byUnit.',
+      );
+    }
+    if (map['componentIds'] != null) {
+      return SourceBlockRecipe(
+        componentIds: _componentReferences(map['componentIds'], 'componentIds'),
+      );
+    }
+    final units = _map(map['byUnit'], 'byUnit');
+    _enumKeys(units, WeightUnit.values.map((value) => value.name).toSet());
+    if (units.isEmpty) {
+      throw const FormatException('Option recipe byUnit cannot be empty.');
+    }
+    return SourceBlockRecipe(
+      byUnit: Map.unmodifiable({
+        for (final entry in units.entries)
+          WeightUnit.values.byName(entry.key): _componentReferences(
+            entry.value,
+            entry.key,
+          ),
+      }),
+    );
+  }
+
+  List<ComponentReference> _componentReferences(Object? value, String label) {
+    if (value is! List<Object?> || value.isEmpty) {
+      throw FormatException('$label must be a non-empty reference list.');
+    }
+    return List.unmodifiable(
+      value.map((value) => _reference(_map(value, label))),
+    );
+  }
+
+  ResolvedJokerRecipe _jokerRecipe(Map<String, Object?> map) {
+    _keys(map, const {'blockId', 'steps'});
+    final steps = _list(map, 'steps')
+        .map((value) {
+          final step = _map(value, 'jokerStep');
+          _keys(step, const {'cumulativeIncreaseBasisPoints', 'repetitions'});
+          return JokerRecipeStep(
+            cumulativeIncreaseBasisPoints: _positiveInt(
+              step,
+              'cumulativeIncreaseBasisPoints',
+            ),
+            repetitions: _repetitions(_map(step['repetitions'], 'repetitions')),
+          );
+        })
+        .toList(growable: false);
+    if (steps.isEmpty) {
+      throw const FormatException('Joker recipe steps cannot be empty.');
+    }
+    return ResolvedJokerRecipe(
+      blockId: _nonEmptyString(map, 'blockId'),
+      steps: List.unmodifiable(steps),
+    );
+  }
+
   List<Map<String, Object?>> decodeOptionSchemas(String source) {
     final root = _root(source, 'optionSchemas');
     return _list(root, 'optionSchemas')
@@ -263,6 +401,7 @@ final class CatalogSourceDocumentCodec {
         'assistancePlanIds',
         'conditioningDefinitionIds',
         'componentSelections',
+        'optionRecipeId',
       },
       optional: const {
         'weekPlans',
@@ -270,6 +409,7 @@ final class CatalogSourceDocumentCodec {
         'assistancePlanIds',
         'conditioningDefinitionIds',
         'componentSelections',
+        'optionRecipeId',
       },
     );
     if (map.containsKey('weekPlans') == map.containsKey('phases')) {
@@ -281,6 +421,9 @@ final class CatalogSourceDocumentCodec {
       id: _string(map, 'id'),
       revision: _int(map, 'revision'),
       optionSchemaId: _reference(_map(map['optionSchemaId'], 'optionSchemaId')),
+      optionRecipeId: map['optionRecipeId'] == null
+          ? null
+          : _reference(_map(map['optionRecipeId'], 'optionRecipeId')),
       scheduleIds: _list(map, 'scheduleIds')
           .map((value) => _reference(_map(value, 'reference')))
           .toList(growable: false),
@@ -402,6 +545,36 @@ final class CatalogSourceDocumentCodec {
         return AmrapRepetitions(
           minimum: map['minimum'] == null ? null : _int(map, 'minimum'),
         );
+      case 'joker':
+        _keys(map, const {'type'});
+        return const JokerRepetitions();
+      case 'percentage_thresholds':
+        _keys(map, const {'type', 'thresholds'});
+        final thresholds = _list(map, 'thresholds')
+            .map((value) {
+              final threshold = _map(value, 'percentageThreshold');
+              _keys(threshold, const {'maximumBasisPoints', 'count'});
+              return PercentageRepetitionThreshold(
+                maximumBasisPoints: _positiveInt(
+                  threshold,
+                  'maximumBasisPoints',
+                ),
+                count: _positiveInt(threshold, 'count'),
+              );
+            })
+            .toList(growable: false);
+        if (thresholds.isEmpty) {
+          throw const FormatException('percentage_thresholds cannot be empty.');
+        }
+        for (var index = 1; index < thresholds.length; index++) {
+          if (thresholds[index].maximumBasisPoints <=
+              thresholds[index - 1].maximumBasisPoints) {
+            throw const FormatException(
+              'percentage_thresholds must be strictly ascending.',
+            );
+          }
+        }
+        return PercentageThresholdRepetitions(List.unmodifiable(thresholds));
       default:
         throw FormatException("Unknown repetition type ${map['type']}.");
     }
@@ -426,6 +599,71 @@ final class CatalogSourceDocumentCodec {
         return RelativeSetLoad(
           position: RelativeSetPosition.values.byName(_string(map, 'position')),
           multiplierBasisPoints: _int(map, 'multiplierBasisPoints'),
+        );
+      case 'warm_up_base':
+        _keys(map, const {'type', 'region'});
+        return WarmUpBaseLoad(
+          WarmUpBodyRegion.values.byName(_string(map, 'region')),
+        );
+      case 'training_max_ramp':
+        _keys(
+          map,
+          const {
+            'type',
+            'anchor',
+            'stepBasisPoints',
+            'lowerBound',
+            'lowerBoundStepFractionBasisPoints',
+            'anchorMultiplierBasisPoints',
+            'maximumExclusiveBasisPoints',
+          },
+          optional: const {
+            'lowerBound',
+            'lowerBoundStepFractionBasisPoints',
+            'anchorMultiplierBasisPoints',
+            'maximumExclusiveBasisPoints',
+          },
+        );
+        final anchor = switch (_string(map, 'anchor')) {
+          'before_main_work' => TrainingMaxRampAnchor.beforeMainWork,
+          'warm_up_base' => TrainingMaxRampAnchor.warmUpBase,
+          final value => throw FormatException('Unknown ramp anchor $value.'),
+        };
+        if (map['lowerBound'] != null &&
+            _string(map, 'lowerBound') != 'warm_up_base_plus_step_fraction') {
+          throw FormatException(
+            'Unknown ramp lowerBound ${map['lowerBound']}.',
+          );
+        }
+        final lowerFraction = map['lowerBoundStepFractionBasisPoints'] == null
+            ? null
+            : _positiveInt(map, 'lowerBoundStepFractionBasisPoints');
+        final anchorMultiplier = map['anchorMultiplierBasisPoints'] == null
+            ? null
+            : _positiveInt(map, 'anchorMultiplierBasisPoints');
+        final maximum = map['maximumExclusiveBasisPoints'] == null
+            ? null
+            : _positiveInt(map, 'maximumExclusiveBasisPoints');
+        if ((anchor == TrainingMaxRampAnchor.beforeMainWork &&
+                (map['lowerBound'] == null ||
+                    lowerFraction == null ||
+                    anchorMultiplier != null ||
+                    maximum != null)) ||
+            (anchor == TrainingMaxRampAnchor.warmUpBase &&
+                (map['lowerBound'] != null ||
+                    lowerFraction != null ||
+                    anchorMultiplier == null ||
+                    maximum == null))) {
+          throw const FormatException(
+            'Ramp parameters do not match the selected anchor.',
+          );
+        }
+        return TrainingMaxRampLoad(
+          anchor: anchor,
+          stepBasisPoints: _positiveInt(map, 'stepBasisPoints'),
+          lowerBoundStepFractionBasisPoints: lowerFraction,
+          anchorMultiplierBasisPoints: anchorMultiplier,
+          maximumExclusiveBasisPoints: maximum,
         );
       default:
         throw FormatException("Unknown load type ${map['type']}.");
@@ -464,6 +702,18 @@ final class CatalogSourceDocumentCodec {
   static int _int(Map<String, Object?> map, String key) => map[key] is int
       ? map[key]! as int
       : throw FormatException('$key must be an integer.');
+  static int _positiveInt(Map<String, Object?> map, String key) {
+    final value = _int(map, key);
+    if (value <= 0) throw FormatException('$key must be positive.');
+    return value;
+  }
+
+  static String _nonEmptyString(Map<String, Object?> map, String key) {
+    final value = _string(map, key);
+    if (value.trim().isEmpty) throw FormatException('$key cannot be empty.');
+    return value;
+  }
+
   static List<String> _strings(Map<String, Object?> map, String key) =>
       _list(map, key)
           .map(
@@ -485,6 +735,13 @@ final class CatalogSourceDocumentCodec {
     final missing = allowed.difference(map.keys.toSet()).difference(optional);
     if (missing.isNotEmpty) {
       throw FormatException('Missing key ${missing.first}.');
+    }
+  }
+
+  static void _enumKeys(Map<String, Object?> map, Set<String> allowed) {
+    final unknown = map.keys.toSet().difference(allowed);
+    if (unknown.isNotEmpty) {
+      throw FormatException('Unknown enum key ${unknown.first}.');
     }
   }
 

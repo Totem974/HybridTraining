@@ -124,7 +124,8 @@ final class WorkspaceProgramCodec {
       'multiplierBasisPoints': multiplierBasisPoints,
     },
     MainWorkSetPlusLoad() ||
-    WarmUpBaseLoad() => throw const WorkspaceProgramFormatException(
+    WarmUpBaseLoad() ||
+    TrainingMaxRampLoad() => throw const WorkspaceProgramFormatException(
       'Resolved option loads cannot be stored in user-defined programs',
     ),
   };
