@@ -1,10 +1,23 @@
 import { renderCycleForm, localized, type CycleEditorSchema, type CycleFormIntent, type JsonValue } from './cycle/form';
 import { renderProgram, type CycleResponseLike } from './cycle/program';
+import { buildCycleRequest } from './cycle/request/buildCycleRequest';
+import { changeEditorValue, normalizeEditorState } from './cycle/state/editorState';
+import {
+  currentDraftId,
+  cycleDraft,
+  draftEnvelope,
+  restoreCompatibleDraft,
+  type CycleDraftPayload,
+} from './cycle/storage/cyclePersistence';
 import { EngineClient } from './engine';
 import {
   exportConfiguration,
   exportProgram,
+  IndexedDbWorkspaceStorage,
   importValidatedArtifact,
+  SavedConfigurationRepository,
+  TrainingSnapshotRepository,
+  WorkspaceDraftRepository,
   type LocalArtifact,
 } from './storage';
 import { PreferencesStore, type Locale } from './storage/preferences';
@@ -27,10 +40,15 @@ let client: EngineClient;
 let catalog: CatalogIndex;
 let schema: CycleEditorSchema;
 let values: Record<string, JsonValue> = {};
+let defaultValues: Record<string, JsonValue> = {};
 let disposeForm: (() => void) | undefined;
 let lastRequest: object | undefined;
 let lastResponse: CycleResponse | undefined;
 let generationTimer: ReturnType<typeof setTimeout> | undefined;
+let workspaceStorage: IndexedDbWorkspaceStorage | undefined;
+let drafts: WorkspaceDraftRepository<CycleDraftPayload> | undefined;
+let configurations: SavedConfigurationRepository<object> | undefined;
+let snapshots: TrainingSnapshotRepository<object> | undefined;
 
 const translations = {
   en: { eyebrow: 'Training tools', pageTitle: 'Cycle generator', pageSummary: 'Configure and generate a training cycle locally in your browser.', weight: 'Weight', template: 'Template', additionalOptions: 'Additional options', plating: 'Plating & barbell', scheduling: 'Scheduling', output: 'Output', program: 'Program' },
@@ -41,12 +59,25 @@ async function start(): Promise<void> {
   try {
     client = await EngineClient.initialize();
     catalog = client.catalogIndex<CatalogIndex>({ apiVersion: 'v1', schemaVersion: 1 });
-    const preferred = catalog.templates.find((item) => item.id === 'classic_boring_but_big') ?? catalog.templates[0];
-    const preferredVariant = preferred?.variantIds.includes('same_lift_5x10')
-      ? 'same_lift_5x10'
-      : preferred?.variantIds[0];
+    installRepositories();
+    const allowed = new Map(catalog.templates.map((template) => [
+      template.id,
+      new Set(template.variantIds),
+    ]));
+    const restored = drafts
+      ? await restoreCompatibleDraft(drafts, client.contractMetadata(), allowed)
+      : undefined;
+    const preferred = restored
+      ? catalog.templates.find((item) => item.id === restored.templateId)
+      : catalog.templates[0];
+    const preferredVariant = restored?.variantId ?? preferred?.variantIds[0];
     if (!preferred || !preferredVariant) throw new Error('CATALOG_HAS_NO_CYCLE_VARIANTS');
-    await loadSchema(preferred.id, preferredVariant, false);
+    await loadSchema(
+      preferred.id,
+      preferredVariant,
+      restored?.values,
+      restored?.scheduleId,
+    );
     installLocaleControls();
     root.dataset.cycleReady = 'true';
     if (status) status.textContent = '';
@@ -59,7 +90,7 @@ async function start(): Promise<void> {
 async function loadSchema(
   templateId: string,
   variantId: string,
-  preserve: boolean,
+  candidates: Readonly<Record<string, JsonValue>> = {},
   scheduleId?: string,
 ): Promise<void> {
   const next = client.cycleEditorSchema<CycleEditorSchema>({
@@ -69,20 +100,21 @@ async function loadSchema(
     variantId,
     ...(scheduleId ? { scheduleId } : {}),
   });
-  const previous = preserve ? values : {};
-  schema = {
-    ...next,
-    fields: next.fields.map((field) => ({
-      ...field,
-      value: field.path === 'showPlating'
-        ? preferences.read().showPlating
-        : ['templateId', 'variantId', 'scheduleId', 'sessionOrder'].includes(field.path)
-          ? field.value
-          : previous[field.path] ?? field.value,
-    })),
+  const merged = {
+    ...candidates,
+    showPlating: preferences.read().showPlating,
   };
-  values = Object.fromEntries(schema.fields.map((field) => [field.path, field.value]));
+  const normalized = normalizeEditorState(next, merged, new Set([
+    'templateId',
+    'variantId',
+    'scheduleId',
+    'sessionOrder',
+  ]));
+  schema = normalized.schema;
+  values = normalized.values;
+  defaultValues = normalized.defaults;
   renderEditor();
+  persistDraft();
   scheduleGeneration();
 }
 
@@ -108,30 +140,30 @@ async function handleIntent(intent: CycleFormIntent): Promise<void> {
   values[intent.path] = intent.value;
   if (intent.path === 'templateId' && typeof intent.value === 'string') {
     const selected = catalog.templates.find((item) => item.id === intent.value);
-    if (selected?.variantIds[0]) await loadSchema(selected.id, selected.variantIds[0], true);
+    if (selected?.variantIds[0]) await loadSchema(selected.id, selected.variantIds[0], values);
     return;
   }
   if (intent.path === 'variantId' && typeof intent.value === 'string') {
-    await loadSchema(String(values.templateId), intent.value, true);
+    await loadSchema(String(values.templateId), intent.value, values);
     return;
   }
   if (intent.path === 'scheduleId' && typeof intent.value === 'string') {
-    await loadSchema(String(values.templateId), String(values.variantId), true, intent.value);
+    await loadSchema(String(values.templateId), String(values.variantId), values, intent.value);
     return;
   }
-  schema = {
-    ...schema,
-    fields: schema.fields.map((field) => field.path === intent.path ? { ...field, value: intent.value! } : field),
-  };
+  const normalized = changeEditorValue(
+    { schema, values, defaults: defaultValues },
+    intent.path,
+    intent.value,
+  );
+  schema = normalized.schema;
+  values = normalized.values;
+  defaultValues = normalized.defaults;
   if (intent.path === 'showPlating' && typeof intent.value === 'boolean') {
     preferences.setShowPlating(intent.value);
   }
-  if (schema.fields.some((field) =>
-    [...(field.visibleWhen ?? []), ...(field.enabledWhen ?? [])]
-      .some((condition) => condition.path === intent.path)
-  )) {
-    renderEditor();
-  }
+  renderEditor();
+  persistDraft();
   scheduleGeneration();
 }
 
@@ -141,7 +173,7 @@ function scheduleGeneration(): void {
 }
 
 function generate(): void {
-  generateRequest(buildCycleRequest());
+  generateRequest(buildCycleRequest(schema, values));
 }
 
 function generateRequest(request: object): void {
@@ -149,6 +181,7 @@ function generateRequest(request: object): void {
     const response = client.generateCycle<CycleResponse>(request);
     lastRequest = request;
     lastResponse = response;
+    persistGeneration(request, response);
     if (!program) throw new Error('PROGRAM_MOUNT_MISSING');
     renderProgram(program, response.cycle as CycleResponseLike, {
       showPlating: Boolean(values.showPlating),
@@ -190,9 +223,11 @@ function installTransferControls(): void {
       const imported = await importValidatedArtifact(
         await file.text(),
         'configuration',
-        (candidate) => client.validateCycle<ValidationReport>(candidate.payload as object),
+        (candidate) => metadataMatchesCurrent(candidate)
+          ? validateImportedRequest(candidate.payload as Record<string, unknown>)
+          : ({ valid: false, errors: [{ code: 'VERSION_MISMATCH' }] }),
       );
-      generateRequest(imported.payload as object);
+      await hydrateImportedRequest(imported.payload as Record<string, unknown>);
     } catch (error) {
       if (status) status.textContent = message(error);
     } finally {
@@ -201,7 +236,7 @@ function installTransferControls(): void {
   });
   controls.append(
     transferButton(locale === 'fr' ? 'Exporter la configuration' : 'Export configuration', () => {
-      const request = lastRequest ?? buildCycleRequest();
+      const request = buildCycleRequest(schema, values);
       download('cycle-configuration.json', exportConfiguration(artifact('configuration', request)));
     }),
     transferButton(locale === 'fr' ? 'Exporter le programme' : 'Export program', () => {
@@ -212,6 +247,48 @@ function installTransferControls(): void {
     input,
   );
   mount.append(controls);
+}
+
+function validateImportedRequest(request: Record<string, unknown>): ValidationReport {
+  try {
+    const schemaRequest = {
+      apiVersion: 'v1',
+      schemaVersion: 1,
+      templateId: typeof request.templateId === 'string' ? request.templateId : '',
+      variantId: typeof request.variantId === 'string' ? request.variantId : '',
+      ...(typeof request.scheduleId === 'string' ? { scheduleId: request.scheduleId } : {}),
+    };
+    let importedSchema: CycleEditorSchema;
+    try {
+      importedSchema = client.cycleEditorSchema<CycleEditorSchema>(schemaRequest);
+    } catch {
+      const { scheduleId: _, ...withoutStaleSchedule } = schemaRequest;
+      importedSchema = client.cycleEditorSchema<CycleEditorSchema>(withoutStaleSchedule);
+    }
+    const importedState = normalizeEditorState(importedSchema, requestValues(request), new Set([
+      'templateId',
+      'variantId',
+      'scheduleId',
+      'sessionOrder',
+    ]));
+    const cycleId = typeof request.cycleId === 'string' ? request.cycleId : undefined;
+    return client.validateCycle<ValidationReport>(
+      buildCycleRequest(importedState.schema, importedState.values, cycleId ? { cycleId } : {}),
+    );
+  } catch {
+    return {
+      ...client.contractMetadata(),
+      valid: false,
+      errors: [{
+        code: 'INVALID_IMPORTED_REQUEST',
+        path: '',
+        messageKey: 'engine.invalidCycleRequest',
+        details: {},
+        severity: 'error',
+      }],
+      warnings: [],
+    };
+  }
 }
 
 function transferButton(label: string, action: () => void): HTMLButtonElement {
@@ -238,70 +315,116 @@ function download(fileName: string, content: string): void {
   URL.revokeObjectURL(url);
 }
 
-function buildCycleRequest(): object {
-  const unit = values.unit === 'lb' ? 'lb' : 'kg';
-  const order = Array.isArray(values.sessionOrder)
-    ? values.sessionOrder.filter((item): item is string => typeof item === 'string')
-    : [];
-  if (order.length === 0) throw new Error('SESSION_ORDER_REQUIRED');
-  const mode = typeof values.maxMode === 'string' ? values.maxMode : 'oneRepMax';
-  const movements = schema.fields
-    .filter((field) => field.id.startsWith('max-load-'))
-    .map((field) => field.id.slice('max-load-'.length));
-  const requestMovements = [...new Set([...movements, ...order])];
-  const maxInputs = Object.fromEntries(requestMovements.map((movement) => {
-    const weight = numberValue(`maxInputs.${movement}.weight`, 100);
-    const input: Record<string, unknown> = {
-      type: mode,
-      weight: { centiUnits: Math.round(weight * 100), unit },
-    };
-    if (mode === 'repMax') {
-      input.repetitions = Math.round(numberValue(`maxInputs.${movement}.repetitions`, 5));
-      input.formula = 'epley';
-    }
-    return [movement, input];
-  }));
-  const platesPerSide = Object.entries(values)
-    .filter(([path, count]) => path.startsWith('plates.') && typeof count === 'number' && count > 0)
-    .flatMap(([path, count]) => Array.from({ length: Math.round(count as number) }, () => ({
-      centiUnits: Math.round(Number(path.slice('plates.'.length)) * 100), unit,
-    })));
-  const percentageParameters = Object.fromEntries(
-    schema.fields
-      .filter((field) => field.path.startsWith('options.') && field.kind === 'percentage')
-      .map((field) => [field.path.slice('options.'.length), Math.round(numberValue(field.path, Number(field.value ?? 0)))]),
-  );
-  return {
-    apiVersion: 'v1', schemaVersion: 1,
-    cycleId: `cycle-${Date.now()}`,
-    templateId: String(values.templateId), variantId: String(values.variantId),
-    scheduleId: String(values.scheduleId),
-    startDate: `${String(values.startDate)}T00:00:00.000`,
-    sessionOrder: order,
-    maxInputs,
-    globalTrainingMaxRatioBasisPoints: Math.round(numberValue('globalTrainingMaxRatioBasisPoints', 9000)),
-    trainingMaxRatioByMovement: {}, percentageParameters, percentageParametersByMovement: {},
-    options: Object.fromEntries(Object.entries(values).filter(([path]) => path.startsWith('options.'))),
-    unit,
-    barProfile: {
-      weight: { centiUnits: Math.round(numberValue('barWeight', 20) * 100), unit },
-      platesPerSide,
-    },
-    includeDeload: values['options.include_deload'] !== false,
-    programTitle: String(values.programTitle ?? '5/3/1'),
-    showPlating: Boolean(values.showPlating),
-  };
-}
-
 function movementNames(): Record<string, string> {
   return Object.fromEntries(schema.fields
     .filter((field) => field.id.startsWith('max-load-'))
     .map((field) => [field.id.slice('max-load-'.length), localized(field.label, locale)]));
 }
 
-function numberValue(path: string, fallback: number): number {
-  const value = values[path];
-  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+function installRepositories(): void {
+  try {
+    workspaceStorage = new IndexedDbWorkspaceStorage();
+    drafts = new WorkspaceDraftRepository(workspaceStorage);
+    configurations = new SavedConfigurationRepository(workspaceStorage);
+    snapshots = new TrainingSnapshotRepository(workspaceStorage);
+  } catch {
+    workspaceStorage = undefined;
+  }
+}
+
+function persistDraft(): void {
+  if (!drafts || !client || !schema) return;
+  void drafts.save(
+    currentDraftId,
+    draftEnvelope(client.contractMetadata(), cycleDraft(values)),
+  ).catch(() => undefined);
+}
+
+function persistGeneration(request: object, response: CycleResponse): void {
+  if (configurations) {
+    void configurations.save(
+      'cycle-latest',
+      artifact('configuration', request),
+    ).catch(() => undefined);
+  }
+  if (snapshots) {
+    void snapshots.save(
+      response.snapshot.logicalHash,
+      response.snapshot,
+    ).catch(() => undefined);
+  }
+}
+
+function metadataMatchesCurrent(candidate: LocalArtifact): boolean {
+  const metadata = client.contractMetadata();
+  return candidate.apiVersion === metadata.apiVersion &&
+    candidate.schemaVersion === metadata.schemaVersion &&
+    candidate.engineVersion === metadata.engineVersion &&
+    candidate.catalogVersion === metadata.catalogVersion &&
+    candidate.catalogHash === metadata.catalogHash;
+}
+
+async function hydrateImportedRequest(request: Record<string, unknown>): Promise<void> {
+  const templateId = typeof request.templateId === 'string' ? request.templateId : '';
+  const variantId = typeof request.variantId === 'string' ? request.variantId : '';
+  const scheduleId = typeof request.scheduleId === 'string' ? request.scheduleId : undefined;
+  const importedValues = requestValues(request);
+  try {
+    await loadSchema(templateId, variantId, importedValues, scheduleId);
+  } catch {
+    await loadSchema(templateId, variantId, importedValues);
+  }
+  if (generationTimer) clearTimeout(generationTimer);
+  const cycleId = typeof request.cycleId === 'string' ? request.cycleId : undefined;
+  generateRequest(buildCycleRequest(schema, values, cycleId ? { cycleId } : {}));
+}
+
+function requestValues(request: Record<string, unknown>): Record<string, JsonValue> {
+  const result: Record<string, JsonValue> = {};
+  for (const key of ['templateId', 'variantId', 'scheduleId', 'sessionOrder', 'unit', 'programTitle', 'showPlating']) {
+    if (request[key] !== undefined) result[key] = request[key];
+  }
+  if (typeof request.startDate === 'string') result.startDate = request.startDate.slice(0, 10);
+  if (typeof request.globalTrainingMaxRatioBasisPoints === 'number') {
+    result.globalTrainingMaxRatioBasisPoints = request.globalTrainingMaxRatioBasisPoints;
+  }
+  const maxInputs = record(request.maxInputs);
+  for (const [movement, rawInput] of Object.entries(maxInputs)) {
+    const input = record(rawInput);
+    if (typeof input.type === 'string') result.maxMode = input.type;
+    const inputWeight = record(input.weight);
+    if (typeof inputWeight.centiUnits === 'number') {
+      result[`maxInputs.${movement}.weight`] = inputWeight.centiUnits / 100;
+    }
+    if (typeof input.repetitions === 'number') {
+      result[`maxInputs.${movement}.repetitions`] = input.repetitions;
+    }
+  }
+  const optionValues = record(request.options);
+  for (const [id, value] of Object.entries(optionValues)) result[`options.${id}`] = value;
+  for (const [id, value] of Object.entries(record(request.percentageParameters))) {
+    result[`options.${id}`] = value;
+  }
+  const barProfile = record(request.barProfile);
+  const barWeight = record(barProfile.weight);
+  if (typeof barWeight.centiUnits === 'number') result.barWeight = barWeight.centiUnits / 100;
+  const plateCounts = new Map<number, number>();
+  if (Array.isArray(barProfile.platesPerSide)) {
+    for (const rawPlate of barProfile.platesPerSide) {
+      const plate = record(rawPlate);
+      if (typeof plate.centiUnits !== 'number') continue;
+      const denomination = plate.centiUnits / 100;
+      plateCounts.set(denomination, (plateCounts.get(denomination) ?? 0) + 1);
+    }
+  }
+  for (const [denomination, count] of plateCounts) result[`plates.${denomination}`] = count;
+  return result;
+}
+
+function record(value: unknown): Record<string, JsonValue> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, JsonValue>
+    : {};
 }
 
 function installLocaleControls(): void {
