@@ -7,6 +7,66 @@ import 'package:hybrid_training/features/cycle_web/presentation/cycle_web_page.d
 import 'package:hybrid_training/features/training_catalog/domain/catalog_index.dart';
 
 void main() {
+  testWidgets('shows the Cycle Macrocycle switch and every generator block', (
+    tester,
+  ) async {
+    final application = _FakeCycleWebApplication();
+    await tester.pumpWidget(
+      MaterialApp(home: CycleWebPage(application: application)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('hybrid-generator-page-toggle')),
+      findsOneWidget,
+    );
+    expect(find.text('Cycle'), findsOneWidget);
+    expect(find.text('Macrocycle'), findsOneWidget);
+    expect(find.text('WEIGHT'), findsOneWidget);
+    expect(find.text('TEMPLATE'), findsOneWidget);
+    expect(find.text('ADDITIONAL OPTIONS'), findsOneWidget);
+    expect(find.text('PLATING & BARBELL'), findsOneWidget);
+    expect(find.text('SCHEDULING'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('cycle-web-max-weight-squat')),
+      '100',
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('cycle-web-generate')));
+    await tester.tap(find.byKey(const Key('cycle-web-generate')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('PROGRAM'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'keeps the complete generator layout overflow-free responsively',
+    (tester) async {
+      final application = _FakeCycleWebApplication();
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      for (final size in const [Size(1440, 1000), Size(390, 844)]) {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1;
+        await tester.pumpWidget(
+          MaterialApp(home: CycleWebPage(application: application)),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('WEIGHT'), findsOneWidget);
+        expect(find.text('TEMPLATE'), findsOneWidget);
+        expect(find.text('ADDITIONAL OPTIONS'), findsOneWidget);
+        expect(find.text('PLATING & BARBELL'), findsOneWidget);
+        expect(find.text('SCHEDULING'), findsOneWidget);
+        expect(find.byType(SingleChildScrollView), findsWidgets);
+        expect(tester.takeException(), isNull, reason: 'viewport: $size');
+      }
+    },
+  );
+
   testWidgets('renders catalogue templates and generic conditional options', (
     tester,
   ) async {

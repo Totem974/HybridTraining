@@ -370,6 +370,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
           DropdownButtonFormField<String>(
             key: const Key('cycle-web-template'),
             initialValue: _state!.templateId,
+            isExpanded: true,
             decoration: InputDecoration(
               labelText: _isFrench ? 'Modèle' : 'Template',
             ),
@@ -390,6 +391,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
           DropdownButtonFormField<String>(
             key: const Key('cycle-web-variant'),
             initialValue: _state!.variantId,
+            isExpanded: true,
             decoration: InputDecoration(
               labelText: _isFrench ? 'Variante' : 'Variant',
             ),
@@ -408,22 +410,59 @@ class _CycleWebPageState extends State<CycleWebPage> {
     );
   }
 
-  Widget _optionsCard() => _sectionCard(
-    title: _isFrench ? 'OPTIONS SUPPLÉMENTAIRES' : 'ADDITIONAL OPTIONS',
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final option in _schema!.options)
-          if (CycleOptionConditionEvaluator.evaluate(
+  Widget _optionsCard() {
+    final visible = _schema!.options
+        .where(
+          (option) => CycleOptionConditionEvaluator.evaluate(
             option.visibleWhen,
             _state!.values,
-          )) ...[
-            _optionField(option),
-            const SizedBox(height: 12),
-          ],
-      ],
-    ),
-  );
+          ),
+        )
+        .toList();
+    return _sectionCard(
+      title: _isFrench ? 'OPTIONS SUPPLÉMENTAIRES' : 'ADDITIONAL OPTIONS',
+      child: visible.isEmpty
+          ? Text(
+              _isFrench
+                  ? 'Aucune option supplémentaire pour cette variante.'
+                  : 'No additional options for this variant.',
+            )
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final columns = constraints.maxWidth >= 720
+                    ? 3
+                    : constraints.maxWidth >= 460
+                    ? 2
+                    : 1;
+                final width =
+                    (constraints.maxWidth - (columns - 1) * 18) / columns;
+                return Wrap(
+                  spacing: 18,
+                  runSpacing: 18,
+                  children: [
+                    for (final option in visible)
+                      SizedBox(
+                        width: width,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            border: Border(
+                              top: BorderSide(
+                                color: Theme.of(context).dividerColor,
+                              ),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: _optionField(option),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+    );
+  }
 
   Widget _outputCard() => _sectionCard(
     title: 'OUTPUT',
@@ -504,37 +543,110 @@ class _CycleWebPageState extends State<CycleWebPage> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DropdownButtonFormField<WeightUnit>(
-          key: const Key('cycle-web-unit'),
-          initialValue: _state!.unit,
-          decoration: InputDecoration(labelText: _isFrench ? 'Unité' : 'Unit'),
-          items: WeightUnit.values
-              .map(
-                (unit) => DropdownMenuItem(value: unit, child: Text(unit.name)),
-              )
-              .toList(),
-          onChanged: (unit) {
-            if (unit != null) _setState(_state!.copyWith(unit: unit));
-          },
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: SegmentedButton<CycleMaxInputKind>(
+            key: const Key('cycle-web-max-mode'),
+            showSelectedIcon: false,
+            segments: const [
+              ButtonSegment(
+                value: CycleMaxInputKind.oneRepMax,
+                label: Text('1 RM'),
+              ),
+              ButtonSegment(
+                value: CycleMaxInputKind.directTrainingMax,
+                label: Text('TM'),
+              ),
+              ButtonSegment(
+                value: CycleMaxInputKind.repMax,
+                label: Text('Rep max'),
+              ),
+            ],
+            selected: {_commonMaxKind},
+            onSelectionChanged: (selection) =>
+                _setAllMaxKinds(selection.single),
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         for (final movementId in _movementIds) ...[
           _movementMaxFields(movementId),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
         ],
-        _numberField(
-          key: 'cycle-web-global-ratio',
-          label: _isFrench ? 'Ratio TM global (%)' : 'Global TM ratio (%)',
-          value: _state!.globalTrainingMaxRatioBasisPoints / 100,
-          onValue: (value) => _setState(
-            _state!.copyWith(
-              globalTrainingMaxRatioBasisPoints: (value * 100).round(),
+        const Divider(height: 24),
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          spacing: 12,
+          runSpacing: 10,
+          children: [
+            SizedBox(
+              width: 205,
+              child: _numberField(
+                key: 'cycle-web-global-ratio',
+                label: _isFrench
+                    ? 'Ratio TM global (%)'
+                    : 'Global TM ratio (%)',
+                value: _state!.globalTrainingMaxRatioBasisPoints / 100,
+                onValue: (value) => _setState(
+                  _state!.copyWith(
+                    globalTrainingMaxRatioBasisPoints: (value * 100).round(),
+                  ),
+                ),
+              ),
             ),
-          ),
+            SizedBox(
+              width: 135,
+              child: DropdownButtonFormField<WeightUnit>(
+                key: const Key('cycle-web-unit'),
+                initialValue: _state!.unit,
+                isExpanded: true,
+                decoration: InputDecoration(
+                  labelText: _isFrench ? 'Unité' : 'Unit',
+                ),
+                items: WeightUnit.values
+                    .map(
+                      (unit) =>
+                          DropdownMenuItem(value: unit, child: Text(unit.name)),
+                    )
+                    .toList(),
+                onChanged: (unit) {
+                  if (unit != null) _setState(_state!.copyWith(unit: unit));
+                },
+              ),
+            ),
+          ],
         ),
       ],
     ),
   );
+
+  CycleMaxInputKind get _commonMaxKind {
+    for (final movementId in _movementIds) {
+      final kind = _state!.maxInputs[movementId]?.kind;
+      if (kind != null) return kind;
+    }
+    return CycleMaxInputKind.oneRepMax;
+  }
+
+  void _setAllMaxKinds(CycleMaxInputKind kind) {
+    final inputs = <String, CycleMovementMaxInput>{};
+    for (final movementId in _movementIds) {
+      final current =
+          _state!.maxInputs[movementId] ??
+          const CycleMovementMaxInput(
+            kind: CycleMaxInputKind.oneRepMax,
+            weightCentiUnits: 0,
+          );
+      inputs[movementId] = CycleMovementMaxInput(
+        kind: kind,
+        weightCentiUnits: current.weightCentiUnits,
+        repetitions: kind == CycleMaxInputKind.repMax
+            ? (current.repetitions ?? 1)
+            : null,
+      );
+    }
+    _setState(_state!.copyWith(maxInputs: inputs));
+  }
 
   Widget _movementMaxFields(String id) {
     final input =
@@ -543,86 +655,108 @@ class _CycleWebPageState extends State<CycleWebPage> {
           kind: CycleMaxInputKind.oneRepMax,
           weightCentiUnits: 0,
         );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(_humanize(id), style: Theme.of(context).textTheme.titleSmall),
-        DropdownButtonFormField<CycleMaxInputKind>(
-          key: ValueKey('cycle-web-max-kind-$id'),
-          initialValue: input.kind,
-          items: CycleMaxInputKind.values
-              .map(
-                (kind) => DropdownMenuItem(
-                  value: kind,
-                  child: Text(_humanize(kind.name)),
-                ),
-              )
-              .toList(),
-          onChanged: (kind) {
-            if (kind != null) {
-              _setMovementInput(
-                id,
-                CycleMovementMaxInput(
-                  kind: kind,
-                  weightCentiUnits: input.weightCentiUnits,
-                  repetitions: kind == CycleMaxInputKind.repMax
-                      ? (input.repetitions ?? 1)
-                      : null,
-                ),
-              );
-            }
-          },
-        ),
-        const SizedBox(height: 8),
-        _numberField(
-          key: 'cycle-web-max-weight-$id',
-          label: _isFrench ? 'Charge' : 'Weight',
-          value: input.weightCentiUnits / 100,
-          onValue: (value) => _setMovementInput(
-            id,
-            CycleMovementMaxInput(
-              kind: input.kind,
-              weightCentiUnits: (value * 100).round(),
-              repetitions: input.repetitions,
-            ),
-          ),
-        ),
-        if (input.kind == CycleMaxInputKind.repMax) ...[
-          const SizedBox(height: 8),
-          _numberField(
-            key: 'cycle-web-max-reps-$id',
-            label: _isFrench ? 'Répétitions' : 'Repetitions',
-            value: (input.repetitions ?? 1).toDouble(),
-            onValue: (value) => _setMovementInput(
-              id,
-              CycleMovementMaxInput(
-                kind: input.kind,
-                weightCentiUnits: input.weightCentiUnits,
-                repetitions: value.round(),
-              ),
-            ),
-          ),
-        ],
-        const SizedBox(height: 8),
-        _numberField(
-          key: 'cycle-web-ratio-$id',
-          label: _isFrench
-              ? 'Ratio TM spécifique (%)'
-              : 'Movement TM ratio (%)',
-          value:
-              (_state!.trainingMaxRatioByMovementBasisPoints[id] ??
-                  _state!.globalTrainingMaxRatioBasisPoints) /
-              100,
-          onValue: (value) => _setState(
-            _state!.copyWith(
-              trainingMaxRatioByMovementBasisPoints: {
-                ..._state!.trainingMaxRatioByMovementBasisPoints,
-                id: (value * 100).round(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final fields = <Widget>[
+          SizedBox(
+            width: 120,
+            child: DropdownButtonFormField<CycleMaxInputKind>(
+              key: ValueKey('cycle-web-max-kind-$id'),
+              initialValue: input.kind,
+              isExpanded: true,
+              decoration: const InputDecoration(isDense: true),
+              items: CycleMaxInputKind.values
+                  .map(
+                    (kind) => DropdownMenuItem(
+                      value: kind,
+                      child: Text(
+                        kind == CycleMaxInputKind.oneRepMax
+                            ? '1 RM'
+                            : kind == CycleMaxInputKind.directTrainingMax
+                            ? 'TM'
+                            : 'Rep max',
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (kind) {
+                if (kind != null) {
+                  _setMovementInput(
+                    id,
+                    CycleMovementMaxInput(
+                      kind: kind,
+                      weightCentiUnits: input.weightCentiUnits,
+                      repetitions: kind == CycleMaxInputKind.repMax
+                          ? (input.repetitions ?? 1)
+                          : null,
+                    ),
+                  );
+                }
               },
             ),
           ),
-        ),
-      ],
+          if (input.kind == CycleMaxInputKind.repMax)
+            SizedBox(
+              width: 78,
+              child: _numberField(
+                key: 'cycle-web-max-reps-$id',
+                label: _isFrench ? 'Rép.' : 'Reps',
+                value: (input.repetitions ?? 1).toDouble(),
+                onValue: (value) => _setMovementInput(
+                  id,
+                  CycleMovementMaxInput(
+                    kind: input.kind,
+                    weightCentiUnits: input.weightCentiUnits,
+                    repetitions: value.round(),
+                  ),
+                ),
+              ),
+            ),
+          SizedBox(
+            width: 92,
+            child: _numberField(
+              key: 'cycle-web-max-weight-$id',
+              label: _state!.unit.name,
+              value: input.weightCentiUnits / 100,
+              onValue: (value) => _setMovementInput(
+                id,
+                CycleMovementMaxInput(
+                  kind: input.kind,
+                  weightCentiUnits: (value * 100).round(),
+                  repetitions: input.repetitions,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 82,
+            child: _numberField(
+              key: 'cycle-web-ratio-$id',
+              label: 'TM %',
+              value:
+                  (_state!.trainingMaxRatioByMovementBasisPoints[id] ??
+                      _state!.globalTrainingMaxRatioBasisPoints) /
+                  100,
+              onValue: (value) => _setState(
+                _state!.copyWith(
+                  trainingMaxRatioByMovementBasisPoints: {
+                    ..._state!.trainingMaxRatioByMovementBasisPoints,
+                    id: (value * 100).round(),
+                  },
+                ),
+              ),
+            ),
+          ),
+        ];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(_humanize(id), style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 6),
+            Wrap(spacing: 8, runSpacing: 8, children: fields),
+          ],
+        );
+      },
     );
   }
 
@@ -767,9 +901,14 @@ class _CycleWebPageState extends State<CycleWebPage> {
             _numberField(
               key: 'cycle-option-${option.id}-$movementId',
               label: _humanize(movementId),
-              value: (values[movementId] as num?)?.toDouble() ?? 0,
-              onValue: (next) =>
-                  _setOption(option.id, {...values, movementId: next}),
+              value: _optionNumberForDisplay(
+                option,
+                (values[movementId] as num?)?.toDouble() ?? 0,
+              ),
+              onValue: (next) => _setOption(option.id, {
+                ...values,
+                movementId: _optionNumberFromDisplay(option, next),
+              }),
             ),
         ],
       );
@@ -791,6 +930,7 @@ class _CycleWebPageState extends State<CycleWebPage> {
       return DropdownButtonFormField<Object>(
         key: ValueKey('cycle-option-${option.id}'),
         initialValue: value,
+        isExpanded: true,
         decoration: InputDecoration(labelText: label),
         items: [
           for (final allowed in option.allowedValues)
@@ -808,7 +948,9 @@ class _CycleWebPageState extends State<CycleWebPage> {
     }
     return TextFormField(
       key: ValueKey('cycle-option-${option.id}'),
-      initialValue: '$value',
+      initialValue: value is num
+          ? '${_optionNumberForDisplay(option, value.toDouble())}'
+          : '$value',
       enabled: enabled,
       keyboardType: const TextInputType.numberWithOptions(
         decimal: true,
@@ -823,14 +965,41 @@ class _CycleWebPageState extends State<CycleWebPage> {
         final parsed = option.type == CycleOptionType.integer
             ? int.tryParse(text)
             : double.tryParse(text);
-        if (parsed != null) _setOption(option.id, parsed);
+        if (parsed != null) {
+          _setOption(
+            option.id,
+            _optionNumberFromDisplay(option, parsed.toDouble()),
+          );
+        }
       },
     );
   }
 
+  double _optionNumberForDisplay(CycleOptionDefinition option, double value) =>
+      option.type == CycleOptionType.percentage ? value / 100 : value;
+
+  num _optionNumberFromDisplay(CycleOptionDefinition option, double value) =>
+      option.type == CycleOptionType.percentage
+      ? (value * 100).round()
+      : option.type == CycleOptionType.integer
+      ? value.round()
+      : value;
+
   String? _bounds(CycleOptionDefinition option) {
     if (option.minimum == null && option.maximum == null) return null;
-    return '${option.minimum ?? '−∞'} – ${option.maximum ?? '∞'}';
+    final minimum = option.minimum == null
+        ? '−∞'
+        : _optionNumberForDisplay(
+            option,
+            option.minimum!.toDouble(),
+          ).toString();
+    final maximum = option.maximum == null
+        ? '∞'
+        : _optionNumberForDisplay(
+            option,
+            option.maximum!.toDouble(),
+          ).toString();
+    return '$minimum – $maximum';
   }
 
   String _templateLabel(CycleTemplateSummary template) =>
@@ -878,42 +1047,53 @@ class _CyclePreview extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
     container: true,
     label: isFrench ? 'Aperçu du cycle généré' : 'Generated cycle preview',
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          isFrench ? 'Aperçu sauvegardé' : 'Saved preview',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 8),
-        for (final week in view.cycle.weeks)
-          ExpansionTile(
-            key: ValueKey('cycle-preview-week-${week.number}'),
-            title: Text('${isFrench ? 'Semaine' : 'Week'} ${week.number}'),
-            children: [
-              for (final session in week.sessions)
-                ExpansionTile(
-                  key: ValueKey('cycle-preview-session-${session.id}'),
-                  title: Text(session.movementId.value.replaceAll('_', ' ')),
-                  subtitle: Text(
-                    '${session.date.toIso8601String().substring(0, 10)} · ${session.blocks.length} ${isFrench ? 'blocs' : 'blocks'}',
-                  ),
-                  children: [
-                    for (final block in session.blocks)
-                      ListTile(
-                        key: ValueKey('cycle-preview-block-${block.id}'),
-                        title: Text(
-                          '${block.role} · ${block.movementId.value.replaceAll('_', ' ')}',
-                        ),
-                        subtitle: Text(
-                          block.sets.map(_setDescription).join('\n'),
-                        ),
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 760
+            ? 4
+            : constraints.maxWidth >= 520
+            ? 2
+            : 1;
+        final gap = 12.0;
+        final sessionWidth =
+            (constraints.maxWidth - (columns - 1) * gap) / columns;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              isFrench ? 'Aperçu sauvegardé' : 'Saved preview',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            for (final week in view.cycle.weeks) ...[
+              Text(
+                '${isFrench ? 'SEMAINE' : 'WEEK'} ${week.number}',
+                key: ValueKey('cycle-preview-week-${week.number}'),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final session in week.sessions)
+                    SizedBox(
+                      width: sessionWidth,
+                      child: _CycleSessionPreview(
+                        session: session,
+                        setDescription: _setDescription,
+                        isFrench: isFrench,
                       ),
-                  ],
-                ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 24),
             ],
-          ),
-      ],
+          ],
+        );
+      },
     ),
   );
 
@@ -931,6 +1111,71 @@ class _CyclePreview extends StatelessWidget {
         '${set.repetitions} · $loadText · '
         '${isFrench ? 'plaques/côté' : 'plates/side'} $plates';
   }
+}
+
+class _CycleSessionPreview extends StatelessWidget {
+  const _CycleSessionPreview({
+    required this.session,
+    required this.setDescription,
+    required this.isFrench,
+  });
+
+  final GeneratedSession session;
+  final String Function(GeneratedSet) setDescription;
+  final bool isFrench;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    key: ValueKey('cycle-preview-session-${session.id}'),
+    padding: const EdgeInsets.all(10),
+    decoration: BoxDecoration(
+      color: HybridGeneratorTokens.surfaceMuted.withValues(alpha: 0.42),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          session.movementId.value.replaceAll('_', ' ').toUpperCase(),
+          textAlign: TextAlign.center,
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        Text(
+          session.date.toIso8601String().substring(0, 10),
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 8),
+        for (final block in session.blocks) ...[
+          Text(
+            '${block.role} · ${block.movementId.value.replaceAll('_', ' ')}',
+            key: ValueKey('cycle-preview-block-${block.id}'),
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 5),
+          for (final set in block.sets)
+            Container(
+              margin: const EdgeInsets.only(bottom: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+              decoration: BoxDecoration(
+                color: HybridGeneratorTokens.background.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                setDescription(set),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          const SizedBox(height: 7),
+        ],
+      ],
+    ),
+  );
 }
 
 class _ErrorPanel extends StatelessWidget {

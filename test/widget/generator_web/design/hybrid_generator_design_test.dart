@@ -46,7 +46,7 @@ void main() {
     HybridGeneratorPage? destination;
     await tester.pumpWidget(_app(onNavigate: (value) => destination = value));
 
-    await tester.tap(find.text('Forever'));
+    await tester.tap(find.text('Macrocycle'));
     await tester.pump();
 
     expect(destination, HybridGeneratorPage.forever);

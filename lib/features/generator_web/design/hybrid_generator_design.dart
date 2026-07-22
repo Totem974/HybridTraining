@@ -155,7 +155,7 @@ class HybridGeneratorHeader extends StatelessWidget {
           ButtonSegment(value: HybridGeneratorPage.cycle, label: Text('Cycle')),
           ButtonSegment(
             value: HybridGeneratorPage.forever,
-            label: Text('Forever'),
+            label: Text('Macrocycle'),
           ),
         ],
         selected: {page},
@@ -258,35 +258,37 @@ class HybridGeneratorCard extends StatelessWidget {
         ),
       );
     }
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _CardTitle(title),
-            const SizedBox(height: HybridGeneratorTokens.compactGap),
-            Divider(color: Theme.of(context).dividerColor, height: 1),
-            const SizedBox(height: HybridGeneratorTokens.compactGap),
-            child,
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 10),
+          child: _CardTitle(title, prominent: true),
         ),
-      ),
+        Card(
+          child: Padding(padding: const EdgeInsets.all(18), child: child),
+        ),
+      ],
     );
   }
 }
 
 class _CardTitle extends StatelessWidget {
-  const _CardTitle(this.value);
+  const _CardTitle(this.value, {this.prominent = false});
   final String value;
+  final bool prominent;
 
   @override
   Widget build(BuildContext context) => Text(
     value.toUpperCase(),
-    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-      color: HybridGeneratorTokens.text,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 0.8,
-    ),
+    style:
+        (prominent
+                ? Theme.of(context).textTheme.headlineSmall
+                : Theme.of(context).textTheme.titleMedium)
+            ?.copyWith(
+              color: HybridGeneratorTokens.text,
+              fontWeight: FontWeight.w800,
+              letterSpacing: prominent ? 1.1 : 0.8,
+            ),
   );
 }
