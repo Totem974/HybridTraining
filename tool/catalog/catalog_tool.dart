@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'canonical_json.dart';
+
 import 'package:hybrid_training/features/training_catalog/data/runtime_catalog_builder.dart';
 import 'package:hybrid_training/core/storage/sqlite_database_file.dart';
 import 'package:hybrid_training/features/cycle_generation/domain/cycle_compiler_impl.dart';
@@ -42,10 +44,11 @@ Future<void> main(List<String> arguments) async {
         'coverage',
         'verify',
         'build',
+        'build-web',
         'seed',
       }.contains(arguments.first)) {
     stderr.writeln(
-      'Usage: dart run tool/catalog/catalog_tool.dart <lint|coverage|verify|build|seed> [output]',
+      'Usage: dart run tool/catalog/catalog_tool.dart <lint|coverage|verify|build|build-web|seed> [output]',
     );
     exitCode = 64;
     return;
@@ -108,8 +111,22 @@ Future<void> main(List<String> arguments) async {
       final outputPath = arguments.length > 1
           ? arguments[1]
           : 'build/catalog/catalog.db';
-      stdout.writeln(await buildCatalogDatabase(outputPath));
+      final artifacts = await buildCatalogArtifacts(
+        File(outputPath).parent.path,
+        databaseFileName: File(outputPath).uri.pathSegments.last,
+      );
+      stdout.writeln(artifacts.databasePath);
+      stdout.writeln(artifacts.bundlePath);
+      stdout.writeln(artifacts.manifestPath);
       stdout.writeln(buildCatalogSeed('assets/catalog/catalog_seed.v2.json'));
+    case 'build-web':
+      final outputDirectory = arguments.length > 1
+          ? arguments[1]
+          : 'build/catalog';
+      final artifacts = await buildCatalogArtifacts(outputDirectory);
+      stdout.writeln(artifacts.databasePath);
+      stdout.writeln(artifacts.bundlePath);
+      stdout.writeln(artifacts.manifestPath);
     case 'seed':
       stdout.writeln(
         buildCatalogSeed(
@@ -316,10 +333,23 @@ Future<String> buildCatalogDatabase(
     ),
   );
   try {
+    final aggregate = catalog.buildDocument();
     await const RuntimeCatalogPublisher().publish(
-      aggregate: catalog.buildDocument(),
+      aggregate: aggregate,
       database: database,
     );
+    await database.execute('''
+      CREATE TABLE catalog_logical_manifest (
+        catalog_version INTEGER PRIMARY KEY,
+        schema_version INTEGER NOT NULL,
+        content_hash TEXT NOT NULL
+      )
+    ''');
+    await database.insert('catalog_logical_manifest', {
+      'catalog_version': aggregate['catalogVersion'],
+      'schema_version': aggregate['schemaVersion'],
+      'content_hash': logicalJsonHash(aggregate),
+    });
   } catch (_) {
     await database.close();
     if (output.existsSync()) {
@@ -329,6 +359,99 @@ Future<String> buildCatalogDatabase(
   }
   await database.close();
   return outputPath;
+}
+
+final class CatalogArtifactReport {
+  const CatalogArtifactReport({
+    required this.databasePath,
+    required this.bundlePath,
+    required this.manifestPath,
+    required this.logicalHash,
+  });
+
+  final String databasePath;
+  final String bundlePath;
+  final String manifestPath;
+  final String logicalHash;
+}
+
+Future<CatalogArtifactReport> buildCatalogArtifacts(
+  String outputDirectory, {
+  String sourcePath = 'catalog_src',
+  String databaseFileName = 'catalog.db',
+}) async {
+  final catalog = _Catalog.load(Directory(sourcePath));
+  final errors = catalog.lint();
+  if (errors.isNotEmpty) throw FormatException(errors.join('\n'));
+  final aggregate = catalog.buildDocument();
+  final logicalHash = logicalJsonHash(aggregate);
+  final directory = Directory(outputDirectory).absolute
+    ..createSync(recursive: true);
+  final databasePath =
+      '${directory.path}${Platform.pathSeparator}$databaseFileName';
+  final bundlePath =
+      '${directory.path}${Platform.pathSeparator}catalog.bundle.json';
+  final manifestPath =
+      '${directory.path}${Platform.pathSeparator}catalog.manifest.json';
+
+  await buildCatalogDatabase(databasePath, sourcePath: sourcePath);
+  _writeDeterministicJson(File(bundlePath), aggregate);
+  final databaseHash = await readCatalogDatabaseLogicalHash(databasePath);
+  if (databaseHash != logicalHash) {
+    throw StateError(
+      'Catalog logical hash mismatch: database=$databaseHash bundle=$logicalHash',
+    );
+  }
+  final counts = <String, int>{};
+  for (final document in catalog.documents) {
+    counts.update(
+      document.kind,
+      (count) => count + document.records.length,
+      ifAbsent: () => document.records.length,
+    );
+  }
+  final sortedCounts = Map<String, int>.fromEntries(
+    counts.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
+  );
+  _writeDeterministicJson(File(manifestPath), {
+    'catalogVersion': aggregate['catalogVersion'],
+    'schemaVersion': aggregate['schemaVersion'],
+    'contentHash': logicalHash,
+    'entryCounts': sortedCounts,
+    'buildId': 'catalog-${aggregate['catalogVersion']}-$logicalHash',
+  });
+  return CatalogArtifactReport(
+    databasePath: databasePath,
+    bundlePath: bundlePath,
+    manifestPath: manifestPath,
+    logicalHash: logicalHash,
+  );
+}
+
+Future<String> readCatalogDatabaseLogicalHash(String databasePath) async {
+  sqfliteFfiInit();
+  final database = await databaseFactoryFfi.openDatabase(
+    databasePath,
+    options: OpenDatabaseOptions(readOnly: true),
+  );
+  try {
+    final rows = await database.query(
+      'catalog_logical_manifest',
+      columns: ['content_hash'],
+      limit: 1,
+    );
+    if (rows.length != 1 || rows.single['content_hash'] is! String) {
+      throw const FormatException('catalog.db has no logical hash metadata');
+    }
+    return rows.single['content_hash']! as String;
+  } finally {
+    await database.close();
+  }
+}
+
+void _writeDeterministicJson(File output, Object? value) {
+  output.parent.createSync(recursive: true);
+  output.writeAsStringSync('${canonicalJson(value)}\n');
 }
 
 List<String> lintCatalog({String sourcePath = 'catalog_src'}) =>
