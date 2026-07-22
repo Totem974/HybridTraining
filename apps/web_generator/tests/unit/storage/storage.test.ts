@@ -4,8 +4,14 @@ import { describe, expect, it } from "vitest";
 import {
   IndexedDbWorkspaceStorage,
   PreferencesStore,
+  SavedConfigurationRepository,
+  TrainingSnapshotRepository,
+  WorkspaceDraftRepository,
+  exportConfiguration,
   exportEnvelope,
+  exportProgram,
   importEnvelope,
+  importValidatedArtifact,
   workspaceStores,
   type EnvelopeLike,
   type StorageLike,
@@ -34,6 +40,46 @@ describe("versioned envelope import/export", () => {
 
   it("rejects unversioned data", () => {
     expect(() => importEnvelope('{"payload":{}}')).toThrow(TypeError);
+  });
+});
+
+describe("local artifact import/export", () => {
+  const configuration = { ...envelope, artifactKind: "configuration" as const };
+  const program = { ...envelope, artifactKind: "program" as const };
+
+  it("exports configurations and programs without changing their payload", () => {
+    expect(JSON.parse(exportConfiguration(configuration))).toEqual(configuration);
+    expect(JSON.parse(exportProgram(program))).toEqual(program);
+    expect(() => exportConfiguration(program)).toThrow(TypeError);
+    expect(() => exportProgram(configuration)).toThrow(TypeError);
+  });
+
+  it("requires successful local-engine validation on import", async () => {
+    let calls = 0;
+    const imported = await importValidatedArtifact(
+      JSON.stringify(configuration),
+      "configuration",
+      (candidate) => {
+        calls += 1;
+        expect(candidate.payload).toEqual(envelope.payload);
+        return { valid: true, errors: [] };
+      },
+    );
+
+    expect(calls).toBe(1);
+    expect(imported).toEqual(configuration);
+    expect(imported).not.toBe(configuration);
+    await expect(
+      importValidatedArtifact(JSON.stringify(program), "configuration", () => ({
+        valid: true,
+      })),
+    ).rejects.toThrow(TypeError);
+    await expect(
+      importValidatedArtifact(JSON.stringify(configuration), "configuration", () => ({
+        valid: false,
+        errors: [{ code: "INVALID" }],
+      })),
+    ).rejects.toThrow("rejected by the local engine");
   });
 });
 
@@ -79,6 +125,46 @@ describe("IndexedDbWorkspaceStorage", () => {
     expect(loaded?.envelope).toEqual(envelope);
     expect(loaded?.envelope).not.toBe(envelope);
     expect(envelope).toEqual(original);
+    storage.close();
+  });
+
+  it("rejects malformed records before writing", async () => {
+    const storage = new IndexedDbWorkspaceStorage(new IDBFactory());
+    await expect(
+      storage.put("workspace_drafts", {
+        id: "bad",
+        updatedAt: "not-a-date",
+        envelope,
+      }),
+    ).rejects.toThrow(TypeError);
+    await expect(
+      storage.put("workspace_drafts", {
+        id: "bad-envelope",
+        updatedAt: "2026-07-22T00:00:00.000Z",
+        envelope: { payload: {} } as EnvelopeLike,
+      }),
+    ).rejects.toThrow(TypeError);
+    storage.close();
+  });
+
+  it("provides one typed repository per required store", async () => {
+    const storage = new IndexedDbWorkspaceStorage(new IDBFactory());
+    const repositories = [
+      new WorkspaceDraftRepository(storage),
+      new SavedConfigurationRepository(storage),
+      new TrainingSnapshotRepository(storage),
+    ];
+
+    for (const [index, repository] of repositories.entries()) {
+      await repository.save(
+        `repository-${index}`,
+        envelope,
+        new Date(`2026-07-2${index}T00:00:00.000Z`),
+      );
+      expect((await repository.load(`repository-${index}`))?.envelope).toEqual(
+        envelope,
+      );
+    }
     storage.close();
   });
 });

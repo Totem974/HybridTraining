@@ -34,6 +34,12 @@ export function importEnvelope<T = unknown>(json: string): EnvelopeLike<T> {
   return clone(value as EnvelopeLike<T>);
 }
 
+export function assertVersionedEnvelope(
+  value: unknown,
+): asserts value is EnvelopeLike {
+  assertEnvelope(value);
+}
+
 export function clone<T>(value: T): T {
   return structuredClone(value);
 }

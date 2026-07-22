@@ -1,4 +1,8 @@
-import { clone, type EnvelopeLike } from "./envelope";
+import {
+  assertVersionedEnvelope,
+  clone,
+  type EnvelopeLike,
+} from "./envelope";
 
 export const databaseName = "hybrid-training-web";
 export const databaseVersion = 1;
@@ -17,12 +21,14 @@ export interface StoredEnvelope<T = unknown> {
 }
 
 export class IndexedDbWorkspaceStorage {
-  private databasePromise?: Promise<IDBDatabase>;
+  private databasePromise: Promise<IDBDatabase> | undefined;
 
   constructor(private readonly factory: IDBFactory = indexedDB) {}
 
   async put<T>(store: WorkspaceStoreName, item: StoredEnvelope<T>): Promise<void> {
     requireId(item.id);
+    requireIsoDate(item.updatedAt);
+    assertVersionedEnvelope(item.envelope);
     const db = await this.open();
     await request(db.transaction(store, "readwrite").objectStore(store).put(clone(item)));
   }
@@ -87,4 +93,11 @@ function request<T>(operation: IDBRequest<T>): Promise<T> {
 
 function requireId(id: string): void {
   if (id.trim() === "") throw new TypeError("A storage id is required");
+}
+
+function requireIsoDate(value: string): void {
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.valueOf()) || parsed.toISOString() !== value) {
+    throw new TypeError("updatedAt must be an ISO-8601 UTC timestamp");
+  }
 }
