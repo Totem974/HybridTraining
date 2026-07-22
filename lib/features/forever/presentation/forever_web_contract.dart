@@ -1,5 +1,42 @@
 import 'package:flutter/foundation.dart';
 
+import '../../cycle_web/application/cycle_web_contract.dart';
+
+enum ForeverWebArchitectureMode { preset, userDefined }
+
+@immutable
+final class ForeverDraftNode {
+  const ForeverDraftNode({
+    required this.id,
+    required this.role,
+    required this.cycleKey,
+    this.optionSummary = const [],
+    this.configuration,
+  });
+
+  final String id;
+  final String role;
+  final String cycleKey;
+  final List<String> optionSummary;
+  final CycleEditorState? configuration;
+
+  ForeverDraftNode copyWith({
+    String? id,
+    String? role,
+    String? cycleKey,
+    CycleEditorState? configuration,
+    bool clearConfiguration = false,
+  }) => ForeverDraftNode(
+    id: id ?? this.id,
+    role: role ?? this.role,
+    cycleKey: cycleKey ?? this.cycleKey,
+    optionSummary: optionSummary,
+    configuration: clearConfiguration
+        ? null
+        : configuration ?? this.configuration,
+  );
+}
+
 @immutable
 final class ForeverDefinitionItem {
   const ForeverDefinitionItem({
@@ -60,6 +97,10 @@ final class ForeverEditorDraft {
     required this.startDate,
     required this.trainingMaxCentiUnits,
     required this.selectedCyclesBySlot,
+    this.architectureMode = ForeverWebArchitectureMode.preset,
+    this.nodes = const [],
+    this.equipment = const {},
+    this.globalOptions = const {},
   });
 
   final String definitionId;
@@ -67,6 +108,10 @@ final class ForeverEditorDraft {
   final DateTime startDate;
   final Map<String, int> trainingMaxCentiUnits;
   final Map<String, String> selectedCyclesBySlot;
+  final ForeverWebArchitectureMode architectureMode;
+  final List<ForeverDraftNode> nodes;
+  final Map<String, Object?> equipment;
+  final Map<String, Object?> globalOptions;
 
   ForeverEditorDraft copyWith({
     String? definitionId,
@@ -74,12 +119,20 @@ final class ForeverEditorDraft {
     DateTime? startDate,
     Map<String, int>? trainingMaxCentiUnits,
     Map<String, String>? selectedCyclesBySlot,
+    ForeverWebArchitectureMode? architectureMode,
+    List<ForeverDraftNode>? nodes,
+    Map<String, Object?>? equipment,
+    Map<String, Object?>? globalOptions,
   }) => ForeverEditorDraft(
     definitionId: definitionId ?? this.definitionId,
     definitionRevision: definitionRevision ?? this.definitionRevision,
     startDate: startDate ?? this.startDate,
     trainingMaxCentiUnits: trainingMaxCentiUnits ?? this.trainingMaxCentiUnits,
     selectedCyclesBySlot: selectedCyclesBySlot ?? this.selectedCyclesBySlot,
+    architectureMode: architectureMode ?? this.architectureMode,
+    nodes: nodes ?? this.nodes,
+    equipment: equipment ?? this.equipment,
+    globalOptions: globalOptions ?? this.globalOptions,
   );
 }
 
@@ -136,4 +189,11 @@ abstract interface class ForeverWebApplication {
     ForeverEditorDraft draft,
   );
   Future<GeneratedMacrocycleView?> loadSavedMacrocycle();
+}
+
+/// Optional Web capability. Implementations expose the project's supported
+/// export format without making the presentation serialize domain snapshots.
+abstract interface class ForeverWebExportApplication {
+  Future<String> exportDraft(ForeverEditorDraft draft);
+  Future<String> exportMacrocycle(String macrocycleId);
 }

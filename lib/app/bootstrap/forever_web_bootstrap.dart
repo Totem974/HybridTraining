@@ -72,6 +72,7 @@ Future<ForeverWebApplication> createForeverWebApplication() async {
   return ForeverWebApplicationImpl(
     catalogVersion: 2,
     definitionRepository: SqliteForeverDefinitionRepository(catalogDatabase),
+    catalogQuery: catalog,
     cycleResolver: cycleResolver,
     composer: ForeverComposerImpl(
       cycleDefinitionResolver: cycleResolver,

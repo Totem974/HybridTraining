@@ -87,21 +87,24 @@ class _HybridTrainingAppState extends State<HybridTrainingApp> {
           ),
           useMaterial3: true,
         ),
-        onGenerateRoute: (settings) =>
-            (applications == null
-                ? null
-                : (applications.forever == null
-                          ? null
-                          : ForeverWebRoute.build(
-                              settings: settings,
-                              application: applications.forever!,
-                            )) ??
-                      CycleWebRoute.build(
+        onGenerateRoute: (settings) {
+          if (widget.pocOnlyMode) {
+            if (applications == null) return null;
+            return (applications.forever == null
+                    ? null
+                    : ForeverWebRoute.build(
                         settings: settings,
-                        application: applications.cycle,
-                        foreverRoute: ForeverWebRoute.path,
+                        application: applications.forever!,
+                        cycleApplication: applications.cycle,
                       )) ??
-            buildPoc531Route(settings),
+                CycleWebRoute.build(
+                  settings: settings,
+                  application: applications.cycle,
+                  foreverRoute: ForeverWebRoute.path,
+                );
+          }
+          return buildPoc531Route(settings);
+        },
         home: widget.pocOnlyMode
             ? applications == null
                   ? Scaffold(

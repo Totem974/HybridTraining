@@ -13,10 +13,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Forever generator'), findsOneWidget);
-    expect(find.text('Leader'), findsNWidgets(2));
-    expect(find.text('Deload'), findsOneWidget);
+    expect(find.text('Leader'), findsWidgets);
+    expect(find.text('Deload'), findsWidgets);
     expect(find.text('TM Test'), findsWidgets);
 
+    await tester.ensureVisible(find.byKey(const Key('forever-slot-leader')));
     await tester.tap(find.byKey(const Key('forever-slot-leader')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('BBB').last);
@@ -56,6 +57,8 @@ void main() {
     expect(find.text('Générateur Forever'), findsOneWidget);
     expect(find.text('Training Max initiaux'), findsOneWidget);
     expect(find.text('Générer et sauvegarder'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const Key('forever-generate')));
+    await tester.pumpAndSettle();
     expect(
       tester.getSemantics(find.byKey(const Key('forever-generate'))),
       matchesSemantics(

@@ -1,8 +1,13 @@
 import '../../cycle_generation/domain/cycle_contract.dart';
+import '../../cycle_generation/domain/cycle_option_schema.dart';
+import '../../cycle_web/application/cycle_web_contract.dart';
 import '../../training_catalog/application/catalog_repository.dart';
+import '../data/forever_draft_payload.dart';
+import '../data/forever_json_export.dart';
 import '../data/sqlite_forever_draft_repository.dart';
 import '../data/sqlite_forever_macrocycle_repository.dart';
 import '../domain/forever_contract.dart';
+import '../domain/forever_architecture.dart' as architecture;
 import '../presentation/forever_web_contract.dart';
 
 final class CatalogForeverCycleResolver
@@ -21,10 +26,12 @@ final class CatalogForeverCycleResolver
       );
 }
 
-final class ForeverWebApplicationImpl implements ForeverWebApplication {
+final class ForeverWebApplicationImpl
+    implements ForeverWebApplication, ForeverWebExportApplication {
   ForeverWebApplicationImpl({
     required this.catalogVersion,
     required this.definitionRepository,
+    required this.catalogQuery,
     required this.cycleResolver,
     required this.composer,
     required this.draftRepository,
@@ -34,6 +41,7 @@ final class ForeverWebApplicationImpl implements ForeverWebApplication {
 
   final int catalogVersion;
   final ForeverDefinitionRepository definitionRepository;
+  final CycleCatalogQuery catalogQuery;
   final ForeverCycleDefinitionResolver cycleResolver;
   final ForeverComposer composer;
   final SqliteForeverDraftRepository draftRepository;
@@ -52,17 +60,39 @@ final class ForeverWebApplicationImpl implements ForeverWebApplication {
   Future<ForeverEditorDraft?> loadDraft() async {
     final stored = await draftRepository.load('forever-web-draft');
     if (stored == null) return null;
-    final payload = stored.payload;
+    final payload = ForeverDraftPayload.decode(
+      payloadVersion: stored.payloadVersion,
+      definitionId: stored.definitionId,
+      payload: stored.payload,
+    );
     return ForeverEditorDraft(
       definitionId: stored.definitionId,
       definitionRevision: stored.definitionRevision,
-      startDate: DateTime.parse(payload['startDate']! as String),
-      trainingMaxCentiUnits: (payload['trainingMaxes']! as Map).map(
-        (key, value) => MapEntry(key as String, value as int),
-      ),
-      selectedCyclesBySlot: (payload['selectedCycles']! as Map).map(
-        (key, value) => MapEntry(key as String, value as String),
-      ),
+      startDate: payload.startDate,
+      trainingMaxCentiUnits: payload.trainingMaxCentiUnits,
+      selectedCyclesBySlot: {
+        for (final node in payload.architecture)
+          node.id: '${node.templateId}/${node.variantId}',
+      },
+      architectureMode: payload.mode == ForeverDraftMode.preset
+          ? ForeverWebArchitectureMode.preset
+          : ForeverWebArchitectureMode.userDefined,
+      nodes: stored.payloadVersion == 1
+          ? const []
+          : payload.architecture
+                .map(
+                  (node) => ForeverDraftNode(
+                    id: node.id,
+                    role: node.role,
+                    cycleKey: '${node.templateId}/${node.variantId}',
+                    configuration: node.configuration.isEmpty
+                        ? null
+                        : _cycleStateFromJson(node.configuration),
+                  ),
+                )
+                .toList(growable: false),
+      equipment: payload.equipment,
+      globalOptions: payload.globalOptions,
     );
   }
 
@@ -70,14 +100,10 @@ final class ForeverWebApplicationImpl implements ForeverWebApplication {
   Future<void> saveDraft(ForeverEditorDraft draft) => draftRepository.save(
     StoredForeverDraft(
       id: 'forever-web-draft',
-      payloadVersion: 1,
+      payloadVersion: ForeverDraftPayload.currentVersion,
       definitionId: draft.definitionId,
       definitionRevision: draft.definitionRevision,
-      payload: {
-        'startDate': draft.startDate.toUtc().toIso8601String(),
-        'trainingMaxes': draft.trainingMaxCentiUnits,
-        'selectedCycles': draft.selectedCyclesBySlot,
-      },
+      payload: _draftPayload(draft).toJson(),
       updatedAt: now(),
     ),
   );
@@ -86,56 +112,43 @@ final class ForeverWebApplicationImpl implements ForeverWebApplication {
   Future<GeneratedMacrocycleView> generateSaveAndReload(
     ForeverEditorDraft draft,
   ) async {
-    final definition = await definitionRepository.resolve(
+    final published = await definitionRepository.resolve(
       catalogVersion: catalogVersion,
       id: ForeverDefinitionId(draft.definitionId),
       revision: ForeverDefinitionRevision(draft.definitionRevision),
     );
-    final slotRequests = <String, ForeverSlotRequest>{};
-    for (final phase in definition.phases) {
-      for (final slot in phase.slots) {
-        final selected = _reference(
-          draft.selectedCyclesBySlot[slot.id] ?? slot.defaultCycle.key,
-        );
-        final cycle = await cycleResolver.resolve(selected);
-        slotRequests[slot.id] = ForeverSlotRequest(
-          slotId: slot.id,
-          cycle: selected,
-          trainingDays: _days(cycle.sessionMovementIds.length),
-          sessionOrder: cycle.sessionMovementIds,
-          includeDeload: false,
-        );
-      }
-    }
+    final architectureValue = await _architecture(draft, published);
+    final definition = architectureValue.toResolvedDefinition(
+      labelEn: published.labelEn,
+      labelFr: published.labelFr,
+    );
     final macrocycleId =
-        'forever-${draft.definitionId}-${draft.startDate.toUtc().millisecondsSinceEpoch}';
+        'forever-${draft.definitionId}-${now().toUtc().microsecondsSinceEpoch}';
     final macrocycle = await composer.compose(
       definition,
-      ForeverRequest(
+      architectureValue.toRequest(
         macrocycleId: macrocycleId,
-        definitionId: definition.id,
-        definitionRevision: definition.revision,
         startDate: draft.startDate,
         initialTrainingMaxes: draft.trainingMaxCentiUnits.map(
           (id, value) => MapEntry(MovementId(id), Weight(value, WeightUnit.lb)),
         ),
-        slotRequests: slotRequests,
         unit: WeightUnit.lb,
-        roundingIncrement: const Weight(500, WeightUnit.lb),
-        barProfile: const BarProfile(
-          weight: Weight(4500, WeightUnit.lb),
-          platesPerSide: [
-            Weight(4500, WeightUnit.lb),
-            Weight(3500, WeightUnit.lb),
-            Weight(2500, WeightUnit.lb),
-            Weight(1000, WeightUnit.lb),
-            Weight(500, WeightUnit.lb),
-            Weight(250, WeightUnit.lb),
-          ],
+        roundingIncrement: Weight(
+          draft.equipment['roundingIncrementCentiUnits'] as int? ?? 500,
+          WeightUnit.lb,
         ),
+        barProfile: _barProfile(draft),
       ),
     );
     await macrocycleRepository.save(macrocycle: macrocycle, savedAt: now());
+    await saveDraft(
+      draft.copyWith(
+        globalOptions: {
+          ...draft.globalOptions,
+          'lastMacrocycleId': macrocycle.id,
+        },
+      ),
+    );
     final stored = await macrocycleRepository.load(macrocycle.id);
     return _storedView(stored);
   }
@@ -144,11 +157,154 @@ final class ForeverWebApplicationImpl implements ForeverWebApplication {
   Future<GeneratedMacrocycleView?> loadSavedMacrocycle() async {
     final draft = await loadDraft();
     if (draft == null) return null;
+    final id = draft.globalOptions['lastMacrocycleId'] as String?;
+    if (id == null || id.isEmpty) return null;
     try {
-      return _storedView(await macrocycleRepository.load(_macrocycleId(draft)));
+      return _storedView(await macrocycleRepository.load(id));
     } on StateError {
       return null;
     }
+  }
+
+  @override
+  Future<String> exportDraft(ForeverEditorDraft draft) async {
+    await saveDraft(draft);
+    final stored = await draftRepository.load('forever-web-draft');
+    if (stored == null) throw StateError('Forever draft was not saved.');
+    return ForeverJsonExport.configuration(stored);
+  }
+
+  @override
+  Future<String> exportMacrocycle(String macrocycleId) async =>
+      ForeverJsonExport.result(await macrocycleRepository.load(macrocycleId));
+
+  Future<architecture.ForeverArchitecture> _architecture(
+    ForeverEditorDraft draft,
+    ResolvedForeverDefinition published,
+  ) async {
+    final publishedSlots = {
+      for (final phase in published.phases)
+        for (final slot in phase.slots) slot.id: slot,
+    };
+    final nodes = <architecture.ForeverArchitectureNode>[];
+    for (final draftNode in draft.nodes) {
+      final slotId = draftNode.id.replaceFirst(RegExp(r'-\d+$'), '');
+      final publishedSlot = publishedSlots[slotId];
+      final reference = _reference(draftNode.cycleKey);
+      final resolved = await cycleResolver.resolve(reference);
+      final state = draftNode.configuration;
+      final sessionOrder = state == null || state.sessionOrder.isEmpty
+          ? resolved.sessionMovementIds
+          : state.sessionOrder.map(MovementId.new).toList(growable: false);
+      final trainingDays = state == null || state.trainingDays.isEmpty
+          ? _days(sessionOrder.length)
+          : state.trainingDays;
+      final percentageParameters = <String, Percentage>{};
+      final percentageParametersByMovement =
+          <MovementId, Map<String, Percentage>>{};
+      var includeDeload = true;
+      if (state != null) {
+        final schema = await catalogQuery.loadEditorSchema(
+          catalogVersion: catalogVersion,
+          templateId: state.templateId,
+          variantId: state.variantId,
+        );
+        for (final option in schema.options) {
+          final value = state.values[option.id] ?? option.defaultValue;
+          if (option.id == 'include_deload') {
+            includeDeload = value as bool;
+          } else if (option.type == CycleOptionType.percentage) {
+            if (option.scope == CycleOptionScope.perMovement) {
+              for (final entry in (value as Map).entries) {
+                percentageParametersByMovement.putIfAbsent(
+                  MovementId(entry.key as String),
+                  () => {},
+                )[option.id] = Percentage(
+                  (entry.value as num).round(),
+                );
+              }
+            } else {
+              percentageParameters[option.id] = Percentage(
+                (value as num).round(),
+              );
+            }
+          }
+        }
+      }
+      final configuration = architecture.ForeverNodeConfiguration(
+        cycle: reference,
+        trainingDays: trainingDays,
+        sessionOrder: sessionOrder,
+        parameters: state?.values.cast<String, Object?>() ?? const {},
+        percentageParameters: percentageParameters,
+        percentageParametersByMovement: percentageParametersByMovement,
+        globalTrainingMaxRatio: Percentage(
+          state?.globalTrainingMaxRatioBasisPoints ?? 10000,
+        ),
+        trainingMaxRatioByMovement:
+            (state?.trainingMaxRatioByMovementBasisPoints ?? const {}).map(
+              (id, ratio) => MapEntry(MovementId(id), Percentage(ratio)),
+            ),
+        scheduleId: state?.values['scheduleId'] as String?,
+        includeDeload: includeDeload,
+      );
+      nodes.add(
+        architecture.ForeverArchitectureNode(
+          id: draftNode.id,
+          role: ForeverPhaseRole.values.byName(draftNode.role),
+          transition:
+              draft.architectureMode == ForeverWebArchitectureMode.preset
+              ? publishedSlot!.transition
+              : const ForeverTransition(trainingMaxRule: KeepTrainingMax()),
+          configuration: configuration,
+          allowedRoles:
+              draft.architectureMode == ForeverWebArchitectureMode.preset
+              ? [publishedSlot!.role]
+              : ForeverPhaseRole.values,
+          allowedCycles:
+              draft.architectureMode == ForeverWebArchitectureMode.preset
+              ? publishedSlot!.allowedCycles
+              : [reference],
+          required: draft.architectureMode == ForeverWebArchitectureMode.preset
+              ? publishedSlot!.optional == false
+              : false,
+          locked: draft.architectureMode == ForeverWebArchitectureMode.preset,
+        ),
+      );
+    }
+    return architecture.ForeverArchitecture(
+      id: draft.architectureMode == ForeverWebArchitectureMode.preset
+          ? published.id.value
+          : 'web-${draft.startDate.toUtc().millisecondsSinceEpoch}',
+      mode: draft.architectureMode == ForeverWebArchitectureMode.preset
+          ? architecture.ForeverArchitectureMode.preset
+          : architecture.ForeverArchitectureMode.userDefined,
+      nodes: nodes,
+      presetDefinitionId:
+          draft.architectureMode == ForeverWebArchitectureMode.preset
+          ? published.id
+          : null,
+      presetRevision:
+          draft.architectureMode == ForeverWebArchitectureMode.preset
+          ? published.revision
+          : null,
+      sourceRuleIds: draft.architectureMode == ForeverWebArchitectureMode.preset
+          ? published.sourceRuleIds
+          : const ['userDefined'],
+    );
+  }
+
+  BarProfile _barProfile(ForeverEditorDraft draft) {
+    final bar = draft.equipment['barWeightCentiUnits'] as int? ?? 4500;
+    final plates =
+        (draft.equipment['platesPerSideCentiUnits'] as List?)?.cast<int>() ??
+        const [4500, 3500, 2500, 1000, 500, 250];
+    return BarProfile(
+      weight: Weight(bar, WeightUnit.lb),
+      platesPerSide: plates
+          .map((value) => Weight(value, WeightUnit.lb))
+          .toList(growable: false),
+    );
   }
 
   Future<ForeverDefinitionItem> _definitionItem(
@@ -261,8 +417,96 @@ final class ForeverWebApplicationImpl implements ForeverWebApplication {
     );
   }
 
-  String _macrocycleId(ForeverEditorDraft draft) =>
-      'forever-${draft.definitionId}-${draft.startDate.toUtc().millisecondsSinceEpoch}';
+  ForeverDraftPayload _draftPayload(ForeverEditorDraft draft) =>
+      ForeverDraftPayload(
+        mode: draft.architectureMode == ForeverWebArchitectureMode.preset
+            ? ForeverDraftMode.preset
+            : ForeverDraftMode.custom,
+        presetId: draft.architectureMode == ForeverWebArchitectureMode.preset
+            ? draft.definitionId
+            : null,
+        startDate: draft.startDate,
+        architecture: draft.nodes
+            .map((node) {
+              final reference = _reference(node.cycleKey);
+              return ForeverDraftNodePayload(
+                id: node.id,
+                role: node.role,
+                templateId: reference.templateId,
+                variantId: reference.variantId,
+                configuration: node.configuration == null
+                    ? const {}
+                    : _cycleStateJson(node.configuration!),
+              );
+            })
+            .toList(growable: false),
+        trainingMaxCentiUnits: draft.trainingMaxCentiUnits,
+        equipment: draft.equipment,
+        globalOptions: draft.globalOptions,
+      );
+
+  Map<String, Object?> _cycleStateJson(CycleEditorState state) => {
+    'templateId': state.templateId,
+    'variantId': state.variantId,
+    'values': state.values,
+    'startDate': state.startDate?.toUtc().toIso8601String(),
+    'trainingDays': state.trainingDays,
+    'sessionOrder': state.sessionOrder,
+    'maxInputs': state.maxInputs.map(
+      (id, input) => MapEntry(id, {
+        'kind': input.kind.name,
+        'weightCentiUnits': input.weightCentiUnits,
+        'repetitions': input.repetitions,
+      }),
+    ),
+    'globalTrainingMaxRatioBasisPoints':
+        state.globalTrainingMaxRatioBasisPoints,
+    'trainingMaxRatioByMovementBasisPoints':
+        state.trainingMaxRatioByMovementBasisPoints,
+    'unit': state.unit.name,
+    'roundingIncrementCentiUnits': state.roundingIncrementCentiUnits,
+    'barWeightCentiUnits': state.barWeightCentiUnits,
+    'platesPerSideCentiUnits': state.platesPerSideCentiUnits,
+    'cycleId': state.cycleId,
+  };
+
+  CycleEditorState _cycleStateFromJson(Map<String, Object?> json) =>
+      CycleEditorState(
+        templateId: json['templateId']! as String,
+        variantId: json['variantId']! as String,
+        values: (json['values']! as Map).cast<String, Object>(),
+        startDate: json['startDate'] == null
+            ? null
+            : DateTime.parse(json['startDate']! as String),
+        trainingDays: (json['trainingDays']! as List<Object?>).cast<int>(),
+        sessionOrder: (json['sessionOrder']! as List<Object?>).cast<String>(),
+        maxInputs: ((json['maxInputs']! as Map).cast<String, Object?>()).map((
+          id,
+          raw,
+        ) {
+          final input = (raw! as Map).cast<String, Object?>();
+          return MapEntry(
+            id,
+            CycleMovementMaxInput(
+              kind: CycleMaxInputKind.values.byName(input['kind']! as String),
+              weightCentiUnits: input['weightCentiUnits']! as int,
+              repetitions: input['repetitions'] as int?,
+            ),
+          );
+        }),
+        globalTrainingMaxRatioBasisPoints:
+            json['globalTrainingMaxRatioBasisPoints']! as int,
+        trainingMaxRatioByMovementBasisPoints:
+            (json['trainingMaxRatioByMovementBasisPoints']! as Map)
+                .cast<String, int>(),
+        unit: WeightUnit.values.byName(json['unit']! as String),
+        roundingIncrementCentiUnits:
+            json['roundingIncrementCentiUnits']! as int,
+        barWeightCentiUnits: json['barWeightCentiUnits']! as int,
+        platesPerSideCentiUnits:
+            (json['platesPerSideCentiUnits']! as List<Object?>).cast<int>(),
+        cycleId: json['cycleId']! as String,
+      );
 
   List<int> _days(int count) => switch (count) {
     1 => const [1],
