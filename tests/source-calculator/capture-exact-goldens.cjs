@@ -61,6 +61,26 @@ const BASE_INPUT = Object.freeze({
   },
 });
 
+const KG_CHALLENGE_INPUT = Object.freeze({
+  ...BASE_INPUT,
+  unit: 'kg',
+});
+
+const KG_CHALLENGE_TM_PROGRESSION = Object.freeze({
+  bbbChallengeTrainingMaxProgression: {
+    unit: 'kg',
+    upperBodyIncrementKg: 2.5,
+    lowerBodyIncrementKg: 5,
+    cycleStartWeeks: [1, 4, 8, 11],
+    trainingMaxByCycleKg: {
+      'Overhead Press': [67.5, 70, 72.5, 75],
+      'Bench Press': [90, 92.5, 95, 97.5],
+      Squat: [135, 140, 145, 150],
+      Deadlift: [180, 185, 190, 195],
+    },
+  },
+});
+
 const SCENARIOS = Object.freeze([
   scenario('bbb-original-4-day', ['bbb.variant.original', 'schedule.frequency.four'], {
     family: 'Boring But Big',
@@ -158,6 +178,22 @@ const SCENARIOS = Object.freeze([
     checkboxValues: [true],
     days: 4,
   }),
+  scenario(
+    'bbb-challenge-thirteen-weeks-kg',
+    [
+      'bbbChallenge.duration.thirteenWeeks',
+      'bbbChallenge.tmIncrement.kg.upper2_5',
+      'bbbChallenge.tmIncrement.kg.lower5',
+    ],
+    {
+      family: 'BBB Challenge',
+      selectValues: ['2'],
+      checkboxValues: [true],
+      days: 4,
+    },
+    KG_CHALLENGE_INPUT,
+    KG_CHALLENGE_TM_PROGRESSION,
+  ),
   scenario('full-body-original-phase-one', ['fullBody.mode.original'], {
     family: 'Full Body',
     selectValues: ['0', '0'],
@@ -178,8 +214,14 @@ const SCENARIOS = Object.freeze([
   }),
 ]);
 
-function scenario(id, coverage, template) {
-  return { id, coverage, template };
+function scenario(
+  id,
+  coverage,
+  template,
+  weightInput = BASE_INPUT,
+  oracleAssertions = null,
+) {
+  return { id, coverage, template, weightInput, oracleAssertions };
 }
 
 async function main() {
@@ -212,8 +254,24 @@ async function main() {
 
     if (ONLY_SCENARIO) {
       const captured = scenarios[0];
+      const frozen = JSON.parse(fs.readFileSync(FIXTURE_PATH, 'utf8'));
+      assertExactGoldens(frozen);
+      const frozenScenario = frozen.scenarios.find(
+        (scenario) => scenario.id === captured.id,
+      );
+      if (!frozenScenario) {
+        throw new Error(`Frozen corpus does not contain ${captured.id}`);
+      }
+      if (stableStringify(frozenScenario) !== stableStringify(captured)) {
+        throw new Error(
+          `Live source differs from frozen ${captured.id}.\n` +
+            `Frozen output: ${frozenScenario.outputSha256}\n` +
+            `Live output: ${captured.outputSha256}`,
+        );
+      }
       process.stdout.write(
-        `Validated ${captured.id}: ${captured.output.weekCount} weeks, ` +
+        `Live source matches frozen ${captured.id}: ` +
+          `${captured.output.weekCount} weeks, ` +
           `${captured.output.weeks.map((week) => week.sessions.length).join('/')} sessions, ` +
           `${captured.outputSha256}.\n`,
       );
@@ -448,7 +506,7 @@ async function captureScenario(browser, definition) {
 
   try {
     await page.goto(SOURCE_URL, { waitUntil: 'networkidle' });
-    await applyBaseInput(page);
+    await applyBaseInput(page, definition.weightInput);
     await applyTemplate(page, definition.template);
     await applyAdditionalOptions(page);
     await applySchedule(page, definition.template.days);
@@ -472,36 +530,46 @@ async function captureScenario(browser, definition) {
       );
     }
     const output = await extractProgram(page);
-    return {
+    const input = {
+      commonInputProfile: 'source-v2.2-default-explicit',
+      templateFamily: definition.template.family,
+      templateSelectValues: definition.template.selectValues,
+      templateCheckboxValues: definition.template.checkboxValues,
+      daysPerWeek: definition.template.days,
+    };
+    if (definition.weightInput !== BASE_INPUT) {
+      input.weightInputOverride = {
+        unit: definition.weightInput.unit,
+      };
+    }
+    const captured = {
       id: definition.id,
       coverage: definition.coverage,
-      input: {
-        commonInputProfile: 'source-v2.2-default-explicit',
-        templateFamily: definition.template.family,
-        templateSelectValues: definition.template.selectValues,
-        templateCheckboxValues: definition.template.checkboxValues,
-        daysPerWeek: definition.template.days,
-      },
+      input,
       selectedState,
       output,
       outputSha256: outputSha256(output),
     };
+    if (definition.oracleAssertions !== null) {
+      captured.oracleAssertions = definition.oracleAssertions;
+    }
+    return captured;
   } finally {
     await context.close();
   }
 }
 
-async function applyBaseInput(page) {
+async function applyBaseInput(page, input) {
   const weight = section(page, 'Weight');
-  await weight.getByRole('tab', { name: BASE_INPUT.weightMode, exact: true }).click();
-  for (const [lift, value] of Object.entries(BASE_INPUT.lifts)) {
+  await weight.getByRole('tab', { name: input.weightMode, exact: true }).click();
+  for (const [lift, value] of Object.entries(input.lifts)) {
     await weight.getByLabel(`${lift} reps`, { exact: true }).fill(String(value.reps));
     await weight.getByLabel(`${lift} weight`, { exact: true }).fill(String(value.weight));
   }
   await weight
     .getByLabel('Training Max Ratio', { exact: true })
-    .fill(String(BASE_INPUT.trainingMaxRatioPercent));
-  await weight.getByRole('tab', { name: BASE_INPUT.unit, exact: true }).click();
+    .fill(String(input.trainingMaxRatioPercent));
+  await weight.getByRole('tab', { name: input.unit, exact: true }).click();
 }
 
 async function applyTemplate(page, template) {

@@ -33,6 +33,13 @@
     "reportedVersion": "2.2",
     "entrypoint": "/calculator/"
   },
+  "exactGoldenMatrix": {
+    "scenarioCount": 20,
+    "units": ["lbs", "kg"],
+    "explicitBehaviorAssertions": [
+      "bbbChallengeTrainingMaxProgressionKg"
+    ]
+  },
   "normalization": {
     "weightScale": 1000,
     "preserveWeekOrder": true,

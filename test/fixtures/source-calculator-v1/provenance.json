@@ -27,9 +27,13 @@
     "method": "localBlackBoxChromium",
     "entrypoint": "http://127.0.0.1:4173/calculator/",
     "browser": "Chromium 149.0.7827.55",
-    "scenarioCount": 19,
+    "scenarioCount": 20,
     "networkPolicy": "loopbackOnly",
-    "copiedSourceAssets": false
+    "copiedSourceAssets": false,
+    "units": ["lbs", "kg"],
+    "explicitBehaviorAssertions": [
+      "bbbChallengeTrainingMaxProgressionKg"
+    ]
   },
   "excludedCopyrightMaterial": [
     "archive",

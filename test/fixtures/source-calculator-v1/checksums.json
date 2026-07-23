@@ -22,7 +22,7 @@
     },
     {
       "path": "exact-goldens.json",
-      "sha256": "32c9281a1abcaf46dc2fcc550a7bcf875166b26674937d60150986a5ad9c71ba"
+      "sha256": "ba8f6eb246905f26cded077a7c4c18fb0a7e43a69af1767791e7048bc570fcaf"
     },
     {
       "path": "observations.json",
@@ -30,7 +30,7 @@
     },
     {
       "path": "provenance.json",
-      "sha256": "97f8ca9e0fd2da1bae7788b6f29344b877c121c514590ec4836c4d978b41f71f"
+      "sha256": "a6b0aacd025eac269f10e4f9ebec834de856a2e1a932b6f0c45f9c050a09253e"
     }
   ]
 }

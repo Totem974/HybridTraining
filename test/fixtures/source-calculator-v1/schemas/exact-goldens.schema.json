@@ -63,6 +63,38 @@
           "outputSha256": {
             "type": "string",
             "pattern": "^[0-9a-f]{64}$"
+          },
+          "oracleAssertions": {
+            "type": "object",
+            "properties": {
+              "bbbChallengeTrainingMaxProgression": {
+                "type": "object",
+                "required": [
+                  "unit",
+                  "upperBodyIncrementKg",
+                  "lowerBodyIncrementKg",
+                  "cycleStartWeeks",
+                  "trainingMaxByCycleKg"
+                ],
+                "properties": {
+                  "unit": {"const": "kg"},
+                  "upperBodyIncrementKg": {"const": 2.5},
+                  "lowerBodyIncrementKg": {"const": 5},
+                  "cycleStartWeeks": {
+                    "type": "array",
+                    "prefixItems": [
+                      {"const": 1},
+                      {"const": 4},
+                      {"const": 8},
+                      {"const": 11}
+                    ],
+                    "minItems": 4,
+                    "maxItems": 4
+                  },
+                  "trainingMaxByCycleKg": {"type": "object"}
+                }
+              }
+            }
           }
         }
       }

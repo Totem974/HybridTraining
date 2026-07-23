@@ -10,6 +10,8 @@ The capture covers:
 - First Set Last AMRAP, 3x5 and 5x8;
 - GVT 10x10;
 - all three BBB Challenge durations;
+- a second 13-week BBB Challenge capture in kg, with exact assertions for the
+  +2.5 kg upper-body and +5 kg lower-body training-max increments;
 - the three Full Body modes;
 - two-, three- and four-day schedules.
 
@@ -25,11 +27,22 @@ Compare the frozen corpus with a fresh run of the local mirror:
 node tests/source-calculator/capture-exact-goldens.cjs
 ```
 
+Recapture and compare only the kg progression scenario:
+
+```text
+node tests/source-calculator/capture-exact-goldens.cjs --only=bbb-challenge-thirteen-weeks-kg
+```
+
 The capture script uses `http://127.0.0.1:4173/calculator/`. If that endpoint is
 not available, it starts a temporary static server from the extracted archived
 network files and stops it after capture. Override paths only when needed with
 `SOURCE_CALCULATOR_URL`, `SOURCE_CALCULATOR_ARCHIVE`, and
 `SOURCE_CALCULATOR_MIRROR`.
+
+The kg Challenge assertion is checked at cycle starts in weeks 1, 4, 8 and 11.
+The verifier derives the expected 5s-week main work from the asserted training
+maxes and checks it against the black-box output, while distinguishing the
+six-set main-work block from same-name BBB assistance.
 
 Refreshing the immutable fixture is intentionally explicit:
 

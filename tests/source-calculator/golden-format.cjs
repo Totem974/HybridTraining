@@ -21,6 +21,7 @@ const EXPECTED_SCENARIO_IDS = Object.freeze([
   'bbb-challenge-six-weeks',
   'bbb-challenge-three-months',
   'bbb-challenge-thirteen-weeks',
+  'bbb-challenge-thirteen-weeks-kg',
   'full-body-original-phase-one',
   'full-body-updated-default',
   'full-body-full-boring-default',
@@ -42,6 +43,8 @@ const EXPECTED_COVERAGE = Object.freeze([
   'bbbChallenge.duration.sixWeeks',
   'bbbChallenge.duration.threeMonths',
   'bbbChallenge.duration.thirteenWeeks',
+  'bbbChallenge.tmIncrement.kg.upper2_5',
+  'bbbChallenge.tmIncrement.kg.lower5',
   'fullBody.mode.original',
   'fullBody.mode.updated',
   'fullBody.mode.fullBoring',
@@ -85,6 +88,7 @@ function corpusSha256(scenarios) {
         input: scenario.input,
         selectedState: scenario.selectedState,
         outputSha256: scenario.outputSha256,
+        oracleAssertions: scenario.oracleAssertions,
       })),
     ),
   );
@@ -141,6 +145,11 @@ function assertExactGoldens(document) {
       outputSha256(scenario.output),
       `${path}.outputSha256`,
     );
+    if (scenario.id === 'bbb-challenge-thirteen-weeks-kg') {
+      validateKgChallengeTrainingMaxProgression(scenario, path);
+    } else if (scenario.oracleAssertions !== undefined) {
+      fail(`${path}.oracleAssertions is only valid for a scenario with explicit checks`);
+    }
   }
 
   for (const coverage of EXPECTED_COVERAGE) {
@@ -153,6 +162,95 @@ function assertExactGoldens(document) {
     corpusSha256(document.scenarios),
     '$.corpusSha256',
   );
+}
+
+function validateKgChallengeTrainingMaxProgression(scenario, path) {
+  const proofPath = `${path}.oracleAssertions.bbbChallengeTrainingMaxProgression`;
+  assertObject(scenario.oracleAssertions, `${path}.oracleAssertions`);
+  const proof = scenario.oracleAssertions.bbbChallengeTrainingMaxProgression;
+  assertObject(proof, proofPath);
+  assertEqual(proof.unit, 'kg', `${proofPath}.unit`);
+  assertEqual(proof.upperBodyIncrementKg, 2.5, `${proofPath}.upperBodyIncrementKg`);
+  assertEqual(proof.lowerBodyIncrementKg, 5, `${proofPath}.lowerBodyIncrementKg`);
+  assertDeepEqual(
+    proof.cycleStartWeeks,
+    [1, 4, 8, 11],
+    `${proofPath}.cycleStartWeeks`,
+  );
+  assertEqual(
+    scenario.selectedState.weight.unit,
+    proof.unit,
+    `${path}.selectedState.weight.unit`,
+  );
+  assertEqual(
+    scenario.selectedState.weight.trainingMaxRatioPercent,
+    90,
+    `${path}.selectedState.weight.trainingMaxRatioPercent`,
+  );
+  assertEqual(
+    scenario.input.weightInputOverride.unit,
+    'kg',
+    `${path}.input.weightInputOverride.unit`,
+  );
+
+  const movementIncrements = {
+    'Overhead Press': proof.upperBodyIncrementKg,
+    'Bench Press': proof.upperBodyIncrementKg,
+    Squat: proof.lowerBodyIncrementKg,
+    Deadlift: proof.lowerBodyIncrementKg,
+  };
+  assertObject(proof.trainingMaxByCycleKg, `${proofPath}.trainingMaxByCycleKg`);
+  assertDeepEqual(
+    Object.keys(proof.trainingMaxByCycleKg),
+    Object.keys(movementIncrements),
+    `${proofPath}.trainingMaxByCycleKg movements`,
+  );
+  for (const [movement, increment] of Object.entries(movementIncrements)) {
+    const lift = scenario.selectedState.weight.lifts[movement];
+    assertObject(lift, `${path}.selectedState.weight.lifts.${movement}`);
+    const initialTrainingMax =
+      (lift.weight * scenario.selectedState.weight.trainingMaxRatioPercent) / 100;
+    const expectedProgression = proof.cycleStartWeeks.map(
+      (_, cycleIndex) => initialTrainingMax + increment * cycleIndex,
+    );
+    const assertedProgression = proof.trainingMaxByCycleKg[movement];
+    assertDeepEqual(
+      assertedProgression,
+      expectedProgression,
+      `${proofPath}.trainingMaxByCycleKg.${movement}`,
+    );
+
+    for (let cycleIndex = 0; cycleIndex < proof.cycleStartWeeks.length; cycleIndex += 1) {
+      const weekNumber = proof.cycleStartWeeks[cycleIndex];
+      const week = scenario.output.weeks[weekNumber - 1];
+      assertEqual(week.label, `Week ${weekNumber}`, `${path}.output.weeks cycle start`);
+      const exercise = week.sessions
+        .flatMap((session) => session.exercises)
+        .find(
+          (candidate) =>
+            candidate.name === movement && candidate.sets.length >= 6,
+        );
+      assertObject(
+        exercise,
+        `${path}.output.weeks[${weekNumber - 1}].exercise.${movement}`,
+      );
+      const observedMainWork = exercise.sets.slice(-3).map((set) => set.work);
+      const trainingMax = assertedProgression[cycleIndex];
+      const expectedMainWork = [65, 75, 85].map((percentage, setIndex) => {
+        const load = ceilToLoadStep((trainingMax * percentage) / 100, 2.5);
+        return `${setIndex === 2 ? '5+' : '5'} x ${String(load)}`;
+      });
+      assertDeepEqual(
+        observedMainWork,
+        expectedMainWork,
+        `${path}.output Week ${weekNumber} ${movement} main work`,
+      );
+    }
+  }
+}
+
+function ceilToLoadStep(value, step) {
+  return Math.ceil(value / step - 1e-10) * step;
 }
 
 function validateWeeks(weeks, path) {
