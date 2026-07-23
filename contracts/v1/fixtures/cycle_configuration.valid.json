@@ -1,0 +1,36 @@
+{
+  "format": "hybrid-training-cycle",
+  "configurationVersion": 1,
+  "catalogVersion": 1,
+  "catalogHash": "sha256:test",
+  "template": {
+    "id": "classic_531",
+    "variantId": "boring_but_big_original",
+    "options": {
+      "sameLift": true,
+      "supplementalRatioBasisPoints": 5000
+    }
+  },
+  "commonOptions": {
+    "warmUp": { "enabled": true, "type": "original" },
+    "joker": { "enabled": true, "ceilingBasisPoints": 1000 },
+    "deload": { "enabled": true, "type": "deload1", "skipWarmUp": false }
+  },
+  "maxes": {
+    "mode": "repMax",
+    "globalTrainingMaxRatioBasisPoints": 9000,
+    "values": {
+      "overhead_press": { "weight": { "centiUnits": 6000, "unit": "kg" }, "repetitions": 5, "formula": "epley" },
+      "squat": { "weight": { "centiUnits": 14000, "unit": "kg" }, "repetitions": 3 }
+    },
+    "ratiosByMovement": { "overhead_press": 8500 }
+  },
+  "schedule": {
+    "id": "schedule_four_day_fixed",
+    "startDate": "2026-07-27T00:00:00.000Z",
+    "sessionOrder": ["overhead_press", "deadlift", "bench_press", "squat"],
+    "trainingDays": [1, 2, 4, 5]
+  },
+  "equipment": { "unit": "kg", "barProfileId": "default_kg" },
+  "output": { "title": "5/3/1 BBB", "showPlating": true }
+}
