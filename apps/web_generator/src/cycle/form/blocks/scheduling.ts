@@ -107,14 +107,43 @@ function renderOrder(
   const group = node("fieldset", "schedule-order");
   const legend = node("legend");
   legend.textContent = localized(field.label, locale);
+  const instructions = node("p", "schedule-order__instructions");
+  instructions.id = `${safeId(field.id)}-instructions`;
+  instructions.textContent = locale.toLowerCase().startsWith("fr")
+    ? "Faites glisser les séances pour les réordonner. Les flèches restent disponibles au clavier."
+    : "Drag sessions to reorder them. Arrow buttons remain available from the keyboard.";
   const list = node("ol", "schedule-order__tokens");
+  list.setAttribute("aria-describedby", instructions.id);
   const values = Array.isArray(field.value) ? [...field.value] : [];
   const isFrench = locale.toLowerCase().startsWith("fr");
+  const reorder = (source: number, destination: number): void => {
+    if (
+      source === destination ||
+      source < 0 ||
+      destination < 0 ||
+      source >= values.length ||
+      destination >= values.length
+    ) return;
+    const reordered = [...values];
+    const [moved] = reordered.splice(source, 1);
+    if (moved === undefined) return;
+    reordered.splice(destination, 0, moved);
+    emit(dispatch, schemaId, field, reordered);
+  };
   values.forEach((value, index) => {
     const choice = field.choices?.find((item) => serialized(item.value) === serialized(value));
     const item = node("li", "schedule-order__item");
-    const label = node("span", "schedule-token");
     const itemLabel = choice ? localized(choice.label, locale) : "—";
+    item.draggable = enabled;
+    item.dataset.orderIndex = String(index);
+    item.setAttribute(
+      "aria-label",
+      isFrench ? `${itemLabel}, position ${index + 1}` : `${itemLabel}, position ${index + 1}`,
+    );
+    const handle = node("span", "schedule-token__handle");
+    handle.textContent = "⋮⋮";
+    handle.setAttribute("aria-hidden", "true");
+    const label = node("span", "schedule-token");
     label.textContent = itemLabel;
     const controls = node("span", "schedule-token__controls");
     const moveButton = (direction: -1 | 1) => {
@@ -134,16 +163,42 @@ function renderOrder(
       );
       button.addEventListener("click", () => {
         if (button.disabled) return;
-        [values[destination], values[index]] = [values[index], values[destination]];
-        emit(dispatch, schemaId, field, values);
+        reorder(index, destination);
       });
       return button;
     };
+    item.addEventListener("dragstart", (event) => {
+      if (!enabled || !event.dataTransfer) {
+        event.preventDefault();
+        return;
+      }
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", String(index));
+      item.classList.add("is-dragging");
+    });
+    item.addEventListener("dragend", () => {
+      item.classList.remove("is-dragging");
+      list.querySelectorAll(".is-drag-over").forEach((entry) =>
+        entry.classList.remove("is-drag-over"));
+    });
+    item.addEventListener("dragover", (event) => {
+      if (!enabled) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+      item.classList.add("is-drag-over");
+    });
+    item.addEventListener("dragleave", () => item.classList.remove("is-drag-over"));
+    item.addEventListener("drop", (event) => {
+      event.preventDefault();
+      item.classList.remove("is-drag-over");
+      const source = Number(event.dataTransfer?.getData("text/plain"));
+      if (Number.isInteger(source)) reorder(source, index);
+    });
     controls.append(moveButton(-1), moveButton(1));
-    item.append(label, controls);
+    item.append(handle, label, controls);
     list.append(item);
   });
-  group.append(legend, list);
+  group.append(legend, instructions, list);
   return group;
 }
 

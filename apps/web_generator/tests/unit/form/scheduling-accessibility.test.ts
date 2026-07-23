@@ -81,4 +81,41 @@ describe("Scheduling accessibility", () => {
       value: ["deadlift", "press", "squat"],
     });
   });
+
+  it("supports drag and drop while preserving keyboard controls", () => {
+    const root = shell();
+    const dispatch = vi.fn();
+    renderCycleForm({ schema, root, dispatch, locale: "en" });
+    const items = root.querySelectorAll<HTMLElement>(".schedule-order__item");
+    const transfer = new MemoryDataTransfer();
+    const dragStart = new Event("dragstart", { bubbles: true, cancelable: true });
+    Object.defineProperty(dragStart, "dataTransfer", { value: transfer });
+    items[0]?.dispatchEvent(dragStart);
+    const drop = new Event("drop", { bubbles: true, cancelable: true });
+    Object.defineProperty(drop, "dataTransfer", { value: transfer });
+    items[2]?.dispatchEvent(drop);
+
+    expect(items[0]?.draggable).toBe(true);
+    expect(dispatch).toHaveBeenCalledWith({
+      type: "cycle.field.changed",
+      schemaId: "schedule-test",
+      fieldId: "session-order",
+      path: "schedule.sessionOrder",
+      value: ["deadlift", "squat", "press"],
+    });
+  });
 });
+
+class MemoryDataTransfer {
+  effectAllowed = "uninitialized";
+  dropEffect = "none";
+  private value = "";
+
+  setData(_format: string, value: string): void {
+    this.value = value;
+  }
+
+  getData(_format: string): string {
+    return this.value;
+  }
+}

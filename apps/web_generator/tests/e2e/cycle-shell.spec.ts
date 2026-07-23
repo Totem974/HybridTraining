@@ -58,3 +58,15 @@ test("keeps primary navigation and collapse controls at least 44px tall", async 
     expect(Math.round(box?.height ?? 0)).toBeGreaterThanOrEqual(44);
   }
 });
+
+test("reorders training sessions with drag and drop", async ({ page }) => {
+  const items = page.locator(".schedule-order__item");
+  await expect(items).toHaveCount(4);
+  const first = (await items.nth(0).innerText()).trim();
+  const second = (await items.nth(1).innerText()).trim();
+
+  await items.nth(0).dragTo(items.nth(3));
+
+  await expect(items.nth(0)).toContainText(second.split(/\s/)[0] ?? second);
+  await expect(items.nth(3)).toContainText(first.split(/\s/)[0] ?? first);
+});
