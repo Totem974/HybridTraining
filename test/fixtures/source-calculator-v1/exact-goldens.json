@@ -9,7 +9,7 @@
     "sourceArchiveSha256": "6f9b3613d0ecc6a0ff18837308f74aecc4e9cf4f5cee0201de595152a404583f",
     "sourceReportedVersion": "2.2",
     "sourceReportedReleaseDate": "2024-11-20",
-    "capturedAtUtc": "2026-07-23T18:33:18.898Z",
+    "capturedAtUtc": "2026-07-23T18:54:58.893Z",
     "browserName": "Chromium",
     "browserVersion": "149.0.7827.55",
     "networkPolicy": "loopbackOnly",
@@ -63,7 +63,7 @@
       "showPlating": true
     }
   },
-  "scenarioCount": 20,
+  "scenarioCount": 22,
   "scenarios": [
     {
       "id": "bbb-original-4-day",
@@ -20766,6 +20766,2097 @@
       "outputSha256": "5ca8c914c26d3cf3d6d879fd7130a088605afc44132d944690f35c694a238cf6"
     },
     {
+      "id": "gvt-10x10-alternate-4-day",
+      "coverage": [
+        "gvt.10x10",
+        "gvt.alternateExercise.enabled",
+        "gvt.useSameRatio.enabled"
+      ],
+      "input": {
+        "commonInputProfile": "source-v2.2-default-explicit",
+        "templateFamily": "GVT",
+        "templateSelectValues": [
+          "30"
+        ],
+        "templateCheckboxValues": [
+          true,
+          true
+        ],
+        "daysPerWeek": 4
+      },
+      "selectedState": {
+        "weight": {
+          "mode": "1 Rep Max",
+          "unit": "lbs",
+          "trainingMaxRatioPercent": 90,
+          "lifts": {
+            "Overhead Press": {
+              "reps": 1,
+              "weight": 75
+            },
+            "Bench Press": {
+              "reps": 1,
+              "weight": 100
+            },
+            "Squat": {
+              "reps": 1,
+              "weight": 150
+            },
+            "Deadlift": {
+              "reps": 1,
+              "weight": 200
+            }
+          }
+        },
+        "template": {
+          "selects": [
+            {
+              "index": 0,
+              "label": "Template",
+              "value": "GVT",
+              "selectedLabel": "GVT"
+            },
+            {
+              "index": 1,
+              "label": "10 x 10 @",
+              "value": "30",
+              "selectedLabel": "30%"
+            }
+          ],
+          "checkboxes": [
+            {
+              "index": 0,
+              "label": "Alternate exercise",
+              "checked": true
+            },
+            {
+              "index": 1,
+              "label": "Use same ratio",
+              "checked": true
+            }
+          ]
+        },
+        "additionalOptions": {
+          "selects": [
+            {
+              "index": 0,
+              "label": "Option",
+              "value": "0",
+              "selectedLabel": "Original"
+            },
+            {
+              "index": 1,
+              "label": "Option",
+              "value": "0",
+              "selectedLabel": "Deload 1"
+            }
+          ],
+          "checkboxes": [
+            {
+              "index": 0,
+              "label": "Add Joker Sets",
+              "checked": false
+            },
+            {
+              "index": 1,
+              "label": "Deload After Cycle",
+              "checked": true
+            },
+            {
+              "index": 2,
+              "label": "Skip Warmup",
+              "checked": true
+            }
+          ]
+        },
+        "plating": {
+          "plateInventory": [
+            {
+              "plate": "100 lbs",
+              "count": 0
+            },
+            {
+              "plate": "55 lbs",
+              "count": 0
+            },
+            {
+              "plate": "45 lbs",
+              "count": 10
+            },
+            {
+              "plate": "35 lbs",
+              "count": 0
+            },
+            {
+              "plate": "25 lbs",
+              "count": 1
+            },
+            {
+              "plate": "15 lbs",
+              "count": 0
+            },
+            {
+              "plate": "10 lbs",
+              "count": 2
+            },
+            {
+              "plate": "5 lbs",
+              "count": 1
+            },
+            {
+              "plate": "2.5 lbs",
+              "count": 1
+            },
+            {
+              "plate": "1.25 lbs",
+              "count": 0
+            },
+            {
+              "plate": "1 lbs",
+              "count": 0
+            },
+            {
+              "plate": "0.75 lbs",
+              "count": 0
+            },
+            {
+              "plate": "0.5 lbs",
+              "count": 0
+            },
+            {
+              "plate": "0.25 lbs",
+              "count": 0
+            }
+          ],
+          "barbellWeight": 45
+        },
+        "scheduling": {
+          "daysPerWeek": 4,
+          "liftOrder": [
+            "Overhead Press",
+            "Deadlift",
+            "Bench Press",
+            "Squat"
+          ],
+          "checkboxes": [
+            {
+              "index": 0,
+              "label": "Bastard work order",
+              "checked": false
+            },
+            {
+              "index": 1,
+              "label": "3/5/1 week order",
+              "checked": false
+            }
+          ]
+        },
+        "output": {
+          "programTitle": "",
+          "checkboxes": [
+            {
+              "index": 0,
+              "label": "Print QR code with link",
+              "checked": true
+            },
+            {
+              "index": 1,
+              "label": "Show Plating",
+              "checked": true
+            }
+          ]
+        }
+      },
+      "output": {
+        "weekCount": 4,
+        "weeks": [
+          {
+            "label": "Week 1",
+            "sessions": [
+              {
+                "position": 1,
+                "exercises": [
+                  {
+                    "name": "Overhead Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5+ x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bench Press",
+                    "sets": [
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dumbbell Row",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 2,
+                "exercises": [
+                  {
+                    "name": "Deadlift",
+                    "sets": [
+                      {
+                        "work": "5 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 120",
+                        "plates": [
+                          "25",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      },
+                      {
+                        "work": "5+ x 155",
+                        "plates": [
+                          "45",
+                          "10"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Squat",
+                    "sets": [
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ab Wheel",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 3,
+                "exercises": [
+                  {
+                    "name": "Bench Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5+ x 80",
+                        "plates": [
+                          "10",
+                          "5",
+                          "2½"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Overhead Press",
+                    "sets": [
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lat Pulldown",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 4,
+                "exercises": [
+                  {
+                    "name": "Squat",
+                    "sets": [
+                      {
+                        "work": "5 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "5 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 105",
+                        "plates": [
+                          "25",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5+ x 115",
+                        "plates": [
+                          "25",
+                          "10"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Deadlift",
+                    "sets": [
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Hanging Leg Raise",
+                    "sets": [
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Week 2",
+            "sessions": [
+              {
+                "position": 1,
+                "exercises": [
+                  {
+                    "name": "Overhead Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 50",
+                        "plates": [
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3+ x 65",
+                        "plates": [
+                          "10"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bench Press",
+                    "sets": [
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dumbbell Row",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 2,
+                "exercises": [
+                  {
+                    "name": "Deadlift",
+                    "sets": [
+                      {
+                        "work": "5 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 130",
+                        "plates": [
+                          "25",
+                          "10",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 145",
+                        "plates": [
+                          "45",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3+ x 165",
+                        "plates": [
+                          "45",
+                          "10",
+                          "5"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Squat",
+                    "sets": [
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ab Wheel",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 3,
+                "exercises": [
+                  {
+                    "name": "Bench Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3 x 65",
+                        "plates": [
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "3 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3+ x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Overhead Press",
+                    "sets": [
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lat Pulldown",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 4,
+                "exercises": [
+                  {
+                    "name": "Squat",
+                    "sets": [
+                      {
+                        "work": "5 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "3 x 95",
+                        "plates": [
+                          "25"
+                        ]
+                      },
+                      {
+                        "work": "3 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3+ x 125",
+                        "plates": [
+                          "25",
+                          "10",
+                          "5"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Deadlift",
+                    "sets": [
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Hanging Leg Raise",
+                    "sets": [
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Week 3",
+            "sessions": [
+              {
+                "position": 1,
+                "exercises": [
+                  {
+                    "name": "Overhead Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "1+ x 65",
+                        "plates": [
+                          "10"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bench Press",
+                    "sets": [
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dumbbell Row",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 2,
+                "exercises": [
+                  {
+                    "name": "Deadlift",
+                    "sets": [
+                      {
+                        "work": "5 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      },
+                      {
+                        "work": "3 x 155",
+                        "plates": [
+                          "45",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "1+ x 175",
+                        "plates": [
+                          "45",
+                          "10",
+                          "10"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Squat",
+                    "sets": [
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ab Wheel",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 3,
+                "exercises": [
+                  {
+                    "name": "Bench Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 80",
+                        "plates": [
+                          "10",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "1+ x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Overhead Press",
+                    "sets": [
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lat Pulldown",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 4,
+                "exercises": [
+                  {
+                    "name": "Squat",
+                    "sets": [
+                      {
+                        "work": "5 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "5 x 105",
+                        "plates": [
+                          "25",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3 x 115",
+                        "plates": [
+                          "25",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "1+ x 130",
+                        "plates": [
+                          "25",
+                          "10",
+                          "5",
+                          "2½"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Deadlift",
+                    "sets": [
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Hanging Leg Raise",
+                    "sets": [
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Week 4",
+            "sessions": [
+              {
+                "position": 1,
+                "exercises": [
+                  {
+                    "name": "Overhead Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dumbbell Row",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 2,
+                "exercises": [
+                  {
+                    "name": "Deadlift",
+                    "sets": [
+                      {
+                        "work": "5 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ab Wheel",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 3,
+                "exercises": [
+                  {
+                    "name": "Bench Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Lat Pulldown",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 4,
+                "exercises": [
+                  {
+                    "name": "Squat",
+                    "sets": [
+                      {
+                        "work": "5 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Hanging Leg Raise",
+                    "sets": [
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "outputSha256": "3304ca01832497b2c2fbd5fbc4d5ad9d416c8a8e8cbe7caafd700e75787200e4",
+      "oracleAssertions": {
+        "gvtAlternateSameRatio": {
+          "alternateExercise": true,
+          "useSameRatio": true,
+          "ratioPercent": 30,
+          "daysPerWeek": 4,
+          "supplementalMovementByMain": {
+            "Overhead Press": "Bench Press",
+            "Deadlift": "Squat",
+            "Bench Press": "Overhead Press",
+            "Squat": "Deadlift"
+          }
+        }
+      }
+    },
+    {
       "id": "bbb-challenge-six-weeks",
       "coverage": [
         "bbbChallenge.duration.sixWeeks"
@@ -24283,6 +26374,3394 @@
         ]
       },
       "outputSha256": "6b41fbc9cd2b4deb2d5553e037977f159c57ab6806186f5325a70c35f1aee26c"
+    },
+    {
+      "id": "bbb-challenge-six-weeks-same-lift",
+      "coverage": [
+        "bbbChallenge.duration.sixWeeks",
+        "bbbChallenge.lessBoring.disabled"
+      ],
+      "input": {
+        "commonInputProfile": "source-v2.2-default-explicit",
+        "templateFamily": "BBB Challenge",
+        "templateSelectValues": [
+          "0"
+        ],
+        "templateCheckboxValues": [
+          false
+        ],
+        "daysPerWeek": 4
+      },
+      "selectedState": {
+        "weight": {
+          "mode": "1 Rep Max",
+          "unit": "lbs",
+          "trainingMaxRatioPercent": 90,
+          "lifts": {
+            "Overhead Press": {
+              "reps": 1,
+              "weight": 75
+            },
+            "Bench Press": {
+              "reps": 1,
+              "weight": 100
+            },
+            "Squat": {
+              "reps": 1,
+              "weight": 150
+            },
+            "Deadlift": {
+              "reps": 1,
+              "weight": 200
+            }
+          }
+        },
+        "template": {
+          "selects": [
+            {
+              "index": 0,
+              "label": "Template",
+              "value": "BBB Challenge",
+              "selectedLabel": "BBB Challenge"
+            },
+            {
+              "index": 1,
+              "label": "Option",
+              "value": "0",
+              "selectedLabel": "Six Weeks"
+            }
+          ],
+          "checkboxes": [
+            {
+              "index": 0,
+              "label": "Less boring",
+              "checked": false
+            }
+          ]
+        },
+        "additionalOptions": {
+          "selects": [
+            {
+              "index": 0,
+              "label": "Option",
+              "value": "0",
+              "selectedLabel": "Original"
+            },
+            {
+              "index": 1,
+              "label": "Option",
+              "value": "0",
+              "selectedLabel": "Deload 1"
+            }
+          ],
+          "checkboxes": [
+            {
+              "index": 0,
+              "label": "Add Joker Sets",
+              "checked": false
+            },
+            {
+              "index": 1,
+              "label": "Deload After Cycle",
+              "checked": true
+            },
+            {
+              "index": 2,
+              "label": "Skip Warmup",
+              "checked": true
+            }
+          ]
+        },
+        "plating": {
+          "plateInventory": [
+            {
+              "plate": "100 lbs",
+              "count": 0
+            },
+            {
+              "plate": "55 lbs",
+              "count": 0
+            },
+            {
+              "plate": "45 lbs",
+              "count": 10
+            },
+            {
+              "plate": "35 lbs",
+              "count": 0
+            },
+            {
+              "plate": "25 lbs",
+              "count": 1
+            },
+            {
+              "plate": "15 lbs",
+              "count": 0
+            },
+            {
+              "plate": "10 lbs",
+              "count": 2
+            },
+            {
+              "plate": "5 lbs",
+              "count": 1
+            },
+            {
+              "plate": "2.5 lbs",
+              "count": 1
+            },
+            {
+              "plate": "1.25 lbs",
+              "count": 0
+            },
+            {
+              "plate": "1 lbs",
+              "count": 0
+            },
+            {
+              "plate": "0.75 lbs",
+              "count": 0
+            },
+            {
+              "plate": "0.5 lbs",
+              "count": 0
+            },
+            {
+              "plate": "0.25 lbs",
+              "count": 0
+            }
+          ],
+          "barbellWeight": 45
+        },
+        "scheduling": {
+          "daysPerWeek": 4,
+          "liftOrder": [
+            "Overhead Press",
+            "Deadlift",
+            "Bench Press",
+            "Squat"
+          ],
+          "checkboxes": [
+            {
+              "index": 0,
+              "label": "Bastard work order",
+              "checked": false
+            },
+            {
+              "index": 1,
+              "label": "3/5/1 week order",
+              "checked": false
+            }
+          ]
+        },
+        "output": {
+          "programTitle": "",
+          "checkboxes": [
+            {
+              "index": 0,
+              "label": "Print QR code with link",
+              "checked": true
+            },
+            {
+              "index": 1,
+              "label": "Show Plating",
+              "checked": true
+            }
+          ]
+        }
+      },
+      "output": {
+        "weekCount": 7,
+        "weeks": [
+          {
+            "label": "Week 1",
+            "sessions": [
+              {
+                "position": 1,
+                "exercises": [
+                  {
+                    "name": "Overhead Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5+ x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Pull Up",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bicep Curl",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 2,
+                "exercises": [
+                  {
+                    "name": "Deadlift",
+                    "sets": [
+                      {
+                        "work": "5 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 120",
+                        "plates": [
+                          "25",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      },
+                      {
+                        "work": "5+ x 155",
+                        "plates": [
+                          "45",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ab Wheel",
+                    "sets": [
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 3,
+                "exercises": [
+                  {
+                    "name": "Bench Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5+ x 80",
+                        "plates": [
+                          "10",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dumbbell Row",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rear Lats Raises",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 4,
+                "exercises": [
+                  {
+                    "name": "Squat",
+                    "sets": [
+                      {
+                        "work": "5 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "5 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 105",
+                        "plates": [
+                          "25",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5+ x 115",
+                        "plates": [
+                          "25",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Hanging Leg Raise",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Week 2",
+            "sessions": [
+              {
+                "position": 1,
+                "exercises": [
+                  {
+                    "name": "Overhead Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 50",
+                        "plates": [
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3+ x 65",
+                        "plates": [
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Pull Up",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bicep Curl",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 2,
+                "exercises": [
+                  {
+                    "name": "Deadlift",
+                    "sets": [
+                      {
+                        "work": "5 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 130",
+                        "plates": [
+                          "25",
+                          "10",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 145",
+                        "plates": [
+                          "45",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3+ x 165",
+                        "plates": [
+                          "45",
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ab Wheel",
+                    "sets": [
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 3,
+                "exercises": [
+                  {
+                    "name": "Bench Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3 x 65",
+                        "plates": [
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "3 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3+ x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dumbbell Row",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rear Lats Raises",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 4,
+                "exercises": [
+                  {
+                    "name": "Squat",
+                    "sets": [
+                      {
+                        "work": "5 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "3 x 95",
+                        "plates": [
+                          "25"
+                        ]
+                      },
+                      {
+                        "work": "3 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3+ x 125",
+                        "plates": [
+                          "25",
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Hanging Leg Raise",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Week 3",
+            "sessions": [
+              {
+                "position": 1,
+                "exercises": [
+                  {
+                    "name": "Overhead Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "1+ x 65",
+                        "plates": [
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Pull Up",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bicep Curl",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 2,
+                "exercises": [
+                  {
+                    "name": "Deadlift",
+                    "sets": [
+                      {
+                        "work": "5 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      },
+                      {
+                        "work": "3 x 155",
+                        "plates": [
+                          "45",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "1+ x 175",
+                        "plates": [
+                          "45",
+                          "10",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ab Wheel",
+                    "sets": [
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 3,
+                "exercises": [
+                  {
+                    "name": "Bench Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 80",
+                        "plates": [
+                          "10",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "1+ x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dumbbell Row",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rear Lats Raises",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 4,
+                "exercises": [
+                  {
+                    "name": "Squat",
+                    "sets": [
+                      {
+                        "work": "5 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "5 x 105",
+                        "plates": [
+                          "25",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3 x 115",
+                        "plates": [
+                          "25",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "1+ x 130",
+                        "plates": [
+                          "25",
+                          "10",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Hanging Leg Raise",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Week 4",
+            "sessions": [
+              {
+                "position": 1,
+                "exercises": [
+                  {
+                    "name": "Overhead Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 50",
+                        "plates": [
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5+ x 65",
+                        "plates": [
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Pull Up",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bicep Curl",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 2,
+                "exercises": [
+                  {
+                    "name": "Deadlift",
+                    "sets": [
+                      {
+                        "work": "5 x 80",
+                        "plates": [
+                          "10",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 95",
+                        "plates": [
+                          "25"
+                        ]
+                      },
+                      {
+                        "work": "3 x 115",
+                        "plates": [
+                          "25",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "5 x 125",
+                        "plates": [
+                          "25",
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 145",
+                        "plates": [
+                          "45",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5+ x 165",
+                        "plates": [
+                          "45",
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 115",
+                        "plates": [
+                          "25",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 115",
+                        "plates": [
+                          "25",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 115",
+                        "plates": [
+                          "25",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 115",
+                        "plates": [
+                          "25",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 115",
+                        "plates": [
+                          "25",
+                          "10"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ab Wheel",
+                    "sets": [
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 3,
+                "exercises": [
+                  {
+                    "name": "Bench Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 50",
+                        "plates": [
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 65",
+                        "plates": [
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "5 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5+ x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dumbbell Row",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rear Lats Raises",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 4,
+                "exercises": [
+                  {
+                    "name": "Squat",
+                    "sets": [
+                      {
+                        "work": "5 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 95",
+                        "plates": [
+                          "25"
+                        ]
+                      },
+                      {
+                        "work": "5 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5+ x 125",
+                        "plates": [
+                          "25",
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Hanging Leg Raise",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Week 5",
+            "sessions": [
+              {
+                "position": 1,
+                "exercises": [
+                  {
+                    "name": "Overhead Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3+ x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Pull Up",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bicep Curl",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 2,
+                "exercises": [
+                  {
+                    "name": "Deadlift",
+                    "sets": [
+                      {
+                        "work": "5 x 80",
+                        "plates": [
+                          "10",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 95",
+                        "plates": [
+                          "25"
+                        ]
+                      },
+                      {
+                        "work": "3 x 115",
+                        "plates": [
+                          "25",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "3 x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      },
+                      {
+                        "work": "3 x 155",
+                        "plates": [
+                          "45",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "3+ x 175",
+                        "plates": [
+                          "45",
+                          "10",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      },
+                      {
+                        "work": "10 x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      },
+                      {
+                        "work": "10 x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      },
+                      {
+                        "work": "10 x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      },
+                      {
+                        "work": "10 x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ab Wheel",
+                    "sets": [
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 3,
+                "exercises": [
+                  {
+                    "name": "Bench Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 50",
+                        "plates": [
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 80",
+                        "plates": [
+                          "10",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3+ x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dumbbell Row",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rear Lats Raises",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 4,
+                "exercises": [
+                  {
+                    "name": "Squat",
+                    "sets": [
+                      {
+                        "work": "5 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 105",
+                        "plates": [
+                          "25",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3 x 120",
+                        "plates": [
+                          "25",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3+ x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      },
+                      {
+                        "work": "10 x 105",
+                        "plates": [
+                          "25",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 105",
+                        "plates": [
+                          "25",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 105",
+                        "plates": [
+                          "25",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 105",
+                        "plates": [
+                          "25",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 105",
+                        "plates": [
+                          "25",
+                          "5"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Hanging Leg Raise",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Week 6",
+            "sessions": [
+              {
+                "position": 1,
+                "exercises": [
+                  {
+                    "name": "Overhead Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "3 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3 x 65",
+                        "plates": [
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "1+ x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 55",
+                        "plates": [
+                          "5"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Pull Up",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bicep Curl",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 2,
+                "exercises": [
+                  {
+                    "name": "Deadlift",
+                    "sets": [
+                      {
+                        "work": "5 x 80",
+                        "plates": [
+                          "10",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 95",
+                        "plates": [
+                          "25"
+                        ]
+                      },
+                      {
+                        "work": "3 x 115",
+                        "plates": [
+                          "25",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "5 x 145",
+                        "plates": [
+                          "45",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3 x 165",
+                        "plates": [
+                          "45",
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "1+ x 185",
+                        "plates": [
+                          "45",
+                          "25"
+                        ]
+                      },
+                      {
+                        "work": "10 x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      },
+                      {
+                        "work": "10 x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      },
+                      {
+                        "work": "10 x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      },
+                      {
+                        "work": "10 x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      },
+                      {
+                        "work": "10 x 135",
+                        "plates": [
+                          "45"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ab Wheel",
+                    "sets": [
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 3,
+                "exercises": [
+                  {
+                    "name": "Bench Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 50",
+                        "plates": [
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3 x 85",
+                        "plates": [
+                          "10",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "1+ x 95",
+                        "plates": [
+                          "25"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 70",
+                        "plates": [
+                          "10",
+                          "2½"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dumbbell Row",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rear Lats Raises",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 4,
+                "exercises": [
+                  {
+                    "name": "Squat",
+                    "sets": [
+                      {
+                        "work": "5 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "3 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 110",
+                        "plates": [
+                          "25",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "3 x 125",
+                        "plates": [
+                          "25",
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "1+ x 140",
+                        "plates": [
+                          "45",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 105",
+                        "plates": [
+                          "25",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 105",
+                        "plates": [
+                          "25",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 105",
+                        "plates": [
+                          "25",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 105",
+                        "plates": [
+                          "25",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 105",
+                        "plates": [
+                          "25",
+                          "5"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Hanging Leg Raise",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Week 7",
+            "sessions": [
+              {
+                "position": 1,
+                "exercises": [
+                  {
+                    "name": "Overhead Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 x 45",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Pull Up",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Bicep Curl",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 2,
+                "exercises": [
+                  {
+                    "name": "Deadlift",
+                    "sets": [
+                      {
+                        "work": "5 x 80",
+                        "plates": [
+                          "10",
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 95",
+                        "plates": [
+                          "25"
+                        ]
+                      },
+                      {
+                        "work": "5 x 115",
+                        "plates": [
+                          "25",
+                          "10"
+                        ]
+                      },
+                      {
+                        "work": "10 x 95",
+                        "plates": [
+                          "25"
+                        ]
+                      },
+                      {
+                        "work": "10 x 95",
+                        "plates": [
+                          "25"
+                        ]
+                      },
+                      {
+                        "work": "10 x 95",
+                        "plates": [
+                          "25"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Ab Wheel",
+                    "sets": [
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "15 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 3,
+                "exercises": [
+                  {
+                    "name": "Bench Press",
+                    "sets": [
+                      {
+                        "work": "5 x 45",
+                        "plates": []
+                      },
+                      {
+                        "work": "5 x 50",
+                        "plates": [
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 50",
+                        "plates": [
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 50",
+                        "plates": [
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 50",
+                        "plates": [
+                          "2½"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Dumbbell Row",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Rear Lats Raises",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "position": 4,
+                "exercises": [
+                  {
+                    "name": "Squat",
+                    "sets": [
+                      {
+                        "work": "5 x 60",
+                        "plates": [
+                          "5",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "5 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "5 x 90",
+                        "plates": [
+                          "10",
+                          "10",
+                          "2½"
+                        ]
+                      },
+                      {
+                        "work": "10 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      },
+                      {
+                        "work": "10 x 75",
+                        "plates": [
+                          "10",
+                          "5"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Hanging Leg Raise",
+                    "sets": [
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      },
+                      {
+                        "work": "10 reps",
+                        "plates": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "outputSha256": "b0d738f6f0179d225d13116a0793ebee8b983a49fbe17ff0c0a62dc74923eac6",
+      "oracleAssertions": {
+        "bbbChallengeSameLift": {
+          "duration": "Six Weeks",
+          "lessBoring": false,
+          "supplementalExerciseMode": "sameLift",
+          "daysPerWeek": 4
+        }
+      }
     },
     {
       "id": "bbb-challenge-three-months",
@@ -48895,5 +54374,5 @@
       "outputSha256": "baad97f3baf39fc338b2b08eb4a8a4227c9afa66e41207f73260f6fe5d11bb83"
     }
   ],
-  "corpusSha256": "8dee420c568cbc19a0170c455dba56a9f2555b1c09f0b7e57eec57c2bcea1611"
+  "corpusSha256": "9ae84501abe6dc6e2fc9f530bfa96ca7d2f7411800a9a11c30fda2123546f442"
 }

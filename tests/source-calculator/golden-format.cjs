@@ -18,7 +18,9 @@ const EXPECTED_SCENARIO_IDS = Object.freeze([
   'fsl-multiple-3x5-4-day',
   'fsl-multiple-5x8-4-day',
   'gvt-10x10-4-day',
+  'gvt-10x10-alternate-4-day',
   'bbb-challenge-six-weeks',
+  'bbb-challenge-six-weeks-same-lift',
   'bbb-challenge-three-months',
   'bbb-challenge-thirteen-weeks',
   'bbb-challenge-thirteen-weeks-kg',
@@ -40,7 +42,10 @@ const EXPECTED_COVERAGE = Object.freeze([
   'fsl.mode.multipleSets.3x5',
   'fsl.mode.multipleSets.5x8',
   'gvt.10x10',
+  'gvt.alternateExercise.enabled',
+  'gvt.useSameRatio.enabled',
   'bbbChallenge.duration.sixWeeks',
+  'bbbChallenge.lessBoring.disabled',
   'bbbChallenge.duration.threeMonths',
   'bbbChallenge.duration.thirteenWeeks',
   'bbbChallenge.tmIncrement.kg.upper2_5',
@@ -145,10 +150,20 @@ function assertExactGoldens(document) {
       outputSha256(scenario.output),
       `${path}.outputSha256`,
     );
-    if (scenario.id === 'bbb-challenge-thirteen-weeks-kg') {
-      validateKgChallengeTrainingMaxProgression(scenario, path);
-    } else if (scenario.oracleAssertions !== undefined) {
-      fail(`${path}.oracleAssertions is only valid for a scenario with explicit checks`);
+    switch (scenario.id) {
+      case 'gvt-10x10-alternate-4-day':
+        validateGvtAlternateSameRatio(scenario, path);
+        break;
+      case 'bbb-challenge-six-weeks-same-lift':
+        validateBbbChallengeSameLift(scenario, path);
+        break;
+      case 'bbb-challenge-thirteen-weeks-kg':
+        validateKgChallengeTrainingMaxProgression(scenario, path);
+        break;
+      default:
+        if (scenario.oracleAssertions !== undefined) {
+          fail(`${path}.oracleAssertions is only valid for a scenario with explicit checks`);
+        }
     }
   }
 
@@ -162,6 +177,141 @@ function assertExactGoldens(document) {
     corpusSha256(document.scenarios),
     '$.corpusSha256',
   );
+}
+
+function validateGvtAlternateSameRatio(scenario, path) {
+  const proofPath = `${path}.oracleAssertions.gvtAlternateSameRatio`;
+  assertObject(scenario.oracleAssertions, `${path}.oracleAssertions`);
+  const proof = scenario.oracleAssertions.gvtAlternateSameRatio;
+  assertObject(proof, proofPath);
+  assertEqual(proof.alternateExercise, true, `${proofPath}.alternateExercise`);
+  assertEqual(proof.useSameRatio, true, `${proofPath}.useSameRatio`);
+  assertEqual(proof.ratioPercent, 30, `${proofPath}.ratioPercent`);
+  assertEqual(proof.daysPerWeek, 4, `${proofPath}.daysPerWeek`);
+  assertDeepEqual(
+    proof.supplementalMovementByMain,
+    {
+      'Overhead Press': 'Bench Press',
+      Deadlift: 'Squat',
+      'Bench Press': 'Overhead Press',
+      Squat: 'Deadlift',
+    },
+    `${proofPath}.supplementalMovementByMain`,
+  );
+
+  const template = scenario.selectedState.template;
+  assertObject(template, `${path}.selectedState.template`);
+  assertEqual(
+    template.selects[1].selectedLabel,
+    '30%',
+    `${path}.selectedState.template.selects[1].selectedLabel`,
+  );
+  assertEqual(
+    template.checkboxes[0].label,
+    'Alternate exercise',
+    `${path}.selectedState.template.checkboxes[0].label`,
+  );
+  assertEqual(
+    template.checkboxes[0].checked,
+    true,
+    `${path}.selectedState.template.checkboxes[0].checked`,
+  );
+  assertEqual(
+    template.checkboxes[1].label,
+    'Use same ratio',
+    `${path}.selectedState.template.checkboxes[1].label`,
+  );
+  assertEqual(
+    template.checkboxes[1].checked,
+    true,
+    `${path}.selectedState.template.checkboxes[1].checked`,
+  );
+  assertEqual(
+    scenario.selectedState.scheduling.daysPerWeek,
+    proof.daysPerWeek,
+    `${path}.selectedState.scheduling.daysPerWeek`,
+  );
+
+  const firstWeek = scenario.output.weeks[0];
+  assertEqual(firstWeek.sessions.length, 4, `${path}.output.weeks[0].sessions.length`);
+  for (const session of firstWeek.sessions) {
+    const mainMovement = session.exercises[0]?.name;
+    const supplementalMovement = proof.supplementalMovementByMain[mainMovement];
+    assertNonEmptyString(
+      supplementalMovement,
+      `${proofPath}.supplementalMovementByMain.${mainMovement}`,
+    );
+    assertEqual(
+      session.exercises[1]?.name,
+      supplementalMovement,
+      `${path}.output Week 1 ${mainMovement} alternate exercise`,
+    );
+    assertEqual(
+      session.exercises[1]?.sets.length,
+      10,
+      `${path}.output Week 1 ${mainMovement} alternate set count`,
+    );
+  }
+}
+
+function validateBbbChallengeSameLift(scenario, path) {
+  const proofPath = `${path}.oracleAssertions.bbbChallengeSameLift`;
+  assertObject(scenario.oracleAssertions, `${path}.oracleAssertions`);
+  const proof = scenario.oracleAssertions.bbbChallengeSameLift;
+  assertObject(proof, proofPath);
+  assertEqual(proof.duration, 'Six Weeks', `${proofPath}.duration`);
+  assertEqual(proof.lessBoring, false, `${proofPath}.lessBoring`);
+  assertEqual(
+    proof.supplementalExerciseMode,
+    'sameLift',
+    `${proofPath}.supplementalExerciseMode`,
+  );
+  assertEqual(proof.daysPerWeek, 4, `${proofPath}.daysPerWeek`);
+
+  const template = scenario.selectedState.template;
+  assertObject(template, `${path}.selectedState.template`);
+  assertEqual(
+    template.selects[1].selectedLabel,
+    proof.duration,
+    `${path}.selectedState.template.selects[1].selectedLabel`,
+  );
+  assertEqual(
+    template.checkboxes[0].label,
+    'Less boring',
+    `${path}.selectedState.template.checkboxes[0].label`,
+  );
+  assertEqual(
+    template.checkboxes[0].checked,
+    proof.lessBoring,
+    `${path}.selectedState.template.checkboxes[0].checked`,
+  );
+  assertEqual(
+    scenario.selectedState.scheduling.daysPerWeek,
+    proof.daysPerWeek,
+    `${path}.selectedState.scheduling.daysPerWeek`,
+  );
+
+  const firstWeek = scenario.output.weeks[0];
+  assertEqual(firstWeek.sessions.length, 4, `${path}.output.weeks[0].sessions.length`);
+  for (const session of firstWeek.sessions) {
+    const mainExercise = session.exercises[0];
+    assertObject(mainExercise, `${path}.output Week 1 main exercise`);
+    assertEqual(
+      mainExercise.sets.length,
+      11,
+      `${path}.output Week 1 ${mainExercise.name} combined main and supplemental sets`,
+    );
+    const pairedMajorMovements = session.exercises
+      .slice(1)
+      .filter((exercise) =>
+        ['Overhead Press', 'Deadlift', 'Bench Press', 'Squat'].includes(exercise.name),
+      );
+    assertEqual(
+      pairedMajorMovements.length,
+      0,
+      `${path}.output Week 1 ${mainExercise.name} paired major movements`,
+    );
+  }
 }
 
 function validateKgChallengeTrainingMaxProgression(scenario, path) {

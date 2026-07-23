@@ -34,9 +34,11 @@
     "entrypoint": "/calculator/"
   },
   "exactGoldenMatrix": {
-    "scenarioCount": 20,
+    "scenarioCount": 22,
     "units": ["lbs", "kg"],
     "explicitBehaviorAssertions": [
+      "gvtAlternateExerciseWithCommonRatio",
+      "bbbChallengeSixWeeksSameLift",
       "bbbChallengeTrainingMaxProgressionKg"
     ]
   },

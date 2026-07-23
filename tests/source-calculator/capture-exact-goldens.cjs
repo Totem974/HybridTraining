@@ -81,6 +81,30 @@ const KG_CHALLENGE_TM_PROGRESSION = Object.freeze({
   },
 });
 
+const GVT_ALTERNATE_SAME_RATIO_ASSERTIONS = Object.freeze({
+  gvtAlternateSameRatio: {
+    alternateExercise: true,
+    useSameRatio: true,
+    ratioPercent: 30,
+    daysPerWeek: 4,
+    supplementalMovementByMain: {
+      'Overhead Press': 'Bench Press',
+      Deadlift: 'Squat',
+      'Bench Press': 'Overhead Press',
+      Squat: 'Deadlift',
+    },
+  },
+});
+
+const BBB_CHALLENGE_SAME_LIFT_ASSERTIONS = Object.freeze({
+  bbbChallengeSameLift: {
+    duration: 'Six Weeks',
+    lessBoring: false,
+    supplementalExerciseMode: 'sameLift',
+    daysPerWeek: 4,
+  },
+});
+
 const SCENARIOS = Object.freeze([
   scenario('bbb-original-4-day', ['bbb.variant.original', 'schedule.frequency.four'], {
     family: 'Boring But Big',
@@ -160,12 +184,43 @@ const SCENARIOS = Object.freeze([
     checkboxValues: [false, true],
     days: 4,
   }),
+  scenario(
+    'gvt-10x10-alternate-4-day',
+    [
+      'gvt.10x10',
+      'gvt.alternateExercise.enabled',
+      'gvt.useSameRatio.enabled',
+    ],
+    {
+      family: 'GVT',
+      selectValues: ['30'],
+      checkboxValues: [true, true],
+      days: 4,
+    },
+    BASE_INPUT,
+    GVT_ALTERNATE_SAME_RATIO_ASSERTIONS,
+  ),
   scenario('bbb-challenge-six-weeks', ['bbbChallenge.duration.sixWeeks'], {
     family: 'BBB Challenge',
     selectValues: ['0'],
     checkboxValues: [true],
     days: 4,
   }),
+  scenario(
+    'bbb-challenge-six-weeks-same-lift',
+    [
+      'bbbChallenge.duration.sixWeeks',
+      'bbbChallenge.lessBoring.disabled',
+    ],
+    {
+      family: 'BBB Challenge',
+      selectValues: ['0'],
+      checkboxValues: [false],
+      days: 4,
+    },
+    BASE_INPUT,
+    BBB_CHALLENGE_SAME_LIFT_ASSERTIONS,
+  ),
   scenario('bbb-challenge-three-months', ['bbbChallenge.duration.threeMonths'], {
     family: 'BBB Challenge',
     selectValues: ['1'],

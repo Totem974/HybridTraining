@@ -24,11 +24,13 @@ Evidence levels used by the corpus:
 
 `controls.json` is the exhaustive UI surface known at freeze time.
 `coverage.json` distinguishes documented coverage from exact runtime capture.
-`exact-goldens.json` freezes 20 complete programs for the priority template and
-schedule matrix, including every displayed set and plate list. The dedicated
-13-week BBB Challenge scenario in kg also asserts the source training-max
-progression at weeks 1, 4, 8 and 11: +2.5 kg per upper-body cycle and +5 kg per
-lower-body cycle.
+`exact-goldens.json` freezes 22 complete programs for the priority template and
+schedule matrix, including every displayed set and plate list. Dedicated
+toggle scenarios assert GVT's alternate-exercise mapping with one shared 30%
+ratio and the six-week BBB Challenge's same-lift supplemental work when
+`Less boring` is disabled. The dedicated 13-week BBB Challenge scenario in kg
+also asserts the source training-max progression at weeks 1, 4, 8 and 11:
++2.5 kg per upper-body cycle and +5 kg per lower-body cycle.
 `anomalies.json` records every known source quirk and the target disposition.
 Raw-byte SHA-256 digests in `checksums.json` protect the evidence documents.
 

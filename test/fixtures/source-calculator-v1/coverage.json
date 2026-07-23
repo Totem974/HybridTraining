@@ -81,7 +81,10 @@
     {
       "id": "gvt-10x10",
       "captureStatus": "exactGolden",
-      "goldenScenarioIds": ["gvt-10x10-4-day"]
+      "goldenScenarioIds": [
+        "gvt-10x10-4-day",
+        "gvt-10x10-alternate-4-day"
+      ]
     },
     {"id": "bodyweight-distribution", "captureStatus": "pendingExactCapture"},
     {
@@ -89,6 +92,7 @@
       "captureStatus": "exactGolden",
       "goldenScenarioIds": [
         "bbb-challenge-six-weeks",
+        "bbb-challenge-six-weeks-same-lift",
         "bbb-challenge-three-months",
         "bbb-challenge-thirteen-weeks"
       ]

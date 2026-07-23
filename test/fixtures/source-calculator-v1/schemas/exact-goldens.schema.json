@@ -93,6 +93,38 @@
                   },
                   "trainingMaxByCycleKg": {"type": "object"}
                 }
+              },
+              "gvtAlternateSameRatio": {
+                "type": "object",
+                "required": [
+                  "alternateExercise",
+                  "useSameRatio",
+                  "ratioPercent",
+                  "daysPerWeek",
+                  "supplementalMovementByMain"
+                ],
+                "properties": {
+                  "alternateExercise": {"const": true},
+                  "useSameRatio": {"const": true},
+                  "ratioPercent": {"const": 30},
+                  "daysPerWeek": {"const": 4},
+                  "supplementalMovementByMain": {"type": "object"}
+                }
+              },
+              "bbbChallengeSameLift": {
+                "type": "object",
+                "required": [
+                  "duration",
+                  "lessBoring",
+                  "supplementalExerciseMode",
+                  "daysPerWeek"
+                ],
+                "properties": {
+                  "duration": {"const": "Six Weeks"},
+                  "lessBoring": {"const": false},
+                  "supplementalExerciseMode": {"const": "sameLift"},
+                  "daysPerWeek": {"const": 4}
+                }
               }
             }
           }

@@ -27,11 +27,13 @@
     "method": "localBlackBoxChromium",
     "entrypoint": "http://127.0.0.1:4173/calculator/",
     "browser": "Chromium 149.0.7827.55",
-    "scenarioCount": 20,
+    "scenarioCount": 22,
     "networkPolicy": "loopbackOnly",
     "copiedSourceAssets": false,
     "units": ["lbs", "kg"],
     "explicitBehaviorAssertions": [
+      "gvtAlternateExerciseWithCommonRatio",
+      "bbbChallengeSixWeeksSameLift",
       "bbbChallengeTrainingMaxProgressionKg"
     ]
   },
