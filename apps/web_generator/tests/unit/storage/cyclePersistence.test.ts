@@ -1,9 +1,11 @@
 import { IDBFactory } from "fake-indexeddb";
 import { describe, expect, it } from "vitest";
+import type { CycleConfiguration } from "../../../../../contracts/v1/generated/contracts";
 
 import {
   currentDraftId,
   cycleDraft,
+  cycleDraftVersion,
   draftEnvelope,
   restoreCompatibleDraft,
   type CycleDraftPayload,
@@ -21,16 +23,34 @@ const metadata = {
   catalogHash: "catalog",
 } as const;
 
+function configuration(templateId = "template", variantId = "variant"): CycleConfiguration {
+  return {
+    format: "hybrid-training-cycle",
+    configurationVersion: 1,
+    template: { id: templateId, variantId, options: {} },
+    commonOptions: {
+      warmUp: { enabled: false },
+      joker: { enabled: false },
+      deload: { enabled: false },
+    },
+    maxes: { mode: "oneRepMax", globalTrainingMaxRatioBasisPoints: 8500, values: {} },
+    schedule: { id: "schedule", startDate: "2026-07-23", sessionOrder: [] },
+    equipment: { unit: "kg", barProfileId: "default-kg" },
+    output: { title: "Cycle", showPlating: true },
+  };
+}
+
 describe("Cycle draft persistence", () => {
-  it("restores a compatible draft and removes obsolete records", async () => {
+  it("round-trips a compatible v2 configuration and retains obsolete records", async () => {
     const storage = new IndexedDbWorkspaceStorage(new IDBFactory());
     const repository = new WorkspaceDraftRepository<CycleDraftPayload>(storage);
-    const payload = cycleDraft({
+    const editorValues = {
       templateId: "template",
       variantId: "variant",
       scheduleId: "schedule",
       "options.warmup": true,
-    });
+    };
+    const payload = cycleDraft(configuration(), editorValues);
     await repository.save(currentDraftId, draftEnvelope(metadata, payload));
     await repository.save("obsolete", {
       ...draftEnvelope(metadata, payload),
@@ -42,18 +62,84 @@ describe("Cycle draft persistence", () => {
       metadata,
       new Map([["template", new Set(["variant"])]]),
     );
-    expect(restored).toEqual(payload);
-    expect((await repository.list()).map((record) => record.id)).toEqual([currentDraftId]);
+    expect(restored).toEqual({
+      templateId: "template",
+      variantId: "variant",
+      scheduleId: "schedule",
+      values: editorValues,
+      configuration: configuration(),
+    });
+    expect((await repository.list()).map((record) => record.id).sort()).toEqual([
+      currentDraftId,
+      "obsolete",
+    ]);
     storage.close();
   });
 
-  it("cleans a current draft whose selection disappeared from the catalog", async () => {
+  it("keeps a current draft whose selection disappeared from the catalog", async () => {
     const storage = new IndexedDbWorkspaceStorage(new IDBFactory());
     const repository = new WorkspaceDraftRepository<CycleDraftPayload>(storage);
-    const payload = cycleDraft({ templateId: "removed", variantId: "variant" });
+    const payload = cycleDraft(configuration("removed"), {
+      templateId: "removed",
+      variantId: "variant",
+    });
     await repository.save(currentDraftId, draftEnvelope(metadata, payload));
     expect(await restoreCompatibleDraft(repository, metadata, new Map())).toBeUndefined();
-    expect(await repository.list()).toEqual([]);
+    expect(await repository.list()).toHaveLength(1);
+    storage.close();
+  });
+
+  it("migrates a compatible v1 draft in place without losing its values", async () => {
+    const storage = new IndexedDbWorkspaceStorage(new IDBFactory());
+    const repository = new WorkspaceDraftRepository<unknown>(storage);
+    await repository.save(currentDraftId, {
+      ...metadata,
+      payload: {
+        draftVersion: 1,
+        templateId: "template",
+        variantId: "variant",
+        scheduleId: "schedule",
+        values: { templateId: "template", variantId: "variant", scheduleId: "schedule", ratio: 50 },
+      },
+    });
+
+    const migratedPayload = cycleDraft(configuration(), {
+      templateId: "template",
+      variantId: "variant",
+      scheduleId: "schedule",
+      ratio: 50,
+    });
+    const restored = await restoreCompatibleDraft(
+      repository,
+      metadata,
+      new Map([["template", new Set(["variant"])]]),
+      () => migratedPayload,
+    );
+    expect(restored?.values.ratio).toBe(50);
+    const rewritten = await repository.load(currentDraftId);
+    expect((rewritten?.envelope.payload as CycleDraftPayload).draftVersion).toBe(cycleDraftVersion);
+    expect((rewritten?.envelope.payload as CycleDraftPayload)).toEqual(migratedPayload);
+    storage.close();
+  });
+
+  it("retains an incompatible legacy draft when its migration codec declines it", async () => {
+    const storage = new IndexedDbWorkspaceStorage(new IDBFactory());
+    const repository = new WorkspaceDraftRepository<unknown>(storage);
+    const legacy = {
+      draftVersion: 1,
+      templateId: "template",
+      variantId: "variant",
+      values: { templateId: "template", variantId: "variant" },
+    };
+    await repository.save(currentDraftId, { ...metadata, payload: legacy });
+
+    expect(await restoreCompatibleDraft(
+      repository,
+      metadata,
+      new Map([["template", new Set(["variant"])]]),
+      () => undefined,
+    )).toBeUndefined();
+    expect((await repository.load(currentDraftId))?.envelope.payload).toEqual(legacy);
     storage.close();
   });
 });
