@@ -182,10 +182,13 @@ test('plating visibility and local persistence survive reload', async ({ page })
 
 test('FR and EN labels switch locally', async ({ page }) => {
   const external = await openIntegratedCycle(page);
+  await awaitGeneratedProgram(page);
   await page.getByRole('button', { name: /^fr$/i }).click();
   await expect(page.getByRole('checkbox', { name: /afficher les plaques/i })).toBeVisible();
+  await expect(page.locator('.program-week__title').first()).toContainText('SEMAINE');
   await page.getByRole('button', { name: /^en$/i }).click();
   await expect(page.getByRole('checkbox', { name: /show plating/i })).toBeVisible();
+  await expect(page.locator('.program-week__title').first()).toContainText('WEEK');
   expect(external).toEqual([]);
 });
 

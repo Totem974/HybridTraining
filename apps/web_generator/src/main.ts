@@ -11,6 +11,10 @@ import {
 } from './cycle/configuration/share';
 import { changeEditorValue, normalizeEditorState } from './cycle/state/editorState';
 import {
+  createCycleGenerationScheduler,
+  type CycleGenerationScheduler,
+} from './cycle/state/generationScheduler';
+import {
   currentDraftId,
   cycleDraft,
   draftEnvelope,
@@ -57,12 +61,13 @@ let currentConfiguration: CycleConfiguration;
 let disposeForm: (() => void) | undefined;
 let lastRequest: object | undefined;
 let lastResponse: CycleResponse | undefined;
-let generationTimer: ReturnType<typeof setTimeout> | undefined;
+let generationScheduler: CycleGenerationScheduler<object>;
 let workspaceStorage: IndexedDbWorkspaceStorage | undefined;
 let drafts: WorkspaceDraftRepository<CycleDraftPayload> | undefined;
 let configurations: SavedConfigurationRepository<object> | undefined;
 let snapshots: TrainingSnapshotRepository<object> | undefined;
 let startupWarning = '';
+let generationFailed = false;
 
 const translations = {
   en: { eyebrow: 'Training tools', pageTitle: 'Cycle generator', pageSummary: 'Configure and generate a training cycle locally in your browser.', weight: 'Weight', template: 'Template', additionalOptions: 'Additional options', plating: 'Plating & barbell', scheduling: 'Scheduling', output: 'Output', program: 'Program' },
@@ -72,6 +77,28 @@ const translations = {
 async function start(): Promise<void> {
   try {
     client = await EngineClient.initialize();
+    generationScheduler = createCycleGenerationScheduler<object, CycleResponse>({
+      generate: (request) => client.generateCycle<CycleResponse>(request),
+      fingerprint: (request) => JSON.stringify(request),
+      onResult: publishGeneration,
+      onError: (error) => {
+        generationFailed = true;
+        if (status) status.textContent = message(error);
+      },
+      onPhaseChange: (phase) => {
+        if (!status) return;
+        if (phase === 'scheduled') {
+          generationFailed = false;
+          status.textContent = locale === 'fr'
+            ? 'Mise à jour du programme…'
+            : 'Updating program…';
+        } else if (phase === 'idle' && lastResponse && !generationFailed) {
+          status.textContent = locale === 'fr'
+            ? 'Programme généré et à jour.'
+            : 'Program generated and up to date.';
+        }
+      },
+    });
     catalog = client.catalogIndex<CatalogIndex>({ apiVersion: 'v1', schemaVersion: 1 });
     installRepositories();
     const allowed = new Map(catalog.templates.map((template) => [
@@ -158,7 +185,7 @@ function renderEditor(): void {
 
 async function handleIntent(intent: CycleFormIntent): Promise<void> {
   if (intent.type === 'cycle.action.requested') {
-    if (intent.action === 'generate') generate();
+    if (intent.action === 'generate') void generate();
     return;
   }
   if (!intent.path || intent.value === undefined) return;
@@ -208,21 +235,27 @@ async function handleIntent(intent: CycleFormIntent): Promise<void> {
 }
 
 function scheduleGeneration(): void {
-  if (generationTimer) clearTimeout(generationTimer);
-  generationTimer = setTimeout(() => generate(), 80);
-}
-
-function generate(): void {
   try {
-    generateRequest(client.configurationToCycleRequest<CycleRequest>(currentConfiguration));
+    generationScheduler.schedule(
+      client.configurationToCycleRequest<CycleRequest>(currentConfiguration),
+    );
   } catch (error) {
     if (status) status.textContent = message(error);
   }
 }
 
-function generateRequest(request: object): void {
+async function generate(): Promise<void> {
   try {
-    const response = client.generateCycle<CycleResponse>(request);
+    await generationScheduler.flush(
+      client.configurationToCycleRequest<CycleRequest>(currentConfiguration),
+    );
+  } catch (error) {
+    if (status) status.textContent = message(error);
+  }
+}
+
+function publishGeneration(response: CycleResponse, request: object): void {
+  generationFailed = false;
     lastRequest = request;
     lastResponse = response;
     persistGeneration(request, response);
@@ -245,9 +278,6 @@ function generateRequest(request: object): void {
       },
     });
     if (status) status.textContent = locale === 'fr' ? 'Programme généré.' : 'Program generated.';
-  } catch (error) {
-    if (status) status.textContent = message(error);
-  }
 }
 
 function installTransferControls(): void {
@@ -434,8 +464,9 @@ async function hydrateImportedConfiguration(configuration: CycleConfiguration): 
   } catch {
     await loadSchema(templateId, variantId, configuration);
   }
-  if (generationTimer) clearTimeout(generationTimer);
-  generateRequest(client.configurationToCycleRequest<CycleRequest>(currentConfiguration));
+  await generationScheduler.flush(
+    client.configurationToCycleRequest<CycleRequest>(currentConfiguration),
+  );
 }
 
 function importConfiguration(payload: unknown): CycleConfiguration {
@@ -500,7 +531,11 @@ function installLocaleControls(): void {
       preferences.setLocale(candidate);
       controls.querySelectorAll('button').forEach((item) => item.ariaPressed = String(item === button));
       renderEditor();
-      scheduleGeneration();
+      if (lastResponse && lastRequest) {
+        publishGeneration(lastResponse, lastRequest);
+      } else {
+        scheduleGeneration();
+      }
     });
     controls.append(button);
   }

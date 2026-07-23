@@ -77,8 +77,10 @@ a {
 
 .site-header {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem);
+  align-items: end;
   gap: var(--space-5);
-  padding-block: var(--space-7) var(--space-5);
+  padding-block: var(--space-5);
 }
 
 .header-topline {
@@ -86,6 +88,7 @@ a {
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
+  min-width: 0;
 }
 
 .locale-switch {
@@ -147,7 +150,7 @@ h2 {
 }
 
 h1 {
-  font-size: clamp(2.25rem, 5vw, 3.625rem);
+  font-size: clamp(2rem, 4vw, 2.875rem);
   font-weight: 950;
   letter-spacing: -0.035em;
   line-height: 1.08;
@@ -256,6 +259,11 @@ h1 {
 }
 
 @media (max-width: 770px) {
+  .site-header {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+
   .editor-grid {
     grid-template-columns: minmax(0, 1fr);
   }
