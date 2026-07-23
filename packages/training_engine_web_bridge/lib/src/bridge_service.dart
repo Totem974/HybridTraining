@@ -9,6 +9,7 @@ abstract interface class TrainingEngineJsonBindings {
   String engineInfo();
   String catalogIndex(String requestJson);
   String cycleEditorSchema(String requestJson);
+  String configurationToCycleRequest(String configurationJson);
   String validateCycle(String requestJson);
   String generateCycle(String requestJson);
   String generateMacrocycle(String requestJson);
@@ -38,6 +39,12 @@ final class BridgeService {
 
   String cycleEditorSchema(String requestJson) =>
       _invoke('cycleEditorSchema', requestJson, _bindings.cycleEditorSchema);
+
+  String configurationToCycleRequest(String configurationJson) => _invoke(
+    'configurationToCycleRequest',
+    configurationJson,
+    _bindings.configurationToCycleRequest,
+  );
 
   String validateCycle(String requestJson) =>
       _invoke('validateCycle', requestJson, _bindings.validateCycle);

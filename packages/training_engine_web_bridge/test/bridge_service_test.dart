@@ -33,6 +33,8 @@ final class _Bindings implements TrainingEngineJsonBindings {
   @override
   String cycleEditorSchema(String requestJson) => '{"ok":true}';
   @override
+  String configurationToCycleRequest(String configurationJson) => '{"ok":true}';
+  @override
   String validateCycle(String requestJson) => '{"ok":true}';
   @override
   String generateCycle(String requestJson) {

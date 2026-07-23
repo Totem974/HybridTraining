@@ -43,6 +43,61 @@ void main() {
     expect((response['snapshot'] as Map<String, Object?>)['kind'], 'cycle');
   });
 
+  test('configuration projection round-trips through cycle generation', () {
+    final service = initializedService();
+    final metadata = jsonDecode(service.engineInfo()) as Map<String, Object?>;
+    final configuration = <String, Object?>{
+      'format': 'hybrid-training-cycle',
+      'configurationVersion': 1,
+      'catalogVersion': metadata['catalogVersion'],
+      'catalogHash': metadata['catalogHash'],
+      'template': {
+        'id': 'classic_531',
+        'variantId': 'four_day',
+        'options': <String, Object?>{},
+      },
+      'commonOptions': {
+        'warmUp': {'enabled': false},
+        'joker': {'enabled': false},
+        'deload': {'enabled': true, 'type': 'deload1', 'skipWarmUp': false},
+      },
+      'maxes': {
+        'mode': 'oneRepMax',
+        'globalTrainingMaxRatioBasisPoints': 9000,
+        'values': {
+          for (final entry
+              in (_cycleRequest['maxInputs']! as Map<String, Object?>).entries)
+            entry.key: {
+              'weight': (entry.value! as Map<String, Object?>)['weight'],
+            },
+        },
+      },
+      'schedule': {
+        'id': 'schedule_four_day_fixed',
+        'startDate': '2026-07-27T00:00:00.000Z',
+        'sessionOrder': ['overhead_press', 'deadlift', 'bench_press', 'squat'],
+        'trainingDays': [1, 2, 4, 5],
+      },
+      'equipment': {'unit': 'lb', 'bar': _cycleRequest['barProfile']},
+      'output': {'title': 'Bridge configuration', 'showPlating': true},
+    };
+
+    final requestJson = service.configurationToCycleRequest(
+      jsonEncode(configuration),
+    );
+    final request = jsonDecode(requestJson) as Map<String, Object?>;
+    expect(request['cycleId'], 'cycle-classic_531-four_day-2026-07-27');
+    final validation =
+        jsonDecode(service.validateCycle(requestJson)) as Map<String, Object?>;
+    expect(validation['valid'], true, reason: jsonEncode(validation));
+    final response =
+        jsonDecode(service.generateCycle(requestJson)) as Map<String, Object?>;
+    expect(
+      (response['cycle'] as Map<String, Object?>)['templateId'],
+      'classic_531',
+    );
+  });
+
   test('catalogIndex places the unique catalog default first', () {
     final service = initializedService();
     final index =

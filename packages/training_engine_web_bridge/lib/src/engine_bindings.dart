@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:training_engine/training_engine.dart';
 
 import 'bridge_service.dart';
+import 'cycle_configuration_codec.dart';
 import 'cycle_request_normalizer.dart';
 
 final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
@@ -10,6 +11,8 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   final CatalogPlanDataResolver _dataResolver = const CatalogPlanDataResolver();
   final CatalogPlanResolver _planResolver = const CatalogPlanResolver();
   final CycleCompiler _compiler = const CycleCompilerImpl();
+  final CycleConfigurationCodec _configurationCodec =
+      const CycleConfigurationCodec();
 
   int? _catalogVersion;
   String? _catalogHash;
@@ -141,11 +144,21 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     'capabilities': const [
       'catalogIndex',
       'cycleEditorSchema',
+      'configurationToCycleRequest',
       'validateCycle',
       'generateCycle',
       'generateMacrocycle',
     ],
   });
+
+  @override
+  String configurationToCycleRequest(String configurationJson) => jsonEncode(
+    _configurationCodec.toCycleRequest(
+      _map(jsonDecode(configurationJson), 'cycle configuration'),
+      catalogVersion: _catalogVersion!,
+      catalogHash: _catalogHash!,
+    ),
+  );
 
   @override
   String catalogIndex(String requestJson) {
@@ -432,9 +445,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
           for (final session in schemaSchedule.sessions)
             {
               'value': session.id,
-              'label': session.movementIds
-                  .map(_movementTokenLabel)
-                  .join('+'),
+              'label': session.movementIds.map(_movementTokenLabel).join('+'),
             },
         ],
       ),
