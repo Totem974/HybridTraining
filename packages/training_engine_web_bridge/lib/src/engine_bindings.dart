@@ -10,7 +10,11 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   final CatalogSourceDocumentCodec _codec = const CatalogSourceDocumentCodec();
   final CatalogPlanDataResolver _dataResolver = const CatalogPlanDataResolver();
   final CatalogPlanResolver _planResolver = const CatalogPlanResolver();
-  final CycleCompiler _compiler = const CycleCompilerImpl();
+  final CatalogScheduleDataResolver _scheduleDataResolver =
+      const CatalogScheduleDataResolver();
+  final AssistancePlanResolver _assistancePlanResolver =
+      const AssistancePlanResolver();
+  final CycleCompilerImpl _compiler = const CycleCompilerImpl();
   final CycleConfigurationCodec _configurationCodec =
       const CycleConfigurationCodec();
 
@@ -22,6 +26,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   List<Map<String, Object?>> _rawTemplateRecords = const [];
   List<Map<String, Object?>> _rawOptionSchemas = const [];
   List<Map<String, Object?>> _rawScheduleRecords = const [];
+  List<Map<String, Object?>> _rawAssistancePlanRecords = const [];
   List<Map<String, Object?>> _rawForeverDefinitions = const [];
   List<Map<String, Object?>> _rawTemplateAliases = const [];
   List<SourceCycleOptionRecipe> _optionRecipes = const [];
@@ -92,6 +97,13 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
         (item) => item['kind'] == 'schedules',
       ))
         for (final item in _list(document, 'schedules')) _map(item, 'schedule'),
+    ];
+    _rawAssistancePlanRecords = [
+      for (final document in documents.where(
+        (item) => item['kind'] == 'assistancePlans',
+      ))
+        for (final item in _list(document, 'assistancePlans'))
+          _map(item, 'assistance plan'),
     ];
     _rawForeverDefinitions = [
       for (final document in documents.where(
@@ -921,16 +933,39 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       sessionOrder,
       scheduleId: scheduleId,
     );
+    final trainingDays = json['trainingDays'] == null
+        ? _defaultTrainingDays(selectedSchedule)
+        : _integers(json, 'trainingDays');
+    final selectedScheduleForCompilation = _scheduleWithCadence(
+      selectedSchedule,
+      trainingDays.length,
+    );
+    final resolvedSchedule = _scheduleDataResolver.resolve(
+      selectedScheduleForCompilation,
+    );
+    final selection = CycleScheduleSelection(
+      trainingDays: trainingDays,
+      sessionOrder: [for (final id in sessionOrder) SessionId(id)],
+    );
+    final rawOptions = _map(json['options'], 'options');
+    final catalogOptionValues = _catalogOptionValues(
+      templateId,
+      variantId,
+      rawOptions,
+    );
     final definition = _resolve(
       templateId,
       variantId,
       sessionOrder,
       scheduleId: selectedSchedule.reference.id,
-      optionValues: _catalogOptionValues(
-        templateId,
-        variantId,
-        _map(json['options'], 'options'),
-      ),
+      optionValues: catalogOptionValues,
+    );
+    final assistancePlans = _resolveAssistancePlans(templateId, variantId);
+    final assistanceOptionValues = _cycleOptionValues(
+      templateId,
+      variantId,
+      rawOptions,
+      selectedScheduleForCompilation,
     );
     final ratioByMovement = _optionalMap(
       json['trainingMaxRatioByMovement'] ??
@@ -991,44 +1026,45 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
         _ => throw FormatException('UNKNOWN_MAX_INPUT_KIND:$kind'),
       };
     }
-    return _compiler.compile(
-      definition,
-      CycleRequest(
-        cycleId: _string(json, 'cycleId'),
-        startDate: DateTime.parse(_string(json, 'startDate')),
-        trainingDays: json['trainingDays'] == null
-            ? _defaultTrainingDays(selectedSchedule)
-            : _integers(json, 'trainingDays'),
-        sessionOrder: [for (final id in sessionOrder) MovementId(id)],
-        maxInputs: maxInputs,
-        globalTrainingMaxRatio: Percentage(
-          _integer(json, 'globalTrainingMaxRatioBasisPoints'),
-        ),
-        trainingMaxRatioByMovement: {
-          for (final entry in ratioByMovement.entries)
-            MovementId(entry.key): Percentage(entry.value as int),
-        },
-        percentageParameters: {
-          for (final entry in _optionalMap(
-            json['percentageParameters'],
-          ).entries)
-            entry.key: Percentage(entry.value as int),
-        },
-        percentageParametersByMovement: {
-          for (final movement in _optionalMap(
-            json['percentageParametersByMovement'],
-          ).entries)
-            MovementId(movement.key): {
-              for (final entry in _optionalMap(movement.value).entries)
-                entry.key: Percentage(entry.value as int),
-            },
-        },
-        unit: unit,
-        roundingIncrement: rounding,
-        barProfile: BarProfile(weight: barWeight, platesPerSide: plates),
-        includeDeload: json['includeDeload'] as bool? ?? true,
-        cycleOptions: _cycleOptions(_map(json['options'], 'options'), unit),
+    final request = CycleRequest(
+      cycleId: _string(json, 'cycleId'),
+      startDate: DateTime.parse(_string(json, 'startDate')),
+      trainingDays: trainingDays,
+      sessionOrder: [for (final id in sessionOrder) MovementId(id)],
+      maxInputs: maxInputs,
+      globalTrainingMaxRatio: Percentage(
+        _integer(json, 'globalTrainingMaxRatioBasisPoints'),
       ),
+      trainingMaxRatioByMovement: {
+        for (final entry in ratioByMovement.entries)
+          MovementId(entry.key): Percentage(entry.value as int),
+      },
+      percentageParameters: {
+        for (final entry in _optionalMap(json['percentageParameters']).entries)
+          entry.key: Percentage(entry.value as int),
+      },
+      percentageParametersByMovement: {
+        for (final movement in _optionalMap(
+          json['percentageParametersByMovement'],
+        ).entries)
+          MovementId(movement.key): {
+            for (final entry in _optionalMap(movement.value).entries)
+              entry.key: Percentage(entry.value as int),
+          },
+      },
+      unit: unit,
+      roundingIncrement: rounding,
+      barProfile: BarProfile(weight: barWeight, platesPerSide: plates),
+      includeDeload: json['includeDeload'] as bool? ?? true,
+      cycleOptions: _cycleOptions(rawOptions, unit),
+    );
+    return _compiler.compileScheduled(
+      definition: definition,
+      schedule: resolvedSchedule,
+      selection: selection,
+      request: request,
+      assistancePlans: assistancePlans,
+      assistanceOptionValues: assistanceOptionValues,
     );
   }
 
@@ -1237,6 +1273,90 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     return values;
   }
 
+  CycleOptionValues _cycleOptionValues(
+    String templateId,
+    String variantId,
+    Map<String, Object?> options,
+    SourceSchedule schedule,
+  ) {
+    final global = <String, Object>{};
+    final byMovement = <MovementId, Map<String, Object>>{};
+    final bySession = <SessionId, Map<String, Object>>{};
+    final movementIds = schedule.sessions
+        .expand((session) => session.movementIds)
+        .toSet();
+    final sessionIds = schedule.sessions.map((session) => session.id).toSet();
+
+    for (final parameter in _optionParameters(templateId, variantId)) {
+      final id = _string(parameter, 'id');
+      final path = (parameter['requestPath'] as String?) ?? id;
+      final value = _optionValueAtPath(options, path) ?? parameter['default'];
+      if (value == null) continue;
+      switch (parameter['scope'] as String? ?? 'global') {
+        case 'global':
+          global[id] = value;
+        case 'perMovement':
+          _addScopedOptionValues(
+            id: id,
+            value: value,
+            ids: movementIds,
+            target: byMovement,
+            key: MovementId.new,
+          );
+        case 'perSession':
+          _addScopedOptionValues(
+            id: id,
+            value: value,
+            ids: sessionIds,
+            target: bySession,
+            key: SessionId.new,
+          );
+        case final scope:
+          throw FormatException('UNKNOWN_OPTION_SCOPE:$scope');
+      }
+    }
+    return CycleOptionValues(
+      global: Map.unmodifiable(global),
+      byMovement: Map.unmodifiable({
+        for (final entry in byMovement.entries)
+          entry.key: Map.unmodifiable(entry.value),
+      }),
+      bySession: Map.unmodifiable({
+        for (final entry in bySession.entries)
+          entry.key: Map.unmodifiable(entry.value),
+      }),
+    );
+  }
+
+  Object? _optionValueAtPath(Map<String, Object?> options, String path) {
+    Object? value = options;
+    for (final segment in path.split('.')) {
+      if (value is! Map || !value.containsKey(segment)) return null;
+      value = value[segment];
+    }
+    return value;
+  }
+
+  void _addScopedOptionValues<T>({
+    required String id,
+    required Object value,
+    required Iterable<String> ids,
+    required Map<T, Map<String, Object>> target,
+    required T Function(String) key,
+  }) {
+    if (value is Map) {
+      for (final scopedId in ids) {
+        final scopedValue = value[scopedId];
+        if (scopedValue == null) continue;
+        target.putIfAbsent(key(scopedId), () => {})[id] = scopedValue;
+      }
+      return;
+    }
+    for (final scopedId in ids) {
+      target.putIfAbsent(key(scopedId), () => {})[id] = value;
+    }
+  }
+
   Map<String, Object?> _optionDefaults(String templateId, String variantId) {
     return {
       for (final parameter in _optionParameters(templateId, variantId))
@@ -1279,7 +1399,50 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   }
 
   List<int> _defaultTrainingDays(SourceSchedule schedule) {
-    return List<int>.generate(schedule.sessions.length, (index) => index + 1);
+    return List<int>.generate(
+      schedule.sessionsPerWeek ?? schedule.sessions.length,
+      (index) => index + 1,
+    );
+  }
+
+  SourceSchedule _scheduleWithCadence(SourceSchedule schedule, int frequency) {
+    if (schedule.sessionsPerWeek != null) return schedule;
+    return SourceSchedule(
+      reference: schedule.reference,
+      sessions: schedule.sessions,
+      type: schedule.type,
+      sessionsPerWeek: frequency,
+    );
+  }
+
+  List<ResolvedAssistancePlan> _resolveAssistancePlans(
+    String templateId,
+    String variantId,
+  ) {
+    final variant = _templates
+        .singleWhere((template) => template.id == templateId)
+        .variants
+        .singleWhere((candidate) => candidate.id == variantId);
+    return List.unmodifiable([
+      for (final reference in variant.assistancePlanIds)
+        _resolveAssistancePlan(reference),
+    ]);
+  }
+
+  ResolvedAssistancePlan _resolveAssistancePlan(ComponentReference reference) {
+    final matches = _rawAssistancePlanRecords
+        .where(
+          (record) =>
+              record['id'] == reference.id &&
+              record['revision'] == reference.revision,
+        )
+        .toList(growable: false);
+    if (matches.length != 1) {
+      throw FormatException(
+        'ASSISTANCE_PLAN_NOT_RESOLVED:${reference.id}@${reference.revision}',
+      );
+    }
+    return _assistancePlanResolver.resolve(matches.single);
   }
 
   Map<String, Object?> _metadata() {
