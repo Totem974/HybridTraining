@@ -1,11 +1,14 @@
 import { renderCycleForm, localized, type CycleEditorSchema, type CycleFormIntent, type JsonValue } from './cycle/form';
 import { renderProgram, type CycleResponseLike } from './cycle/program';
 import {
-  cycleConfigurationToCycleRequest,
   cycleConfigurationToEditorValues,
   editorValuesToCycleConfiguration,
   migrateCycleRequestV1ToConfiguration,
 } from './cycle/configuration';
+import {
+  createCycleShareUrl,
+  readCycleConfigurationFromUrl,
+} from './cycle/configuration/share';
 import { changeEditorValue, normalizeEditorState } from './cycle/state/editorState';
 import {
   currentDraftId,
@@ -73,7 +76,8 @@ async function start(): Promise<void> {
     const restored = drafts
       ? await restoreCompatibleDraft(drafts, client.contractMetadata(), allowed)
       : undefined;
-    const restoredConfiguration = restored?.configuration;
+    const fromUrl = readCycleConfigurationFromUrl();
+    const restoredConfiguration = fromUrl ?? restored?.configuration;
     const preferred = restoredConfiguration
       ? catalog.templates.find((item) => item.id === restoredConfiguration.template.id)
       : catalog.templates[0];
@@ -128,6 +132,7 @@ async function loadSchema(
     values,
     client.contractMetadata(),
   );
+  updateShareUrl();
   renderEditor();
   persistDraft();
   scheduleGeneration();
@@ -179,6 +184,7 @@ async function handleIntent(intent: CycleFormIntent): Promise<void> {
     values,
     client.contractMetadata(),
   );
+  updateShareUrl();
   if (intent.path === 'showPlating' && typeof intent.value === 'boolean') {
     preferences.setShowPlating(intent.value);
   }
@@ -193,7 +199,11 @@ function scheduleGeneration(): void {
 }
 
 function generate(): void {
-  generateRequest(cycleConfigurationToCycleRequest(currentConfiguration, schema));
+  try {
+    generateRequest(client.configurationToCycleRequest<CycleRequest>(currentConfiguration));
+  } catch (error) {
+    if (status) status.textContent = message(error);
+  }
 }
 
 function generateRequest(request: object): void {
@@ -265,6 +275,12 @@ function installTransferControls(): void {
       if (!lastResponse) throw new Error('GENERATE_BEFORE_EXPORT');
       download('cycle-program.json', exportProgram(artifact('program', lastResponse)));
     }),
+    transferButton(locale === 'fr' ? 'Copier le lien' : 'Copy share link', () => {
+      const shareUrl = createCycleShareUrl(currentConfiguration);
+      window.history.replaceState({}, '', shareUrl);
+      void navigator.clipboard?.writeText(shareUrl.href).catch(() => undefined);
+      if (status) status.textContent = locale === 'fr' ? 'Lien prêt à partager.' : 'Share link ready.';
+    }),
     transferButton(locale === 'fr' ? 'Importer' : 'Import', () => input.click()),
     input,
   );
@@ -303,7 +319,7 @@ function validateImportedConfiguration(configuration: CycleConfiguration): Valid
       client.contractMetadata(),
     );
     return client.validateCycle<ValidationReport>(
-      cycleConfigurationToCycleRequest(normalizedConfiguration, importedState.schema),
+      client.configurationToCycleRequest<CycleRequest>(normalizedConfiguration),
     );
   } catch {
     return {
@@ -404,7 +420,7 @@ async function hydrateImportedConfiguration(configuration: CycleConfiguration): 
     await loadSchema(templateId, variantId, configuration);
   }
   if (generationTimer) clearTimeout(generationTimer);
-  generateRequest(cycleConfigurationToCycleRequest(currentConfiguration, schema));
+  generateRequest(client.configurationToCycleRequest<CycleRequest>(currentConfiguration));
 }
 
 function importConfiguration(payload: unknown): CycleConfiguration {
@@ -428,6 +444,15 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
 function isCycleConfiguration(value: unknown): value is CycleConfiguration {
   return isPlainRecord(value) && value.format === 'hybrid-training-cycle' &&
     value.configurationVersion === 1;
+}
+
+function updateShareUrl(): void {
+  if (!currentConfiguration) return;
+  window.history.replaceState(
+    {},
+    '',
+    createCycleShareUrl(currentConfiguration),
+  );
 }
 
 function installLocaleControls(): void {

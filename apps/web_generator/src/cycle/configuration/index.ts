@@ -3,6 +3,7 @@ import type {
   CycleRequest,
   Weight,
 } from "../../../../../contracts/v1/generated/contracts";
+export type { CycleConfiguration } from "../../../../../contracts/v1/generated/contracts";
 import type { CycleEditorSchema, JsonValue } from "../form/types";
 import { buildCycleRequest, type BuildCycleRequestOptions } from "../request/buildCycleRequest";
 

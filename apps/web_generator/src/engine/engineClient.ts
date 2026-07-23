@@ -5,6 +5,7 @@ export interface EngineBridge {
   engineInfo(): string;
   catalogIndex(requestJson: string): string;
   cycleEditorSchema(requestJson: string): string;
+  configurationToCycleRequest(configurationJson: string): string;
   validateCycle(requestJson: string): string;
   generateCycle(requestJson: string): string;
   generateMacrocycle(requestJson: string): string;
@@ -50,6 +51,16 @@ export class EngineClient {
 
   cycleEditorSchema<T>(request: object): T {
     return this.call<T>(this.bridge.cycleEditorSchema.bind(this.bridge), request);
+  }
+
+  configurationToCycleRequest<T>(configuration: object): T {
+    const request = parseObject(
+      this.bridge.configurationToCycleRequest(JSON.stringify(configuration)),
+    );
+    if (request.apiVersion !== 'v1' || request.schemaVersion !== 1) {
+      throw new Error('ENGINE_CONTRACT_VERSION_UNSUPPORTED');
+    }
+    return request as T;
   }
 
   validateCycle<T>(request: object): T {

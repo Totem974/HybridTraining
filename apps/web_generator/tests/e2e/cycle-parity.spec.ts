@@ -127,6 +127,19 @@ test('configuration import and configuration/program exports stay local', async 
   expect(external).toEqual([]);
 });
 
+test('share URL restores the canonical configuration locally', async ({ page }) => {
+  const external = await openIntegratedCycle(page);
+  await page.getByTestId('joker.enabled').check();
+  await expect(page).toHaveURL(/\?cycle=/);
+  const sharedUrl = page.url();
+  await page.getByTestId('joker.enabled').uncheck();
+  await page.goto(sharedUrl);
+  await expect(page.locator('[data-cycle-ready="true"]')).toHaveCount(1);
+  await expect(page.getByTestId('joker.enabled')).toBeChecked();
+  await awaitGeneratedProgram(page);
+  expect(external).toEqual([]);
+});
+
 for (const width of [1440, 390, 320]) {
   test(`responsive Cycle flow remains usable at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: width > 500 ? 1000 : 844 });

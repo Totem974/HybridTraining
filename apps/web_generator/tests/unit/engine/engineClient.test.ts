@@ -44,6 +44,7 @@ function bridge(): EngineBridge {
     engineInfo: () => response,
     catalogIndex: () => JSON.stringify({ ...metadata, templates: [] }),
     cycleEditorSchema: () => response,
+    configurationToCycleRequest: () => response,
     validateCycle: () => response,
     generateCycle: () => response,
     generateMacrocycle: () => response,
