@@ -25,7 +25,7 @@ void main() {
       'rotating',
       'multiMovement',
     });
-    const keys = {
+    const requiredKeys = {
       'id',
       'revision',
       'labels',
@@ -35,7 +35,16 @@ void main() {
       'sessions',
     };
     for (final schedule in schedules) {
-      expect(schedule.keys.toSet(), keys);
+      final id = schedule['id'];
+      final expectedKeys = {...requiredKeys};
+      if (id == 'schedule_two_day_paired_source_order') {
+        expectedKeys.add('sessionBlockOrder');
+        expect(schedule['type'], 'multiMovement');
+        expect(schedule['sessionBlockOrder'], 'movementMajor');
+      } else {
+        expect(schedule, isNot(contains('sessionBlockOrder')));
+      }
+      expect(schedule.keys.toSet(), expectedKeys);
       expect(schedule['revision'], 1);
       expect(schedule['sourceRuleIds'], isNotEmpty);
       expect(schedule['sessionsPerWeek'], inInclusiveRange(1, 7));
@@ -55,6 +64,7 @@ void main() {
         'schedule_four_day_fixed': 4,
         'schedule_three_day_rotating': 3,
         'schedule_two_day_multi_movement_option_one': 2,
+        'schedule_two_day_paired_source_order': 2,
         'schedule_two_day_rotating_four_lifts': 2,
       },
     );

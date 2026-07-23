@@ -71,6 +71,29 @@ void main() {
           expectedKeys.add('requestPath');
           expect(parameter['requestPath'], startsWith('fullBody.'));
         }
+        if (parameter.containsKey('valueLabels')) {
+          expectedKeys.add('valueLabels');
+          expect(parameter['type'], 'enumeration');
+          final allowedValues = parameter['allowedValues']! as List<Object?>;
+          final valueLabels = (parameter['valueLabels']! as List<Object?>)
+              .cast<Map<String, Object?>>();
+          expect(valueLabels, hasLength(allowedValues.length));
+          final labeledValues = <Object?>{};
+          for (final valueLabel in valueLabels) {
+            expect(valueLabel.keys.toSet(), {'value', 'labels'});
+            expect(allowedValues, contains(valueLabel['value']));
+            expect(
+              labeledValues.add(valueLabel['value']),
+              isTrue,
+              reason: '${parameter['id']} has duplicate value labels',
+            );
+            final labels = valueLabel['labels']! as Map<String, Object?>;
+            expect(labels.keys.toSet(), {'en', 'fr'});
+            expect(labels['en'], isA<String>().having((value) => value, 'en', isNotEmpty));
+            expect(labels['fr'], isA<String>().having((value) => value, 'fr', isNotEmpty));
+          }
+          expect(labeledValues, unorderedEquals(allowedValues));
+        }
         expect(parameter.keys.toSet(), expectedKeys);
         expect(parameter['visibleWhen'], {'type': 'always'});
         expect(parameter['enabledWhen'], {'type': 'always'});

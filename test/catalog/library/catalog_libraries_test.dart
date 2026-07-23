@@ -18,6 +18,10 @@ void expectDocumentShape(Map<String, Object?> document, String kind) {
 }
 
 void expectStableRecords(List<Map<String, Object?>> values) {
+  const calculatorSourceRuleIds = {
+    'app.source_calculator.gvt_assistance',
+    'app.source_calculator.two_day_assistance',
+  };
   final ids = <String>{};
   for (final record in values) {
     final id = record['id']! as String;
@@ -32,7 +36,14 @@ void expectStableRecords(List<Map<String, Object?>> values) {
         .cast<String>();
     expect(sourceRuleIds, isNotEmpty, reason: '$id must be sourced');
     for (final sourceRuleId in sourceRuleIds) {
-      expect(sourceRuleId, matches(RegExp(r'^(or|by|fv|pl)\.')));
+      final isPublishedBookRule = RegExp(
+        r'^(or|by|fv|pl)\.',
+      ).hasMatch(sourceRuleId);
+      expect(
+        isPublishedBookRule || calculatorSourceRuleIds.contains(sourceRuleId),
+        isTrue,
+        reason: '$id has an unrecognized source rule: $sourceRuleId',
+      );
     }
     expect(
       jsonEncode(record).toLowerCase(),
