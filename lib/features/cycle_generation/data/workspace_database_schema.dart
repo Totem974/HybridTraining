@@ -4,7 +4,7 @@ import 'sqlite_workspace_program_repository.dart';
 import '../../forever/data/forever_sqlite_schema.dart';
 
 abstract final class WorkspaceDatabaseSchema {
-  static const version = 3;
+  static const version = 4;
   static Future<void> create(Database db, int _) async {
     await db.execute(
       '''CREATE TABLE profiles(
@@ -31,6 +31,7 @@ abstract final class WorkspaceDatabaseSchema {
       request_json TEXT NOT NULL, updated_at TEXT NOT NULL)''');
     await SqliteWorkspaceProgramRepository.createTables(db);
     await createForeverWorkspaceTables(db);
+    await createCycleConfigurationTables(db);
   }
 
   static Future<void> upgrade(
@@ -44,5 +45,26 @@ abstract final class WorkspaceDatabaseSchema {
     if (oldVersion < 3 && newVersion >= 3) {
       await migrateForeverWorkspaceTables(db, oldVersion, newVersion);
     }
+    if (oldVersion < 4 && newVersion >= 4) {
+      await createCycleConfigurationTables(db);
+    }
   }
+}
+
+Future<void> createCycleConfigurationTables(Database db) async {
+  await db.execute('''CREATE TABLE IF NOT EXISTS cycle_configurations(
+    id TEXT PRIMARY KEY,
+    profile_id TEXT REFERENCES profiles(id),
+    name TEXT NOT NULL,
+    format_version INTEGER NOT NULL CHECK(format_version > 0),
+    catalog_version INTEGER NOT NULL CHECK(catalog_version > 0),
+    catalog_hash TEXT NOT NULL,
+    configuration_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    archived_at TEXT)''');
+  await db.execute(
+    '''CREATE INDEX IF NOT EXISTS cycle_configurations_profile_updated_idx
+    ON cycle_configurations(profile_id, updated_at DESC)''',
+  );
 }
