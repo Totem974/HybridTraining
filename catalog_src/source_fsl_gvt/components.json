@@ -1,0 +1,563 @@
+{
+  "schemaVersion": 1,
+  "kind": "components",
+  "components": [
+    {
+      "id": "source_fsl_amrap",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "Source FSL AMRAP",
+        "fr": "FSL AMRAP source"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.fsl"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "movementRelation": "sameAsMain",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_fsl_gvt"
+        ]
+      },
+      "block": {
+        "id": "fsl_amrap",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "amrap"
+            },
+            "load": {
+              "type": "relative_set",
+              "position": "first",
+              "multiplierBasisPoints": 10000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_fsl_multiple",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "Source FSL multiple sets",
+        "fr": "FSL series multiples source"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.fsl"
+      ],
+      "parameterSchemaIds": [
+        "fsl_set_count",
+        "fsl_repetitions"
+      ],
+      "constraints": {
+        "movementRelation": "sameAsMain",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_fsl_gvt"
+        ]
+      },
+      "block": {
+        "id": "fsl_multiple",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "parameterized_fixed",
+              "parameterId": "fsl_repetitions",
+              "default": 5,
+              "minimum": 3,
+              "maximum": 8
+            },
+            "load": {
+              "type": "relative_set",
+              "position": "first",
+              "multiplierBasisPoints": 10000
+            },
+            "multiplicity": {
+              "type": "parameterized",
+              "parameterId": "fsl_set_count",
+              "default": 3,
+              "minimum": 3,
+              "maximum": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_gvt_10x10_same",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "Source GVT 10x10 same exercise",
+        "fr": "GVT 10x10 source meme exercice"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.gvt"
+      ],
+      "parameterSchemaIds": [
+        "gvt_percentage"
+      ],
+      "constraints": {
+        "movementRelation": "sameAsMain",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_fsl_gvt"
+        ]
+      },
+      "block": {
+        "id": "gvt_10x10",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "parameterized_training_max_percentage",
+              "parameterId": "gvt_percentage",
+              "defaultBasisPoints": 3000,
+              "minimumBasisPoints": 3000,
+              "maximumBasisPoints": 7500
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 10
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_gvt_10x10_alternate",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "Source GVT 10x10 alternate exercise",
+        "fr": "GVT 10x10 source exercice alterne"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.gvt"
+      ],
+      "parameterSchemaIds": [
+        "gvt_percentage"
+      ],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_fsl_gvt"
+        ]
+      },
+      "sessionMovementBindings": [
+        {
+          "sessionId": "overhead_press",
+          "movementId": "bench_press"
+        },
+        {
+          "sessionId": "deadlift",
+          "movementId": "squat"
+        },
+        {
+          "sessionId": "bench_press",
+          "movementId": "overhead_press"
+        },
+        {
+          "sessionId": "squat",
+          "movementId": "deadlift"
+        }
+      ],
+      "block": {
+        "id": "gvt_10x10",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "parameterized_training_max_percentage",
+              "parameterId": "gvt_percentage",
+              "defaultBasisPoints": 3000,
+              "minimumBasisPoints": 3000,
+              "maximumBasisPoints": 7500
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 10
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_gvt_assistance_ohp_default",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "Source GVT overhead press assistance",
+        "fr": "Assistance GVT source developpe militaire"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.gvt_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "loadSelection": "userSelectedBecauseSourcePrescribesNoLoad",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_fsl_gvt"
+        ],
+        "sessionIds": [
+          "overhead_press"
+        ]
+      },
+      "block": {
+        "id": "gvt_assistance_lat_pulldown",
+        "role": "assistance",
+        "movementId": "lat_pulldown",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "unloaded"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 10
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_gvt_assistance_deadlift_default",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "Source GVT deadlift assistance",
+        "fr": "Assistance GVT source souleve de terre"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.gvt_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_fsl_gvt"
+        ],
+        "sessionIds": [
+          "deadlift"
+        ]
+      },
+      "block": {
+        "id": "gvt_assistance_hanging_leg_raise",
+        "role": "assistance",
+        "movementId": "hanging_leg_raise",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 15
+            },
+            "load": {
+              "type": "bodyweight"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_gvt_assistance_bench_default",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "Source GVT bench press assistance",
+        "fr": "Assistance GVT source developpe couche"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.gvt_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "loadSelection": "userSelectedBecauseSourcePrescribesNoLoad",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_fsl_gvt"
+        ],
+        "sessionIds": [
+          "bench_press"
+        ]
+      },
+      "block": {
+        "id": "gvt_assistance_dumbbell_row",
+        "role": "assistance",
+        "movementId": "dumbbell_row",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "unloaded"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 10
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_gvt_assistance_squat_default",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "Source GVT squat assistance",
+        "fr": "Assistance GVT source squat"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.gvt_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_fsl_gvt"
+        ],
+        "sessionIds": [
+          "squat"
+        ]
+      },
+      "block": {
+        "id": "gvt_assistance_ab_wheel",
+        "role": "assistance",
+        "movementId": "ab_wheel",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "bodyweight"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_gvt_assistance_ohp_alternate",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "Source GVT overhead press alternate assistance",
+        "fr": "Assistance GVT source alternee developpe militaire"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.gvt_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "loadSelection": "userSelectedBecauseSourcePrescribesNoLoad",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_fsl_gvt"
+        ],
+        "sessionIds": [
+          "overhead_press"
+        ]
+      },
+      "block": {
+        "id": "gvt_assistance_dumbbell_row",
+        "role": "assistance",
+        "movementId": "dumbbell_row",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "unloaded"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 10
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_gvt_assistance_deadlift_alternate",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "Source GVT deadlift alternate assistance",
+        "fr": "Assistance GVT source alternee souleve de terre"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.gvt_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_fsl_gvt"
+        ],
+        "sessionIds": [
+          "deadlift"
+        ]
+      },
+      "block": {
+        "id": "gvt_assistance_ab_wheel",
+        "role": "assistance",
+        "movementId": "ab_wheel",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "bodyweight"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_gvt_assistance_bench_alternate",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "Source GVT bench press alternate assistance",
+        "fr": "Assistance GVT source alternee developpe couche"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.gvt_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "loadSelection": "userSelectedBecauseSourcePrescribesNoLoad",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_fsl_gvt"
+        ],
+        "sessionIds": [
+          "bench_press"
+        ]
+      },
+      "block": {
+        "id": "gvt_assistance_lat_pulldown",
+        "role": "assistance",
+        "movementId": "lat_pulldown",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "unloaded"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 10
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_gvt_assistance_squat_alternate",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "Source GVT squat alternate assistance",
+        "fr": "Assistance GVT source alternee squat"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.gvt_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_fsl_gvt"
+        ],
+        "sessionIds": [
+          "squat"
+        ]
+      },
+      "block": {
+        "id": "gvt_assistance_hanging_leg_raise",
+        "role": "assistance",
+        "movementId": "hanging_leg_raise",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 15
+            },
+            "load": {
+              "type": "bodyweight"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

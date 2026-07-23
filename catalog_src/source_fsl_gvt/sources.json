@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "kind": "sources",
+  "sources": [
+    {
+      "ruleId": "app.source_calculator.fsl",
+      "work": "Original 5/3/1 calculator",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "First Set Last modes, bounds, and generated prescriptions observed in the exact 2026-07-23 local capture",
+      "reviewStatus": "referenceAppObserved"
+    },
+    {
+      "ruleId": "app.source_calculator.gvt",
+      "work": "Original 5/3/1 calculator",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "GVT ratio, alternate-exercise bindings, and generated prescriptions observed in the exact 2026-07-23 local capture",
+      "reviewStatus": "referenceAppObserved"
+    },
+    {
+      "ruleId": "app.source_calculator.gvt_assistance",
+      "work": "Original 5/3/1 calculator",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "GVT assistance exercise, set, repetition, alternate, and deload mappings observed in the exact 2026-07-23 local capture",
+      "reviewStatus": "referenceAppObserved"
+    }
+  ]
+}

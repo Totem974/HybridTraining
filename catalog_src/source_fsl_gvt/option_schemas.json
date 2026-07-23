@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 1,
+  "kind": "optionSchemas",
+  "optionSchemas": [
+    {
+      "id": "source_fsl_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "app.source_calculator.fsl"
+      ],
+      "includeSchemaIds": [
+        {
+          "id": "classic_crosscut_options",
+          "revision": 1
+        }
+      ],
+      "parameters": [
+        {
+          "id": "fsl_mode",
+          "presentationGroup": "template",
+          "labelEn": "Option",
+          "labelFr": "Option",
+          "type": "enumeration",
+          "scope": "global",
+          "default": "amrap",
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [
+            "amrap",
+            "multiple"
+          ],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        },
+        {
+          "id": "fsl_set_count",
+          "presentationGroup": "template",
+          "labelEn": "Number of sets",
+          "labelFr": "Nombre de series",
+          "type": "integer",
+          "scope": "global",
+          "default": 3,
+          "minimum": 3,
+          "maximum": 5,
+          "step": 1,
+          "allowedValues": [
+            3,
+            4,
+            5
+          ],
+          "visibleWhen": {
+            "type": "equals",
+            "parameterId": "fsl_mode",
+            "value": "multiple"
+          },
+          "enabledWhen": {
+            "type": "equals",
+            "parameterId": "fsl_mode",
+            "value": "multiple"
+          },
+          "requiredWhen": {
+            "type": "equals",
+            "parameterId": "fsl_mode",
+            "value": "multiple"
+          }
+        },
+        {
+          "id": "fsl_repetitions",
+          "presentationGroup": "template",
+          "labelEn": "Reps per set",
+          "labelFr": "Repetitions par serie",
+          "type": "integer",
+          "scope": "global",
+          "default": 5,
+          "minimum": 3,
+          "maximum": 8,
+          "step": 1,
+          "allowedValues": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "visibleWhen": {
+            "type": "equals",
+            "parameterId": "fsl_mode",
+            "value": "multiple"
+          },
+          "enabledWhen": {
+            "type": "equals",
+            "parameterId": "fsl_mode",
+            "value": "multiple"
+          },
+          "requiredWhen": {
+            "type": "equals",
+            "parameterId": "fsl_mode",
+            "value": "multiple"
+          }
+        }
+      ]
+    },
+    {
+      "id": "source_gvt_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "app.source_calculator.gvt",
+        "app.source_calculator.gvt_assistance"
+      ],
+      "includeSchemaIds": [
+        {
+          "id": "classic_crosscut_options",
+          "revision": 1
+        }
+      ],
+      "parameters": [
+        {
+          "id": "gvt_percentage",
+          "presentationGroup": "template",
+          "labelEn": "10 x 10 @",
+          "labelFr": "10 x 10 a",
+          "requestPath": "gvt_percentage",
+          "type": "percentage",
+          "scope": "perMovement",
+          "default": 3000,
+          "minimum": 3000,
+          "maximum": 7500,
+          "step": 500,
+          "allowedValues": [
+            3000,
+            3500,
+            4000,
+            4500,
+            5000,
+            5500,
+            6000,
+            6500,
+            7000,
+            7500
+          ],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        },
+        {
+          "id": "gvt_alternate",
+          "presentationGroup": "template",
+          "labelEn": "Alternate exercise",
+          "labelFr": "Exercice alterne",
+          "type": "boolean",
+          "scope": "global",
+          "default": false,
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [
+            true,
+            false
+          ],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        },
+        {
+          "id": "gvt_use_same_ratio",
+          "presentationGroup": "template",
+          "labelEn": "Use same ratio",
+          "labelFr": "Utiliser le meme ratio",
+          "type": "boolean",
+          "scope": "global",
+          "default": true,
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [
+            true,
+            false
+          ],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        }
+      ]
+    }
+  ]
+}

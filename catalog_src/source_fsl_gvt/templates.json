@@ -1,0 +1,479 @@
+{
+  "schemaVersion": 1,
+  "kind": "templates",
+  "generation": {
+    "id": "source_fsl_gvt",
+    "labels": {
+      "en": "Source FSL and GVT",
+      "fr": "FSL et GVT source"
+    }
+  },
+  "templates": [
+    {
+      "id": "source_calculator_first_set_last",
+      "revision": 1,
+      "surface": "cyclePublic",
+      "labels": {
+        "en": "First Set Last - source calculator",
+        "fr": "First Set Last - calculateur source"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.fsl"
+      ],
+      "variants": [
+        {
+          "id": "standard",
+          "revision": 1,
+          "loadRoundingPolicy": "up",
+          "labels": {
+            "en": "Standard",
+            "fr": "Standard"
+          },
+          "sourceRuleIds": [
+            "app.source_calculator.fsl"
+          ],
+          "componentSelections": [
+            {
+              "parameterId": "fsl_mode",
+              "targetComponentId": {
+                "id": "source_fsl_amrap",
+                "revision": 1
+              },
+              "choices": [
+                {
+                  "value": "amrap",
+                  "componentId": {
+                    "id": "source_fsl_amrap",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": "multiple",
+                  "componentId": {
+                    "id": "source_fsl_multiple",
+                    "revision": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
+          "optionSchemaId": {
+            "id": "source_fsl_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            },
+            {
+              "id": "schedule_three_day_rotating",
+              "revision": 1
+            }
+          ],
+          "assistancePlanIds": [],
+          "conditioningDefinitionIds": [],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "supplementalMovementRelation": "sameAsMain"
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeWarmUp": true,
+            "includeDeload": true,
+            "fsl_mode": "amrap",
+            "fsl_set_count": 3,
+            "fsl_repetitions": 5
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_fsl_amrap",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_fsl_amrap",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_fsl_amrap",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "source_calculator_gvt",
+      "revision": 1,
+      "surface": "cyclePublic",
+      "labels": {
+        "en": "GVT - source calculator",
+        "fr": "GVT - calculateur source"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.gvt",
+        "app.source_calculator.gvt_assistance"
+      ],
+      "variants": [
+        {
+          "id": "standard",
+          "revision": 1,
+          "loadRoundingPolicy": "up",
+          "labels": {
+            "en": "Standard",
+            "fr": "Standard"
+          },
+          "sourceRuleIds": [
+            "app.source_calculator.gvt",
+            "app.source_calculator.gvt_assistance"
+          ],
+          "componentSelections": [
+            {
+              "parameterId": "gvt_alternate",
+              "targetComponentId": {
+                "id": "source_gvt_10x10_same",
+                "revision": 1
+              },
+              "choices": [
+                {
+                  "value": false,
+                  "componentId": {
+                    "id": "source_gvt_10x10_same",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": true,
+                  "componentId": {
+                    "id": "source_gvt_10x10_alternate",
+                    "revision": 1
+                  }
+                }
+              ]
+            },
+            {
+              "parameterId": "gvt_alternate",
+              "targetComponentId": {
+                "id": "source_gvt_assistance_ohp_default",
+                "revision": 1
+              },
+              "choices": [
+                {
+                  "value": false,
+                  "componentId": {
+                    "id": "source_gvt_assistance_ohp_default",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": true,
+                  "componentId": {
+                    "id": "source_gvt_assistance_ohp_alternate",
+                    "revision": 1
+                  }
+                }
+              ]
+            },
+            {
+              "parameterId": "gvt_alternate",
+              "targetComponentId": {
+                "id": "source_gvt_assistance_deadlift_default",
+                "revision": 1
+              },
+              "choices": [
+                {
+                  "value": false,
+                  "componentId": {
+                    "id": "source_gvt_assistance_deadlift_default",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": true,
+                  "componentId": {
+                    "id": "source_gvt_assistance_deadlift_alternate",
+                    "revision": 1
+                  }
+                }
+              ]
+            },
+            {
+              "parameterId": "gvt_alternate",
+              "targetComponentId": {
+                "id": "source_gvt_assistance_bench_default",
+                "revision": 1
+              },
+              "choices": [
+                {
+                  "value": false,
+                  "componentId": {
+                    "id": "source_gvt_assistance_bench_default",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": true,
+                  "componentId": {
+                    "id": "source_gvt_assistance_bench_alternate",
+                    "revision": 1
+                  }
+                }
+              ]
+            },
+            {
+              "parameterId": "gvt_alternate",
+              "targetComponentId": {
+                "id": "source_gvt_assistance_squat_default",
+                "revision": 1
+              },
+              "choices": [
+                {
+                  "value": false,
+                  "componentId": {
+                    "id": "source_gvt_assistance_squat_default",
+                    "revision": 1
+                  }
+                },
+                {
+                  "value": true,
+                  "componentId": {
+                    "id": "source_gvt_assistance_squat_alternate",
+                    "revision": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
+          "optionSchemaId": {
+            "id": "source_gvt_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            },
+            {
+              "id": "schedule_three_day_rotating",
+              "revision": 1
+            },
+            {
+              "id": "schedule_two_day_rotating_four_lifts",
+              "revision": 1
+            }
+          ],
+          "assistancePlanIds": [],
+          "conditioningDefinitionIds": [],
+          "compatibilities": {
+            "trainingMaxRequired": true
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeWarmUp": true,
+            "includeDeload": true,
+            "gvt_alternate": false,
+            "gvt_use_same_ratio": true,
+            "percentageParametersByMovement": {
+              "overhead_press": {
+                "gvt_percentage": 3000
+              },
+              "deadlift": {
+                "gvt_percentage": 3000
+              },
+              "bench_press": {
+                "gvt_percentage": 3000
+              },
+              "squat": {
+                "gvt_percentage": 3000
+              }
+            }
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_10x10_same",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_ohp_default",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_deadlift_default",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_bench_default",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_squat_default",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_10x10_same",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_ohp_default",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_deadlift_default",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_bench_default",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_squat_default",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_10x10_same",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_ohp_default",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_deadlift_default",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_bench_default",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_squat_default",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_ohp_default",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_deadlift_default",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_bench_default",
+                  "revision": 1
+                },
+                {
+                  "id": "source_gvt_assistance_squat_default",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
