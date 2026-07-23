@@ -111,6 +111,7 @@ final class CatalogPlan {
     this.assistancePlanIds = const [],
     this.conditioningDefinitionIds = const [],
     this.loadRoundingPolicy = LoadRoundingPolicy.nearest,
+    this.trainingMaxProgression,
   });
 
   final int catalogVersion;
@@ -127,6 +128,7 @@ final class CatalogPlan {
   final List<ComponentReference> assistancePlanIds;
   final List<ComponentReference> conditioningDefinitionIds;
   final LoadRoundingPolicy loadRoundingPolicy;
+  final TrainingMaxProgression? trainingMaxProgression;
 }
 
 final class CatalogPlanResolver {
@@ -164,6 +166,7 @@ final class CatalogPlanResolver {
                 phaseIteration: 1,
                 sourceWeekNumber: week.weekNumber,
                 components: week.components,
+                trainingMaxProgressionStep: 0,
               ),
           ]
         : phaseExpander.expand(plan.phases);
@@ -180,6 +183,7 @@ final class CatalogPlanResolver {
               phaseId: week.phaseId,
               phaseIteration: week.phaseIteration,
               sourceWeekNumber: week.sourceWeekNumber,
+              trainingMaxProgressionStep: week.trainingMaxProgressionStep,
             ),
             sessions: [
               for (final session in plan.sessions)
@@ -201,6 +205,7 @@ final class CatalogPlanResolver {
         plan.conditioningDefinitionIds,
       ),
       loadRoundingPolicy: plan.loadRoundingPolicy,
+      trainingMaxProgression: plan.trainingMaxProgression,
     );
   }
 

@@ -56,6 +56,7 @@ final class CatalogPlanDataResolver {
         CatalogPhase(
           id: phase.id,
           repeatCount: phase.repeatCount,
+          trainingMaxProgressionStep: phase.trainingMaxProgressionStep,
           weekPlans: _applyComponentSelections(
             phase.weekPlans,
             variant.componentSelections,
@@ -131,6 +132,7 @@ final class CatalogPlanDataResolver {
         variant.conditioningDefinitionIds,
       ),
       loadRoundingPolicy: variant.loadRoundingPolicy,
+      trainingMaxProgression: variant.trainingMaxProgression,
       optionRecipes: _resolveOptionRecipes(
         variant,
         optionRecipes,
@@ -170,6 +172,7 @@ final class CatalogPlanDataResolver {
                 phaseIteration: 1,
                 sourceWeekNumber: week.weekNumber,
                 components: week.components,
+                trainingMaxProgressionStep: 0,
               ),
           ]
         : const PhaseExpander().expand(phases);

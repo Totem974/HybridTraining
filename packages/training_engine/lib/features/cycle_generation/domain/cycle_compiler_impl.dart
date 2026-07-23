@@ -44,6 +44,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
     );
     final weeks = <GeneratedWeek>[];
     for (final week in effectiveDefinition.weeks) {
+      final weekMaxes = _trainingMaxesForWeek(effectiveDefinition, week, maxes);
       final sessions = <GeneratedSession>[];
       for (var index = 0; index < request.sessionOrder.length; index++) {
         final movement = request.sessionOrder[index];
@@ -64,7 +65,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
             blocks: _compileBlocks(
               blocks,
               movement,
-              maxes,
+              weekMaxes,
               request,
               effectiveDefinition.loadRoundingPolicy,
             ),
@@ -128,6 +129,11 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
         cursor = _onOrAfter(cursor, selection.trainingDays[dayIndex]);
         final blocks = <GeneratedBlock>[];
         for (final source in day.sources) {
+          final sourceMaxes = _trainingMaxesForWeek(
+            effectiveDefinition,
+            source.week,
+            maxes,
+          );
           final effective = _effectiveBlocks(
             effectiveDefinition,
             source.week,
@@ -139,7 +145,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
             _compileBlocks(
               effective,
               source.template.movementIds.first,
-              maxes,
+              sourceMaxes,
               request,
               effectiveDefinition.loadRoundingPolicy,
             ),
@@ -745,6 +751,44 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
     return maxes;
   }
 
+  Map<MovementId, Weight> _trainingMaxesForWeek(
+    ResolvedCycleDefinition definition,
+    WeekDefinition week,
+    Map<MovementId, Weight> initialMaxes,
+  ) {
+    final progression = definition.trainingMaxProgression;
+    final step = week.origin?.trainingMaxProgressionStep ?? 0;
+    if (progression == null || step == 0) return initialMaxes;
+    return Map.unmodifiable({
+      for (final entry in initialMaxes.entries)
+        entry.key: switch (progression) {
+          LinearPhaseStepTrainingMaxProgression() => _progressedTrainingMax(
+            progression,
+            entry.key,
+            entry.value,
+            step,
+          ),
+        },
+    });
+  }
+
+  Weight _progressedTrainingMax(
+    LinearPhaseStepTrainingMaxProgression progression,
+    MovementId movement,
+    Weight initial,
+    int step,
+  ) {
+    final increment = progression.incrementFor(initial.unit, movement);
+    if (increment == null || increment <= 0) {
+      throw CycleGenerationException(
+        CycleGenerationErrorCode.invalidCycleOptions,
+        'Training Max progression has no positive '
+        '${initial.unit.name} increment for ${movement.value}.',
+      );
+    }
+    return Weight(initial.centiUnits + step * increment, initial.unit);
+  }
+
   ResolvedCycleDefinition _applyWeekOrder(
     ResolvedCycleDefinition definition,
     WorkWeekOrder order,
@@ -788,6 +832,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
       assistancePlanIds: definition.assistancePlanIds,
       conditioningDefinitionIds: definition.conditioningDefinitionIds,
       loadRoundingPolicy: definition.loadRoundingPolicy,
+      trainingMaxProgression: definition.trainingMaxProgression,
     );
   }
 

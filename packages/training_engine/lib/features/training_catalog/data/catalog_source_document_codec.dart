@@ -71,6 +71,7 @@ final class SourceVariant {
     this.assistancePlanIds = const [],
     this.conditioningDefinitionIds = const [],
     this.loadRoundingPolicy = LoadRoundingPolicy.nearest,
+    this.trainingMaxProgression,
   });
   final String id;
   final int revision;
@@ -84,6 +85,7 @@ final class SourceVariant {
   final List<ComponentReference> assistancePlanIds;
   final List<ComponentReference> conditioningDefinitionIds;
   final LoadRoundingPolicy loadRoundingPolicy;
+  final TrainingMaxProgression? trainingMaxProgression;
 }
 
 final class SourceBlockRecipe {
@@ -598,6 +600,7 @@ final class CatalogSourceDocumentCodec {
         'componentSelections',
         'optionRecipeId',
         'loadRoundingPolicy',
+        'trainingMaxProgression',
       },
       optional: const {
         'weekPlans',
@@ -607,6 +610,7 @@ final class CatalogSourceDocumentCodec {
         'componentSelections',
         'optionRecipeId',
         'loadRoundingPolicy',
+        'trainingMaxProgression',
       },
     );
     if (map.containsKey('weekPlans') == map.containsKey('phases')) {
@@ -642,16 +646,32 @@ final class CatalogSourceDocumentCodec {
           : _list(map, 'phases')
                 .map((value) {
                   final phase = _map(value, 'phase');
-                  _keys(phase, const {'id', 'repeatCount', 'weekPlans'});
+                  _keys(
+                    phase,
+                    const {
+                      'id',
+                      'repeatCount',
+                      'weekPlans',
+                      'trainingMaxProgressionStep',
+                    },
+                    optional: const {'trainingMaxProgressionStep'},
+                  );
                   return CatalogPhase(
                     id: _string(phase, 'id'),
                     repeatCount: _int(phase, 'repeatCount'),
                     weekPlans: _weekPlans(_list(phase, 'weekPlans')),
+                    trainingMaxProgressionStep:
+                        phase['trainingMaxProgressionStep'] == null
+                        ? 0
+                        : _nonNegativeInt(phase, 'trainingMaxProgressionStep'),
                   );
                 })
                 .toList(growable: false),
       compatibilities: _map(map['compatibilities'], 'compatibilities'),
       loadRoundingPolicy: _loadRoundingPolicy(map['loadRoundingPolicy']),
+      trainingMaxProgression: _trainingMaxProgression(
+        map['trainingMaxProgression'],
+      ),
       componentSelections: map['componentSelections'] == null
           ? const []
           : _list(map, 'componentSelections')
@@ -704,6 +724,38 @@ final class CatalogSourceDocumentCodec {
       throw const FormatException('loadRoundingPolicy must be nearest or up.');
     }
     return LoadRoundingPolicy.values.byName(value);
+  }
+
+  TrainingMaxProgression? _trainingMaxProgression(Object? value) {
+    if (value == null) return null;
+    final map = _map(value, 'trainingMaxProgression');
+    _keys(map, const {'type', 'incrementCentiUnitsByUnit'});
+    if (_string(map, 'type') != 'linear_phase_step') {
+      throw FormatException(
+        'Unknown trainingMaxProgression type ${map['type']}.',
+      );
+    }
+    final units = _map(
+      map['incrementCentiUnitsByUnit'],
+      'incrementCentiUnitsByUnit',
+    );
+    _keys(units, const {'lb', 'kg'});
+    const movementIds = {'overhead_press', 'bench_press', 'squat', 'deadlift'};
+    final increments = <WeightUnit, Map<MovementId, int>>{};
+    for (final unit in WeightUnit.values) {
+      final byMovement = _map(
+        units[unit.name],
+        'incrementCentiUnitsByUnit.${unit.name}',
+      );
+      _keys(byMovement, movementIds);
+      increments[unit] = Map.unmodifiable({
+        for (final movementId in movementIds)
+          MovementId(movementId): _positiveInt(byMovement, movementId),
+      });
+    }
+    return LinearPhaseStepTrainingMaxProgression(
+      incrementCentiUnitsByUnit: Map.unmodifiable(increments),
+    );
   }
 
   List<CatalogWeekPlan> _weekPlans(List<Object?> values) => values
@@ -1193,6 +1245,14 @@ final class CatalogSourceDocumentCodec {
   static int _positiveInt(Map<String, Object?> map, String key) {
     final value = _int(map, key);
     if (value <= 0) throw FormatException('$key must be positive.');
+    return value;
+  }
+
+  static int _nonNegativeInt(Map<String, Object?> map, String key) {
+    final value = _int(map, key);
+    if (value < 0) {
+      throw FormatException('$key must be non-negative.');
+    }
     return value;
   }
 

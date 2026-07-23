@@ -28,6 +28,22 @@ final class Percentage {
 
 extension type const MovementId(String value) {}
 
+sealed class TrainingMaxProgression {
+  const TrainingMaxProgression();
+}
+
+final class LinearPhaseStepTrainingMaxProgression
+    extends TrainingMaxProgression {
+  const LinearPhaseStepTrainingMaxProgression({
+    required this.incrementCentiUnitsByUnit,
+  });
+
+  final Map<WeightUnit, Map<MovementId, int>> incrementCentiUnitsByUnit;
+
+  int? incrementFor(WeightUnit unit, MovementId movement) =>
+      incrementCentiUnitsByUnit[unit]?[movement];
+}
+
 sealed class TrainingMaxInput {
   const TrainingMaxInput();
 }
@@ -433,6 +449,7 @@ final class ResolvedCycleDefinition {
     this.assistancePlanIds = const [],
     this.conditioningDefinitionIds = const [],
     this.loadRoundingPolicy = LoadRoundingPolicy.nearest,
+    this.trainingMaxProgression,
   });
   final int catalogVersion;
   final String templateId;
@@ -446,6 +463,7 @@ final class ResolvedCycleDefinition {
   final List<ComponentReference> assistancePlanIds;
   final List<ComponentReference> conditioningDefinitionIds;
   final LoadRoundingPolicy loadRoundingPolicy;
+  final TrainingMaxProgression? trainingMaxProgression;
 }
 
 final class BarProfile {

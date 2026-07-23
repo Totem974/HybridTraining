@@ -1101,6 +1101,7 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
             'componentSelections',
             'optionRecipeId',
             'loadRoundingPolicy',
+            'trainingMaxProgression',
           },
           vat,
           optional: {
@@ -1111,6 +1112,7 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
             'componentSelections',
             'optionRecipeId',
             'loadRoundingPolicy',
+            'trainingMaxProgression',
           },
         );
         _common(v, vat);
@@ -1125,7 +1127,20 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
         if (v['phases'] case final List<Object?> phases) {
           for (final rawPhase in phases) {
             final phase = _object(rawPhase, '$vat.phases');
-            _exact(phase, {'id', 'repeatCount', 'weekPlans'}, '$vat.phase');
+            _exact(
+              phase,
+              {'id', 'repeatCount', 'weekPlans', 'trainingMaxProgressionStep'},
+              '$vat.phase',
+              optional: {'trainingMaxProgressionStep'},
+            );
+            if (phase['trainingMaxProgressionStep'] case final Object step) {
+              if (step is! int || step < 0) {
+                throw FormatException(
+                  '$vat.phase.trainingMaxProgressionStep '
+                  'must be a non-negative integer',
+                );
+              }
+            }
             _weekPlans(
               phase['weekPlans']! as List<Object?>,
               '$vat.phase.weekPlans',
@@ -1153,6 +1168,9 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
           throw FormatException(
             '$vat.loadRoundingPolicy must be nearest or up',
           );
+        }
+        if (v['trainingMaxProgression'] case final Object progression) {
+          _trainingMaxProgression(progression, '$vat.trainingMaxProgression');
         }
         if (v['componentSelections'] case final List<Object?> selections) {
           for (var j = 0; j < selections.length; j++) {
@@ -1553,6 +1571,42 @@ void _weekPlans(List<Object?> raw, String at) {
       throw FormatException('$at[$i] invalid weekNumber');
     }
     _refs(plan['componentIds'], '$at[$i].componentIds');
+  }
+}
+
+void _trainingMaxProgression(Object? raw, String at) {
+  final value = _object(raw, at);
+  _exact(value, {'type', 'incrementCentiUnitsByUnit'}, at);
+  if (value['type'] != 'linear_phase_step') {
+    throw FormatException('$at has unknown type ${value['type']}');
+  }
+  final units = _object(
+    value['incrementCentiUnitsByUnit'],
+    '$at.incrementCentiUnitsByUnit',
+  );
+  _exact(units, {'lb', 'kg'}, '$at.incrementCentiUnitsByUnit');
+  for (final unit in const ['lb', 'kg']) {
+    final increments = _object(
+      units[unit],
+      '$at.incrementCentiUnitsByUnit.$unit',
+    );
+    _exact(increments, {
+      'overhead_press',
+      'bench_press',
+      'squat',
+      'deadlift',
+    }, '$at.incrementCentiUnitsByUnit.$unit');
+    for (final movement in const [
+      'overhead_press',
+      'bench_press',
+      'squat',
+      'deadlift',
+    ]) {
+      _positiveCatalogInteger(
+        increments[movement],
+        '$at.incrementCentiUnitsByUnit.$unit.$movement',
+      );
+    }
   }
 }
 
