@@ -101,6 +101,39 @@ void main() {
       );
     });
 
+    test('replacement keeps the catalog warm-up anchor', () {
+      final cycle = _compile(
+        definition: _definition(
+          weekBlocks: [
+            _block('second-lift', 'supplemental', const Unloaded()),
+            _block('base-warm', 'warm_up', const Unloaded()),
+            _block(
+              'main',
+              'main_work',
+              const TrainingMaxPercentageLoad(Percentage(8500)),
+            ),
+            _block('assistance', 'assistance', const Unloaded()),
+          ],
+          warmUp: {
+            WarmUpType.original: _recipe(WeightUnit.kg, [
+              _block('selected-warm', 'warm_up', const Unloaded()),
+            ]),
+          },
+        ),
+        options: const CycleExecutionOptions(
+          warmUp: WarmUpExecutionOptions(
+            enabled: true,
+            type: WarmUpType.original,
+          ),
+        ),
+      );
+
+      expect(
+        cycle.weeks.single.sessions.single.blocks.map((block) => block.id),
+        ['second-lift', 'selected-warm', 'main', 'assistance'],
+      );
+    });
+
     test('Beyond rejects absent, non-positive, and mixed-unit bases', () {
       final definition = _definition(
         warmUp: {WarmUpType.beyond: _recipe(WeightUnit.kg, const [])},
@@ -240,6 +273,31 @@ void main() {
         }
       }
       expect(fingerprints, hasLength(12));
+    });
+
+    test('replacement keeps deload before following assistance', () {
+      final cycle = _compile(
+        definition: _definition(
+          weekBlocks: [
+            _block('second-lift', 'supplemental', const Unloaded()),
+            _block('base-deload', 'deload', const Unloaded()),
+            _block('assistance', 'assistance', const Unloaded()),
+          ],
+          deload: {
+            DeloadType.type1: _recipe(WeightUnit.kg, [
+              _block('selected-deload', 'deload', const Unloaded()),
+            ]),
+          },
+        ),
+        options: const CycleExecutionOptions(
+          deload: DeloadExecutionOptions(enabled: true, type: DeloadType.type1),
+        ),
+      );
+
+      expect(
+        cycle.weeks.single.sessions.single.blocks.map((block) => block.id),
+        ['second-lift', 'selected-deload', 'assistance'],
+      );
     });
 
     test('selected overlay identifies deload context for skipWarmUp', () {
@@ -512,6 +570,7 @@ ResolvedCycleDefinition _definition({
   ResolvedJokerRecipe? joker,
   Map<DeloadType, ResolvedBlockRecipe> deload = const {},
   bool deloadBase = false,
+  List<BlockDefinition>? weekBlocks,
 }) => ResolvedCycleDefinition(
   catalogVersion: 1,
   templateId: 'template',
@@ -521,16 +580,18 @@ ResolvedCycleDefinition _definition({
   weeks: [
     WeekDefinition(
       number: 1,
-      blocks: [
-        if (deloadBase)
-          _block('base-deload', 'deload', const Unloaded())
-        else
-          _block(
-            'main',
-            'main_work',
-            const TrainingMaxPercentageLoad(Percentage(8500)),
-          ),
-      ],
+      blocks:
+          weekBlocks ??
+          [
+            if (deloadBase)
+              _block('base-deload', 'deload', const Unloaded())
+            else
+              _block(
+                'main',
+                'main_work',
+                const TrainingMaxPercentageLoad(Percentage(8500)),
+              ),
+          ],
     ),
   ],
   optionRecipes: ResolvedCycleOptionRecipes(

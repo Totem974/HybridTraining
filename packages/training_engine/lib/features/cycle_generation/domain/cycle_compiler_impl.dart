@@ -1565,31 +1565,36 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
         selectedDeloadBlocks.isNotEmpty;
 
     if (recipes.warmUp.isNotEmpty) {
-      blocks.removeWhere((block) => block.role == 'warm_up');
       final type = options.warmUp.type;
       final skip =
           isDeloadWeek &&
           options.deload.enabled &&
           options.deload.type != DeloadType.highIntensity &&
           options.deload.skipWarmUp;
-      if (options.warmUp.enabled && !skip && type != null) {
-        blocks.insertAll(
-          0,
-          _overlayBlocks(
-            recipes.warmUp[type]!,
-            request.unit,
-            week.number,
-            sessionId,
-          ),
-        );
-      }
+      blocks = _replaceRoleAtAnchor(
+        blocks,
+        role: 'warm_up',
+        replacement: options.warmUp.enabled && !skip && type != null
+            ? _overlayBlocks(
+                recipes.warmUp[type]!,
+                request.unit,
+                week.number,
+                sessionId,
+              )
+            : const [],
+        fallbackIndex: 0,
+      );
     }
 
     if (recipes.deload.isNotEmpty) {
-      blocks.removeWhere((block) => block.role == 'deload');
-      if (options.deload.enabled && deloadType != null) {
-        blocks.addAll(selectedDeloadBlocks);
-      }
+      blocks = _replaceRoleAtAnchor(
+        blocks,
+        role: 'deload',
+        replacement: options.deload.enabled && deloadType != null
+            ? selectedDeloadBlocks
+            : const [],
+        fallbackIndex: blocks.length,
+      );
     } else if (!request.includeDeload) {
       blocks.removeWhere((block) => block.role == 'deload');
     }
@@ -1640,6 +1645,27 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
               mainWorkSemantics: block.mainWorkSemantics,
             ),
     ];
+  }
+
+  List<BlockDefinition> _replaceRoleAtAnchor(
+    List<BlockDefinition> blocks, {
+    required String role,
+    required List<BlockDefinition> replacement,
+    required int fallbackIndex,
+  }) {
+    final anchor = blocks.indexWhere((block) => block.role == role);
+    final result = [
+      for (final block in blocks)
+        if (block.role != role) block,
+    ];
+    if (replacement.isEmpty) return result;
+    var insertionIndex = anchor < 0
+        ? fallbackIndex
+        : blocks.take(anchor).where((block) => block.role != role).length;
+    if (insertionIndex < 0) insertionIndex = 0;
+    if (insertionIndex > result.length) insertionIndex = result.length;
+    result.insertAll(insertionIndex, replacement);
+    return result;
   }
 
   List<BlockDefinition> _overlayBlocks(
