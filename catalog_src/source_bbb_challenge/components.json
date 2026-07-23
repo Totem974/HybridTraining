@@ -1,0 +1,1348 @@
+{
+  "schemaVersion": 1,
+  "kind": "components",
+  "components": [
+    {
+      "id": "source_bbb_challenge_same_5x10_50",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge same-lift 5x10 at 50%",
+        "fr": "BBB Challenge meme mouvement 5x10 a 50 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "movementRelation": "sameAsMain",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_5x10_50",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 5000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_cross_5x10_50",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge Less boring 5x10 at 50%",
+        "fr": "BBB Challenge moins monotone 5x10 a 50 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "sessionMovementBindings": [
+        {
+          "sessionId": "overhead_press",
+          "movementId": "bench_press"
+        },
+        {
+          "sessionId": "deadlift",
+          "movementId": "squat"
+        },
+        {
+          "sessionId": "bench_press",
+          "movementId": "overhead_press"
+        },
+        {
+          "sessionId": "squat",
+          "movementId": "deadlift"
+        }
+      ],
+      "block": {
+        "id": "bbb_challenge_5x10_50",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 5000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_same_5x10_60",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge same-lift 5x10 at 60%",
+        "fr": "BBB Challenge meme mouvement 5x10 a 60 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "movementRelation": "sameAsMain",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_5x10_60",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 6000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_cross_5x10_60",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge Less boring 5x10 at 60%",
+        "fr": "BBB Challenge moins monotone 5x10 a 60 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "sessionMovementBindings": [
+        {
+          "sessionId": "overhead_press",
+          "movementId": "bench_press"
+        },
+        {
+          "sessionId": "deadlift",
+          "movementId": "squat"
+        },
+        {
+          "sessionId": "bench_press",
+          "movementId": "overhead_press"
+        },
+        {
+          "sessionId": "squat",
+          "movementId": "deadlift"
+        }
+      ],
+      "block": {
+        "id": "bbb_challenge_5x10_60",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 6000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_same_5x10_70",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge same-lift 5x10 at 70%",
+        "fr": "BBB Challenge meme mouvement 5x10 a 70 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "movementRelation": "sameAsMain",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_5x10_70",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 7000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_cross_5x10_70",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge Less boring 5x10 at 70%",
+        "fr": "BBB Challenge moins monotone 5x10 a 70 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "sessionMovementBindings": [
+        {
+          "sessionId": "overhead_press",
+          "movementId": "bench_press"
+        },
+        {
+          "sessionId": "deadlift",
+          "movementId": "squat"
+        },
+        {
+          "sessionId": "bench_press",
+          "movementId": "overhead_press"
+        },
+        {
+          "sessionId": "squat",
+          "movementId": "deadlift"
+        }
+      ],
+      "block": {
+        "id": "bbb_challenge_5x10_70",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 7000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_same_3x10_50",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge same-lift 3x10 at 50%",
+        "fr": "BBB Challenge meme mouvement 3x10 a 50 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "movementRelation": "sameAsMain",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_3x10_50",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 5000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_cross_3x10_50",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge Less boring 3x10 at 50%",
+        "fr": "BBB Challenge moins monotone 3x10 a 50 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "sessionMovementBindings": [
+        {
+          "sessionId": "overhead_press",
+          "movementId": "bench_press"
+        },
+        {
+          "sessionId": "deadlift",
+          "movementId": "squat"
+        },
+        {
+          "sessionId": "bench_press",
+          "movementId": "overhead_press"
+        },
+        {
+          "sessionId": "squat",
+          "movementId": "deadlift"
+        }
+      ],
+      "block": {
+        "id": "bbb_challenge_3x10_50",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 5000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_same_5x5_80",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge same-lift 5x5 at 80%",
+        "fr": "BBB Challenge meme mouvement 5x5 a 80 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "movementRelation": "sameAsMain",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_5x5_80",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 5
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 8000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_cross_5x5_80",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge Less boring 5x5 at 80%",
+        "fr": "BBB Challenge moins monotone 5x5 a 80 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "sessionMovementBindings": [
+        {
+          "sessionId": "overhead_press",
+          "movementId": "bench_press"
+        },
+        {
+          "sessionId": "deadlift",
+          "movementId": "squat"
+        },
+        {
+          "sessionId": "bench_press",
+          "movementId": "overhead_press"
+        },
+        {
+          "sessionId": "squat",
+          "movementId": "deadlift"
+        }
+      ],
+      "block": {
+        "id": "bbb_challenge_5x5_80",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 5
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 8000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_same_5x3_90",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge same-lift 5x3 at 90%",
+        "fr": "BBB Challenge meme mouvement 5x3 a 90 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "movementRelation": "sameAsMain",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_5x3_90",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 3
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 9000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_cross_5x3_90",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge Less boring 5x3 at 90%",
+        "fr": "BBB Challenge moins monotone 5x3 a 90 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "sessionMovementBindings": [
+        {
+          "sessionId": "overhead_press",
+          "movementId": "bench_press"
+        },
+        {
+          "sessionId": "deadlift",
+          "movementId": "squat"
+        },
+        {
+          "sessionId": "bench_press",
+          "movementId": "overhead_press"
+        },
+        {
+          "sessionId": "squat",
+          "movementId": "deadlift"
+        }
+      ],
+      "block": {
+        "id": "bbb_challenge_5x3_90",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 3
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 9000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_same_5x1_100",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge same-lift 5x1 at 100%",
+        "fr": "BBB Challenge meme mouvement 5x1 a 100 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "movementRelation": "sameAsMain",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_5x1_100",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 1
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 10000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_cross_5x1_100",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge Less boring 5x1 at 100%",
+        "fr": "BBB Challenge moins monotone 5x1 a 100 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "sessionMovementBindings": [
+        {
+          "sessionId": "overhead_press",
+          "movementId": "bench_press"
+        },
+        {
+          "sessionId": "deadlift",
+          "movementId": "squat"
+        },
+        {
+          "sessionId": "bench_press",
+          "movementId": "overhead_press"
+        },
+        {
+          "sessionId": "squat",
+          "movementId": "deadlift"
+        }
+      ],
+      "block": {
+        "id": "bbb_challenge_5x1_100",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 1
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 10000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_same_3x1_50",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge same-lift 3x1 at 50%",
+        "fr": "BBB Challenge meme mouvement 3x1 a 50 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "movementRelation": "sameAsMain",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_3x1_50",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 1
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 5000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_cross_3x1_50",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "BBB Challenge Less boring 3x1 at 50%",
+        "fr": "BBB Challenge moins monotone 3x1 a 50 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ]
+      },
+      "sessionMovementBindings": [
+        {
+          "sessionId": "overhead_press",
+          "movementId": "bench_press"
+        },
+        {
+          "sessionId": "deadlift",
+          "movementId": "squat"
+        },
+        {
+          "sessionId": "bench_press",
+          "movementId": "overhead_press"
+        },
+        {
+          "sessionId": "squat",
+          "movementId": "deadlift"
+        }
+      ],
+      "block": {
+        "id": "bbb_challenge_3x1_50",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 1
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 5000
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 3
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_assistance_same_ohp_pull_up",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "BBB Challenge same-lift OHP Pull Up",
+        "fr": "BBB Challenge meme mouvement OHP traction"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ],
+        "sessionIds": [
+          "overhead_press"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_assistance_pull_up",
+        "role": "assistance",
+        "movementId": "pull_up",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "bodyweight"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_assistance_cross_ohp_dumbbell_row",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "BBB Challenge Less boring OHP Dumbbell Row",
+        "fr": "BBB Challenge moins monotone OHP rowing haltere"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "loadSelection": "userSelectedBecauseSourcePrescribesNoLoad",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ],
+        "sessionIds": [
+          "overhead_press"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_assistance_dumbbell_row",
+        "role": "assistance",
+        "movementId": "dumbbell_row",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "unloaded"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_assistance_same_ohp_curl",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "BBB Challenge same-lift OHP Bicep Curl",
+        "fr": "BBB Challenge meme mouvement OHP curl biceps"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "loadSelection": "userSelectedBecauseSourcePrescribesNoLoad",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ],
+        "sessionIds": [
+          "overhead_press"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_assistance_curl",
+        "role": "assistance",
+        "movementId": "curl",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "unloaded"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_assistance_cross_ohp_rear_lats",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "BBB Challenge Less boring OHP Rear Lats Raises",
+        "fr": "BBB Challenge moins monotone OHP elevations posterieures"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "loadSelection": "userSelectedBecauseSourcePrescribesNoLoad",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ],
+        "sessionIds": [
+          "overhead_press"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_assistance_rear_lateral_raise",
+        "role": "assistance",
+        "movementId": "rear_lateral_raise",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "unloaded"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_assistance_same_deadlift_ab_wheel",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "BBB Challenge same-lift Deadlift Ab Wheel",
+        "fr": "BBB Challenge meme mouvement souleve de terre roue abdominale"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ],
+        "sessionIds": [
+          "deadlift"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_assistance_ab_wheel",
+        "role": "assistance",
+        "movementId": "ab_wheel",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 15
+            },
+            "load": {
+              "type": "bodyweight"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_assistance_cross_deadlift_hanging_leg_raise",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "BBB Challenge Less boring Deadlift Hanging Leg Raise",
+        "fr": "BBB Challenge moins monotone souleve de terre releve de jambes"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ],
+        "sessionIds": [
+          "deadlift"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_assistance_hanging_leg_raise",
+        "role": "assistance",
+        "movementId": "hanging_leg_raise",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "bodyweight"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_assistance_same_bench_dumbbell_row",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "BBB Challenge same-lift Bench Dumbbell Row",
+        "fr": "BBB Challenge meme mouvement couche rowing haltere"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "loadSelection": "userSelectedBecauseSourcePrescribesNoLoad",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ],
+        "sessionIds": [
+          "bench_press"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_assistance_dumbbell_row",
+        "role": "assistance",
+        "movementId": "dumbbell_row",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "unloaded"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_assistance_cross_bench_pull_up",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "BBB Challenge Less boring Bench Pull Up",
+        "fr": "BBB Challenge moins monotone couche traction"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ],
+        "sessionIds": [
+          "bench_press"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_assistance_pull_up",
+        "role": "assistance",
+        "movementId": "pull_up",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "bodyweight"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_assistance_same_bench_rear_lats",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "BBB Challenge same-lift Bench Rear Lats Raises",
+        "fr": "BBB Challenge meme mouvement couche elevations posterieures"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "loadSelection": "userSelectedBecauseSourcePrescribesNoLoad",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ],
+        "sessionIds": [
+          "bench_press"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_assistance_rear_lateral_raise",
+        "role": "assistance",
+        "movementId": "rear_lateral_raise",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "unloaded"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_assistance_cross_bench_curl",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "BBB Challenge Less boring Bench Bicep Curl",
+        "fr": "BBB Challenge moins monotone couche curl biceps"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "loadSelection": "userSelectedBecauseSourcePrescribesNoLoad",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ],
+        "sessionIds": [
+          "bench_press"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_assistance_curl",
+        "role": "assistance",
+        "movementId": "curl",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "unloaded"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_assistance_same_squat_hanging_leg_raise",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "BBB Challenge same-lift Squat Hanging Leg Raise",
+        "fr": "BBB Challenge meme mouvement squat releve de jambes"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ],
+        "sessionIds": [
+          "squat"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_assistance_hanging_leg_raise",
+        "role": "assistance",
+        "movementId": "hanging_leg_raise",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "bodyweight"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_challenge_assistance_cross_squat_ab_wheel",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {
+        "en": "BBB Challenge Less boring Squat Ab Wheel",
+        "fr": "BBB Challenge moins monotone squat roue abdominale"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge_assistance"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_bbb_challenge"
+        ],
+        "sessionIds": [
+          "squat"
+        ]
+      },
+      "block": {
+        "id": "bbb_challenge_assistance_ab_wheel",
+        "role": "assistance",
+        "movementId": "ab_wheel",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 15
+            },
+            "load": {
+              "type": "bodyweight"
+            },
+            "multiplicity": {
+              "type": "fixed",
+              "count": 5
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

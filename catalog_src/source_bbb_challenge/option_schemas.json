@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "kind": "optionSchemas",
+  "optionSchemas": [
+    {
+      "id": "source_bbb_challenge_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_challenge",
+        "app.source_calculator.bbb_challenge_assistance"
+      ],
+      "includeSchemaIds": [
+        {
+          "id": "classic_crosscut_options",
+          "revision": 1
+        }
+      ],
+      "parameters": [
+        {
+          "id": "bbb_challenge_less_boring",
+          "presentationGroup": "template",
+          "labelEn": "Less boring",
+          "labelFr": "Moins monotone",
+          "type": "boolean",
+          "scope": "global",
+          "default": true,
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [
+            true,
+            false
+          ],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        }
+      ]
+    }
+  ]
+}

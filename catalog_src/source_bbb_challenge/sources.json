@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "kind": "sources",
+  "sources": [
+    {
+      "ruleId": "app.source_calculator.bbb_challenge",
+      "work": "Original 5/3/1 calculator",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "BBB Challenge durations, supplemental prescriptions, deload placement, and training-max progression observed in the exact 2026-07-23 local captures",
+      "reviewStatus": "referenceAppObserved"
+    },
+    {
+      "ruleId": "app.source_calculator.bbb_challenge_assistance",
+      "work": "Original 5/3/1 calculator",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "BBB Challenge same-lift and Less boring assistance exercise, set, repetition, order, and deload mappings observed in the exact 2026-07-23 local captures",
+      "reviewStatus": "referenceAppObserved"
+    }
+  ]
+}
