@@ -1554,7 +1554,13 @@ void _parameter(Map<String, Object?> value, String at) {
       'requiredWhen',
     },
     at,
-    optional: {'presentationGroup', 'labelEn', 'labelFr', 'requestPath'},
+    optional: {
+      'presentationGroup',
+      'labelEn',
+      'labelFr',
+      'requestPath',
+      'valueLabels',
+    },
   );
   if (value['requestPath'] case final Object requestPath) {
     if (requestPath is! String ||
@@ -1599,6 +1605,51 @@ void _parameter(Map<String, Object?> value, String at) {
   }
   if (value['allowedValues'] is! List<Object?>) {
     throw const FormatException('allowedValues must be an array');
+  }
+  if (value.containsKey('valueLabels')) {
+    if (value['type'] != 'enumeration') {
+      throw FormatException(
+        '$at.valueLabels is supported only for enumeration parameters',
+      );
+    }
+    final allowedValues = value['allowedValues']! as List<Object?>;
+    final valueLabels = _objects(value['valueLabels'], '$at.valueLabels');
+    if (valueLabels.isEmpty) {
+      throw FormatException('$at.valueLabels cannot be empty');
+    }
+    final seenValues = <Object?>[];
+    for (var index = 0; index < valueLabels.length; index++) {
+      final entry = valueLabels[index];
+      final entryPath = '$at.valueLabels[$index]';
+      _exact(entry, {'value', 'labels'}, entryPath);
+      final labeledValue = entry['value'];
+      if (labeledValue is! String &&
+          labeledValue is! num &&
+          labeledValue is! bool) {
+        throw FormatException('$entryPath.value must be a JSON scalar');
+      }
+      if (!allowedValues.any((allowed) => allowed == labeledValue)) {
+        throw FormatException(
+          '$entryPath.value $labeledValue is not an allowed value',
+        );
+      }
+      if (seenValues.any((seen) => seen == labeledValue)) {
+        throw FormatException(
+          '$at.valueLabels has duplicate value $labeledValue',
+        );
+      }
+      seenValues.add(labeledValue);
+      final labels = _object(entry['labels'], '$entryPath.labels');
+      _exact(labels, {'en', 'fr'}, '$entryPath.labels');
+      for (final locale in const ['en', 'fr']) {
+        final label = labels[locale];
+        if (label is! String || label.trim().isEmpty) {
+          throw FormatException(
+            '$entryPath.labels.$locale must be a non-empty string',
+          );
+        }
+      }
+    }
   }
   for (final key in const ['visibleWhen', 'enabledWhen', 'requiredWhen']) {
     _condition(value[key], '$at.$key');

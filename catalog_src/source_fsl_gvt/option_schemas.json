@@ -30,6 +30,22 @@
             "amrap",
             "multiple"
           ],
+          "valueLabels": [
+            {
+              "value": "amrap",
+              "labels": {
+                "en": "AMRAP",
+                "fr": "AMRAP"
+              }
+            },
+            {
+              "value": "multiple",
+              "labels": {
+                "en": "Multiple sets",
+                "fr": "Séries multiples"
+              }
+            }
+          ],
           "visibleWhen": {
             "type": "always"
           },

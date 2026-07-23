@@ -569,6 +569,7 @@ final class CatalogSourceDocumentCodec {
                 'labelEn',
                 'labelFr',
                 'requestPath',
+                'valueLabels',
               },
             );
             _nonEmptyString(parameter, 'id');
@@ -582,10 +583,52 @@ final class CatalogSourceDocumentCodec {
                 );
               }
             }
+            _validateOptionValueLabels(parameter);
           }
           return map;
         })
         .toList(growable: false);
+  }
+
+  void _validateOptionValueLabels(Map<String, Object?> parameter) {
+    if (!parameter.containsKey('valueLabels')) return;
+    if (parameter['type'] != 'enumeration') {
+      throw const FormatException(
+        'valueLabels are supported only for enumeration parameters.',
+      );
+    }
+    final allowedValues = parameter['allowedValues'];
+    if (allowedValues is! List<Object?>) {
+      throw const FormatException(
+        'allowedValues must be a list when valueLabels are present.',
+      );
+    }
+    final valueLabels = _list(parameter, 'valueLabels');
+    if (valueLabels.isEmpty) {
+      throw const FormatException('valueLabels cannot be empty.');
+    }
+    final seenValues = <Object?>[];
+    for (final value in valueLabels) {
+      final entry = _map(value, 'valueLabel');
+      _keys(entry, const {'value', 'labels'});
+      final labeledValue = entry['value'];
+      if (!_isJsonScalar(labeledValue)) {
+        throw const FormatException('valueLabel.value must be a JSON scalar.');
+      }
+      if (!allowedValues.any((allowed) => allowed == labeledValue)) {
+        throw FormatException(
+          'valueLabel.value $labeledValue is not an allowed value.',
+        );
+      }
+      if (seenValues.any((seen) => seen == labeledValue)) {
+        throw FormatException('Duplicate valueLabel.value $labeledValue.');
+      }
+      seenValues.add(labeledValue);
+      final labels = _map(entry['labels'], 'valueLabel.labels');
+      _keys(labels, const {'en', 'fr'});
+      _nonEmptyString(labels, 'en');
+      _nonEmptyString(labels, 'fr');
+    }
   }
 
   void _validateOptionSchemaReferences(Map<String, Object?> schema) {

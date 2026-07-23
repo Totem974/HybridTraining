@@ -10,10 +10,16 @@ kind. Unknown keys are rejected by the catalogue lint.
   "section": string, "reviewStatus": "reviewed" | "referenceAppObserved" }`.
 - Stable reference: `{ "id": string, "revision": positive integer }`.
 - Parameter: `id`, `type`, `scope`, `default`, `minimum`, `maximum`, `step`,
-  `allowedValues`, `visibleWhen`, `enabledWhen`, `requiredWhen`.
+  `allowedValues`, `visibleWhen`, `enabledWhen`, `requiredWhen`, and optional
+  `valueLabels`.
 - Parameter types: `boolean`, `enumeration`, `integer`, `percentage`, `weight`,
   `movement`, `exercise`, `prescription`.
 - Scopes: `global`, `perMovement`, `perSession`.
+- Enumeration `valueLabels` is an optional ordered array of
+  `{ "value": scalar, "labels": { "en": string, "fr": string } }`. Every
+  labeled value must occur in `allowedValues`, may occur only once, and both
+  localized labels must be non-empty. Consumers fall back to the serialized
+  allowed value when this metadata is absent.
 - Conditions are objects with one `type` from `always`, `present`, `equals`,
   `not`, `all`, `any`, `in`, `range`; their operands are explicit JSON fields.
 

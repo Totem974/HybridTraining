@@ -38,6 +38,22 @@
           "maximum": null,
           "step": null,
           "allowedValues": ["original", "beyond"],
+          "valueLabels": [
+            {
+              "value": "original",
+              "labels": {
+                "en": "Original 5/3/1",
+                "fr": "Original 5/3/1"
+              }
+            },
+            {
+              "value": "beyond",
+              "labels": {
+                "en": "Beyond 5/3/1",
+                "fr": "Beyond 5/3/1"
+              }
+            }
+          ],
           "visibleWhen": { "type": "equals", "parameterId": "warmUp.enabled", "value": true },
           "enabledWhen": { "type": "equals", "parameterId": "warmUp.enabled", "value": true },
           "requiredWhen": { "type": "equals", "parameterId": "warmUp.enabled", "value": true }
@@ -102,6 +118,50 @@
           "maximum": 3000,
           "step": 500,
           "allowedValues": [500, 1000, 1500, 2000, 2500, 3000],
+          "valueLabels": [
+            {
+              "value": 500,
+              "labels": {
+                "en": "+5%",
+                "fr": "+5 %"
+              }
+            },
+            {
+              "value": 1000,
+              "labels": {
+                "en": "+10%",
+                "fr": "+10 %"
+              }
+            },
+            {
+              "value": 1500,
+              "labels": {
+                "en": "+15%",
+                "fr": "+15 %"
+              }
+            },
+            {
+              "value": 2000,
+              "labels": {
+                "en": "+20%",
+                "fr": "+20 %"
+              }
+            },
+            {
+              "value": 2500,
+              "labels": {
+                "en": "+25%",
+                "fr": "+25 %"
+              }
+            },
+            {
+              "value": 3000,
+              "labels": {
+                "en": "+30%",
+                "fr": "+30 %"
+              }
+            }
+          ],
           "visibleWhen": { "type": "equals", "parameterId": "joker.enabled", "value": true },
           "enabledWhen": { "type": "equals", "parameterId": "joker.enabled", "value": true },
           "requiredWhen": { "type": "equals", "parameterId": "joker.enabled", "value": true }
@@ -134,6 +194,50 @@
           "maximum": null,
           "step": null,
           "allowedValues": ["deload1", "deload2", "deload3", "deload4", "deload5", "highIntensity"],
+          "valueLabels": [
+            {
+              "value": "deload1",
+              "labels": {
+                "en": "Option 1",
+                "fr": "Option 1"
+              }
+            },
+            {
+              "value": "deload2",
+              "labels": {
+                "en": "Option 2",
+                "fr": "Option 2"
+              }
+            },
+            {
+              "value": "deload3",
+              "labels": {
+                "en": "Option 3",
+                "fr": "Option 3"
+              }
+            },
+            {
+              "value": "deload4",
+              "labels": {
+                "en": "Option 4",
+                "fr": "Option 4"
+              }
+            },
+            {
+              "value": "deload5",
+              "labels": {
+                "en": "Option 5",
+                "fr": "Option 5"
+              }
+            },
+            {
+              "value": "highIntensity",
+              "labels": {
+                "en": "High intensity",
+                "fr": "Haute intensité"
+              }
+            }
+          ],
           "visibleWhen": { "type": "equals", "parameterId": "deload.enabled", "value": true },
           "enabledWhen": { "type": "equals", "parameterId": "deload.enabled", "value": true },
           "requiredWhen": { "type": "equals", "parameterId": "deload.enabled", "value": true }

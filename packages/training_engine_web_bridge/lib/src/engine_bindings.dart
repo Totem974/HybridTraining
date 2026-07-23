@@ -1313,14 +1313,14 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       }
     }
     return CycleOptionValues(
-      global: Map.unmodifiable(global),
-      byMovement: Map.unmodifiable({
+      global: Map<String, Object>.unmodifiable(global),
+      byMovement: Map<MovementId, Map<String, Object>>.unmodifiable({
         for (final entry in byMovement.entries)
-          entry.key: Map.unmodifiable(entry.value),
+          entry.key: Map<String, Object>.unmodifiable(entry.value),
       }),
-      bySession: Map.unmodifiable({
+      bySession: Map<SessionId, Map<String, Object>>.unmodifiable({
         for (final entry in bySession.entries)
-          entry.key: Map.unmodifiable(entry.value),
+          entry.key: Map<String, Object>.unmodifiable(entry.value),
       }),
     );
   }
@@ -1554,7 +1554,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       choices: [
         for (final value
             in (parameter['allowedValues'] as List<Object?>? ?? const []))
-          {'value': value, 'label': value.toString()},
+          {'value': value, 'label': _optionChoiceLabel(parameter, value)},
       ],
       visibleWhen: _editorConditions(
         parameter['visibleWhen'],
@@ -1566,6 +1566,20 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       ),
     );
   }
+}
+
+Object _optionChoiceLabel(Map<String, Object?> parameter, Object? value) {
+  for (final rawEntry
+      in (parameter['valueLabels'] as List<Object?>? ?? const [])) {
+    final entry = _map(rawEntry, 'option value label');
+    if (entry['value'] != value) continue;
+    final labels = _map(entry['labels'], 'option value labels');
+    return {
+      for (final localized in labels.entries)
+        localized.key: localized.value as String,
+    };
+  }
+  return value.toString();
 }
 
 Object? _scopedOptionValue(

@@ -36,6 +36,8 @@
         },
         {
           "id": "supplemental_progression",
+          "labelEn": "Supplemental progression",
+          "labelFr": "Progression complémentaire",
           "type": "enumeration",
           "scope": "global",
           "default": "beginner",
@@ -45,6 +47,22 @@
           "allowedValues": [
             "beginner",
             "intermediate"
+          ],
+          "valueLabels": [
+            {
+              "value": "beginner",
+              "labels": {
+                "en": "Beginner",
+                "fr": "Débutant"
+              }
+            },
+            {
+              "value": "intermediate",
+              "labels": {
+                "en": "Intermediate",
+                "fr": "Intermédiaire"
+              }
+            }
           ],
           "visibleWhen": {
             "type": "always"
@@ -160,6 +178,29 @@
             "phase_two",
             "phase_three"
           ],
+          "valueLabels": [
+            {
+              "value": "phase_one",
+              "labels": {
+                "en": "Phase 1",
+                "fr": "Phase 1"
+              }
+            },
+            {
+              "value": "phase_two",
+              "labels": {
+                "en": "Phase 2",
+                "fr": "Phase 2"
+              }
+            },
+            {
+              "value": "phase_three",
+              "labels": {
+                "en": "Phase 3",
+                "fr": "Phase 3"
+              }
+            }
+          ],
           "visibleWhen": {
             "type": "always"
           },
@@ -221,6 +262,36 @@
             "70x3_80x3_90x3",
             "75x5_85x3_95x1",
             "80x1_90x1_100x1"
+          ],
+          "valueLabels": [
+            {
+              "value": "65x5_75x5_85x5",
+              "labels": {
+                "en": "65% × 5 · 75% × 5 · 85% × 5",
+                "fr": "65 % × 5 · 75 % × 5 · 85 % × 5"
+              }
+            },
+            {
+              "value": "70x3_80x3_90x3",
+              "labels": {
+                "en": "70% × 3 · 80% × 3 · 90% × 3",
+                "fr": "70 % × 3 · 80 % × 3 · 90 % × 3"
+              }
+            },
+            {
+              "value": "75x5_85x3_95x1",
+              "labels": {
+                "en": "75% × 5 · 85% × 3 · 95% × 1",
+                "fr": "75 % × 5 · 85 % × 3 · 95 % × 1"
+              }
+            },
+            {
+              "value": "80x1_90x1_100x1",
+              "labels": {
+                "en": "80% × 1 · 90% × 1 · 100% × 1",
+                "fr": "80 % × 1 · 90 % × 1 · 100 % × 1"
+              }
+            }
           ],
           "visibleWhen": {
             "type": "always"
@@ -284,6 +355,36 @@
             "75x5_85x3_95x1",
             "80x1_90x1_100x1"
           ],
+          "valueLabels": [
+            {
+              "value": "65x5_75x5_85x5",
+              "labels": {
+                "en": "65% × 5 · 75% × 5 · 85% × 5",
+                "fr": "65 % × 5 · 75 % × 5 · 85 % × 5"
+              }
+            },
+            {
+              "value": "70x3_80x3_90x3",
+              "labels": {
+                "en": "70% × 3 · 80% × 3 · 90% × 3",
+                "fr": "70 % × 3 · 80 % × 3 · 90 % × 3"
+              }
+            },
+            {
+              "value": "75x5_85x3_95x1",
+              "labels": {
+                "en": "75% × 5 · 85% × 3 · 95% × 1",
+                "fr": "75 % × 5 · 85 % × 3 · 95 % × 1"
+              }
+            },
+            {
+              "value": "80x1_90x1_100x1",
+              "labels": {
+                "en": "80% × 1 · 90% × 1 · 100% × 1",
+                "fr": "80 % × 1 · 90 % × 1 · 100 % × 1"
+              }
+            }
+          ],
           "visibleWhen": {
             "type": "always"
           },
@@ -311,6 +412,36 @@
             "75x5_85x3_95x1",
             "80x1_90x1_100x1"
           ],
+          "valueLabels": [
+            {
+              "value": "65x5_75x5_85x5",
+              "labels": {
+                "en": "65% × 5 · 75% × 5 · 85% × 5",
+                "fr": "65 % × 5 · 75 % × 5 · 85 % × 5"
+              }
+            },
+            {
+              "value": "70x3_80x3_90x3",
+              "labels": {
+                "en": "70% × 3 · 80% × 3 · 90% × 3",
+                "fr": "70 % × 3 · 80 % × 3 · 90 % × 3"
+              }
+            },
+            {
+              "value": "75x5_85x3_95x1",
+              "labels": {
+                "en": "75% × 5 · 85% × 3 · 95% × 1",
+                "fr": "75 % × 5 · 85 % × 3 · 95 % × 1"
+              }
+            },
+            {
+              "value": "80x1_90x1_100x1",
+              "labels": {
+                "en": "80% × 1 · 90% × 1 · 100% × 1",
+                "fr": "80 % × 1 · 90 % × 1 · 100 % × 1"
+              }
+            }
+          ],
           "visibleWhen": {
             "type": "always"
           },
@@ -337,6 +468,36 @@
             "70x3_80x3_90x3",
             "75x5_85x3_95x1",
             "80x1_90x1_100x1"
+          ],
+          "valueLabels": [
+            {
+              "value": "65x3_75x3_85x3",
+              "labels": {
+                "en": "65% × 3 · 75% × 3 · 85% × 3",
+                "fr": "65 % × 3 · 75 % × 3 · 85 % × 3"
+              }
+            },
+            {
+              "value": "70x3_80x3_90x3",
+              "labels": {
+                "en": "70% × 3 · 80% × 3 · 90% × 3",
+                "fr": "70 % × 3 · 80 % × 3 · 90 % × 3"
+              }
+            },
+            {
+              "value": "75x5_85x3_95x1",
+              "labels": {
+                "en": "75% × 5 · 85% × 3 · 95% × 1",
+                "fr": "75 % × 5 · 85 % × 3 · 95 % × 1"
+              }
+            },
+            {
+              "value": "80x1_90x1_100x1",
+              "labels": {
+                "en": "80% × 1 · 90% × 1 · 100% × 1",
+                "fr": "80 % × 1 · 90 % × 1 · 100 % × 1"
+              }
+            }
           ],
           "visibleWhen": {
             "type": "always"
