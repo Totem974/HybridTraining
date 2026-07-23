@@ -1,0 +1,34 @@
+{
+  "$schema": "schemas/provenance.schema.json",
+  "schemaVersion": 1,
+  "sourceArchive": {
+    "fileName": "fivethreeone.app.tar",
+    "localPathAtCapture": "D:/GitHub/scraper/output/fivethreeone.app.tar",
+    "sizeBytes": 5737984,
+    "sha256": "6f9b3613d0ecc6a0ff18837308f74aecc4e9cf4f5cee0201de595152a404583f",
+    "redistributed": false
+  },
+  "capture": {
+    "reportedVersion": "2.2",
+    "reportedReleaseDate": "2024-11-20",
+    "directoryTimestampLocal": "2026-07-22T15:20:00+04:00",
+    "archiveLastWriteUtc": "2026-07-22T11:30:00Z",
+    "blackBoxVerificationDate": "2026-07-23",
+    "generatedByHybridTraining": false,
+    "networkRequired": false
+  },
+  "evidence": [
+    "docs/audits/source-template-behavior-inventory.md",
+    "docs/audits/cycle-ui-reference-2026-07-23.md",
+    "docs/audits/options-end-to-end-trace.md"
+  ],
+  "excludedCopyrightMaterial": [
+    "archive",
+    "javascriptBundles",
+    "logos",
+    "images",
+    "fonts",
+    "promotionalCopy",
+    "sourceScreenshots"
+  ]
+}

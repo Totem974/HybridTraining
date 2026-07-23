@@ -1,0 +1,42 @@
+{
+  "$schema": "schemas/manifest.schema.json",
+  "schemaVersion": 1,
+  "fixtureSetId": "source-calculator-v1",
+  "oracleSchemaVersion": 1,
+  "immutable": true,
+  "files": [
+    "anomalies.json",
+    "checksums.json",
+    "controls.json",
+    "coverage.json",
+    "manifest.json",
+    "observations.json",
+    "provenance.json",
+    "schemas/anomalies.schema.json",
+    "schemas/checksums.schema.json",
+    "schemas/controls.schema.json",
+    "schemas/coverage.schema.json",
+    "schemas/manifest.schema.json",
+    "schemas/observations.schema.json",
+    "schemas/provenance.schema.json"
+  ],
+  "authorityBoundary": {
+    "sourceArchive": "authoritativeForObservedSourceBehavior",
+    "engineV1Fixtures": "hybridTrainingDeterminismOnly",
+    "engineV1Generator": "forbidden",
+    "typescriptBusinessRules": "forbidden"
+  },
+  "source": {
+    "productId": "fivethreeone-calculator",
+    "reportedVersion": "2.2",
+    "entrypoint": "/calculator/"
+  },
+  "normalization": {
+    "weightScale": 1000,
+    "preserveWeekOrder": true,
+    "preserveSessionOrder": true,
+    "preserveSetOrder": true,
+    "jokerSourceValue": -1,
+    "amrapSourceValue": 0
+  }
+}

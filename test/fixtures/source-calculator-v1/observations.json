@@ -1,0 +1,282 @@
+{
+  "$schema": "schemas/observations.schema.json",
+  "schemaVersion": 1,
+  "observations": [
+    {
+      "id": "OBS-STATIC-INVENTORY",
+      "captureStatus": "documented",
+      "method": "archivedBundleReconstructionAndAudit",
+      "coversAllDeclaredControlValues": true,
+      "anomalyIds": [
+        "SRC-001", "SRC-002", "SRC-003", "SRC-004", "SRC-005",
+        "SRC-006", "SRC-007", "SRC-008", "SRC-009", "SRC-010",
+        "SRC-011", "SRC-012", "SRC-013"
+      ],
+      "notes": "Documents the complete known control surface. It is not a complete generated-program golden."
+    },
+    {
+      "id": "OBS-DEFAULT-BBB-ORIGINAL",
+      "captureStatus": "partialExact",
+      "method": "localBlackBoxChromium",
+      "controlValues": [
+        {"controlId": "weight.mode", "valueId": "oneRepMax"},
+        {"controlId": "weight.unit", "valueId": "lb"},
+        {"controlId": "weight.ratio", "valueId": "normal"},
+        {"controlId": "template.family", "valueId": "boringButBig"},
+        {"controlId": "bbb.variant", "valueId": "original"},
+        {"controlId": "warmUp.type", "valueId": "original"},
+        {"controlId": "joker.ceiling", "valueId": "off"},
+        {"controlId": "deload.type", "valueId": "deload1"},
+        {"controlId": "deload.skipWarmUp", "valueId": "true"},
+        {"controlId": "mainWork.setOrder", "valueId": "standard"},
+        {"controlId": "mainWork.weekOrder", "valueId": "fiveThreeOne"},
+        {"controlId": "schedule.frequency", "valueId": "four"}
+      ],
+      "input": {
+        "oneRepMaxLb": {
+          "overheadPress": 75,
+          "benchPress": 100,
+          "squat": 150,
+          "deadlift": 200
+        },
+        "trainingMaxRatioPercent": 90,
+        "bbbRatioPercent": 30,
+        "sessionOrder": ["overheadPress", "deadlift", "benchPress", "squat"]
+      },
+      "expected": {
+        "weekCount": 4,
+        "week1OverheadPress": {
+          "warmUp": ["5x45lb", "5x45lb", "3x45lb"],
+          "mainWork": ["5x45lb", "5x55lb", "5+ x60lb"],
+          "supplemental": ["5x10x45lb"],
+          "assistance": ["pullUp 5x10"]
+        },
+        "week1Deadlift": {
+          "warmUp": ["5x75lb", "5x90lb", "3x110lb"],
+          "mainWork": ["5x120lb", "5x135lb", "5+ x155lb"],
+          "supplemental": ["5x10x55lb"],
+          "assistance": ["hangingLegRaise 5x15"]
+        },
+        "week4OverheadPress": {
+          "warmUpPresent": false,
+          "deload": ["5x45lb", "5x45lb", "5x45lb"],
+          "assistance": ["pullUp 5x10"]
+        },
+        "week4AllMovements": {
+          "overheadPress": ["5x45lb", "5x45lb", "5x45lb"],
+          "deadlift": ["5x75lb", "5x90lb", "5x110lb"],
+          "benchPress": ["5x45lb", "5x45lb", "5x55lb"],
+          "squat": ["5x55lb", "5x70lb", "5x85lb"]
+        }
+      }
+    },
+    {
+      "id": "OBS-DELOAD-OFF",
+      "captureStatus": "partialExact",
+      "method": "localBlackBoxChromiumDifferential",
+      "controlValues": [
+        {"controlId": "deload.type", "valueId": "off"},
+        {"controlId": "template.family", "valueId": "boringButBig"},
+        {"controlId": "bbb.variant", "valueId": "original"},
+        {"controlId": "schedule.frequency", "valueId": "four"}
+      ],
+      "expected": {
+        "weekCount": 3,
+        "deloadTypeControlVisible": false,
+        "skipWarmUpControlVisible": false,
+        "bbbDeloadControlVisible": false,
+        "workWeeksEqualDefaultWeeksOneToThree": true
+      }
+    },
+    {
+      "id": "OBS-DELOAD-THREE-SKIP-WARMUP",
+      "captureStatus": "partialExact",
+      "method": "localBlackBoxChromiumDifferential",
+      "controlValues": [
+        {"controlId": "deload.type", "valueId": "deload3"},
+        {"controlId": "deload.skipWarmUp", "valueId": "true"},
+        {"controlId": "schedule.frequency", "valueId": "four"}
+      ],
+      "anomalyIds": ["SRC-001"],
+      "expected": {
+        "weekCount": 4,
+        "workWeeksEqualDefaultWeeksOneToThree": true,
+        "week4": {
+          "overheadPress": ["3x45lb", "3x55lb", "3x60lb"],
+          "deadlift": ["3x120lb", "3x140lb", "3x155lb"],
+          "benchPress": ["3x60lb", "3x70lb", "3x80lb"],
+          "squat": ["3x90lb", "3x105lb", "3x115lb"],
+          "assistancePreserved": true,
+          "warmUpPrefixed": false,
+          "bbbPresent": false
+        }
+      },
+      "limitations": [
+        "Rounded loads do not independently distinguish an internal 76% value from 75%; SRC-001 is established by archived algorithm inspection."
+      ]
+    },
+    {
+      "id": "OBS-SCHEDULE-THREE-DAY-ROTATION",
+      "captureStatus": "partialExact",
+      "method": "localBlackBoxChromium",
+      "controlValues": [
+        {"controlId": "schedule.frequency", "valueId": "three"},
+        {"controlId": "template.family", "valueId": "boringButBig"},
+        {"controlId": "bbb.variant", "valueId": "original"}
+      ],
+      "anomalyIds": ["SRC-013"],
+      "expected": {
+        "weekCountWithDeload": 5,
+        "weekCountWithoutDeload": 4,
+        "workWeeks": [
+          ["overheadPress", "deadlift", "benchPress"],
+          ["squat", "overheadPress", "deadlift"],
+          ["benchPress", "squat", "overheadPress"],
+          ["deadlift", "benchPress", "squat"]
+        ],
+        "deloadWeekSessionCount": 3,
+        "deloadFirstSessionGroups": ["overheadPress+pullUp", "deadlift+hangingLegRaise"]
+      }
+    },
+    {
+      "id": "OBS-SCHEDULE-TWO-DAY-BBB",
+      "captureStatus": "partialExact",
+      "method": "localBlackBoxChromium",
+      "controlValues": [
+        {"controlId": "schedule.frequency", "valueId": "two"},
+        {"controlId": "template.family", "valueId": "boringButBig"},
+        {"controlId": "bbb.variant", "valueId": "twoDaysPerWeek"}
+      ],
+      "expected": {
+        "frequencyLocked": true,
+        "weekCountWithDeload": 7,
+        "weekCountWithoutDeload": 6,
+        "week1": [
+          {
+            "mainMovement": "overheadPress",
+            "mainWork": ["5x45lb", "5x55lb", "5+ x60lb"],
+            "crossMovement": "benchPress",
+            "crossSupplemental": "5x10x45lb",
+            "assistance": "pullUp 5x10"
+          },
+          {
+            "mainMovement": "deadlift",
+            "mainWork": ["5x120lb", "5x135lb", "5+ x155lb"],
+            "crossMovement": "squat",
+            "crossSupplemental": "5x10x70lb",
+            "assistance": "goodMorning 5x10"
+          }
+        ],
+        "week7SessionGroups": [
+          "overheadPress+pullUp+deadlift+goodMorning",
+          "benchPress+dumbbellRow+squat+goodMorning"
+        ]
+      },
+      "notes": "The standalone 2 Days/Week template is a separate behavior family and remains a distinct pending capture."
+    },
+    {
+      "id": "OBS-STANDALONE-TWO-DAYS-OPTION-ONE",
+      "captureStatus": "partialExact",
+      "method": "localBlackBoxChromium",
+      "controlValues": [
+        {"controlId": "schedule.frequency", "valueId": "two"},
+        {"controlId": "template.family", "valueId": "twoDays"},
+        {"controlId": "twoDays.option", "valueId": "optionOne"}
+      ],
+      "expected": {
+        "frequencyLocked": true,
+        "weekCountWithDeload": 4,
+        "sessionGroups": ["deadlift+overheadPress", "squat+benchPress"],
+        "week1FirstSessionAssistance": [
+          "dumbbellRow 3x10",
+          "dip 3x10",
+          "goodMorning 3x10",
+          "hamstringCurl 3x10"
+        ],
+        "week1SecondSessionAssistance": [
+          "pullUp 3x10",
+          "backRaise 3x15",
+          "dumbbellBench 3x10",
+          "rearLateralRaise 3x20"
+        ]
+      },
+      "notes": "This is not the BBB 2 Days/Week variant and must remain a separate catalog identity."
+    },
+    {
+      "id": "OBS-ROTATION-LENGTHS",
+      "captureStatus": "documented",
+      "method": "sourceAuditCrossCheck",
+      "controlValues": [
+        {"controlId": "schedule.frequency", "valueId": "two"},
+        {"controlId": "schedule.frequency", "valueId": "three"},
+        {"controlId": "schedule.frequency", "valueId": "four"},
+        {"controlId": "deload.type", "valueId": "off"},
+        {"controlId": "deload.type", "valueId": "deload1"}
+      ],
+      "expected": {
+        "withDeload": {"twoDays": 7, "threeDays": 5, "fourDays": 4},
+        "withoutDeload": {"twoDays": 6, "threeDays": 4, "fourDays": 3}
+      }
+    },
+    {
+      "id": "OBS-RESPONSIVE",
+      "captureStatus": "documented",
+      "method": "localViewportInspection",
+      "controlValues": [
+        {"controlId": "responsive.width", "valueId": "desktop1440"},
+        {"controlId": "responsive.width", "valueId": "mobile390"},
+        {"controlId": "responsive.width", "valueId": "mobile320"}
+      ],
+      "anomalyIds": ["SRC-004", "SRC-011"],
+      "expectedTarget": {
+        "blockOrder": [
+          "Weight", "Template", "Additional Options", "Plating & Barbell",
+          "Scheduling", "Output", "Program"
+        ],
+        "hybridTrainingHorizontalOverflowPixels": 0,
+        "minimumTouchTargetPixels": 44
+      }
+    },
+    {
+      "id": "OBS-PLATING",
+      "captureStatus": "documented",
+      "method": "archivedAlgorithmInspection",
+      "controlValues": [
+        {"controlId": "plating.case", "valueId": "barOnly"},
+        {"controlId": "plating.case", "valueId": "exact"},
+        {"controlId": "plating.case", "valueId": "betweenLoads"},
+        {"controlId": "plating.case", "valueId": "inventoryCeiling"},
+        {"controlId": "plating.case", "valueId": "quarterKg"},
+        {"controlId": "plating.case", "valueId": "emptyInventory"},
+        {"controlId": "plating.case", "valueId": "negativeInventory"},
+        {"controlId": "plating.case", "valueId": "unitSwitch"}
+      ],
+      "anomalyIds": ["SRC-003", "SRC-006", "SRC-010"]
+    },
+    {
+      "id": "OBS-PERSISTENCE",
+      "captureStatus": "documented",
+      "method": "archivedStateAndCodecInspection",
+      "controlValues": [
+        {"controlId": "persistence.codec", "valueId": "deflateRaw"},
+        {"controlId": "persistence.codec", "valueId": "zlibLegacy"},
+        {"controlId": "persistence.codec", "valueId": "invalid"}
+      ],
+      "anomalyIds": ["SRC-005"],
+      "localKeys": [
+        "form",
+        "program",
+        "training-max/main-lifts",
+        "training-max/simplest-strength",
+        "options-collapse",
+        "plating-collapse",
+        "upsell-dismissed"
+      ],
+      "urlCodec": {
+        "parameter": "program",
+        "current": "raw-deflate with modified base64 -_.",
+        "legacyAccepted": "zlib deflate"
+      }
+    }
+  ]
+}

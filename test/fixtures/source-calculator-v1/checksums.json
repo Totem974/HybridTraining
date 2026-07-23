@@ -1,0 +1,32 @@
+{
+  "$schema": "schemas/checksums.schema.json",
+  "schemaVersion": 1,
+  "algorithm": "sha256",
+  "sourceArchive": {
+    "fileName": "fivethreeone.app.tar",
+    "sizeBytes": 5737984,
+    "sha256": "6f9b3613d0ecc6a0ff18837308f74aecc4e9cf4f5cee0201de595152a404583f"
+  },
+  "files": [
+    {
+      "path": "anomalies.json",
+      "sha256": "f300414b43b17d8bc1be0e757155097a9f6ab00944e56bd84f0585fb0dc51ff2"
+    },
+    {
+      "path": "controls.json",
+      "sha256": "900a2507d62dccd2aaaefd987ba1bc8c5dff7f4661f9d1012995280bdeb96304"
+    },
+    {
+      "path": "coverage.json",
+      "sha256": "04b17752a981a26ce3ef52f2e95a1eef9e795cee8d231eefd933804e6b8af1e7"
+    },
+    {
+      "path": "observations.json",
+      "sha256": "1c48296902a333ca594384687378d5972a33dc1a63ec85cd3160fe1b20cee073"
+    },
+    {
+      "path": "provenance.json",
+      "sha256": "0efcba725dfe143f245e7d9cb3a443ef7b40c62215a1e7f3964b6237b1a1b72d"
+    }
+  ]
+}

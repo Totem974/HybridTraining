@@ -1,0 +1,92 @@
+{
+  "$schema": "schemas/anomalies.schema.json",
+  "schemaVersion": 1,
+  "anomalies": [
+    {
+      "id": "SRC-001",
+      "title": "Deload 3 uses a literal 76 percent middle set",
+      "sourceBehavior": "The middle prescription is 76%, not 75%.",
+      "targetDisposition": "needsDecision"
+    },
+    {
+      "id": "SRC-002",
+      "title": "BBB Challenge retains intermediate deload-like weeks when deload is off",
+      "sourceBehavior": "Some intermediate deloads become High Intensity work.",
+      "targetDisposition": "intentionalDivergence",
+      "targetBehavior": "No deload week or deload exercise is emitted when Deload is disabled."
+    },
+    {
+      "id": "SRC-003",
+      "title": "Unit switch does not convert entered values",
+      "sourceBehavior": "The source changes the unit label without converting numeric values.",
+      "targetDisposition": "intentionalDivergence",
+      "targetBehavior": "HybridTraining converts or explicitly asks before changing units."
+    },
+    {
+      "id": "SRC-004",
+      "title": "Source overflows horizontally at 320 pixels",
+      "sourceBehavior": "The observed page exceeds the viewport by approximately five pixels.",
+      "targetDisposition": "intentionalDivergence",
+      "targetBehavior": "No horizontal page overflow at 320 pixels."
+    },
+    {
+      "id": "SRC-005",
+      "title": "Invalid program URL can leave an empty page",
+      "sourceBehavior": "An invalid ?program= payload is not always recovered.",
+      "targetDisposition": "intentionalDivergence",
+      "targetBehavior": "Show a recoverable structured error and a usable default form."
+    },
+    {
+      "id": "SRC-006",
+      "title": "Negative or empty plate inventory can crash plating",
+      "sourceBehavior": "Invalid inventory is not safely rejected in every path.",
+      "targetDisposition": "intentionalDivergence",
+      "targetBehavior": "Reject negative inventory and handle an empty inventory without crashing."
+    },
+    {
+      "id": "SRC-007",
+      "title": "Empty or zero ratio silently falls back to 90 percent",
+      "sourceBehavior": "Invalid ratio input is silently normalized to the default.",
+      "targetDisposition": "intentionalDivergence",
+      "targetBehavior": "Return an explicit validation error."
+    },
+    {
+      "id": "SRC-008",
+      "title": "Full Body Updated first Deadlift profile is 3/3/3",
+      "sourceBehavior": "The first Deadlift profile differs from the visible 5/5/5 family.",
+      "targetDisposition": "mustMatch"
+    },
+    {
+      "id": "SRC-009",
+      "title": "Bodyweight distributes rounding remainder at an edge",
+      "sourceBehavior": "Rounded early sets receive the remainder at the beginning or end.",
+      "targetDisposition": "mustMatch"
+    },
+    {
+      "id": "SRC-010",
+      "title": "Plating prefers the higher load on an equal-distance tie",
+      "sourceBehavior": "The closest-load search breaks ties upward and caps at inventory maximum.",
+      "targetDisposition": "mustMatch"
+    },
+    {
+      "id": "SRC-011",
+      "title": "Several source controls are not fully accessible",
+      "sourceBehavior": "Drag/drop, plate controls and some fields lack robust keyboard or touch semantics.",
+      "targetDisposition": "intentionalDivergence",
+      "targetBehavior": "Keyboard, pointer and touch alternatives with accessible names and focus."
+    },
+    {
+      "id": "SRC-012",
+      "title": "Program units are mutable global generator state",
+      "sourceBehavior": "Generation depends on a mutable global programUnits value.",
+      "targetDisposition": "intentionalDivergence",
+      "targetBehavior": "The Dart core stays pure and receives units in every request."
+    },
+    {
+      "id": "SRC-013",
+      "title": "Rotating schedules can mix movement wave positions",
+      "sourceBehavior": "A displayed week may contain movements belonging to different wave positions.",
+      "targetDisposition": "pendingExactCapture"
+    }
+  ]
+}

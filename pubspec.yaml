@@ -46,6 +46,7 @@ dependencies:
 dev_dependencies:
   training_engine_web_bridge:
     path: packages/training_engine_web_bridge
+  crypto: ^3.0.7
   flutter_test:
     sdk: flutter
   integration_test:

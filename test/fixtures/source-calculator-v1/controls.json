@@ -1,0 +1,275 @@
+{
+  "$schema": "schemas/controls.schema.json",
+  "schemaVersion": 1,
+  "controls": [
+    {
+      "id": "weight.mode",
+      "kind": "choice",
+      "defaultValueId": "oneRepMax",
+      "values": [
+        {"id": "oneRepMax", "sourceValue": "1RM"},
+        {"id": "repMax", "sourceValue": "Rep Max"},
+        {"id": "directTrainingMax", "sourceValue": "Training Max"},
+        {"id": "onePlus", "sourceValue": "1+"}
+      ],
+      "effects": ["recalculateTrainingMax", "regenerateProgram"]
+    },
+    {
+      "id": "weight.unit",
+      "kind": "choice",
+      "defaultValueId": "lb",
+      "values": [
+        {"id": "lb", "sourceValue": "lb"},
+        {"id": "kg", "sourceValue": "kg"}
+      ],
+      "effects": ["changePlatingProfile", "regenerateProgram"]
+    },
+    {
+      "id": "weight.ratio",
+      "kind": "number",
+      "defaultValueId": "normal",
+      "values": [
+        {"id": "normal", "sourceValue": 90},
+        {"id": "empty", "sourceValue": ""},
+        {"id": "zero", "sourceValue": 0}
+      ],
+      "effects": ["recalculateTrainingMax", "regenerateProgram"]
+    },
+    {
+      "id": "template.family",
+      "kind": "select",
+      "defaultValueId": "boringButBig",
+      "values": [
+        {"id": "boringButBig", "sourceValue": "Boring But Big"},
+        {"id": "triumvirate", "sourceValue": "Triumvirate"},
+        {"id": "periodizationBible", "sourceValue": "Periodization Bible"},
+        {"id": "bodyweight", "sourceValue": "Bodyweight"},
+        {"id": "simplestStrength", "sourceValue": "Simplest Strength"},
+        {"id": "forBeginners", "sourceValue": "For Beginners"},
+        {"id": "fullBody", "sourceValue": "Full Body"},
+        {"id": "twoDays", "sourceValue": "2 Days/Week"},
+        {"id": "pyramid", "sourceValue": "Pyramid"},
+        {"id": "firstSetLast", "sourceValue": "First Set Last"},
+        {"id": "gvt", "sourceValue": "GVT"},
+        {"id": "fivesProgression", "sourceValue": "5's Progression"},
+        {"id": "bbbChallenge", "sourceValue": "BBB Challenge"}
+      ],
+      "effects": ["changeConditionalOptions", "changeSchedule", "regenerateProgram"]
+    },
+    {
+      "id": "bbb.variant",
+      "kind": "select",
+      "defaultValueId": "original",
+      "values": [
+        {"id": "original", "sourceValue": "Original (5x10)"},
+        {"id": "lessBoring", "sourceValue": "Less Boring"},
+        {"id": "fiveByFive", "sourceValue": "5x5"},
+        {"id": "fiveByThree", "sourceValue": "5x3"},
+        {"id": "fiveByOne", "sourceValue": "5x1"},
+        {"id": "beyondVariation1", "sourceValue": "Beyond Variation 1"},
+        {"id": "beyondVariation2", "sourceValue": "Beyond Variation 2"},
+        {"id": "twoDaysPerWeek", "sourceValue": "2 Days/Week"}
+      ],
+      "visibleWhen": {"controlId": "template.family", "equals": "boringButBig"},
+      "effects": ["changeSupplementalWork", "changeSchedule", "regenerateProgram"]
+    },
+    {
+      "id": "fullBody.mode",
+      "kind": "select",
+      "defaultValueId": "original",
+      "values": [
+        {"id": "original", "sourceValue": "Original"},
+        {"id": "updated", "sourceValue": "Updated"},
+        {"id": "fullBoring", "sourceValue": "Full Boring"}
+      ],
+      "visibleWhen": {"controlId": "template.family", "equals": "fullBody"},
+      "effects": ["changeProgramTopology", "regenerateProgram"]
+    },
+    {
+      "id": "twoDays.option",
+      "kind": "select",
+      "defaultValueId": "optionOne",
+      "values": [
+        {"id": "optionOne", "sourceValue": "Option One"},
+        {"id": "optionTwo", "sourceValue": "Option Two"},
+        {"id": "optionThree", "sourceValue": "Option Three"}
+      ],
+      "visibleWhen": {"controlId": "template.family", "equals": "twoDays"},
+      "effects": ["changeProgramTopology", "regenerateProgram"]
+    },
+    {
+      "id": "warmUp.type",
+      "kind": "select",
+      "defaultValueId": "original",
+      "values": [
+        {"id": "off", "sourceValue": -1},
+        {"id": "original", "sourceValue": 0},
+        {"id": "beyond", "sourceValue": 1}
+      ],
+      "effects": ["changeDependentBaseWeights", "regenerateProgram"]
+    },
+    {
+      "id": "joker.ceiling",
+      "kind": "select",
+      "defaultValueId": "off",
+      "values": [
+        {"id": "off", "sourceValue": 0},
+        {"id": "plus5", "sourceValue": 5},
+        {"id": "plus10", "sourceValue": 10},
+        {"id": "plus15", "sourceValue": 15},
+        {"id": "plus20", "sourceValue": 20},
+        {"id": "plus25", "sourceValue": 25},
+        {"id": "plus30", "sourceValue": 30}
+      ],
+      "effects": ["appendCumulativeJokerSets", "regenerateProgram"]
+    },
+    {
+      "id": "deload.type",
+      "kind": "select",
+      "defaultValueId": "deload1",
+      "values": [
+        {"id": "off", "sourceValue": -1},
+        {"id": "deload1", "sourceValue": 0},
+        {"id": "deload2", "sourceValue": 1},
+        {"id": "deload3", "sourceValue": 2},
+        {"id": "deload4", "sourceValue": 3},
+        {"id": "deload5", "sourceValue": 4},
+        {"id": "highIntensity", "sourceValue": 5}
+      ],
+      "effects": ["changeDeloadWeek", "regenerateProgram"]
+    },
+    {
+      "id": "deload.skipWarmUp",
+      "kind": "boolean",
+      "defaultValueId": "true",
+      "values": [
+        {"id": "false", "sourceValue": false},
+        {"id": "true", "sourceValue": true}
+      ],
+      "visibleWhen": {
+        "controlId": "deload.type",
+        "in": ["deload1", "deload2", "deload3", "deload4", "deload5"]
+      },
+      "effects": ["changeDeloadWarmUp", "regenerateProgram"]
+    },
+    {
+      "id": "mainWork.setOrder",
+      "kind": "boolean",
+      "defaultValueId": "standard",
+      "values": [
+        {"id": "standard", "sourceValue": false},
+        {"id": "bastard", "sourceValue": true}
+      ],
+      "effects": ["reorderMainWorkSets", "regenerateProgram"]
+    },
+    {
+      "id": "mainWork.weekOrder",
+      "kind": "boolean",
+      "defaultValueId": "fiveThreeOne",
+      "values": [
+        {"id": "fiveThreeOne", "sourceValue": false},
+        {"id": "threeFiveOne", "sourceValue": true}
+      ],
+      "effects": ["reorderWorkWeeks", "regenerateProgram"]
+    },
+    {
+      "id": "schedule.frequency",
+      "kind": "choice",
+      "defaultValueId": "four",
+      "values": [
+        {"id": "two", "sourceValue": 2},
+        {"id": "three", "sourceValue": 3},
+        {"id": "four", "sourceValue": 4}
+      ],
+      "effects": ["changeRotationLength", "regenerateProgram"]
+    },
+    {
+      "id": "output.action",
+      "kind": "action",
+      "defaultValueId": "title",
+      "values": [
+        {"id": "title", "sourceValue": "title"},
+        {"id": "showPlating", "sourceValue": "plating"},
+        {"id": "qr", "sourceValue": "qr"},
+        {"id": "copyTsv", "sourceValue": "copy"},
+        {"id": "print", "sourceValue": "print"},
+        {"id": "share", "sourceValue": "share"},
+        {"id": "openInApp", "sourceValue": "open-in-app"},
+        {"id": "import", "sourceValue": "import"},
+        {"id": "export", "sourceValue": "export"}
+      ],
+      "effects": ["localOutputOnly"]
+    },
+    {
+      "id": "plating.case",
+      "kind": "inventory",
+      "defaultValueId": "exact",
+      "values": [
+        {"id": "barOnly", "sourceValue": "bar-only"},
+        {"id": "exact", "sourceValue": "exact"},
+        {"id": "betweenLoads", "sourceValue": "tie"},
+        {"id": "inventoryCeiling", "sourceValue": "maximum"},
+        {"id": "quarterKg", "sourceValue": "0.125kg"},
+        {"id": "emptyInventory", "sourceValue": "empty"},
+        {"id": "negativeInventory", "sourceValue": "negative"},
+        {"id": "unitSwitch", "sourceValue": "kg-lb"}
+      ],
+      "effects": ["recalculatePlates", "regenerateProgram"]
+    },
+    {
+      "id": "persistence.codec",
+      "kind": "codec",
+      "defaultValueId": "deflateRaw",
+      "values": [
+        {"id": "deflateRaw", "sourceValue": "current"},
+        {"id": "zlibLegacy", "sourceValue": "legacy"},
+        {"id": "invalid", "sourceValue": "invalid"}
+      ],
+      "effects": ["restoreFormOrRecover"]
+    },
+    {
+      "id": "responsive.width",
+      "kind": "viewport",
+      "defaultValueId": "desktop1440",
+      "values": [
+        {"id": "desktop1440", "sourceValue": 1440},
+        {"id": "mobile390", "sourceValue": 390},
+        {"id": "mobile320", "sourceValue": 320}
+      ],
+      "effects": ["reflowLayout"]
+    },
+    {
+      "id": "fsl.mode",
+      "kind": "select",
+      "defaultValueId": "amrap",
+      "values": [
+        {"id": "amrap", "sourceValue": "AMRAP"},
+        {"id": "multipleSets", "sourceValue": "Multiple Sets"}
+      ],
+      "visibleWhen": {"controlId": "template.family", "equals": "firstSetLast"},
+      "effects": ["changeSetMultiplicity", "regenerateProgram"]
+    },
+    {
+      "id": "bbbChallenge.duration",
+      "kind": "select",
+      "defaultValueId": "sixWeeks",
+      "values": [
+        {"id": "sixWeeks", "sourceValue": "Six Weeks"},
+        {"id": "threeMonths", "sourceValue": "Three Months"},
+        {"id": "thirteenWeeks", "sourceValue": "Thirteen Weeks"}
+      ],
+      "visibleWhen": {"controlId": "template.family", "equals": "bbbChallenge"},
+      "effects": ["changePhaseCount", "changeTrainingMaxProgression", "regenerateProgram"]
+    },
+    {
+      "id": "ratio.scope",
+      "kind": "choice",
+      "defaultValueId": "common",
+      "values": [
+        {"id": "common", "sourceValue": "same"},
+        {"id": "byMovement", "sourceValue": "different"}
+      ],
+      "effects": ["changeDependentRatioInputs", "regenerateProgram"]
+    }
+  ]
+}
