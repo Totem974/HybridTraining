@@ -68,8 +68,8 @@ void main() {
   });
 
   test('classic warm-up and deload use canonical conditional trees', () {
-    final warmup = parameter('classic_531_options', 'warmUp.enabled');
-    final deload = parameter('classic_531_options', 'deload.enabled');
+    final warmup = parameter('classic_crosscut_options', 'warmUp.enabled');
+    final deload = parameter('classic_crosscut_options', 'deload.enabled');
     expect(warmup['default'], isTrue);
     expect(warmup['allowedValues'], [true, false]);
     expect(deload['default'], isTrue);
@@ -77,14 +77,14 @@ void main() {
     expect(warmup['labelFr'], 'Échauffement');
     expect(deload['labelFr'], 'Deload après le cycle');
 
-    final warmupType = parameter('classic_531_options', 'warmUp.type');
+    final warmupType = parameter('classic_crosscut_options', 'warmUp.type');
     expect(warmupType['allowedValues'], ['original', 'beyond']);
     expect(
       (warmupType['visibleWhen']! as Map)['parameterId'],
       'warmUp.enabled',
     );
 
-    final skip = parameter('classic_531_options', 'deload.skipWarmUp');
+    final skip = parameter('classic_crosscut_options', 'deload.skipWarmUp');
     expect(jsonEncode(skip['visibleWhen']), contains('deload.type'));
     expect(jsonEncode(skip['visibleWhen']), isNot(contains('highIntensity')));
   });

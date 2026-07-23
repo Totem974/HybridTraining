@@ -5,6 +5,7 @@ import 'canonical_json.dart';
 
 import 'package:hybrid_training/features/training_catalog/data/runtime_catalog_builder.dart';
 import 'package:hybrid_training/core/storage/sqlite_database_file.dart';
+import 'package:training_engine/features/training_catalog/application/option_schema_composer.dart';
 import 'package:hybrid_training/features/cycle_generation/domain/cycle_compiler_impl.dart';
 import 'package:hybrid_training/features/cycle_generation/domain/cycle_contract.dart';
 import 'package:hybrid_training/features/training_catalog/data/sqlite_training_catalog.dart';
@@ -596,6 +597,14 @@ final class _Catalog {
         }
       }
     }
+    try {
+      const OptionSchemaComposer().composeAll([
+        for (final document in documents)
+          if (document.kind == 'optionSchemas') ...document.records,
+      ]);
+    } catch (error) {
+      errors.add('optionSchemas: $error');
+    }
     if (defaultTemplates.length != 1) {
       errors.add(
         'templates require exactly one global default, got '
@@ -739,6 +748,18 @@ final class _Catalog {
         final ids = record['sourceRuleIds'];
         if (ids is List<Object?>) {
           missingReferences += ids.where((id) => !sources.contains(id)).length;
+        }
+      }
+    }
+    for (final schema in byKind['optionSchemas'] ?? const []) {
+      if (schema['includeSchemaIds'] case final List<Object?> references) {
+        for (final rawReference in references) {
+          final reference = rawReference! as Map<String, Object?>;
+          if (!options.contains(
+            '${reference['id']}@${reference['revision']}',
+          )) {
+            missingReferences++;
+          }
         }
       }
     }
@@ -1227,9 +1248,34 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
         }
       }
     case 'optionSchemas':
-      _exact(value, {'id', 'revision', 'sourceRuleIds', 'parameters'}, at);
+      _exact(
+        value,
+        {'id', 'revision', 'sourceRuleIds', 'parameters'},
+        at,
+        optional: {'includeSchemaIds'},
+      );
       _identity(value, at);
       _strings(value['sourceRuleIds'], '$at.sourceRuleIds');
+      if (value.containsKey('includeSchemaIds')) {
+        final references = _objects(
+          value['includeSchemaIds'],
+          '$at.includeSchemaIds',
+        );
+        if (references.isEmpty) {
+          throw FormatException('$at.includeSchemaIds cannot be empty');
+        }
+        final seen = <String>{};
+        for (var i = 0; i < references.length; i++) {
+          final reference = references[i];
+          _ref(reference, '$at.includeSchemaIds[$i]');
+          final key = '${reference['id']}@${reference['revision']}';
+          if (!seen.add(key)) {
+            throw FormatException(
+              '$at.includeSchemaIds has duplicate reference $key',
+            );
+          }
+        }
+      }
       final parameters = _objects(value['parameters'], '$at.parameters');
       for (var i = 0; i < parameters.length; i++) {
         _parameter(parameters[i], '$at.parameters[$i]');

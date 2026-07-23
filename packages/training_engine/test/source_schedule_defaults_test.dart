@@ -97,7 +97,10 @@ void main() {
     expect(schema['sourceRuleIds'], contains(_deloadRuleId));
     expect(schema['sourceRuleIds'], contains('or.warm_up.40_50_60'));
 
-    final parameters = (schema['parameters']! as List<Object?>)
+    final crosscut = schemas.singleWhere(
+      (schema) => schema['id'] == 'classic_crosscut_options',
+    );
+    final parameters = (crosscut['parameters']! as List<Object?>)
         .cast<Map<String, Object?>>();
     final parameterIds = parameters
         .map((parameter) => parameter['id'])

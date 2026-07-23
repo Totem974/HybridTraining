@@ -3,28 +3,13 @@
   "kind": "optionSchemas",
   "optionSchemas": [
     {
-      "id": "classic_531_options",
+      "id": "classic_crosscut_options",
       "revision": 1,
       "sourceRuleIds": [
-        "or.tm.ninety_percent",
         "or.warm_up.40_50_60",
         "or.deload.classic"
       ],
       "parameters": [
-        {
-          "id": "training_max_ratio",
-          "presentationGroup": "hidden",
-          "type": "percentage",
-          "scope": "global",
-          "default": 9000,
-          "minimum": 9000,
-          "maximum": 9000,
-          "step": null,
-          "allowedValues": [],
-          "visibleWhen": { "type": "always" },
-          "enabledWhen": { "type": "always" },
-          "requiredWhen": { "type": "always" }
-        },
         {
           "id": "warmUp.enabled",
           "presentationGroup": "warmup",
@@ -172,11 +157,48 @@
       ]
     },
     {
+      "id": "classic_531_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "or.tm.ninety_percent",
+        "or.warm_up.40_50_60",
+        "or.deload.classic"
+      ],
+      "includeSchemaIds": [
+        {
+          "id": "classic_crosscut_options",
+          "revision": 1
+        }
+      ],
+      "parameters": [
+        {
+          "id": "training_max_ratio",
+          "presentationGroup": "hidden",
+          "type": "percentage",
+          "scope": "global",
+          "default": 9000,
+          "minimum": 9000,
+          "maximum": 9000,
+          "step": null,
+          "allowedValues": [],
+          "visibleWhen": { "type": "always" },
+          "enabledWhen": { "type": "always" },
+          "requiredWhen": { "type": "always" }
+        }
+      ]
+    },
+    {
       "id": "classic_simplest_strength_options",
       "revision": 1,
       "sourceRuleIds": [
         "or.sst.progression",
         "or.sst.pairings"
+      ],
+      "includeSchemaIds": [
+        {
+          "id": "classic_crosscut_options",
+          "revision": 1
+        }
       ],
       "parameters": [
         {
@@ -243,6 +265,12 @@
       "sourceRuleIds": [
         "or.assistance.bodyweight",
         "or.assistance.bodyweight_observed_volume"
+      ],
+      "includeSchemaIds": [
+        {
+          "id": "classic_crosscut_options",
+          "revision": 1
+        }
       ],
       "parameters": [
         {

@@ -433,10 +433,18 @@ final class CatalogSourceDocumentCodec {
     return _list(root, 'optionSchemas')
         .map((value) {
           final map = _map(value, 'optionSchema');
-          _keys(map, const {'id', 'revision', 'sourceRuleIds', 'parameters'});
+          _keys(
+            map,
+            const {'id', 'revision', 'sourceRuleIds', 'parameters'},
+            optional: const {'includeSchemaIds'},
+          );
+          _nonEmptyString(map, 'id');
+          _positiveInt(map, 'revision');
+          _validateOptionSchemaReferences(map);
           for (final value in _list(map, 'parameters')) {
+            final parameter = _map(value, 'parameter');
             _keys(
-              _map(value, 'parameter'),
+              parameter,
               const {
                 'id',
                 'type',
@@ -450,12 +458,48 @@ final class CatalogSourceDocumentCodec {
                 'enabledWhen',
                 'requiredWhen',
               },
-              optional: const {'presentationGroup', 'labelEn', 'labelFr'},
+              optional: const {
+                'presentationGroup',
+                'labelEn',
+                'labelFr',
+                'requestPath',
+              },
             );
+            _nonEmptyString(parameter, 'id');
+            if (parameter['requestPath'] case final Object requestPath) {
+              if (requestPath is! String ||
+                  requestPath.isEmpty ||
+                  requestPath.startsWith('options.') ||
+                  requestPath.split('.').any((segment) => segment.isEmpty)) {
+                throw const FormatException(
+                  'requestPath must be relative to options.',
+                );
+              }
+            }
           }
           return map;
         })
         .toList(growable: false);
+  }
+
+  void _validateOptionSchemaReferences(Map<String, Object?> schema) {
+    if (!schema.containsKey('includeSchemaIds')) return;
+    final values = _list(schema, 'includeSchemaIds');
+    if (values.isEmpty) {
+      throw const FormatException('includeSchemaIds cannot be empty.');
+    }
+    final seen = <String>{};
+    for (final value in values) {
+      final reference = _map(value, 'includeSchemaId');
+      _keys(reference, const {'id', 'revision'});
+      final id = _nonEmptyString(reference, 'id');
+      final revision = _positiveInt(reference, 'revision');
+      if (!seen.add('$id@$revision')) {
+        throw FormatException(
+          'Duplicate option schema reference $id@$revision.',
+        );
+      }
+    }
   }
 
   SourceVariant _variant(Object? value) {

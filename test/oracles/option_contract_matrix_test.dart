@@ -66,7 +66,7 @@ void main() {
   });
 
   test('warm-up option tree is typed and conditionally complete', () {
-    final options = schema(classic, 'classic_531_options');
+    final options = schema(classic, 'classic_crosscut_options');
     expect(option(options, 'warmUp.enabled')['default'], isTrue);
     expect(option(options, 'warmUp.type')['allowedValues'], [
       'original',
@@ -84,7 +84,7 @@ void main() {
   });
 
   test('Joker exposes off plus all six source ceilings', () {
-    final options = schema(classic, 'classic_531_options');
+    final options = schema(classic, 'classic_crosscut_options');
     expect(option(options, 'joker.enabled')['default'], isFalse);
     expect(option(options, 'joker.ceilingBasisPoints')['allowedValues'], [
       500,
@@ -103,7 +103,7 @@ void main() {
   });
 
   test('deload options encode off, six types and skip exclusion', () {
-    final options = schema(classic, 'classic_531_options');
+    final options = schema(classic, 'classic_crosscut_options');
     expect(option(options, 'deload.enabled')['default'], isTrue);
     expect(option(options, 'deload.type')['allowedValues'], [
       'deload1',
@@ -114,7 +114,7 @@ void main() {
       'highIntensity',
     ]);
     final skip = option(options, 'deload.skipWarmUp');
-    expect(skip['default'], isFalse);
+    expect(skip['default'], isTrue);
     expect(_conditionReferences(skip['visibleWhen']), {
       'deload.enabled',
       'deload.type',

@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'package:sqflite_common/sqlite_api.dart';
 
 import '../../cycle_generation/application/catalog_plan_resolver.dart';
+import 'package:training_engine/features/cycle_generation/domain/catalog_cycle_primitives.dart';
 import 'package:training_engine/features/cycle_generation/domain/cycle_contract.dart';
 import 'package:training_engine/features/cycle_generation/domain/cycle_option_schema.dart';
 import '../application/catalog_repository.dart';
+import 'package:training_engine/features/training_catalog/application/option_schema_composer.dart';
 import 'package:training_engine/features/training_catalog/domain/catalog_codec.dart';
 import 'package:training_engine/features/training_catalog/domain/catalog_index.dart';
 import 'package:training_engine/features/training_catalog/domain/catalog_models.dart';
@@ -466,30 +468,16 @@ final class SqliteTrainingCatalog
       );
     }
     final schemaId = metadata.single['option_schema_id']! as String;
-    final rows = await database.query(
-      'catalog_option_schemas',
-      columns: ['payload_json'],
-      where: 'version=? AND id=?',
-      whereArgs: [catalogVersion, schemaId],
-      limit: 1,
+    final parameters = await _composedOptionParameters(
+      catalogVersion: catalogVersion,
+      schemaId: schemaId,
     );
-    if (rows.isEmpty) {
-      throw CatalogNotFoundException('Missing option schema $schemaId');
-    }
-    final payload = _jsonMap(
-      rows.single['payload_json']! as String,
-      'option schema',
-    );
-    final parameters = payload['parameters'];
-    if (parameters is! List<Object?>) {
-      throw const CatalogFormatException('parameters must be a list');
-    }
     return CycleEditorSchema(
       id: schemaId,
       templateId: templateId,
       variantId: variantId,
       options: parameters
-          .map((value) => _decodeOption(_objectMap(value, 'parameter')))
+          .map((value) => _decodeOption(value))
           .toList(growable: false),
     );
   }
@@ -1100,30 +1088,51 @@ final class SqliteTrainingCatalog
       limit: 1,
     );
     if (metadata.isEmpty) return const {};
+    final parameters = await _composedOptionParameters(
+      catalogVersion: catalogVersion,
+      schemaId: metadata.single['option_schema_id']! as String,
+    );
+    return {
+      for (final parameter in parameters)
+        if (parameter['default'] != null)
+          parameter['id']! as String: parameter['default'],
+    };
+  }
+
+  Future<List<Map<String, Object?>>> _composedOptionParameters({
+    required int catalogVersion,
+    required String schemaId,
+  }) async {
     final rows = await database.query(
       'catalog_option_schemas',
-      columns: ['payload_json'],
-      where: 'version=? AND id=?',
-      whereArgs: [catalogVersion, metadata.single['option_schema_id']],
-      limit: 1,
+      columns: ['id', 'revision', 'payload_json'],
+      where: 'version=?',
+      whereArgs: [catalogVersion],
+      orderBy: 'id',
     );
-    if (rows.isEmpty) return const {};
-    final schema = _jsonMap(
-      rows.single['payload_json']! as String,
-      'option schema',
-    );
-    final parameters = schema['parameters'];
-    if (parameters is! List<Object?>) {
-      throw const CatalogFormatException('parameters must be a list');
+    final targetRows = rows.where((row) => row['id'] == schemaId).toList();
+    if (targetRows.isEmpty) {
+      throw CatalogNotFoundException('Missing option schema $schemaId');
     }
-    return {
-      for (final raw in parameters)
-        if (_objectMap(raw, 'parameter')['default'] != null)
-          _objectMap(raw, 'parameter')['id']! as String: _objectMap(
-            raw,
-            'parameter',
-          )['default'],
-    };
+    final schemas = [
+      for (final row in rows)
+        {
+          ..._jsonMap(row['payload_json']! as String, 'option schema'),
+          'id': row['id'],
+          'revision': row['revision'],
+        },
+    ];
+    try {
+      return const OptionSchemaComposer().compose(
+        schemas: schemas,
+        reference: ComponentReference(
+          schemaId,
+          targetRows.single['revision']! as int,
+        ),
+      );
+    } on FormatException catch (error) {
+      throw CatalogFormatException(error.message.toString());
+    }
   }
 
   Future<_CanonicalSelection> _canonicalSelection({

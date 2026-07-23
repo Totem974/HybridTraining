@@ -8,6 +8,12 @@
       "sourceRuleIds": [
         "or.beginner.full_body"
       ],
+      "includeSchemaIds": [
+        {
+          "id": "classic_crosscut_options",
+          "revision": 1
+        }
+      ],
       "parameters": [
         {
           "id": "training_max_ratio",
@@ -111,6 +117,12 @@
         "or.full_body.phase_2",
         "or.full_body.phase_3"
       ],
+      "includeSchemaIds": [
+        {
+          "id": "classic_crosscut_options",
+          "revision": 1
+        }
+      ],
       "parameters": [
         {
           "id": "training_max_ratio",
@@ -165,6 +177,12 @@
       "revision": 1,
       "sourceRuleIds": [
         "app.full_body.updated"
+      ],
+      "includeSchemaIds": [
+        {
+          "id": "classic_crosscut_options",
+          "revision": 1
+        }
       ],
       "parameters": [
         {
@@ -221,6 +239,12 @@
       "revision": 1,
       "sourceRuleIds": [
         "app.full_body.full_boring"
+      ],
+      "includeSchemaIds": [
+        {
+          "id": "classic_crosscut_options",
+          "revision": 1
+        }
       ],
       "parameters": [
         {

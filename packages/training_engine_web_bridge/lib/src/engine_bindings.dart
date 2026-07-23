@@ -14,6 +14,8 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       const CatalogScheduleDataResolver();
   final AssistancePlanResolver _assistancePlanResolver =
       const AssistancePlanResolver();
+  final OptionSchemaComposer _optionSchemaComposer =
+      const OptionSchemaComposer();
   final CycleCompilerImpl _compiler = const CycleCompilerImpl();
   final CycleConfigurationCodec _configurationCodec =
       const CycleConfigurationCodec();
@@ -25,6 +27,8 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   List<SourceComponent> _components = const [];
   List<Map<String, Object?>> _rawTemplateRecords = const [];
   List<Map<String, Object?>> _rawOptionSchemas = const [];
+  Map<OptionSchemaKey, List<Map<String, Object?>>> _optionParametersBySchema =
+      const {};
   List<Map<String, Object?>> _rawScheduleRecords = const [];
   List<Map<String, Object?>> _rawAssistancePlanRecords = const [];
   List<Map<String, Object?>> _rawForeverDefinitions = const [];
@@ -89,9 +93,11 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       for (final document in documents.where(
         (item) => item['kind'] == 'optionSchemas',
       ))
-        for (final item in _list(document, 'optionSchemas'))
-          _map(item, 'option schema'),
+        ..._codec.decodeOptionSchemas(jsonEncode(document)),
     ];
+    _optionParametersBySchema = _optionSchemaComposer.composeAll(
+      _rawOptionSchemas,
+    );
     _rawScheduleRecords = [
       for (final document in documents.where(
         (item) => item['kind'] == 'schedules',
@@ -258,19 +264,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       if (validExample['includeDeload'] is bool)
         'deload.enabled': validExample['includeDeload'],
     };
-    final optionReference = _map(
-      rawVariant['optionSchemaId'],
-      'option schema reference',
-    );
-    final optionSchema = _rawOptionSchemas.singleWhere(
-      (item) =>
-          item['id'] == optionReference['id'] &&
-          item['revision'] == optionReference['revision'],
-    );
-    final optionParameters = [
-      for (final item in _list(optionSchema, 'parameters'))
-        _map(item, 'parameter'),
-    ];
+    final optionParameters = _optionParameters(templateId, variantId);
     final optionRequestPaths = {
       for (final parameter in optionParameters)
         _string(parameter, 'id'):
@@ -1231,14 +1225,14 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       rawVariant['optionSchemaId'],
       'option schema reference',
     );
-    final schema = _rawOptionSchemas.singleWhere(
-      (item) =>
-          item['id'] == reference['id'] &&
-          item['revision'] == reference['revision'],
+    final key = (
+      id: _string(reference, 'id'),
+      revision: _integer(reference, 'revision'),
     );
-    return [
-      for (final raw in _list(schema, 'parameters')) _map(raw, 'parameter'),
-    ];
+    return _optionParametersBySchema[key] ??
+        (throw FormatException(
+          'OPTION_SCHEMA_REFERENCE_NOT_FOUND:${key.id}@${key.revision}',
+        ));
   }
 
   Map<String, Object?> _catalogOptionValues(
