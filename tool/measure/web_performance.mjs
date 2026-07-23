@@ -81,22 +81,20 @@ async function samples(operation) {
 async function measureGeneration(page) {
   return page.evaluate(() => new Promise((resolveMeasurement, reject) => {
     const status = document.querySelector("[data-cycle-region='status']");
-    const button = document.querySelector("[data-testid='generate']");
-    if (!(status instanceof HTMLElement) || !(button instanceof HTMLButtonElement)) {
+    const title = document.querySelector(".output-title input");
+    if (!(status instanceof HTMLElement) || !(title instanceof HTMLInputElement)) {
       reject(new Error("Generation controls unavailable"));
       return;
     }
-    status.textContent = "";
-    requestAnimationFrame(() => {
-      const started = performance.now();
-      const observer = new MutationObserver(() => {
-        if (!status.textContent) return;
-        observer.disconnect();
-        resolveMeasurement(performance.now() - started);
-      });
-      observer.observe(status, { childList: true, characterData: true, subtree: true });
-      button.click();
+    const started = performance.now();
+    const observer = new MutationObserver(() => {
+      if (!/up to date|à jour/i.test(status.textContent ?? "")) return;
+      observer.disconnect();
+      resolveMeasurement(performance.now() - started);
     });
+    observer.observe(status, { childList: true, characterData: true, subtree: true });
+    title.value = `${title.value.replace(/\s·\d+$/, "")} ·${Math.round(started)}`;
+    title.dispatchEvent(new Event("input", { bubbles: true }));
   }));
 }
 

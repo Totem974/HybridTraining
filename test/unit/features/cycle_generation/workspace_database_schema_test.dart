@@ -8,8 +8,8 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 void main() {
   sqfliteFfiInit();
 
-  test('workspace.db v1 stores the vertical-slice user inputs', () async {
-    final directory = await Directory.systemTemp.createTemp('workspace-db-v1-');
+  test('workspace.db stores the vertical-slice user inputs', () async {
+    final directory = await Directory.systemTemp.createTemp('workspace-db-');
     addTearDown(() => directory.delete(recursive: true));
     final file = SqliteDatabaseFile(
       fileName: 'workspace.db',
@@ -63,5 +63,81 @@ void main() {
     expect(await database.query('bars'), hasLength(1));
     expect(await database.query('plates'), hasLength(1));
     expect(await database.query('generation_drafts'), hasLength(1));
+  });
+
+  test(
+    'migration v3 to v4 adds configurations without changing data',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'workspace-db-v3-v4-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final path = '${directory.path}/workspace.db';
+      final legacy = await databaseFactoryFfi.openDatabase(
+        path,
+        options: OpenDatabaseOptions(
+          version: 3,
+          onCreate: (database, version) async {
+            await WorkspaceDatabaseSchema.create(database, version);
+            await database.execute('DROP TABLE cycle_configurations');
+          },
+        ),
+      );
+      await legacy.insert('profiles', {
+        'id': 'existing-profile',
+        'display_name': 'Existing Athlete',
+        'unit': 'kg',
+        'global_tm_ratio_basis_points': 9000,
+        'rounding_increment_centi_units': 250,
+      });
+      await legacy.close();
+
+      final file = SqliteDatabaseFile(
+        fileName: 'workspace.db',
+        version: WorkspaceDatabaseSchema.version,
+        onCreate: WorkspaceDatabaseSchema.create,
+        onUpgrade: WorkspaceDatabaseSchema.upgrade,
+        factory: databaseFactoryFfi,
+        databasePath: path,
+      );
+      addTearDown(file.close);
+      final migrated = await file.open();
+
+      expect(await migrated.query('profiles'), hasLength(1));
+      expect(
+        await migrated.rawQuery(
+          "SELECT name FROM sqlite_master "
+          "WHERE type = 'table' AND name = 'cycle_configurations'",
+        ),
+        hasLength(1),
+      );
+    },
+  );
+
+  test('cycle configuration schema creation is idempotent', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'workspace-db-idempotent-',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final database = await databaseFactoryFfi.openDatabase(
+      '${directory.path}/workspace.db',
+    );
+    addTearDown(database.close);
+    await database.execute('''CREATE TABLE profiles(
+      id TEXT PRIMARY KEY, display_name TEXT NOT NULL, unit TEXT NOT NULL,
+      global_tm_ratio_basis_points INTEGER NOT NULL,
+      rounding_increment_centi_units INTEGER NOT NULL)''');
+
+    await createCycleConfigurationTables(database);
+    await createCycleConfigurationTables(database);
+
+    expect(
+      await database.rawQuery(
+        "SELECT name FROM sqlite_master "
+        "WHERE type = 'index' "
+        "AND name = 'cycle_configurations_profile_updated_idx'",
+      ),
+      hasLength(1),
+    );
   });
 }

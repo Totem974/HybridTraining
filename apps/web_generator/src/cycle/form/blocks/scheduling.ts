@@ -109,20 +109,38 @@ function renderOrder(
   legend.textContent = localized(field.label, locale);
   const list = node("ol", "schedule-order__tokens");
   const values = Array.isArray(field.value) ? [...field.value] : [];
+  const isFrench = locale.toLowerCase().startsWith("fr");
   values.forEach((value, index) => {
     const choice = field.choices?.find((item) => serialized(item.value) === serialized(value));
-    const item = node("li");
-    const button = node("button", "schedule-token");
-    button.type = "button";
-    button.disabled = !enabled;
-    button.textContent = choice ? localized(choice.label, locale) : "—";
-    button.setAttribute("aria-label", `${button.textContent}, ${index + 1}`);
-    button.addEventListener("click", () => {
-      if (index === 0) return;
-      [values[index - 1], values[index]] = [values[index], values[index - 1]];
-      emit(dispatch, schemaId, field, values);
-    });
-    item.append(button);
+    const item = node("li", "schedule-order__item");
+    const label = node("span", "schedule-token");
+    const itemLabel = choice ? localized(choice.label, locale) : "—";
+    label.textContent = itemLabel;
+    const controls = node("span", "schedule-token__controls");
+    const moveButton = (direction: -1 | 1) => {
+      const button = node("button", "schedule-token__move");
+      const destination = index + direction;
+      const directionLabel = isFrench
+        ? direction < 0 ? "vers la gauche" : "vers la droite"
+        : direction < 0 ? "left" : "right";
+      button.type = "button";
+      button.textContent = direction < 0 ? "←" : "→";
+      button.disabled = !enabled || destination < 0 || destination >= values.length;
+      button.setAttribute(
+        "aria-label",
+        isFrench
+          ? `Déplacer ${itemLabel} ${directionLabel}`
+          : `Move ${itemLabel} ${directionLabel}`,
+      );
+      button.addEventListener("click", () => {
+        if (button.disabled) return;
+        [values[destination], values[index]] = [values[index], values[destination]];
+        emit(dispatch, schemaId, field, values);
+      });
+      return button;
+    };
+    controls.append(moveButton(-1), moveButton(1));
+    item.append(label, controls);
     list.append(item);
   });
   group.append(legend, list);

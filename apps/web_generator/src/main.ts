@@ -1,7 +1,21 @@
 import { renderCycleForm, localized, type CycleEditorSchema, type CycleFormIntent, type JsonValue } from './cycle/form';
 import { renderProgram, type CycleResponseLike } from './cycle/program';
-import { buildCycleRequest } from './cycle/request/buildCycleRequest';
+import {
+  cycleConfigurationToEditorValues,
+  editorValuesToCycleConfiguration,
+  migrateCycleRequestV1ToConfiguration,
+} from './cycle/configuration';
+import {
+  createCycleShareUrl,
+  readCycleConfigurationFromUrl,
+} from './cycle/configuration/share';
 import { changeEditorValue, normalizeEditorState } from './cycle/state/editorState';
+import { buildCycleRequest } from './cycle/request/buildCycleRequest';
+import { installCollapsibleSections } from './cycle/ui/collapsibleSections';
+import {
+  createCycleGenerationScheduler,
+  type CycleGenerationScheduler,
+} from './cycle/state/generationScheduler';
 import {
   currentDraftId,
   cycleDraft,
@@ -21,12 +35,16 @@ import {
   type LocalArtifact,
 } from './storage';
 import { PreferencesStore, type Locale } from './storage/preferences';
-import type { CycleResponse, ValidationReport } from '../../../contracts/v1/generated/contracts';
+import type { CycleConfiguration, CycleRequest, CycleResponse, ValidationReport } from '../../../contracts/v1/generated/contracts';
 
 interface CatalogIndex {
   readonly templates: readonly {
     readonly id: string;
     readonly labels: Readonly<Record<string, string>>;
+    readonly generation: {
+      readonly id: string;
+      readonly labels: Readonly<Record<string, string>>;
+    };
     readonly variantIds: readonly string[];
   }[];
 }
@@ -41,14 +59,17 @@ let catalog: CatalogIndex;
 let schema: CycleEditorSchema;
 let values: Record<string, JsonValue> = {};
 let defaultValues: Record<string, JsonValue> = {};
+let currentConfiguration: CycleConfiguration;
 let disposeForm: (() => void) | undefined;
 let lastRequest: object | undefined;
 let lastResponse: CycleResponse | undefined;
-let generationTimer: ReturnType<typeof setTimeout> | undefined;
+let generationScheduler: CycleGenerationScheduler<object>;
 let workspaceStorage: IndexedDbWorkspaceStorage | undefined;
 let drafts: WorkspaceDraftRepository<CycleDraftPayload> | undefined;
 let configurations: SavedConfigurationRepository<object> | undefined;
 let snapshots: TrainingSnapshotRepository<object> | undefined;
+let startupWarning = '';
+let generationFailed = false;
 
 const translations = {
   en: { eyebrow: 'Training tools', pageTitle: 'Cycle generator', pageSummary: 'Configure and generate a training cycle locally in your browser.', weight: 'Weight', template: 'Template', additionalOptions: 'Additional options', plating: 'Plating & barbell', scheduling: 'Scheduling', output: 'Output', program: 'Program' },
@@ -58,6 +79,28 @@ const translations = {
 async function start(): Promise<void> {
   try {
     client = await EngineClient.initialize();
+    generationScheduler = createCycleGenerationScheduler<object, CycleResponse>({
+      generate: (request) => client.generateCycle<CycleResponse>(request),
+      fingerprint: (request) => JSON.stringify(request),
+      onResult: publishGeneration,
+      onError: (error) => {
+        generationFailed = true;
+        if (status) status.textContent = message(error);
+      },
+      onPhaseChange: (phase) => {
+        if (!status) return;
+        if (phase === 'scheduled') {
+          generationFailed = false;
+          status.textContent = locale === 'fr'
+            ? 'Mise à jour du programme…'
+            : 'Updating program…';
+        } else if (phase === 'idle' && lastResponse && !generationFailed) {
+          status.textContent = locale === 'fr'
+            ? 'Programme généré et à jour.'
+            : 'Program generated and up to date.';
+        }
+      },
+    });
     catalog = client.catalogIndex<CatalogIndex>({ apiVersion: 'v1', schemaVersion: 1 });
     installRepositories();
     const allowed = new Map(catalog.templates.map((template) => [
@@ -67,20 +110,23 @@ async function start(): Promise<void> {
     const restored = drafts
       ? await restoreCompatibleDraft(drafts, client.contractMetadata(), allowed)
       : undefined;
-    const preferred = restored
-      ? catalog.templates.find((item) => item.id === restored.templateId)
+    const fromUrl = validatedConfigurationFromUrl();
+    const restoredConfiguration = fromUrl ?? restored?.configuration;
+    const preferred = restoredConfiguration
+      ? catalog.templates.find((item) => item.id === restoredConfiguration.template.id)
       : catalog.templates[0];
-    const preferredVariant = restored?.variantId ?? preferred?.variantIds[0];
+    const preferredVariant = restoredConfiguration?.template.variantId ?? preferred?.variantIds[0];
     if (!preferred || !preferredVariant) throw new Error('CATALOG_HAS_NO_CYCLE_VARIANTS');
     await loadSchema(
       preferred.id,
       preferredVariant,
-      restored?.values,
-      restored?.scheduleId,
+      restoredConfiguration,
+      restoredConfiguration?.schedule.id,
     );
     installLocaleControls();
+    installCollapsibleSections(document, preferences);
     root.dataset.cycleReady = 'true';
-    if (status) status.textContent = '';
+    if (status) status.textContent = startupWarning;
   } catch (error) {
     root.dataset.cycleReady = 'false';
     if (status) status.textContent = message(error);
@@ -90,8 +136,9 @@ async function start(): Promise<void> {
 async function loadSchema(
   templateId: string,
   variantId: string,
-  candidates: Readonly<Record<string, JsonValue>> = {},
+  candidates: Readonly<Record<string, JsonValue>> | CycleConfiguration = {},
   scheduleId?: string,
+  preserveTemplateOptions = true,
 ): Promise<void> {
   const next = client.cycleEditorSchema<CycleEditorSchema>({
     apiVersion: 'v1',
@@ -100,19 +147,36 @@ async function loadSchema(
     variantId,
     ...(scheduleId ? { scheduleId } : {}),
   });
+  const candidateValues = isCycleConfiguration(candidates)
+    ? cycleConfigurationToEditorValues(candidates, next)
+    : candidates;
+  const reusableCandidates = preserveTemplateOptions
+    ? candidateValues
+    : Object.fromEntries(
+        Object.entries(candidateValues).filter(
+          ([path]) => !path.startsWith('options.') && path !== 'includeDeload',
+        ),
+      );
   const merged = {
-    ...candidates,
-    showPlating: preferences.read().showPlating,
+    ...reusableCandidates,
+    showPlating: candidateValues.showPlating ?? preferences.read().showPlating,
   };
   const normalized = normalizeEditorState(next, merged, new Set([
     'templateId',
     'variantId',
     'scheduleId',
     'sessionOrder',
+    'trainingDays',
   ]));
   schema = normalized.schema;
   values = normalized.values;
   defaultValues = normalized.defaults;
+  currentConfiguration = editorValuesToCycleConfiguration(
+    schema,
+    values,
+    client.contractMetadata(),
+  );
+  updateShareUrl();
   renderEditor();
   persistDraft();
   scheduleGeneration();
@@ -133,18 +197,29 @@ function renderEditor(): void {
 
 async function handleIntent(intent: CycleFormIntent): Promise<void> {
   if (intent.type === 'cycle.action.requested') {
-    if (intent.action === 'generate') generate();
+    if (intent.action === 'generate') void generate();
     return;
   }
   if (!intent.path || intent.value === undefined) return;
   values[intent.path] = intent.value;
+  if (intent.path === 'generationId' && typeof intent.value === 'string') {
+    const selected = catalog.templates.find(
+      (item) => item.generation.id === intent.value,
+    );
+    if (selected?.variantIds[0]) {
+      await loadSchema(selected.id, selected.variantIds[0], values, undefined, false);
+    }
+    return;
+  }
   if (intent.path === 'templateId' && typeof intent.value === 'string') {
     const selected = catalog.templates.find((item) => item.id === intent.value);
-    if (selected?.variantIds[0]) await loadSchema(selected.id, selected.variantIds[0], values);
+    if (selected?.variantIds[0]) {
+      await loadSchema(selected.id, selected.variantIds[0], values, undefined, false);
+    }
     return;
   }
   if (intent.path === 'variantId' && typeof intent.value === 'string') {
-    await loadSchema(String(values.templateId), intent.value, values);
+    await loadSchema(String(values.templateId), intent.value, values, undefined, false);
     return;
   }
   if (intent.path === 'scheduleId' && typeof intent.value === 'string') {
@@ -159,6 +234,12 @@ async function handleIntent(intent: CycleFormIntent): Promise<void> {
   schema = normalized.schema;
   values = normalized.values;
   defaultValues = normalized.defaults;
+  currentConfiguration = editorValuesToCycleConfiguration(
+    schema,
+    values,
+    client.contractMetadata(),
+  );
+  updateShareUrl();
   if (intent.path === 'showPlating' && typeof intent.value === 'boolean') {
     preferences.setShowPlating(intent.value);
   }
@@ -168,17 +249,23 @@ async function handleIntent(intent: CycleFormIntent): Promise<void> {
 }
 
 function scheduleGeneration(): void {
-  if (generationTimer) clearTimeout(generationTimer);
-  generationTimer = setTimeout(() => generate(), 80);
-}
-
-function generate(): void {
-  generateRequest(buildCycleRequest(schema, values));
-}
-
-function generateRequest(request: object): void {
   try {
-    const response = client.generateCycle<CycleResponse>(request);
+    generationScheduler.schedule(buildCycleRequest(schema, values));
+  } catch (error) {
+    if (status) status.textContent = message(error);
+  }
+}
+
+async function generate(): Promise<void> {
+  try {
+    await generationScheduler.flush(buildCycleRequest(schema, values));
+  } catch (error) {
+    if (status) status.textContent = message(error);
+  }
+}
+
+function publishGeneration(response: CycleResponse, request: object): void {
+  generationFailed = false;
     lastRequest = request;
     lastResponse = response;
     persistGeneration(request, response);
@@ -201,9 +288,6 @@ function generateRequest(request: object): void {
       },
     });
     if (status) status.textContent = locale === 'fr' ? 'Programme généré.' : 'Program generated.';
-  } catch (error) {
-    if (status) status.textContent = message(error);
-  }
 }
 
 function installTransferControls(): void {
@@ -224,10 +308,10 @@ function installTransferControls(): void {
         await file.text(),
         'configuration',
         (candidate) => metadataMatchesCurrent(candidate)
-          ? validateImportedRequest(candidate.payload as Record<string, unknown>)
+          ? validateImportedConfiguration(importConfiguration(candidate.payload))
           : ({ valid: false, errors: [{ code: 'VERSION_MISMATCH' }] }),
       );
-      await hydrateImportedRequest(imported.payload as Record<string, unknown>);
+      await hydrateImportedConfiguration(importConfiguration(imported.payload));
     } catch (error) {
       if (status) status.textContent = message(error);
     } finally {
@@ -236,12 +320,20 @@ function installTransferControls(): void {
   });
   controls.append(
     transferButton(locale === 'fr' ? 'Exporter la configuration' : 'Export configuration', () => {
-      const request = buildCycleRequest(schema, values);
-      download('cycle-configuration.json', exportConfiguration(artifact('configuration', request)));
+      download(
+        'cycle-configuration.json',
+        exportConfiguration(artifact('configuration', currentConfiguration)),
+      );
     }),
     transferButton(locale === 'fr' ? 'Exporter le programme' : 'Export program', () => {
       if (!lastResponse) throw new Error('GENERATE_BEFORE_EXPORT');
       download('cycle-program.json', exportProgram(artifact('program', lastResponse)));
+    }),
+    transferButton(locale === 'fr' ? 'Copier le lien' : 'Copy share link', () => {
+      const shareUrl = createCycleShareUrl(currentConfiguration);
+      window.history.replaceState({}, '', shareUrl);
+      void navigator.clipboard?.writeText(shareUrl.href).catch(() => undefined);
+      if (status) status.textContent = locale === 'fr' ? 'Lien prêt à partager.' : 'Share link ready.';
     }),
     transferButton(locale === 'fr' ? 'Importer' : 'Import', () => input.click()),
     input,
@@ -249,14 +341,15 @@ function installTransferControls(): void {
   mount.append(controls);
 }
 
-function validateImportedRequest(request: Record<string, unknown>): ValidationReport {
+function validateImportedConfiguration(configuration: CycleConfiguration): ValidationReport {
   try {
+    client.configurationToCycleRequest<CycleRequest>(configuration);
     const schemaRequest = {
       apiVersion: 'v1',
       schemaVersion: 1,
-      templateId: typeof request.templateId === 'string' ? request.templateId : '',
-      variantId: typeof request.variantId === 'string' ? request.variantId : '',
-      ...(typeof request.scheduleId === 'string' ? { scheduleId: request.scheduleId } : {}),
+      templateId: configuration.template.id,
+      variantId: configuration.template.variantId,
+      scheduleId: configuration.schedule.id,
     };
     let importedSchema: CycleEditorSchema;
     try {
@@ -265,15 +358,23 @@ function validateImportedRequest(request: Record<string, unknown>): ValidationRe
       const { scheduleId: _, ...withoutStaleSchedule } = schemaRequest;
       importedSchema = client.cycleEditorSchema<CycleEditorSchema>(withoutStaleSchedule);
     }
-    const importedState = normalizeEditorState(importedSchema, requestValues(request), new Set([
+    const importedState = normalizeEditorState(
+      importedSchema,
+      cycleConfigurationToEditorValues(configuration, importedSchema),
+      new Set([
       'templateId',
       'variantId',
       'scheduleId',
       'sessionOrder',
-    ]));
-    const cycleId = typeof request.cycleId === 'string' ? request.cycleId : undefined;
+      ]),
+    );
+    const normalizedConfiguration = editorValuesToCycleConfiguration(
+      importedState.schema,
+      importedState.values,
+      client.contractMetadata(),
+    );
     return client.validateCycle<ValidationReport>(
-      buildCycleRequest(importedState.schema, importedState.values, cycleId ? { cycleId } : {}),
+      client.configurationToCycleRequest<CycleRequest>(normalizedConfiguration),
     );
   } catch {
     return {
@@ -336,7 +437,7 @@ function persistDraft(): void {
   if (!drafts || !client || !schema) return;
   void drafts.save(
     currentDraftId,
-    draftEnvelope(client.contractMetadata(), cycleDraft(values)),
+    draftEnvelope(client.contractMetadata(), cycleDraft(currentConfiguration)),
   ).catch(() => undefined);
 }
 
@@ -344,7 +445,7 @@ function persistGeneration(request: object, response: CycleResponse): void {
   if (configurations) {
     void configurations.save(
       'cycle-latest',
-      artifact('configuration', request),
+      artifact('configuration', currentConfiguration),
     ).catch(() => undefined);
   }
   if (snapshots) {
@@ -364,94 +465,67 @@ function metadataMatchesCurrent(candidate: LocalArtifact): boolean {
     candidate.catalogHash === metadata.catalogHash;
 }
 
-async function hydrateImportedRequest(request: Record<string, unknown>): Promise<void> {
-  const templateId = typeof request.templateId === 'string' ? request.templateId : '';
-  const variantId = typeof request.variantId === 'string' ? request.variantId : '';
-  const scheduleId = typeof request.scheduleId === 'string' ? request.scheduleId : undefined;
-  const importedValues = requestValues(request);
+async function hydrateImportedConfiguration(configuration: CycleConfiguration): Promise<void> {
+  const templateId = configuration.template.id;
+  const variantId = configuration.template.variantId;
+  const scheduleId = configuration.schedule.id;
   try {
-    await loadSchema(templateId, variantId, importedValues, scheduleId);
+    await loadSchema(templateId, variantId, configuration, scheduleId);
   } catch {
-    await loadSchema(templateId, variantId, importedValues);
+    await loadSchema(templateId, variantId, configuration);
   }
-  if (generationTimer) clearTimeout(generationTimer);
-  const cycleId = typeof request.cycleId === 'string' ? request.cycleId : undefined;
-  generateRequest(buildCycleRequest(schema, values, cycleId ? { cycleId } : {}));
+  await generationScheduler.flush(
+    client.configurationToCycleRequest<CycleRequest>(currentConfiguration),
+  );
 }
 
-function requestValues(request: Record<string, unknown>): Record<string, JsonValue> {
-  const result: Record<string, JsonValue> = {};
-  for (const key of ['templateId', 'variantId', 'scheduleId', 'sessionOrder', 'unit', 'programTitle', 'showPlating']) {
-    if (request[key] !== undefined) result[key] = request[key];
+function importConfiguration(payload: unknown): CycleConfiguration {
+  if (!isPlainRecord(payload)) throw new Error('INVALID_CONFIGURATION_PAYLOAD');
+  if (payload.format === 'hybrid-training-cycle' && payload.configurationVersion === 1) {
+    return structuredClone(payload) as unknown as CycleConfiguration;
   }
-  if (typeof request.startDate === 'string') result.startDate = request.startDate.slice(0, 10);
-  if (typeof request.globalTrainingMaxRatioBasisPoints === 'number') {
-    result.globalTrainingMaxRatioBasisPoints = request.globalTrainingMaxRatioBasisPoints;
+  if (payload.apiVersion === 'v1' && payload.schemaVersion === 1) {
+    return migrateCycleRequestV1ToConfiguration(
+      payload as unknown as CycleRequest,
+      client.contractMetadata(),
+    );
   }
-  const maxInputs = record(request.maxInputs);
-  for (const [movement, rawInput] of Object.entries(maxInputs)) {
-    const input = record(rawInput);
-    if (typeof input.type === 'string') result.maxMode = input.type;
-    const inputWeight = record(input.weight);
-    if (typeof inputWeight.centiUnits === 'number') {
-      result[`maxInputs.${movement}.weight`] = inputWeight.centiUnits / 100;
-    }
-    if (typeof input.repetitions === 'number') {
-      result[`maxInputs.${movement}.repetitions`] = input.repetitions;
-    }
-  }
-  const optionValues = record(request.options);
-  flattenOptionValues(optionValues, 'options', result);
-  for (const [id, value] of Object.entries(record(request.percentageParameters))) {
-    result[`options.${id}`] = value;
-  }
-  const barProfile = record(request.barProfile);
-  const barWeight = record(barProfile.weight);
-  if (typeof barWeight.centiUnits === 'number') result.barWeight = barWeight.centiUnits / 100;
-  const plateCounts = new Map<number, number>();
-  if (Array.isArray(barProfile.platesPerSide)) {
-    for (const rawPlate of barProfile.platesPerSide) {
-      const plate = record(rawPlate);
-      if (typeof plate.centiUnits !== 'number') continue;
-      const denomination = plate.centiUnits / 100;
-      plateCounts.set(denomination, (plateCounts.get(denomination) ?? 0) + 1);
-    }
-  }
-  for (const [denomination, count] of plateCounts) result[`plates.${denomination}`] = count;
-  return result;
+  throw new Error('UNSUPPORTED_CONFIGURATION_VERSION');
 }
 
-function flattenOptionValues(
-  source: Record<string, JsonValue>,
-  prefix: string,
-  target: Record<string, JsonValue>,
-): void {
-  for (const [key, value] of Object.entries(source)) {
-    const path = `${prefix}.${key}`;
-    if (isPlainRecord(value) && !isWeightValue(value)) {
-      flattenOptionValues(value, path, target);
-    } else {
-      target[path] = isPlainRecord(value) && isWeightValue(value)
-        ? value.centiUnits / 100
-        : structuredClone(value);
-    }
-  }
-}
-
-function isPlainRecord(value: unknown): value is Record<string, JsonValue> {
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function isWeightValue(
-  value: Record<string, JsonValue>,
-): value is Record<string, JsonValue> & { centiUnits: number; unit: 'kg' | 'lb' } {
-  return typeof value.centiUnits === 'number' && (value.unit === 'kg' || value.unit === 'lb');
+function isCycleConfiguration(value: unknown): value is CycleConfiguration {
+  return isPlainRecord(value) && value.format === 'hybrid-training-cycle' &&
+    value.configurationVersion === 1;
 }
 
-function record(value: unknown): Record<string, JsonValue> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
-    ? value as Record<string, JsonValue>
-    : {};
+function updateShareUrl(): void {
+  if (!currentConfiguration) return;
+  window.history.replaceState(
+    {},
+    '',
+    createCycleShareUrl(currentConfiguration),
+  );
+}
+
+function validatedConfigurationFromUrl(): CycleConfiguration | undefined {
+  try {
+    const configuration = readCycleConfigurationFromUrl();
+    if (!configuration) return undefined;
+    client.configurationToCycleRequest<CycleRequest>(configuration);
+    return configuration;
+  } catch {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('cycle');
+    window.history.replaceState({}, '', url);
+    startupWarning = locale === 'fr'
+      ? 'Lien de configuration invalide ignoré.'
+      : 'Invalid configuration link ignored.';
+    return undefined;
+  }
 }
 
 function installLocaleControls(): void {
@@ -467,7 +541,11 @@ function installLocaleControls(): void {
       preferences.setLocale(candidate);
       controls.querySelectorAll('button').forEach((item) => item.ariaPressed = String(item === button));
       renderEditor();
-      scheduleGeneration();
+      if (lastResponse && lastRequest) {
+        publishGeneration(lastResponse, lastRequest);
+      } else {
+        scheduleGeneration();
+      }
     });
     controls.append(button);
   }

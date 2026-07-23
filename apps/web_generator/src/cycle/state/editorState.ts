@@ -29,7 +29,9 @@ export function normalizeEditorState(
   const defaults = Object.fromEntries(
     source.fields.map((field) => [
       field.path,
-      structuredClone(sourceDefaults?.[field.path] ?? field.value),
+      structuredClone(
+        field.readOnly ? field.value : sourceDefaults?.[field.path] ?? field.value,
+      ),
     ]),
   ) as CycleEditorValues;
   const values: CycleEditorValues = { ...defaults };

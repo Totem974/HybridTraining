@@ -9,7 +9,7 @@
       name="description"
       content="A private, browser-based training cycle generator."
     />
-    <title>Cycle generator</title>
+    <title>HybridTraining — Cycle generator</title>
     <link rel="stylesheet" href="../styles/cycle.css" />
   </head>
   <body>
@@ -18,9 +18,13 @@
     <header class="site-header" aria-labelledby="page-title">
       <div class="header-topline">
         <div class="brand-lockup">
-          <span class="brand-mark" aria-hidden="true">HT</span>
+          <span class="brand-mark" aria-hidden="true">
+            <span class="brand-mark__bar"></span>
+            <span class="brand-mark__bar"></span>
+            <span class="brand-mark__bar"></span>
+          </span>
           <div>
-            <p class="eyebrow" data-i18n="eyebrow">Training tools</p>
+            <p class="eyebrow">HybridTraining</p>
             <h1 id="page-title" data-i18n="pageTitle">Cycle generator</h1>
             <p class="header-summary" id="page-summary" data-i18n="pageSummary">
               Configure and generate a training cycle locally in your browser.
@@ -32,7 +36,7 @@
 
       <nav class="page-switcher" aria-label="Training generator">
         <a href="./" aria-current="page">Cycle</a>
-        <span aria-disabled="true">Forever</span>
+        <a href="/forever">Macrocycle</a>
       </nav>
     </header>
 
@@ -75,23 +79,57 @@
           id="additional-options"
           class="editor-section"
           aria-labelledby="additional-options-heading"
+          data-collapsible-section="additional-options"
           data-cycle-region="additional-options"
         >
-          <h2 id="additional-options-heading" data-i18n="additionalOptions">Additional options</h2>
-          <div class="panel" data-cycle-mount="additional-options"></div>
+          <h2 id="additional-options-heading">
+            <button
+              class="section-toggle"
+              type="button"
+              aria-expanded="true"
+              aria-controls="additional-options-content"
+              data-collapse-toggle
+            >
+              <span data-i18n="additionalOptions">Additional options</span>
+              <span class="section-toggle__icon" aria-hidden="true"></span>
+            </button>
+          </h2>
+          <div
+            id="additional-options-content"
+            class="panel"
+            data-collapse-content
+            data-cycle-mount="additional-options"
+          ></div>
+        </section>
+
+        <section
+          id="plating"
+          class="editor-section"
+          aria-labelledby="plating-heading"
+          data-collapsible-section="plating"
+          data-cycle-region="plating"
+        >
+          <h2 id="plating-heading">
+            <button
+              class="section-toggle"
+              type="button"
+              aria-expanded="true"
+              aria-controls="plating-content"
+              data-collapse-toggle
+            >
+              <span data-i18n="plating">Plating &amp; barbell</span>
+              <span class="section-toggle__icon" aria-hidden="true"></span>
+            </button>
+          </h2>
+          <div
+            id="plating-content"
+            class="panel"
+            data-collapse-content
+            data-cycle-mount="plating"
+          ></div>
         </section>
 
         <div class="editor-grid">
-          <section
-            id="plating"
-            class="editor-section"
-            aria-labelledby="plating-heading"
-            data-cycle-region="plating"
-          >
-            <h2 id="plating-heading" data-i18n="plating">Plating &amp; barbell</h2>
-            <div class="panel" data-cycle-mount="plating"></div>
-          </section>
-
           <section
             id="scheduling"
             class="editor-section"
@@ -101,24 +139,23 @@
             <h2 id="scheduling-heading" data-i18n="scheduling">Scheduling</h2>
             <div class="panel" data-cycle-mount="scheduling"></div>
           </section>
-        </div>
 
-        <section
-          id="output"
-          class="editor-section"
-          aria-labelledby="output-heading"
-          data-cycle-region="output"
-        >
-          <h2 id="output-heading" data-i18n="output">Output</h2>
-          <div class="panel" data-cycle-mount="output"></div>
-        </section>
+          <section
+            id="output"
+            class="editor-section"
+            aria-labelledby="output-heading"
+            data-cycle-region="output"
+          >
+            <h2 id="output-heading" data-i18n="output">Output</h2>
+            <div class="panel" data-cycle-mount="output"></div>
+          </section>
+        </div>
       </form>
 
       <section
         id="program"
         class="program-section"
         aria-labelledby="program-heading"
-        aria-live="polite"
         data-cycle-region="program"
       >
         <h2 id="program-heading" data-i18n="program">Program</h2>

@@ -16,6 +16,8 @@ final class HybridTrainingEngineJsApi {
   String catalogIndex(String requestJson) => _service.catalogIndex(requestJson);
   String cycleEditorSchema(String requestJson) =>
       _service.cycleEditorSchema(requestJson);
+  String configurationToCycleRequest(String configurationJson) =>
+      _service.configurationToCycleRequest(configurationJson);
   String validateCycle(String requestJson) =>
       _service.validateCycle(requestJson);
   String generateCycle(String requestJson) =>

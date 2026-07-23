@@ -36,9 +36,7 @@ void main() {
       isNot(contains('phase')),
     );
     expect(
-      (fullBoring['parameters']! as List)
-          .cast<Map>()
-          .map((item) => item['id']),
+      (fullBoring['parameters']! as List).cast<Map>().map((item) => item['id']),
       containsAll([
         'squat_set_profile',
         'bench_set_profile',
@@ -60,11 +58,10 @@ void main() {
       expect(alias['legacyVariantId'], 'phase_${index + 1}');
       expect(alias['templateId'], 'classic_full_body');
       expect(alias['variantId'], 'original');
-      expect((alias['optionOverrides']! as Map)['phase'], 'phase_${[
-        'one',
-        'two',
-        'three',
-      ][index]}');
+      expect(
+        (alias['optionOverrides']! as Map)['phase'],
+        'phase_${['one', 'two', 'three'][index]}',
+      );
     }
   });
 
@@ -75,10 +72,7 @@ void main() {
       'original',
       'beyond',
     ]);
-    for (final id in [
-      'warmUp.bases.lowerBody',
-      'warmUp.bases.upperBody',
-    ]) {
+    for (final id in ['warmUp.bases.lowerBody', 'warmUp.bases.upperBody']) {
       final base = option(options, id);
       expect(base['type'], 'weight');
       expect((base['default']! as Map).keys.toSet(), {'centiUnits', 'unit'});
@@ -104,9 +98,7 @@ void main() {
       _conditionReferences(
         option(options, 'joker.ceilingBasisPoints')['visibleWhen'],
       ),
-      {
-      'joker.enabled',
-      },
+      {'joker.enabled'},
     );
   });
 

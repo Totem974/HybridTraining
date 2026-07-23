@@ -108,10 +108,15 @@ try {
     status: cycleParityFailures.length || foreverParityFailures.length || contractFailures.length ? 'failed' : 'passed',
     artifact,
     catalog,
+    cycleFixtureCount: manifest.cycleFixtures.length,
     cycleParityFailures,
     foreverParityFailures,
     contractFailures,
   }));
+  // The compiled Dart runtime may retain Node event-loop handles after all
+  // bridge calls complete. This runner is a one-shot process, so terminate
+  // explicitly once its complete JSON report has been written.
+  process.exit(0);
 } catch (error) {
   console.log(JSON.stringify({
     status: 'failed',
@@ -121,7 +126,7 @@ try {
     foreverParityFailures: [],
     contractFailures: [{ fixture: '$', message: String(error?.stack ?? error) }],
   }));
-  process.exitCode = 1;
+  process.exit(1);
 }
 
 function canonical(value) {

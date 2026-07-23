@@ -23,7 +23,9 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  background: var(--color-canvas);
+  background:
+    radial-gradient(circle at 50% -12rem, rgba(245, 185, 66, 0.12), transparent 34rem),
+    var(--color-canvas);
 }
 
 button,
@@ -77,8 +79,10 @@ a {
 
 .site-header {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem);
+  align-items: end;
   gap: var(--space-5);
-  padding-block: var(--space-7) var(--space-5);
+  padding-block: var(--space-6) var(--space-5);
 }
 
 .header-topline {
@@ -86,6 +90,7 @@ a {
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
+  min-width: 0;
 }
 
 .locale-switch {
@@ -99,7 +104,7 @@ a {
 
 .locale-switch button {
   min-width: 2.75rem;
-  min-height: 2.5rem;
+  min-height: var(--touch-target);
   padding: var(--space-2);
   border: 0;
   background: transparent;
@@ -119,16 +124,31 @@ a {
 }
 
 .brand-mark {
-  display: grid;
+  display: flex;
   flex: 0 0 58px;
   width: 58px;
   height: 58px;
-  place-items: center;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   border-radius: var(--radius-card);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 65%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 13%, var(--color-surface));
+}
+
+.brand-mark__bar {
+  width: 6px;
+  border-radius: var(--radius-pill);
   background: var(--color-accent);
-  color: var(--color-accent-ink);
-  font-weight: 950;
-  letter-spacing: -0.06em;
+}
+
+.brand-mark__bar:nth-child(1),
+.brand-mark__bar:nth-child(3) {
+  height: 20px;
+}
+
+.brand-mark__bar:nth-child(2) {
+  height: 34px;
 }
 
 .eyebrow,
@@ -147,7 +167,7 @@ h2 {
 }
 
 h1 {
-  font-size: clamp(2.25rem, 5vw, 3.625rem);
+  font-size: clamp(2rem, 4vw, 2.875rem);
   font-weight: 950;
   letter-spacing: -0.035em;
   line-height: 1.08;
@@ -162,10 +182,10 @@ h1 {
 
 .page-switcher {
   display: flex;
-  padding: var(--space-3);
-  border: var(--border-subtle);
-  border-radius: var(--radius-card);
-  background: var(--color-surface);
+  padding: var(--space-1);
+  border: 1px solid color-mix(in srgb, var(--color-border) 58%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-surface) 84%, transparent);
 }
 
 .page-switcher a,
@@ -179,9 +199,13 @@ h1 {
 }
 
 .page-switcher a[aria-current="page"] {
-  background: var(--color-control-selected);
+  background: var(--color-accent);
   color: var(--color-control-selected-ink);
   font-weight: 850;
+}
+
+.page-switcher a:not([aria-current="page"]):hover {
+  background: var(--color-surface-raised);
 }
 
 .page-shell {
@@ -256,9 +280,49 @@ h1 {
 }
 
 @media (max-width: 770px) {
+  .site-header {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+
   .editor-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+.section-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--touch-target);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  text-transform: inherit;
+}
+
+.section-toggle__icon {
+  width: 0.7rem;
+  height: 0.7rem;
+  flex: 0 0 auto;
+  border-right: 3px solid var(--color-accent);
+  border-bottom: 3px solid var(--color-accent);
+  transform: rotate(45deg) translateY(-0.15rem);
+  transition: transform 140ms ease;
+}
+
+.is-collapsed .section-toggle__icon {
+  transform: rotate(-45deg);
+}
+
+[data-collapse-content][hidden] {
+  display: none;
 }
 
 @media (max-width: 520px) {
@@ -286,11 +350,6 @@ h1 {
   }
 }
 
-.page-switcher span[aria-disabled="true"] {
-  color: var(--color-text-muted);
-  opacity: 0.62;
-}
-
 @media (max-width: 460px) {
   :root {
     --page-gutter: 1rem;
@@ -300,6 +359,19 @@ h1 {
 @media (max-width: 365px) {
   :root {
     --panel-padding: 0.875rem;
+  }
+
+  .site-header,
+  .page-shell {
+    width: calc(100% - 1.5rem);
+  }
+
+  .brand-lockup {
+    gap: var(--space-3);
+  }
+
+  h1 {
+    font-size: 1.8rem;
   }
 }
 

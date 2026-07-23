@@ -13,8 +13,7 @@
       "scheduleId": "schedule_four_day_fixed",
       "trainingMaxRatio": 9000,
       "options": {
-        "bbb_percentage": 5000,
-        "include_deload": true
+        "bbb_percentage": 5000
       }
     }
   },

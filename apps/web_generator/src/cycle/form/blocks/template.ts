@@ -6,6 +6,7 @@ import type {
   JsonValue,
 } from "../types";
 
+const primarySelectionIds = new Set(["generation", "template", "variant"]);
 const safeId = (value: string): string =>
   `cycle-field-${value.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 
@@ -33,6 +34,7 @@ function renderChoiceRow(
   row.dataset.testid = `${field.id}-row`;
 
   const label = document.createElement("label");
+  label.className = "template-selection-label";
   label.htmlFor = safeId(field.id);
   label.textContent = localized(field.label, context.locale);
 
@@ -43,10 +45,7 @@ function renderChoiceRow(
   select.name = field.path;
   select.disabled = !fieldIsEnabled(field, context.values);
   select.dataset.testid = field.id;
-  select.setAttribute(
-    "aria-label",
-    localized(field.label, context.locale),
-  );
+  select.setAttribute("aria-label", localized(field.label, context.locale));
   for (const choice of field.choices ?? []) {
     const option = document.createElement("option");
     option.value = JSON.stringify(choice.value);
@@ -65,7 +64,7 @@ function renderChoiceRow(
 
   const chevron = document.createElement("span");
   chevron.className = "template-selection-chevron";
-  chevron.ariaHidden = "true";
+  chevron.setAttribute("aria-hidden", "true");
   chevron.textContent = "›";
   control.append(select, chevron);
   row.append(label, control);
@@ -100,7 +99,11 @@ function renderDynamicOption(
   context: CycleBlockRenderContext,
 ): HTMLElement {
   if (field.kind === "boolean") return renderBooleanOption(field, context);
-  if (field.kind === "choice") return renderChoiceRow(field, context);
+  if (field.kind === "choice") {
+    const row = renderChoiceRow(field, context);
+    row.classList.add("template-option");
+    return row;
+  }
 
   const wrapper = document.createElement("div");
   wrapper.className = "field template-option";
@@ -137,15 +140,37 @@ export function renderTemplateBlock(
   block.className = "template-block";
   const rows = document.createElement("div");
   rows.className = "template-selection-rows";
+  rows.setAttribute("role", "group");
+  rows.setAttribute(
+    "aria-label",
+    context.locale.toLowerCase().startsWith("fr")
+      ? "Sélection du programme"
+      : "Program selection",
+  );
   const options = document.createElement("div");
   options.className = "template-dynamic-options";
 
   for (const field of context.fields) {
-    if (field.kind === "choice") rows.append(renderChoiceRow(field, context));
-    else options.append(renderDynamicOption(field, context));
+    if (primarySelectionIds.has(field.id)) {
+      rows.append(renderChoiceRow(field, context));
+    } else {
+      options.append(renderDynamicOption(field, context));
+    }
   }
   if (rows.childElementCount > 0) block.append(rows);
-  if (options.childElementCount > 0) block.append(options);
+  if (options.childElementCount > 0) {
+    const optionsGroup = document.createElement("section");
+    optionsGroup.className = "template-options-group";
+    const heading = document.createElement("h3");
+    heading.className = "template-options-heading";
+    heading.id = `${safeId(context.schemaId)}-template-options`;
+    heading.textContent = context.locale.toLowerCase().startsWith("fr")
+      ? "Options du modèle"
+      : "Template options";
+    optionsGroup.setAttribute("aria-labelledby", heading.id);
+    optionsGroup.append(heading, options);
+    block.append(optionsGroup);
+  }
   fragment.append(block);
   return fragment;
 }

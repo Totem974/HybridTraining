@@ -109,4 +109,30 @@ describe("generic Cycle editor state", () => {
     expect(normalized.values["options.deload_type"]).toBe("original");
     expect(normalized.values["options.joker_percentage"]).toBe(10);
   });
+
+  it("keeps catalog-owned read-only defaults authoritative across schemas", () => {
+    const forcedSchema: CycleEditorSchema = {
+      ...schema,
+      fields: [
+        ...schema.fields,
+        {
+          id: "forced-deload",
+          path: "includeDeload",
+          region: "output",
+          kind: "boolean",
+          label: "Deload",
+          value: true,
+          readOnly: true,
+        },
+      ],
+    };
+    const normalized = normalizeEditorState(
+      forcedSchema,
+      {},
+      new Set(),
+      { includeDeload: false },
+    );
+
+    expect(normalized.values.includeDeload).toBe(true);
+  });
 });

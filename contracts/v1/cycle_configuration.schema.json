@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hybrid.training/contracts/v1/cycle_configuration.schema.json",
+  "title": "CycleConfiguration",
+  "type": "object",
+  "required": ["format", "configurationVersion", "catalogVersion", "catalogHash", "template", "commonOptions", "maxes", "schedule", "equipment", "output"],
+  "properties": {
+    "format": { "const": "hybrid-training-cycle" },
+    "configurationVersion": { "const": 1 },
+    "catalogVersion": { "type": "integer", "minimum": 1 },
+    "catalogHash": { "type": "string", "minLength": 1 },
+    "template": {
+      "type": "object",
+      "required": ["id", "variantId", "options"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "variantId": { "$ref": "#/$defs/stableId" },
+        "options": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": false
+    },
+    "commonOptions": {
+      "type": "object",
+      "required": ["warmUp", "joker", "deload"],
+      "properties": {
+        "warmUp": { "$ref": "cycle_request.schema.json#/$defs/warmUpOptions" },
+        "joker": { "$ref": "cycle_request.schema.json#/$defs/jokerOptions" },
+        "deload": { "$ref": "cycle_request.schema.json#/$defs/deloadOptions" }
+      },
+      "additionalProperties": false
+    },
+    "maxes": {
+      "oneOf": [
+        { "$ref": "#/$defs/oneRepMaxes" },
+        { "$ref": "#/$defs/repMaxes" },
+        { "$ref": "#/$defs/directTrainingMaxes" }
+      ]
+    },
+    "schedule": {
+      "type": "object",
+      "required": ["id", "startDate", "sessionOrder"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "startDate": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T"
+        },
+        "sessionOrder": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/stableId" }
+        },
+        "trainingDays": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 1, "maximum": 7 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "equipment": {
+      "type": "object",
+      "required": ["unit"],
+      "properties": {
+        "unit": { "enum": ["kg", "lb"] },
+        "barProfileId": { "$ref": "#/$defs/stableId" },
+        "bar": { "$ref": "#/$defs/bar" }
+      },
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["unit", "barProfileId"],
+          "properties": {
+            "unit": { "enum": ["kg", "lb"] },
+            "barProfileId": { "$ref": "#/$defs/stableId" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["unit", "bar"],
+          "properties": {
+            "unit": { "enum": ["kg", "lb"] },
+            "bar": { "$ref": "#/$defs/bar" }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "additionalProperties": false
+    },
+    "output": {
+      "type": "object",
+      "required": ["title", "showPlating"],
+      "properties": {
+        "title": { "type": "string" },
+        "showPlating": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "stableId": { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$" },
+    "basisPoints": { "type": "integer", "minimum": 0, "maximum": 20000 },
+    "maxValue": {
+      "type": "object",
+      "required": ["weight"],
+      "properties": { "weight": { "$ref": "common.schema.json#/$defs/weight" } },
+      "additionalProperties": false
+    },
+    "repMaxValue": {
+      "type": "object",
+      "required": ["weight", "repetitions"],
+      "properties": {
+        "weight": { "$ref": "common.schema.json#/$defs/weight" },
+        "repetitions": { "type": "integer", "minimum": 1 },
+        "formula": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "maxesBase": {
+      "type": "object",
+      "required": ["mode", "globalTrainingMaxRatioBasisPoints", "values"],
+      "properties": {
+        "mode": { "enum": ["oneRepMax", "repMax", "directTrainingMax"] },
+        "globalTrainingMaxRatioBasisPoints": { "$ref": "#/$defs/basisPoints" },
+        "values": { "type": "object", "minProperties": 1 },
+        "ratiosByMovement": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/basisPoints" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "oneRepMaxes": {
+      "allOf": [
+        { "$ref": "#/$defs/maxesBase" },
+        { "type": "object", "required": ["mode", "values"], "properties": { "mode": { "const": "oneRepMax" }, "values": { "type": "object", "additionalProperties": { "$ref": "#/$defs/maxValue" } } } }
+      ]
+    },
+    "repMaxes": {
+      "allOf": [
+        { "$ref": "#/$defs/maxesBase" },
+        { "type": "object", "required": ["mode", "values"], "properties": { "mode": { "const": "repMax" }, "values": { "type": "object", "additionalProperties": { "$ref": "#/$defs/repMaxValue" } } } }
+      ]
+    },
+    "directTrainingMaxes": {
+      "allOf": [
+        { "$ref": "#/$defs/maxesBase" },
+        { "type": "object", "required": ["mode", "values"], "properties": { "mode": { "const": "directTrainingMax" }, "values": { "type": "object", "additionalProperties": { "$ref": "#/$defs/maxValue" } } } }
+      ]
+    },
+    "bar": {
+      "type": "object",
+      "required": ["weight", "platesPerSide"],
+      "properties": {
+        "weight": { "$ref": "common.schema.json#/$defs/weight" },
+        "platesPerSide": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/weight" }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

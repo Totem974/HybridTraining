@@ -24,12 +24,20 @@ void main() {
     );
     for (final rawTemplate in templates) {
       final template = rawTemplate! as Map<String, Object?>;
-      final variant =
-          (template['variants']! as List<Object?>).single
-              as Map<String, Object?>;
-      expect(variant['phases'], hasLength(3));
-      expect(variant['validExample'], isNotEmpty);
-      expect(variant.containsKey('componentIds'), isFalse);
+      final variants = template['variants']! as List<Object?>;
+      expect(
+        variants
+            .cast<Map<String, Object?>>()
+            .map((variant) => variant['id'])
+            .toSet(),
+        hasLength(variants.length),
+      );
+      for (final rawVariant in variants) {
+        final variant = rawVariant! as Map<String, Object?>;
+        expect(variant['phases'], hasLength(3));
+        expect(variant['validExample'], isNotEmpty);
+        expect(variant.containsKey('componentIds'), isFalse);
+      }
     }
   });
 }

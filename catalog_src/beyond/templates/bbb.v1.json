@@ -1,12 +1,16 @@
 {
   "schemaVersion": 1,
   "kind": "templates",
+  "generation": {
+    "id": "beyond",
+    "labels": {"en": "Beyond", "fr": "Beyond"}
+  },
   "templates": [{
     "id": "beyond_boring_but_big",
     "revision": 1,
     "surface": "cyclePublic",
     "labels": {"en":"Beyond Boring But Big","fr":"Boring But Big - Beyond"},
-    "sourceRuleIds": ["beyond_001", "beyond_015", "beyond_016"],
+    "sourceRuleIds": ["beyond_001", "beyond_015", "beyond_016", "beyond_020", "beyond_021"],
     "variants": [{
       "id": "same_lift_5x10_50_two_cycles",
       "revision": 1,
@@ -29,8 +33,52 @@
       ],
       "optionSchemaId": {"id":"beyond_bbb_same_lift_options","revision":1},
       "scheduleIds": [{"id":"schedule_four_day_fixed","revision":1}],
-      "compatibilities": {"trainingMaxRequired":true,"supplementalMovementRelation":"sameAsMain","trainingMaxCheckpointAfterWeek":3},
-      "validExample": {"scheduleId":"schedule_four_day_fixed","trainingMaxRatio":9000,"options":{"bbb_percentage":5000,"include_deload":true}}
+      "compatibilities": {"trainingMaxRequired":true,"supplementalMovementRelation":"sameAsMain","trainingMaxCheckpointAfterWeek":3,"includeDeloadRequired":true},
+      "validExample": {"scheduleId":"schedule_four_day_fixed","trainingMaxRatio":9000,"options":{"bbb_percentage":5000}}
+    }, {
+      "id": "variation_i_5x10_wave",
+      "revision": 1,
+      "labels": {"en":"Variation I - 5x10 wave","fr":"Variation I - vague 5x10"},
+      "sourceRuleIds": ["beyond_020"],
+      "phases": [
+        {"id":"cycle_one","repeatCount":1,"weekPlans":[
+          {"weekNumber":1,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_standard_5_week","revision":1},{"id":"beyond_bbb_variation_i_5x10_65","revision":1}]},
+          {"weekNumber":2,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_standard_3_week","revision":1},{"id":"beyond_bbb_variation_i_5x10_70","revision":1}]},
+          {"weekNumber":3,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_standard_531_week","revision":1},{"id":"beyond_bbb_variation_i_5x10_75","revision":1}]}
+        ]},
+        {"id":"cycle_two_after_tm_increase","repeatCount":1,"weekPlans":[
+          {"weekNumber":4,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_standard_5_week","revision":1},{"id":"beyond_bbb_variation_i_5x10_65","revision":1}]},
+          {"weekNumber":5,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_standard_3_week","revision":1},{"id":"beyond_bbb_variation_i_5x10_70","revision":1}]},
+          {"weekNumber":6,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_standard_531_week","revision":1},{"id":"beyond_bbb_variation_i_5x10_75","revision":1}]}
+        ]},
+        {"id":"deload","repeatCount":1,"weekPlans":[{"weekNumber":7,"componentIds":[{"id":"deload_original_40_50_60","revision":1}]}]}
+      ],
+      "optionSchemaId": {"id":"beyond_bbb_fixed_wave_options","revision":1},
+      "scheduleIds": [{"id":"schedule_four_day_fixed","revision":1}],
+      "compatibilities": {"trainingMaxRequired":true,"supplementalMovementRelation":"sameAsMain","trainingMaxCheckpointAfterWeek":3,"includeDeloadRequired":true},
+      "validExample": {"scheduleId":"schedule_four_day_fixed","trainingMaxRatio":9000,"options":{}}
+    }, {
+      "id": "variation_ii_descending_volume",
+      "revision": 1,
+      "labels": {"en":"Variation II - descending volume","fr":"Variation II - volume décroissant"},
+      "sourceRuleIds": ["beyond_021"],
+      "phases": [
+        {"id":"cycle_one","repeatCount":1,"weekPlans":[
+          {"weekNumber":1,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_standard_5_week","revision":1},{"id":"beyond_bbb_variation_ii_5x10_65","revision":1}]},
+          {"weekNumber":2,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_standard_3_week","revision":1},{"id":"beyond_bbb_variation_ii_5x8_70","revision":1}]},
+          {"weekNumber":3,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_standard_531_week","revision":1},{"id":"beyond_bbb_variation_ii_5x5_75","revision":1}]}
+        ]},
+        {"id":"cycle_two_after_tm_increase","repeatCount":1,"weekPlans":[
+          {"weekNumber":4,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_standard_5_week","revision":1},{"id":"beyond_bbb_variation_ii_5x10_65","revision":1}]},
+          {"weekNumber":5,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_standard_3_week","revision":1},{"id":"beyond_bbb_variation_ii_5x8_70","revision":1}]},
+          {"weekNumber":6,"componentIds":[{"id":"warmup_original_40_50_60","revision":1},{"id":"main_standard_531_week","revision":1},{"id":"beyond_bbb_variation_ii_5x5_75","revision":1}]}
+        ]},
+        {"id":"deload","repeatCount":1,"weekPlans":[{"weekNumber":7,"componentIds":[{"id":"deload_original_40_50_60","revision":1}]}]}
+      ],
+      "optionSchemaId": {"id":"beyond_bbb_fixed_wave_options","revision":1},
+      "scheduleIds": [{"id":"schedule_four_day_fixed","revision":1}],
+      "compatibilities": {"trainingMaxRequired":true,"supplementalMovementRelation":"sameAsMain","trainingMaxCheckpointAfterWeek":3,"includeDeloadRequired":true},
+      "validExample": {"scheduleId":"schedule_four_day_fixed","trainingMaxRatio":9000,"options":{}}
     }]
   }]
 }

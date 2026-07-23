@@ -4,7 +4,10 @@ import 'dart:convert';
 ///
 /// This adapter is deliberately owned by the JSON boundary. The engine only
 /// receives typed, canonical options.
-Map<String, Object?> normalizeCycleRequest(Map<String, Object?> source) {
+Map<String, Object?> normalizeCycleRequest(
+  Map<String, Object?> source, {
+  Set<String> catalogOptionKeys = const {},
+}) {
   final request = _clone(source);
   final rawOptions = request['options'];
   final options = rawOptions == null
@@ -13,9 +16,9 @@ Map<String, Object?> normalizeCycleRequest(Map<String, Object?> source) {
 
   _migrateWarmUp(options, request['unit'] as String?);
   _migrateJoker(options);
-  _migrateDeload(options, request);
+  _migrateDeload(options);
   _migrateFullBody(options);
-  _cleanAndValidate(options);
+  _cleanAndValidate(options, catalogOptionKeys);
 
   request['options'] = options;
   if (options['deload'] case final Map<String, Object?> deload) {
@@ -54,10 +57,7 @@ void _migrateJoker(Map<String, Object?> options) {
       : <String, Object?>{'enabled': true, 'ceilingBasisPoints': index * 500};
 }
 
-void _migrateDeload(
-  Map<String, Object?> options,
-  Map<String, Object?> request,
-) {
+void _migrateDeload(Map<String, Object?> options) {
   if (options['deload'] is Map) return;
   final legacy = options.remove('deload');
   if (legacy != null) {
@@ -74,15 +74,6 @@ void _migrateDeload(
     }
     options.remove('deloadSkipWarmup');
     return;
-  }
-  if (request['includeDeload'] case final bool enabled) {
-    options['deload'] = enabled
-        ? <String, Object?>{
-            'enabled': true,
-            'type': 'deload1',
-            'skipWarmUp': false,
-          }
-        : <String, Object?>{'enabled': false};
   }
 }
 
@@ -141,8 +132,17 @@ void _migrateFullBody(Map<String, Object?> options) {
   }
 }
 
-void _cleanAndValidate(Map<String, Object?> options) {
-  const allowed = {'warmUp', 'joker', 'deload', 'fullBody'};
+void _cleanAndValidate(
+  Map<String, Object?> options,
+  Set<String> catalogOptionKeys,
+) {
+  final allowed = {
+    'warmUp',
+    'joker',
+    'deload',
+    'fullBody',
+    ...catalogOptionKeys,
+  };
   _rejectUnknown(options, allowed, 'options');
 
   if (options['warmUp'] case final Object value) {

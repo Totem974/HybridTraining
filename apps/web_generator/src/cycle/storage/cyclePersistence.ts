@@ -1,20 +1,34 @@
-import type { ContractMetadata } from "../../../../../contracts/v1/generated/contracts";
-import type { JsonValue } from "../form/types";
 import type {
-  EnvelopeLike,
-  VersionedEnvelopeRepository,
-} from "../../storage";
+  ContractMetadata,
+  CycleConfiguration,
+} from "../../../../../contracts/v1/generated/contracts";
+import type { JsonValue } from "../form/types";
+import type { EnvelopeLike, VersionedEnvelopeRepository } from "../../storage";
 
 export const currentDraftId = "cycle-current";
-export const cycleDraftVersion = 1;
+export const cycleDraftVersion = 2;
 
-export interface CycleDraftPayload {
+export interface CanonicalCycleDraftPayload {
+  readonly draftVersion: 2;
+  readonly configuration: CycleConfiguration;
+}
+export type CycleDraftPayload = CanonicalCycleDraftPayload;
+
+export interface LegacyCycleDraftPayloadV1 {
   readonly draftVersion: 1;
   readonly templateId: string;
   readonly variantId: string;
   readonly scheduleId?: string;
   readonly values: Readonly<Record<string, JsonValue>>;
 }
+
+export interface RestoredCycleDraft {
+  readonly configuration: CycleConfiguration;
+}
+
+export type LegacyDraftMigration = (
+  payload: LegacyCycleDraftPayloadV1,
+) => CanonicalCycleDraftPayload | undefined;
 
 export function draftEnvelope(
   metadata: ContractMetadata,
@@ -23,40 +37,51 @@ export function draftEnvelope(
   return { ...metadata, payload: structuredClone(payload) };
 }
 
-export async function restoreCompatibleDraft(
-  repository: VersionedEnvelopeRepository<CycleDraftPayload>,
+/**
+ * Restores only a compatible current draft. Unknown, stale and rejected legacy
+ * records remain in IndexedDB so a future migration can recover them.
+ */
+export async function restoreCompatibleDraft<T>(
+  repository: VersionedEnvelopeRepository<T>,
   metadata: ContractMetadata,
   allowedSelections: ReadonlyMap<string, ReadonlySet<string>>,
-): Promise<CycleDraftPayload | undefined> {
-  const records = await repository.list();
-  let restored: CycleDraftPayload | undefined;
-  for (const record of records) {
-    const payload = record.envelope.payload;
-    const compatible = metadataMatches(record.envelope, metadata) &&
-      isDraftPayload(payload) &&
-      allowedSelections.get(payload.templateId)?.has(payload.variantId) === true;
-    if (!compatible) {
-      await repository.delete(record.id);
-      continue;
-    }
-    if (record.id === currentDraftId) restored = structuredClone(payload);
+  migrateLegacy?: LegacyDraftMigration,
+): Promise<RestoredCycleDraft | undefined> {
+  const current = (await repository.list()).find((record) => record.id === currentDraftId);
+  if (!current || !metadataMatches(current.envelope, metadata)) return undefined;
+
+  const payload = current.envelope.payload;
+  const migrated = isLegacyDraftPayload(payload) ? migrateLegacy?.(payload) : undefined;
+  const decoded = decodeDraft(migrated ?? payload);
+  if (!decoded ||
+    allowedSelections.get(decoded.configuration.template.id)?.has(
+      decoded.configuration.template.variantId,
+    ) !== true) {
+    return undefined;
   }
-  return restored;
+
+  if (migrated) {
+    await repository.save(
+      currentDraftId,
+      draftEnvelope(metadata, migrated) as EnvelopeLike<T>,
+      new Date(current.updatedAt),
+    );
+  }
+  return structuredClone(decoded);
 }
 
 export function cycleDraft(
-  values: Readonly<Record<string, JsonValue>>,
-): CycleDraftPayload {
-  const templateId = typeof values.templateId === "string" ? values.templateId : "";
-  const variantId = typeof values.variantId === "string" ? values.variantId : "";
-  const scheduleId = typeof values.scheduleId === "string" ? values.scheduleId : undefined;
+  configuration: CycleConfiguration,
+): CanonicalCycleDraftPayload {
   return {
     draftVersion: cycleDraftVersion,
-    templateId,
-    variantId,
-    ...(scheduleId ? { scheduleId } : {}),
-    values: structuredClone(values),
+    configuration: structuredClone(configuration),
   };
+}
+
+function decodeDraft(value: unknown): RestoredCycleDraft | undefined {
+  if (!isCycleDraftPayload(value)) return undefined;
+  return { configuration: structuredClone(value.configuration) };
 }
 
 function metadataMatches(envelope: EnvelopeLike, metadata: ContractMetadata): boolean {
@@ -67,11 +92,24 @@ function metadataMatches(envelope: EnvelopeLike, metadata: ContractMetadata): bo
     envelope.catalogHash === metadata.catalogHash;
 }
 
-function isDraftPayload(value: unknown): value is CycleDraftPayload {
-  if (!isRecord(value) || value.draftVersion !== cycleDraftVersion) return false;
-  return typeof value.templateId === "string" &&
+function isCycleDraftPayload(value: unknown): value is CycleDraftPayload {
+  return isRecord(value) && value.draftVersion === cycleDraftVersion &&
+    isCycleConfiguration(value.configuration);
+}
+
+function isLegacyDraftPayload(value: unknown): value is LegacyCycleDraftPayloadV1 {
+  return isRecord(value) && value.draftVersion === 1 &&
+    typeof value.templateId === "string" &&
     typeof value.variantId === "string" &&
     isRecord(value.values);
+}
+
+function isCycleConfiguration(value: unknown): value is CycleConfiguration {
+  return isRecord(value) && value.format === "hybrid-training-cycle" &&
+    value.configurationVersion === 1 && isRecord(value.template) &&
+    typeof value.template.id === "string" &&
+    typeof value.template.variantId === "string" && isRecord(value.schedule) &&
+    typeof value.schedule.id === "string";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

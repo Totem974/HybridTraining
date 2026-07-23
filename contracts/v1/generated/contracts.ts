@@ -8,7 +8,27 @@ export type Weight = { readonly "centiUnits": number; readonly "unit": "kg" | "l
 
 export type EngineIssue = { readonly "code": string; readonly "path": string; readonly "messageKey": string; readonly "details": { readonly [key: string]: unknown; }; readonly "severity": "error" | "warning"; };
 
-export type CatalogIndex = ContractEnvelope & { readonly "apiVersion"?: unknown; readonly "schemaVersion"?: unknown; readonly "engineVersion"?: unknown; readonly "catalogVersion"?: unknown; readonly "catalogHash"?: unknown; readonly "templates": ReadonlyArray<{ readonly "id": string; readonly "revision": number; readonly "labels": { readonly "en": string; readonly "fr": string; }; readonly "variantIds": ReadonlyArray<string>; }>; };
+export type CatalogIndex = ContractEnvelope & { readonly "apiVersion"?: unknown; readonly "schemaVersion"?: unknown; readonly "engineVersion"?: unknown; readonly "catalogVersion"?: unknown; readonly "catalogHash"?: unknown; readonly "templates": ReadonlyArray<{ readonly "id": string; readonly "revision": number; readonly "labels": { readonly "en": string; readonly "fr": string; }; readonly "generation": { readonly "id": string; readonly "labels": { readonly "en": string; readonly "fr": string; }; }; readonly "variantIds": ReadonlyArray<string>; }>; };
+
+export type CycleConfigurationStableId = string;
+
+export type CycleConfigurationBasisPoints = number;
+
+export type CycleConfigurationMaxValue = { readonly "weight": Weight; };
+
+export type CycleConfigurationRepMaxValue = { readonly "weight": Weight; readonly "repetitions": number; readonly "formula"?: string; };
+
+export type CycleConfigurationMaxesBase = { readonly "mode": "oneRepMax" | "repMax" | "directTrainingMax"; readonly "globalTrainingMaxRatioBasisPoints": CycleConfigurationBasisPoints; readonly "values": {  }; readonly "ratiosByMovement"?: { readonly [key: string]: CycleConfigurationBasisPoints; }; };
+
+export type CycleConfigurationOneRepMaxes = CycleConfigurationMaxesBase & { readonly "mode": "oneRepMax"; readonly "values": { readonly [key: string]: CycleConfigurationMaxValue; }; };
+
+export type CycleConfigurationRepMaxes = CycleConfigurationMaxesBase & { readonly "mode": "repMax"; readonly "values": { readonly [key: string]: CycleConfigurationRepMaxValue; }; };
+
+export type CycleConfigurationDirectTrainingMaxes = CycleConfigurationMaxesBase & { readonly "mode": "directTrainingMax"; readonly "values": { readonly [key: string]: CycleConfigurationMaxValue; }; };
+
+export type CycleConfigurationBar = { readonly "weight": Weight; readonly "platesPerSide": ReadonlyArray<Weight>; };
+
+export type CycleConfiguration = { readonly "format": "hybrid-training-cycle"; readonly "configurationVersion": 1; readonly "catalogVersion": number; readonly "catalogHash": string; readonly "template": { readonly "id": CycleConfigurationStableId; readonly "variantId": CycleConfigurationStableId; readonly "options": { readonly [key: string]: unknown; }; }; readonly "commonOptions": { readonly "warmUp": CycleRequestWarmUpOptions; readonly "joker": CycleRequestJokerOptions; readonly "deload": CycleRequestDeloadOptions; }; readonly "maxes": CycleConfigurationOneRepMaxes | CycleConfigurationRepMaxes | CycleConfigurationDirectTrainingMaxes; readonly "schedule": { readonly "id": CycleConfigurationStableId; readonly "startDate": string; readonly "sessionOrder": ReadonlyArray<CycleConfigurationStableId>; readonly "trainingDays"?: ReadonlyArray<number>; }; readonly "equipment": { readonly "unit": "kg" | "lb"; readonly "barProfileId": CycleConfigurationStableId; } | { readonly "unit": "kg" | "lb"; readonly "bar": CycleConfigurationBar; }; readonly "output": { readonly "title": string; readonly "showPlating": boolean; }; };
 
 export type CycleEditorSchemaLocalizedText = string | { readonly [key: string]: string; };
 

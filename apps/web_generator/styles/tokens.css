@@ -1,23 +1,23 @@
 :root {
   color-scheme: dark;
 
-  --color-canvas: #181818;
-  --color-surface: #323232;
-  --color-surface-raised: #3b3b3b;
-  --color-control: #727272;
-  --color-control-hover: #858585;
-  --color-control-selected: #f7f7f7;
-  --color-control-selected-ink: #323232;
-  --color-field: #f7f7f7;
-  --color-field-ink: #27303a;
-  --color-accent: #2c9eff;
-  --color-accent-hover: #58b2ff;
-  --color-accent-ink: #101820;
-  --color-text: #f5f5f5;
-  --color-text-muted: #bdbdbd;
-  --color-border: #727272;
+  --color-canvas: #101517;
+  --color-surface: #1b2427;
+  --color-surface-raised: #263237;
+  --color-control: #3d4b50;
+  --color-control-hover: #4b5d63;
+  --color-control-selected: #f5c15d;
+  --color-control-selected-ink: #171b1c;
+  --color-field: #f2f0e9;
+  --color-field-ink: #20282b;
+  --color-accent: #f5b942;
+  --color-accent-hover: #ffd177;
+  --color-accent-ink: #171b1c;
+  --color-text: #f3f1e9;
+  --color-text-muted: #aebbc0;
+  --color-border: #526167;
   --color-danger: #b42318;
-  --color-focus: #8bcbff;
+  --color-focus: #8dd9c7;
 
   --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
@@ -42,8 +42,8 @@
   --section-gap: 1.5rem;
   --panel-padding: clamp(1rem, 3vw, 1.25rem);
   --touch-target: 2.75rem;
-  --radius-card: 1.125rem;
-  --radius-control: 0.75rem;
+  --radius-card: 0.875rem;
+  --radius-control: 0.625rem;
   --radius-pill: 999px;
   --border-subtle: 1px solid var(--color-border);
   --focus-ring: 0 0 0 3px var(--color-canvas), 0 0 0 6px var(--color-focus);

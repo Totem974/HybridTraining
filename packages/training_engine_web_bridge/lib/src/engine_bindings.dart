@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:training_engine/training_engine.dart';
 
 import 'bridge_service.dart';
+import 'cycle_configuration_codec.dart';
 import 'cycle_request_normalizer.dart';
 
 final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
@@ -10,6 +11,8 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   final CatalogPlanDataResolver _dataResolver = const CatalogPlanDataResolver();
   final CatalogPlanResolver _planResolver = const CatalogPlanResolver();
   final CycleCompiler _compiler = const CycleCompilerImpl();
+  final CycleConfigurationCodec _configurationCodec =
+      const CycleConfigurationCodec();
 
   int? _catalogVersion;
   String? _catalogHash;
@@ -71,7 +74,11 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       for (final document in documents.where(
         (item) => item['kind'] == 'templates',
       ))
-        for (final item in _list(document, 'templates')) _map(item, 'template'),
+        for (final item in _list(document, 'templates'))
+          {
+            ..._map(item, 'template'),
+            'generation': _map(document['generation'], 'template generation'),
+          },
     ];
     _rawOptionSchemas = [
       for (final document in documents.where(
@@ -141,6 +148,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     'capabilities': const [
       'catalogIndex',
       'cycleEditorSchema',
+      'configurationToCycleRequest',
       'validateCycle',
       'generateCycle',
       'generateMacrocycle',
@@ -148,11 +156,23 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   });
 
   @override
+  String configurationToCycleRequest(String configurationJson) => jsonEncode(
+    _configurationCodec.toCycleRequest(
+      _map(jsonDecode(configurationJson), 'cycle configuration'),
+      catalogVersion: _catalogVersion!,
+      catalogHash: _catalogHash!,
+    ),
+  );
+
+  @override
   String catalogIndex(String requestJson) {
     final request = _map(jsonDecode(requestJson), 'request');
     _keys(request, const {'apiVersion', 'schemaVersion'});
     _requireV1(request);
-    final defaults = _rawTemplateRecords
+    final publicTemplates = _rawTemplateRecords
+        .where((template) => template['surface'] == 'cyclePublic')
+        .toList(growable: false);
+    final defaults = publicTemplates
         .where((template) => template['isDefault'] == true)
         .toList(growable: false);
     if (defaults.length > 1) {
@@ -160,7 +180,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     }
     final orderedTemplates = [
       ...defaults,
-      ..._rawTemplateRecords.where((template) => template['isDefault'] != true),
+      ...publicTemplates.where((template) => template['isDefault'] != true),
     ];
     return jsonEncode({
       ..._metadata(),
@@ -170,6 +190,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
             'id': template['id'],
             'revision': template['revision'],
             'labels': template['labels'],
+            'generation': template['generation'],
             'variantIds': [
               for (final variant in _list(template, 'variants'))
                 _map(variant, 'variant')['id'],
@@ -192,7 +213,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     var templateId = _string(request, 'templateId');
     var variantId = _string(request, 'variantId');
     final alias = _templateAlias(templateId, variantId);
-    final optionOverrides = alias == null
+    final aliasOptionOverrides = alias == null
         ? const <String, Object?>{}
         : _map(alias['optionOverrides'], 'option overrides');
     if (alias != null) {
@@ -202,10 +223,29 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     final rawTemplate = _rawTemplateRecords.singleWhere(
       (item) => item['id'] == templateId,
     );
+    final selectedGeneration = _map(
+      rawTemplate['generation'],
+      'template generation',
+    );
+    final publicTemplates = _rawTemplateRecords
+        .where((template) => template['surface'] == 'cyclePublic')
+        .toList(growable: false);
+    final orderedTemplates = [
+      ...publicTemplates.where((template) => template['isDefault'] == true),
+      ...publicTemplates.where((template) => template['isDefault'] != true),
+    ];
     _requireV1(request);
     final rawVariant = _list(rawTemplate, 'variants')
         .map((item) => _map(item, 'variant'))
         .singleWhere((item) => item['id'] == variantId);
+    final validExample = _optionalMap(rawVariant['validExample']);
+    final optionOverrides = <String, Object?>{
+      ...aliasOptionOverrides,
+      if (validExample['includeWarmUp'] is bool)
+        'warmUp.enabled': validExample['includeWarmUp'],
+      if (validExample['includeDeload'] is bool)
+        'deload.enabled': validExample['includeDeload'],
+    };
     final optionReference = _map(
       rawVariant['optionSchemaId'],
       'option schema reference',
@@ -223,6 +263,10 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       for (final parameter in optionParameters)
         _string(parameter, 'id'):
             parameter['requestPath'] as String? ?? _string(parameter, 'id'),
+    };
+    final optionScopes = {
+      for (final parameter in optionParameters)
+        _string(parameter, 'id'): parameter['scope'] as String? ?? 'global',
     };
     final defaultScheduleReference =
         rawVariant['validExample'] is Map<String, Object?>
@@ -257,6 +301,27 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
         2 * plateDenominations.fold<double>(0, (sum, plate) => sum + plate);
     final fields = <Map<String, Object?>>[
       _field(
+        id: 'generation',
+        path: 'generationId',
+        region: 'template',
+        kind: 'choice',
+        label: const {'en': 'Generation', 'fr': 'Génération'},
+        value: selectedGeneration['id'],
+        choices: [
+          for (final generation in {
+            for (final template in orderedTemplates)
+              _string(
+                _map(template['generation'], 'template generation'),
+                'id',
+              ): _map(
+                template['generation'],
+                'template generation',
+              ),
+          }.values)
+            {'value': generation['id'], 'label': generation['labels']},
+        ],
+      ),
+      _field(
         id: 'template',
         path: 'templateId',
         region: 'template',
@@ -264,7 +329,11 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
         label: const {'en': 'Template', 'fr': 'Modèle'},
         value: templateId,
         choices: [
-          for (final template in _rawTemplateRecords)
+          for (final template in orderedTemplates.where(
+            (item) =>
+                _map(item['generation'], 'template generation')['id'] ==
+                selectedGeneration['id'],
+          ))
             {'value': template['id'], 'label': template['labels']},
         ],
       ),
@@ -382,7 +451,33 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       ],
       for (final parameter in optionParameters)
         if (parameter['presentationGroup'] != 'hidden')
-          _optionField(parameter, optionRequestPaths, optionOverrides),
+          ..._optionFields(
+            parameter,
+            optionRequestPaths,
+            optionScopes,
+            optionOverrides,
+            movements,
+          ),
+      if (_optionalMap(
+            rawVariant['compatibilities'],
+          )['includeDeloadRequired'] ==
+          true)
+        _field(
+          id: 'include-deload-required',
+          path: 'includeDeload',
+          region: 'output',
+          kind: 'boolean',
+          label: const {'en': 'Include deload', 'fr': 'Inclure le deload'},
+          value: true,
+          readOnly: true,
+          visibleWhen: const [
+            {
+              'path': '__catalogHiddenOption',
+              'operator': 'equals',
+              'value': true,
+            },
+          ],
+        ),
       _field(
         id: 'bar-weight',
         path: 'barWeight',
@@ -432,9 +527,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
           for (final session in schemaSchedule.sessions)
             {
               'value': session.id,
-              'label': session.movementIds
-                  .map(_movementTokenLabel)
-                  .join('+'),
+              'label': session.movementIds.map(_movementTokenLabel).join('+'),
             },
         ],
       ),
@@ -779,8 +872,13 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   }
 
   GeneratedCycle _generate(String requestJson) {
+    final source = _map(jsonDecode(requestJson), 'cycle request');
     final json = normalizeCycleRequest(
-      _map(jsonDecode(requestJson), 'cycle request'),
+      source,
+      catalogOptionKeys: _catalogOptionKeys(
+        _string(source, 'templateId'),
+        _string(source, 'variantId'),
+      ),
     );
     _resolveTemplateAliasAndFullBody(json);
     _rejectUnknown(json, const {
@@ -824,7 +922,11 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       variantId,
       sessionOrder,
       scheduleId: selectedSchedule.reference.id,
-      optionValues: _catalogOptionValues(_map(json['options'], 'options')),
+      optionValues: _catalogOptionValues(
+        templateId,
+        variantId,
+        _map(json['options'], 'options'),
+      ),
     );
     final ratioByMovement = _optionalMap(
       json['trainingMaxRatioByMovement'] ??
@@ -1042,22 +1144,29 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
           )
           .firstOrNull;
 
-  Map<String, Object?> _catalogOptionValues(Map<String, Object?> options) {
-    final fullBody = options['fullBody'];
-    if (fullBody == null) return const {};
-    final selection = _map(fullBody, 'options.fullBody');
-    final values = <String, Object?>{};
-    if (selection['phase'] != null) values['phase'] = selection['phase'];
-    if (selection['liftProfiles'] case final Object rawProfiles) {
-      final profiles = _map(rawProfiles, 'options.fullBody.liftProfiles');
-      for (final entry in profiles.entries) {
-        values['${entry.key}_set_profile'] = entry.value;
-      }
-    }
-    return values;
+  Set<String> _catalogOptionKeys(String templateId, String variantId) {
+    final alias = _templateAlias(templateId, variantId);
+    final resolvedTemplateId = alias == null
+        ? templateId
+        : _string(alias, 'templateId');
+    final resolvedVariantId = alias == null
+        ? variantId
+        : _string(alias, 'variantId');
+    return {
+      for (final parameter in _optionParameters(
+        resolvedTemplateId,
+        resolvedVariantId,
+      ))
+        ((parameter['requestPath'] as String?) ?? _string(parameter, 'id'))
+            .split('.')
+            .first,
+    };
   }
 
-  Map<String, Object?> _optionDefaults(String templateId, String variantId) {
+  List<Map<String, Object?>> _optionParameters(
+    String templateId,
+    String variantId,
+  ) {
     final template = _rawTemplateRecords.singleWhere(
       (item) => item['id'] == templateId,
     );
@@ -1073,13 +1182,48 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
           item['id'] == reference['id'] &&
           item['revision'] == reference['revision'],
     );
+    return [
+      for (final raw in _list(schema, 'parameters')) _map(raw, 'parameter'),
+    ];
+  }
+
+  Map<String, Object?> _catalogOptionValues(
+    String templateId,
+    String variantId,
+    Map<String, Object?> options,
+  ) {
+    final values = <String, Object?>{};
+    for (final parameter in _optionParameters(templateId, variantId)) {
+      final id = _string(parameter, 'id');
+      final path = (parameter['requestPath'] as String?) ?? id;
+      Object? value = options;
+      for (final segment in path.split('.')) {
+        if (value is! Map || !value.containsKey(segment)) {
+          value = null;
+          break;
+        }
+        value = value[segment];
+      }
+      if (value != null) values[id] = value;
+    }
+    final fullBody = options['fullBody'];
+    if (fullBody == null) return values;
+    final selection = _map(fullBody, 'options.fullBody');
+    if (selection['phase'] != null) values['phase'] = selection['phase'];
+    if (selection['liftProfiles'] case final Object rawProfiles) {
+      final profiles = _map(rawProfiles, 'options.fullBody.liftProfiles');
+      for (final entry in profiles.entries) {
+        values['${entry.key}_set_profile'] = entry.value;
+      }
+    }
+    return values;
+  }
+
+  Map<String, Object?> _optionDefaults(String templateId, String variantId) {
     return {
-      for (final raw in _list(schema, 'parameters'))
-        if (_map(raw, 'parameter')['default'] != null)
-          _string(_map(raw, 'parameter'), 'id'): _map(
-            raw,
-            'parameter',
-          )['default'],
+      for (final parameter in _optionParameters(templateId, variantId))
+        if (parameter['default'] != null)
+          _string(parameter, 'id'): parameter['default'],
     };
   }
 
@@ -1117,13 +1261,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   }
 
   List<int> _defaultTrainingDays(SourceSchedule schedule) {
-    final id = schedule.reference.id;
-    final frequency = id.contains('two_day')
-        ? 2
-        : id.contains('three_day')
-        ? 3
-        : schedule.sessions.length;
-    return List<int>.generate(frequency, (index) => index + 1);
+    return List<int>.generate(schedule.sessions.length, (index) => index + 1);
   }
 
   Map<String, Object?> _metadata() {
@@ -1147,12 +1285,60 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     'severity': 'error',
   };
 
+  Iterable<Map<String, Object?>> _optionFields(
+    Map<String, Object?> parameter,
+    Map<String, String> requestPaths,
+    Map<String, String> scopes,
+    Map<String, Object?> optionOverrides,
+    List<String> movementIds,
+  ) {
+    if (scopes[_string(parameter, 'id')] != 'perMovement') {
+      return [_optionField(parameter, requestPaths, scopes, optionOverrides)];
+    }
+    if (parameter['type'] != 'percentage') {
+      throw FormatException(
+        'UNSUPPORTED_PER_MOVEMENT_EDITOR_TYPE:${parameter['type']}',
+      );
+    }
+    return [
+      for (final movementId in movementIds)
+        _optionField(
+          parameter,
+          requestPaths,
+          scopes,
+          optionOverrides,
+          movementId: movementId,
+        ),
+    ];
+  }
+
   Map<String, Object?> _optionField(
     Map<String, Object?> parameter,
     Map<String, String> requestPaths,
-    Map<String, Object?> optionOverrides,
-  ) {
+    Map<String, String> scopes,
+    Map<String, Object?> optionOverrides, {
+    String? movementId,
+  }) {
+    final parameterId = _string(parameter, 'id');
     final type = parameter['type'] as String;
+    final presentationGroup = parameter['presentationGroup'] as String?;
+    final baseRequestPath = requestPaths[parameterId]!;
+    final requestPath = movementId == null
+        ? baseRequestPath
+        : '$baseRequestPath.$movementId';
+    final scopedRequestPaths = {
+      for (final entry in requestPaths.entries)
+        entry.key: movementId != null && scopes[entry.key] == 'perMovement'
+            ? '${entry.value}.$movementId'
+            : entry.value,
+    };
+    final baseLabel = {
+      'en': parameter['labelEn'] ?? parameterId,
+      'fr': parameter['labelFr'] ?? parameter['labelEn'] ?? parameterId,
+    };
+    final movementLabel = movementId == null
+        ? null
+        : _movementLabels[movementId];
     final kind = switch (type) {
       'boolean' => 'boolean',
       'integer' => 'integer',
@@ -1162,17 +1348,27 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       _ => 'text',
     };
     return _field(
-      id: parameter['id'] as String,
-      path: 'options.${requestPaths[_string(parameter, 'id')]}',
-      region: 'additional-options',
-      group: parameter['presentationGroup'] as String?,
-      groupLabel: _optionGroupLabel(parameter['presentationGroup'] as String?),
+      id: movementId == null ? parameterId : '$parameterId.$movementId',
+      path: 'options.$requestPath',
+      region: const {'warmup', 'joker', 'deload'}.contains(presentationGroup)
+          ? 'additional-options'
+          : 'template',
+      group: presentationGroup,
+      groupLabel: _optionGroupLabel(presentationGroup),
       kind: kind,
-      label: {
-        'en': parameter['labelEn'] ?? parameter['id'],
-        'fr': parameter['labelFr'] ?? parameter['labelEn'] ?? parameter['id'],
-      },
-      value: optionOverrides[parameter['id']] ?? parameter['default'],
+      label: movementLabel == null
+          ? baseLabel
+          : {
+              'en': '${baseLabel['en']} — ${movementLabel['en'] ?? movementId}',
+              'fr':
+                  '${baseLabel['fr']} — '
+                  '${movementLabel['fr'] ?? movementLabel['en'] ?? movementId}',
+            },
+      value: _scopedOptionValue(
+        optionOverrides[parameterId],
+        parameter['default'],
+        movementId,
+      ),
       minimum: parameter['minimum'] as num?,
       maximum: parameter['maximum'] as num?,
       step: parameter['step'] as num?,
@@ -1181,10 +1377,31 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
             in (parameter['allowedValues'] as List<Object?>? ?? const []))
           {'value': value, 'label': value.toString()},
       ],
-      visibleWhen: _editorConditions(parameter['visibleWhen'], requestPaths),
-      enabledWhen: _editorConditions(parameter['enabledWhen'], requestPaths),
+      visibleWhen: _editorConditions(
+        parameter['visibleWhen'],
+        scopedRequestPaths,
+      ),
+      enabledWhen: _editorConditions(
+        parameter['enabledWhen'],
+        scopedRequestPaths,
+      ),
     );
   }
+}
+
+Object? _scopedOptionValue(
+  Object? override,
+  Object? defaultValue,
+  String? movementId,
+) {
+  if (movementId == null) return override ?? defaultValue;
+  if (override is Map && override.containsKey(movementId)) {
+    return override[movementId];
+  }
+  if (defaultValue is Map && defaultValue.containsKey(movementId)) {
+    return defaultValue[movementId];
+  }
+  return override ?? defaultValue;
 }
 
 Map<String, Object?> _engineTemplateDocument(Map<String, Object?> document) {

@@ -13,18 +13,22 @@ void main() {
         (item) => item['id'] == parameterId,
       );
 
-  test('fixed values are retained for the engine but hidden from presentation', () {
-    for (final item
-        in (schema('classic_simplest_strength_options')['parameters']! as List)
-            .cast<Map>()) {
-      expect(item['allowedValues'], hasLength(1), reason: '${item['id']}');
-      expect(item['presentationGroup'], 'hidden', reason: '${item['id']}');
-      expect(item['default'], (item['allowedValues']! as List).single);
-    }
-    final ratio = parameter('classic_531_options', 'training_max_ratio');
-    expect(ratio['minimum'], ratio['maximum']);
-    expect(ratio['presentationGroup'], 'hidden');
-  });
+  test(
+    'fixed values are retained for the engine but hidden from presentation',
+    () {
+      for (final item
+          in (schema('classic_simplest_strength_options')['parameters']!
+                  as List)
+              .cast<Map>()) {
+        expect(item['allowedValues'], hasLength(1), reason: '${item['id']}');
+        expect(item['presentationGroup'], 'hidden', reason: '${item['id']}');
+        expect(item['default'], (item['allowedValues']! as List).single);
+      }
+      final ratio = parameter('classic_531_options', 'training_max_ratio');
+      expect(ratio['minimum'], ratio['maximum']);
+      expect(ratio['presentationGroup'], 'hidden');
+    },
+  );
 
   test('every visible classic option represents a real user choice', () {
     for (final optionSchema in schemas) {
@@ -33,10 +37,12 @@ void main() {
             (parameter) => parameter['presentationGroup'] != 'hidden',
           )) {
         final allowed = (item['allowedValues']! as List);
-        final hasRange = item['minimum'] is num &&
+        final hasRange =
+            item['minimum'] is num &&
             item['maximum'] is num &&
             (item['minimum']! as num) < (item['maximum']! as num);
-        final isTypedWeight = item['type'] == 'weight' && item['default'] is Map;
+        final isTypedWeight =
+            item['type'] == 'weight' && item['default'] is Map;
         expect(
           allowed.length > 1 || hasRange || isTypedWeight,
           isTrue,
@@ -48,10 +54,7 @@ void main() {
 
   test('Bodyweight matches the observed defaults and bounded controls', () {
     final total = parameter('classic_bodyweight_options', 'total_repetitions');
-    expect(
-      total,
-      containsPair('presentationGroup', 'assistance'),
-    );
+    expect(total, containsPair('presentationGroup', 'assistance'));
     expect(total['default'], 75);
     expect(total['minimum'], 75);
     expect(total['maximum'], 150);

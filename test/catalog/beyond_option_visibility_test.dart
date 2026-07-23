@@ -38,9 +38,9 @@ void main() {
 
   test('every visible option represents more than one executable value', () {
     for (final schema in schemas) {
-      for (final parameter in _parameters(schema).where(
-        (item) => item['presentationGroup'] != 'hidden',
-      )) {
+      for (final parameter in _parameters(
+        schema,
+      ).where((item) => item['presentationGroup'] != 'hidden')) {
         final allowed = (parameter['allowedValues']! as List<Object?>);
         final minimum = parameter['minimum'];
         final maximum = parameter['maximum'];
@@ -67,7 +67,8 @@ void main() {
 }
 
 List<Map<String, Object?>> _schemas(String path) =>
-    (_read(path)['optionSchemas']! as List<Object?>).cast<Map<String, Object?>>();
+    (_read(path)['optionSchemas']! as List<Object?>)
+        .cast<Map<String, Object?>>();
 
 Iterable<Map<String, Object?>> _parameters(Map<String, Object?> schema) =>
     (schema['parameters']! as List<Object?>).cast<Map<String, Object?>>();

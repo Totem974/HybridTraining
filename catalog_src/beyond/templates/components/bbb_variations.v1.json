@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "kind": "components",
+  "components": [
+    {
+      "id": "beyond_bbb_variation_i_5x10_65",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "BBB Variation I, 5s week", "fr": "BBB Variation I, semaine de 5"},
+      "sourceRuleIds": ["beyond_020"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "five", "movementRelation": "sameAsMain", "setOrder": "declared"},
+      "compatibilities": {"generations": ["beyond"]},
+      "block": {"id": "supplemental", "role": "supplemental", "sets": [
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 6500}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 6500}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 6500}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 6500}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 6500}}
+      ]}
+    },
+    {
+      "id": "beyond_bbb_variation_i_5x10_70",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "BBB Variation I, 3s week", "fr": "BBB Variation I, semaine de 3"},
+      "sourceRuleIds": ["beyond_020"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "three", "movementRelation": "sameAsMain", "setOrder": "declared"},
+      "compatibilities": {"generations": ["beyond"]},
+      "block": {"id": "supplemental", "role": "supplemental", "sets": [
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 7000}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 7000}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 7000}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 7000}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 7000}}
+      ]}
+    },
+    {
+      "id": "beyond_bbb_variation_i_5x10_75",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "BBB Variation I, 5/3/1 week", "fr": "BBB Variation I, semaine 5/3/1"},
+      "sourceRuleIds": ["beyond_020"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "fiveThreeOne", "movementRelation": "sameAsMain", "setOrder": "declared"},
+      "compatibilities": {"generations": ["beyond"]},
+      "block": {"id": "supplemental", "role": "supplemental", "sets": [
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 7500}}
+      ]}
+    },
+    {
+      "id": "beyond_bbb_variation_ii_5x10_65",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "BBB Variation II, 5s week", "fr": "BBB Variation II, semaine de 5"},
+      "sourceRuleIds": ["beyond_021"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "five", "movementRelation": "sameAsMain", "setOrder": "declared"},
+      "compatibilities": {"generations": ["beyond"]},
+      "block": {"id": "supplemental", "role": "supplemental", "sets": [
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 6500}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 6500}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 6500}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 6500}},
+        {"repetitions": {"type": "fixed", "count": 10}, "load": {"type": "training_max_percentage", "basisPoints": 6500}}
+      ]}
+    },
+    {
+      "id": "beyond_bbb_variation_ii_5x8_70",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "BBB Variation II, 3s week", "fr": "BBB Variation II, semaine de 3"},
+      "sourceRuleIds": ["beyond_021"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "three", "movementRelation": "sameAsMain", "setOrder": "declared"},
+      "compatibilities": {"generations": ["beyond"]},
+      "block": {"id": "supplemental", "role": "supplemental", "sets": [
+        {"repetitions": {"type": "fixed", "count": 8}, "load": {"type": "training_max_percentage", "basisPoints": 7000}},
+        {"repetitions": {"type": "fixed", "count": 8}, "load": {"type": "training_max_percentage", "basisPoints": 7000}},
+        {"repetitions": {"type": "fixed", "count": 8}, "load": {"type": "training_max_percentage", "basisPoints": 7000}},
+        {"repetitions": {"type": "fixed", "count": 8}, "load": {"type": "training_max_percentage", "basisPoints": 7000}},
+        {"repetitions": {"type": "fixed", "count": 8}, "load": {"type": "training_max_percentage", "basisPoints": 7000}}
+      ]}
+    },
+    {
+      "id": "beyond_bbb_variation_ii_5x5_75",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "BBB Variation II, 5/3/1 week", "fr": "BBB Variation II, semaine 5/3/1"},
+      "sourceRuleIds": ["beyond_021"],
+      "parameterSchemaIds": [],
+      "constraints": {"weekRole": "fiveThreeOne", "movementRelation": "sameAsMain", "setOrder": "declared"},
+      "compatibilities": {"generations": ["beyond"]},
+      "block": {"id": "supplemental", "role": "supplemental", "sets": [
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+        {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 7500}}
+      ]}
+    }
+  ]
+}

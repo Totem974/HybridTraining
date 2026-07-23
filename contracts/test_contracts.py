@@ -2,7 +2,7 @@ import copy
 import json
 from pathlib import Path
 
-from jsonschema import Draft202012Validator, RefResolver
+from jsonschema import Draft202012Validator, FormatChecker, RefResolver
 
 ROOT = Path(__file__).parent / "v1"
 
@@ -26,6 +26,7 @@ def validator(name):
     return Draft202012Validator(
         schema,
         resolver=RefResolver.from_schema(schema, store=store),
+        format_checker=FormatChecker(),
     )
 
 
@@ -43,6 +44,50 @@ def test_valid_fixtures():
     assert_valid("engine_info.schema.json", "engine_info.valid.json")
     assert_valid("cycle_request.schema.json", "cycle_request.valid.json")
     assert_valid("forever_request.schema.json", "forever_request.valid.json")
+    assert_valid("cycle_configuration.schema.json", "cycle_configuration.valid.json")
+
+
+def test_cycle_configuration_rejects_unknown_keys():
+    value = load("fixtures/cycle_configuration.valid.json")
+    value["unexpected"] = True
+    assert list(validator("cycle_configuration.schema.json").iter_errors(value))
+    value = load("fixtures/cycle_configuration.valid.json")
+    value["template"]["unexpected"] = True
+    assert list(validator("cycle_configuration.schema.json").iter_errors(value))
+
+
+def test_cycle_configuration_max_mode_is_conditional():
+    value = load("fixtures/cycle_configuration.valid.json")
+    del value["maxes"]["values"]["squat"]["repetitions"]
+    assert list(validator("cycle_configuration.schema.json").iter_errors(value))
+    value["maxes"]["mode"] = "oneRepMax"
+    value["maxes"]["values"] = {
+        "squat": {
+            "weight": {"centiUnits": 14000, "unit": "kg"},
+            "repetitions": 3,
+        }
+    }
+    assert list(validator("cycle_configuration.schema.json").iter_errors(value))
+
+
+def test_cycle_configuration_equipment_requires_exactly_one_bar_source():
+    value = load("fixtures/cycle_configuration.valid.json")
+    value["equipment"]["bar"] = {
+        "weight": {"centiUnits": 2000, "unit": "kg"},
+        "platesPerSide": [
+            {"centiUnits": 2000, "unit": "kg"},
+            {"centiUnits": 1500, "unit": "kg"},
+        ],
+    }
+    assert list(validator("cycle_configuration.schema.json").iter_errors(value))
+    del value["equipment"]["barProfileId"]
+    assert not list(validator("cycle_configuration.schema.json").iter_errors(value))
+
+
+def test_cycle_configuration_rejects_invalid_start_date():
+    value = load("fixtures/cycle_configuration.valid.json")
+    value["schedule"]["startDate"] = "next Monday"
+    assert list(validator("cycle_configuration.schema.json").iter_errors(value))
 
 
 def test_unknown_key_is_rejected():

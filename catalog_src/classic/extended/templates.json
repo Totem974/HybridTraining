@@ -1,6 +1,10 @@
 {
   "schemaVersion": 1,
   "kind": "templates",
+  "generation": {
+    "id": "classic",
+    "labels": {"en": "Classic", "fr": "Classic"}
+  },
   "templates": [
     {
       "id": "classic_for_beginners",

@@ -84,6 +84,15 @@
   font-weight: 750;
 }
 
+.additional-options__empty {
+  min-height: var(--touch-target);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
 .additional-options__group > .field:not(.switch-row),
 .additional-options__group > fieldset.field {
   margin-top: var(--space-3);

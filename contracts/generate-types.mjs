@@ -11,6 +11,7 @@ const names = {
   "forever_response.schema.json": "ForeverResponse", "validation_report.schema.json": "ValidationReport",
   "engine_error.schema.json": "EngineError", "engine_warning.schema.json": "EngineWarning",
   "snapshot_envelope.schema.json": "SnapshotEnvelope",
+  "cycle_configuration.schema.json": "CycleConfiguration",
 };
 const commonRefs = { metadata: "ContractMetadata", envelope: "ContractEnvelope", weight: "Weight", issue: "EngineIssue" };
 const pascal = (value) => value.replace(/(^|[-_])(\w)/g, (_, __, letter) => letter.toUpperCase());

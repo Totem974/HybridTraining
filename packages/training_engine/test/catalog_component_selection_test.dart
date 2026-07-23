@@ -131,6 +131,10 @@ void main() {
       id: 'template',
       revision: 1,
       surface: TemplateSurface.cyclePublic,
+      generation: SourceTemplateGeneration(
+        id: 'classic',
+        labels: {'en': 'Classic', 'fr': 'Classic'},
+      ),
       variants: [variant],
     );
     const schedule = SourceSchedule(

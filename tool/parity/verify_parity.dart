@@ -11,6 +11,7 @@ Future<void> main(List<String> arguments) async {
     'cycleParityFailures': <Object?>[],
     'foreverParityFailures': <Object?>[],
     'contractFailures': <Object?>[],
+    'coverage': <String, Object?>{},
     'runners': <String, Object?>{},
   };
   try {
@@ -19,6 +20,15 @@ Future<void> main(List<String> arguments) async {
     final cycleFailures = report['cycleParityFailures']! as List<Object?>;
     final foreverFailures = report['foreverParityFailures']! as List<Object?>;
     _validateContracts(fixtures, contractFailures);
+    final manifest = _readJson(File('${fixtures.path}/manifest.json'));
+    final cycleFixtures = (manifest['cycleFixtures'] as List).cast<String>();
+    report['coverage'] = {
+      'publicCycleVariantCount': cycleFixtures.length,
+      'publicCycleVariants': cycleFixtures,
+      'nativeDartCompared': cycleFixtures.length,
+      'bridgeJavaScriptCompared': 0,
+      'foreverScenariosCompared': _files(fixtures, 'forever/').length,
+    };
     _compareFixtureTrees(
       fixtures,
       nativeOutput,
@@ -42,6 +52,8 @@ Future<void> main(List<String> arguments) async {
     final bridgeReport = await _runBridge(fixtures);
     (report['runners']! as Map<String, Object?>)['bridgeJavaScript'] =
         bridgeReport;
+    (report['coverage']! as Map<String, Object?>)['bridgeJavaScriptCompared'] =
+        bridgeReport['cycleFixtureCount'] ?? 0;
     if (bridgeReport['status'] == 'failed') {
       cycleFailures.addAll(
         (bridgeReport['cycleParityFailures'] as List<Object?>?) ?? const [],
@@ -78,10 +90,39 @@ Future<void> main(List<String> arguments) async {
 
 void _validateContracts(Directory root, List<Object?> failures) {
   final manifest = _readJson(File('${root.path}/manifest.json'));
-  if (manifest['fixtureVersion'] != 1 || manifest['cycleVariantCount'] != 23) {
+  final declaredFixtures =
+      (manifest['cycleFixtures'] as List?)?.cast<String>() ?? const <String>[];
+  final fixtureFiles = _files(root, 'cycle/')
+      .map((path) => path.substring('cycle/'.length, path.length - '.json'.length))
+      .toList();
+  if (manifest['fixtureVersion'] != 1) {
     failures.add({
       'fixture': 'manifest.json',
-      'message': 'Expected fixtureVersion 1 and exactly 23 Cycle variants.',
+      'message': 'Expected fixtureVersion 1.',
+    });
+  }
+  if (manifest['cycleVariantCount'] != declaredFixtures.length) {
+    failures.add({
+      'fixture': 'manifest.json',
+      'message': 'cycleVariantCount does not match cycleFixtures.',
+      'declaredCount': manifest['cycleVariantCount'],
+      'fixtureCount': declaredFixtures.length,
+    });
+  }
+  if (declaredFixtures.toSet().length != declaredFixtures.length) {
+    failures.add({
+      'fixture': 'manifest.json',
+      'message': 'cycleFixtures contains duplicate public variant ids.',
+    });
+  }
+  if (_canonicalJson(declaredFixtures..sort()) !=
+      _canonicalJson(fixtureFiles..sort())) {
+    failures.add({
+      'fixture': 'manifest.json',
+      'message':
+          'cycleFixtures does not exhaustively match the checked-in Cycle fixtures.',
+      'declared': declaredFixtures,
+      'files': fixtureFiles,
     });
   }
   for (final relative in _files(root, 'cycle/')) {
