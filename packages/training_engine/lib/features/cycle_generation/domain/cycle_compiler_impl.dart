@@ -1,3 +1,5 @@
+import 'assistance_compiler.dart';
+import 'assistance_contract.dart';
 import 'cycle_calculations.dart';
 import 'cycle_contract.dart';
 import 'cycle_execution_options.dart';
@@ -11,11 +13,13 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
     this.maxResolver = const TrainingMaxResolver(),
     this.loadCalculator = const LoadCalculator(),
     this.plateCalculator = const PlateCalculator(),
+    this.assistanceCompiler = const AssistanceCompiler(),
   });
 
   final TrainingMaxResolver maxResolver;
   final LoadCalculator loadCalculator;
   final PlateCalculator plateCalculator;
+  final AssistanceCompiler assistanceCompiler;
 
   @override
   GeneratedCycle compile(
@@ -83,6 +87,8 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
     required ResolvedCycleSchedule schedule,
     required CycleScheduleSelection selection,
     required CycleRequest request,
+    Iterable<ResolvedAssistancePlan> assistancePlans = const [],
+    CycleOptionValues assistanceOptionValues = const CycleOptionValues(),
   }) {
     _validateScheduled(definition, schedule, selection, request);
     final options = request.cycleOptions.normalized();
@@ -130,6 +136,15 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
               request,
             ),
           );
+          for (final movement in source.template.movementIds) {
+            blocks.addAll(
+              assistanceCompiler.compileSession(
+                plans: assistancePlans,
+                sessionRole: movement.value,
+                optionValues: assistanceOptionValues,
+              ),
+            );
+          }
         }
         if (blocks.isNotEmpty) {
           sessions.add(

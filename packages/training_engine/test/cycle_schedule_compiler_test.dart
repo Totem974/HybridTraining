@@ -126,6 +126,54 @@ void main() {
     }
   });
 
+  test('assistance follows existing sessions, including deload', () {
+    const assistance = ResolvedAssistancePlan(
+      id: 'test_assistance',
+      revision: 1,
+      slots: [
+        AssistanceSessionSlot(
+          id: 'a_assistance',
+          sessionRole: 'a',
+          prescriptions: [
+            AssistanceExercisePrescription(
+              exerciseId: 'pull_up',
+              volume: FixedAssistanceVolume(setCount: 2, repetitions: 10),
+              load: AssistanceLoadKind.bodyweight,
+            ),
+          ],
+        ),
+      ],
+    );
+    GeneratedCycle compile({required bool includeDeload}) =>
+        compiler.compileScheduled(
+          definition: _fourLiftDefinition(CycleScheduleMode.fixed),
+          schedule: _fourLiftSchedule(CycleScheduleMode.fixed, const {4}),
+          selection: _selection(const [1, 2, 4, 5]),
+          request: _request(const [1, 2, 4, 5], includeDeload: includeDeload),
+          assistancePlans: const [assistance],
+        );
+
+    final withDeload = compile(includeDeload: true);
+    final withoutDeload = compile(includeDeload: false);
+    List<GeneratedBlock> assistanceBlocks(GeneratedCycle cycle) => cycle.weeks
+        .expand((week) => week.sessions)
+        .expand((session) => session.blocks)
+        .where((block) => block.role == 'assistance')
+        .toList();
+
+    expect(withDeload.weeks, hasLength(4));
+    expect(assistanceBlocks(withDeload), hasLength(4));
+    expect(
+      assistanceBlocks(
+        withDeload,
+      ).last.sets.map((set) => set.repetitions['count']),
+      [10, 10],
+      reason: 'assistance remains on an existing deload session',
+    );
+    expect(withoutDeload.weeks, hasLength(3));
+    expect(assistanceBlocks(withoutDeload), hasLength(3));
+  });
+
   test('fixed schedule keeps one source wave per displayed week', () {
     final cycle = compiler.compileScheduled(
       definition: _fourLiftDefinition(CycleScheduleMode.fixed),
