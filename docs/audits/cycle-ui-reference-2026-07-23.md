@@ -1,8 +1,15 @@
 # Audit UI Cycle — référence locale
 
 Date : 23 juillet 2026
+Mise à jour de la validation : 23 juillet 2026
 Source observée : capture locale de `fivethreeone.app/calculator` fournie par le
 propriétaire du dépôt.
+
+## Référence figée
+
+L'oracle source exact contient 35 scénarios versionnés. Ils couvrent les états
+et interactions relevés sur la référence locale et servent à vérifier la
+nouvelle interface sans en reprendre l'identité graphique.
 
 ## Responsive observé
 
@@ -21,10 +28,10 @@ hauteur minimale de 44 px.
 | Bloc | Contrôles de référence | Décision HybridTraining |
 | --- | --- | --- |
 | Weight | unités, Training Max, 1RM, 1RM estimé, ratio TM | Conserver les modes et valeurs exposés par `CycleEditorSchema` |
-| Template | modèle, variante et paramètres conditionnels | Conserver les 25 variantes publiques du catalogue |
+| Template | modèle, variante et paramètres conditionnels | Exposer les 19 templates et 37 variantes Cycle publics du catalogue |
 | Additional Options | warm-up, bases Beyond, Joker, deload et skip warm-up | Afficher/masquer selon les dépendances du moteur ; bloc repliable |
 | Plating & Barbell | compteurs −/+, poids de barre, total maximal | Conserver les compteurs moteur ; bloc repliable |
-| Scheduling | fréquence, ordre des mouvements, ordre 3/5/1 | Conserver les schedules et compatibilités moteur |
+| Scheduling | fréquence, ordre des mouvements, ordre 3/5/1 | Conserver les schedules, les compatibilités moteur et le réordonnancement des séances |
 | Output | titre, QR, plaques et actions | Conserver titre, plaques, import/export et partage existants |
 | Program | semaines, séances, blocs, séries et plaques | Rendre la réponse moteur sans transformation métier |
 
@@ -43,13 +50,37 @@ règle métier n’est introduite.
 
 ## Mesures après refonte
 
-Mesures Chromium locales, 5 échauffements et 30 itérations :
+Mesures locales effectuées sur le port 4176 :
 
 | Scénario | Médiane | p95 |
 | --- | ---: | ---: |
-| Premier chargement local | 549,07 ms | 561,14 ms |
-| Génération Standard | 92,50 ms | 108,20 ms |
-| Génération BBB | 91,80 ms | 101,40 ms |
+| Premier chargement local | 559,49 ms | 566,11 ms |
+| Génération Standard | 92,5 ms | 101,4 ms |
+| Génération BBB | 92,5 ms | 106,4 ms |
 
-Le build Vite produit un HTML de 5,87 kB, un CSS de 28,80 kB
-(5,42 kB gzip) et un JavaScript UI de 54,41 kB (16,34 kB gzip).
+| Artefact | Brut | Gzip |
+| --- | ---: | ---: |
+| Bridge Dart JavaScript | 297 058 o | 92 114 o |
+| JavaScript UI | 60 714 o | 18 243 o |
+| CSS | 29 467 o | 5 524 o |
+| `catalog.bundle.json` | 432 646 o | 37 361 o |
+| `catalog.db` | 1 548 288 o | 162 125 o |
+
+## Validation fonctionnelle finale
+
+Le catalogue validé contient 58 documents, 22 templates bruts et 41 variantes
+brutes. Sa surface Cycle publique contient 19 templates et 37 variantes.
+
+| Contrôle | Résultat |
+| --- | ---: |
+| Parité Cycle native | 37/37 |
+| Parité Cycle JavaScript | 37/37 |
+| Parité Forever | 1/1 |
+| Tests moteur | 186/186 |
+| Tests bridge | 54/54 |
+| Tests Web unitaires | 98/98 |
+| Tests des contrats | 16/16 |
+| Tests E2E | 85 réussis, 26 ignorés intentionnellement |
+
+Les 26 cas E2E ignorés sont des projets ou tests non applicables. Ils ne sont
+pas des échecs.
