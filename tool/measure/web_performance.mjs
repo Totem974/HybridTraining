@@ -6,12 +6,23 @@ const { chromium } = playwright;
 
 const root = resolve(import.meta.dirname, "../..");
 const webRoot = resolve(root, "apps/web_generator");
-const url = "http://127.0.0.1:4173/cycle/";
+const port = Number(process.env.MEASURE_PORT ?? 4173);
+if (!Number.isInteger(port) || port < 1 || port > 65535) {
+  throw new Error(`Invalid MEASURE_PORT: ${process.env.MEASURE_PORT}`);
+}
+const url = `http://127.0.0.1:${port}/cycle/`;
 const warmups = Number(process.env.MEASURE_WARMUPS ?? 5);
 const iterations = Number(process.env.MEASURE_ITERATIONS ?? 30);
 const server = spawn(
   process.execPath,
-  [resolve(webRoot, "node_modules/vite/bin/vite.js"), "--host", "127.0.0.1", "--port", "4173"],
+  [
+    resolve(webRoot, "node_modules/vite/bin/vite.js"),
+    "--host",
+    "127.0.0.1",
+    "--port",
+    String(port),
+    "--strictPort",
+  ],
   { cwd: webRoot, stdio: "ignore" },
 );
 
