@@ -44,86 +44,164 @@ export interface ProgramRenderOptions {
   readonly showPlating: boolean;
 }
 
+interface RenderContext {
+  readonly options: ProgramRenderOptions;
+  readonly dateFormatter: Intl.DateTimeFormat;
+  readonly weightFormatter: Intl.NumberFormat;
+}
+
 export function renderProgram(
   target: HTMLElement,
   response: CycleResponseLike,
   options: ProgramRenderOptions,
 ): void {
+  // Formatters are deliberately shared across the complete render. Constructing
+  // one per set is expensive on larger cycles.
+  const context: RenderContext = {
+    options,
+    dateFormatter: new Intl.DateTimeFormat(options.labels.dateLocale, {
+      day: "numeric",
+      month: "short",
+    }),
+    weightFormatter: new Intl.NumberFormat(options.labels.dateLocale, {
+      maximumFractionDigits: 2,
+    }),
+  };
   const fragment = document.createDocumentFragment();
-  for (const week of response.weeks) fragment.append(renderWeek(week, options));
+  for (const week of response.weeks) fragment.append(renderWeek(week, context));
   target.replaceChildren(fragment);
 }
 
-function renderWeek(week: WeekLike, options: ProgramRenderOptions): HTMLElement {
+function renderWeek(week: WeekLike, context: RenderContext): HTMLElement {
   const section = element("section", "program-week");
-  section.append(element("h3", "program-week__title", `${options.labels.week} ${week.number}`));
+  const title = element(
+    "h3",
+    "program-week__title",
+    `${context.options.labels.week} ${week.number}`,
+  );
+  title.id = `program-week-${week.number}`;
+  section.setAttribute("aria-labelledby", title.id);
+  section.append(title);
+
   const grid = element("div", "session-grid");
-  for (const session of week.sessions) grid.append(renderSession(session, options));
+  grid.setAttribute("role", "list");
+  const sessions = document.createDocumentFragment();
+  for (const session of week.sessions) sessions.append(renderSession(session, context));
+  grid.append(sessions);
   section.append(grid);
   return section;
 }
 
-function renderSession(session: SessionLike, options: ProgramRenderOptions): HTMLElement {
+function renderSession(session: SessionLike, context: RenderContext): HTMLElement {
   const card = element("article", "session-card");
-  const name = displayMovement(session.movementId, options.labels.movementNames, options.labels.session);
+  card.setAttribute("role", "listitem");
+  const name = displayMovement(
+    session.movementId,
+    context.options.labels.movementNames,
+    context.options.labels.session,
+  );
   card.setAttribute("aria-label", name);
+
   const header = element("header", "session-card__header");
   header.append(element("h4", "session-card__title", name));
   if (session.date) {
     const date = new Date(session.date);
     if (!Number.isNaN(date.valueOf())) {
-      const time = element("time", "session-card__date", new Intl.DateTimeFormat(options.labels.dateLocale).format(date));
+      const time = element(
+        "time",
+        "session-card__date",
+        context.dateFormatter.format(date),
+      );
       time.dateTime = session.date;
       header.append(time);
     }
   }
   card.append(header);
-  for (const block of session.blocks) card.append(renderBlock(block, options));
+
+  const blocks = document.createDocumentFragment();
+  for (const block of session.blocks) blocks.append(renderBlock(block, context));
+  card.append(blocks);
   return card;
 }
 
-function renderBlock(block: BlockLike, options: ProgramRenderOptions): HTMLElement {
+function renderBlock(block: BlockLike, context: RenderContext): HTMLElement {
   const group = element("section", "session-block");
-  const blockName = displayName(block.role, options.labels.blockNames ?? {}, options.labels.block);
+  const blockName = displayName(
+    block.role,
+    context.options.labels.blockNames ?? {},
+    context.options.labels.block,
+  );
   group.append(element("h5", "session-block__title", blockName));
+
   if (block.movementId) {
-    const movementName = displayMovement(block.movementId, options.labels.movementNames, "");
+    const movementName = displayMovement(
+      block.movementId,
+      context.options.labels.movementNames,
+      "",
+    );
     if (movementName) group.append(element("p", "session-block__movement", movementName));
   }
-  for (const set of block.sets) {
-    const row = element("div", "set-row");
-    row.append(element("span", "set-row__prescription", formatSet(set)));
-    if (options.showPlating && set.platesPerSide?.length) {
-      const plates = element("span", "set-row__plates");
-      for (const plate of set.platesPerSide) {
-        const chip = element("span", "plate-chip", formatWeight(plate));
-        chip.dataset.plate = "";
-        chip.setAttribute("aria-label", formatWeight(plate));
-        plates.append(chip);
-      }
-      row.append(plates);
-    }
-    group.append(row);
-  }
+
+  const list = element("ol", "set-list");
+  for (const set of block.sets) list.append(renderSet(set, context));
+  group.append(list);
   return group;
 }
 
-function formatSet(set: SetLike): string {
+function renderSet(set: SetLike, context: RenderContext): HTMLLIElement {
+  const row = element("li", "set-row");
+  row.append(
+    element(
+      "span",
+      "set-row__prescription",
+      formatSet(set, context.weightFormatter),
+    ),
+  );
+  if (context.options.showPlating && set.platesPerSide?.length) {
+    const plates = element("span", "set-row__plates");
+    const labels = set.platesPerSide.map((plate) =>
+      formatWeight(plate, context.weightFormatter)
+    );
+    plates.setAttribute("aria-label", labels.join(", "));
+    for (const label of labels) {
+      const chip = element("span", "plate-chip", label);
+      chip.dataset.plate = "";
+      chip.setAttribute("aria-hidden", "true");
+      plates.append(chip);
+    }
+    row.append(plates);
+  }
+  return row;
+}
+
+function formatSet(set: SetLike, weightFormatter: Intl.NumberFormat): string {
   const repetitions = set.repetitions;
   let reps = "—";
   if (typeof repetitions.count === "number") reps = String(repetitions.count);
   else if (typeof repetitions.total === "number") reps = String(repetitions.total);
-  else if (typeof repetitions.minimum === "number" && typeof repetitions.maximum === "number") {
+  else if (
+    typeof repetitions.minimum === "number" &&
+    typeof repetitions.maximum === "number"
+  ) {
     reps = `${repetitions.minimum}–${repetitions.maximum}`;
-  } else if (repetitions.type === "amrap") reps = "AMRAP";
-  return `${reps} × ${set.plannedLoad ? formatWeight(set.plannedLoad) : "—"}`;
+  } else if (repetitions.type === "amrap") {
+    reps = "AMRAP";
+  }
+  const load = set.plannedLoad
+    ? formatWeight(set.plannedLoad, weightFormatter)
+    : "—";
+  return `${reps} × ${load}`;
 }
 
-function formatWeight(weight: WeightLike): string {
-  return `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(weight.centiUnits / 100)} ${weight.unit}`;
+function formatWeight(weight: WeightLike, formatter: Intl.NumberFormat): string {
+  return `${formatter.format(weight.centiUnits / 100)} ${weight.unit}`;
 }
 
-function displayName(id: string, names: Readonly<Record<string, string>>, fallback: string): string {
+function displayName(
+  id: string,
+  names: Readonly<Record<string, string>>,
+  fallback: string,
+): string {
   const label = names[id];
   return typeof label === "string" && label.trim() !== "" ? label : fallback;
 }
