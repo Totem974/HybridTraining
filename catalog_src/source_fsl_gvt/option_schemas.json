@@ -124,7 +124,72 @@
       ],
       "parameters": [
         {
+          "id": "gvt_use_same_ratio",
+          "presentationGroup": "template",
+          "labelEn": "Use same ratio",
+          "labelFr": "Utiliser le meme ratio",
+          "type": "boolean",
+          "scope": "global",
+          "default": true,
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [
+            true,
+            false
+          ],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        },
+        {
           "id": "gvt_percentage",
+          "presentationGroup": "template",
+          "labelEn": "10 x 10 @",
+          "labelFr": "10 x 10 a",
+          "requestPath": "gvt_percentage",
+          "type": "percentage",
+          "scope": "global",
+          "default": 3000,
+          "minimum": 3000,
+          "maximum": 7500,
+          "step": 500,
+          "allowedValues": [
+            3000,
+            3500,
+            4000,
+            4500,
+            5000,
+            5500,
+            6000,
+            6500,
+            7000,
+            7500
+          ],
+          "visibleWhen": {
+            "type": "equals",
+            "parameterId": "gvt_use_same_ratio",
+            "value": true
+          },
+          "enabledWhen": {
+            "type": "equals",
+            "parameterId": "gvt_use_same_ratio",
+            "value": true
+          },
+          "requiredWhen": {
+            "type": "equals",
+            "parameterId": "gvt_use_same_ratio",
+            "value": true
+          }
+        },
+        {
+          "id": "gvt_percentage_by_movement",
           "presentationGroup": "template",
           "labelEn": "10 x 10 @",
           "labelFr": "10 x 10 a",
@@ -148,13 +213,19 @@
             7500
           ],
           "visibleWhen": {
-            "type": "always"
+            "type": "equals",
+            "parameterId": "gvt_use_same_ratio",
+            "value": false
           },
           "enabledWhen": {
-            "type": "always"
+            "type": "equals",
+            "parameterId": "gvt_use_same_ratio",
+            "value": false
           },
           "requiredWhen": {
-            "type": "always"
+            "type": "equals",
+            "parameterId": "gvt_use_same_ratio",
+            "value": false
           }
         },
         {
@@ -165,31 +236,6 @@
           "type": "boolean",
           "scope": "global",
           "default": false,
-          "minimum": null,
-          "maximum": null,
-          "step": null,
-          "allowedValues": [
-            true,
-            false
-          ],
-          "visibleWhen": {
-            "type": "always"
-          },
-          "enabledWhen": {
-            "type": "always"
-          },
-          "requiredWhen": {
-            "type": "always"
-          }
-        },
-        {
-          "id": "gvt_use_same_ratio",
-          "presentationGroup": "template",
-          "labelEn": "Use same ratio",
-          "labelFr": "Utiliser le meme ratio",
-          "type": "boolean",
-          "scope": "global",
-          "default": true,
           "minimum": null,
           "maximum": null,
           "step": null,

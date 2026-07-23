@@ -144,14 +144,23 @@ void main() {
     );
     final gvtParameters = (gvt['parameters']! as List<Object?>)
         .cast<Map<String, Object?>>();
-    final ratio = _parameter(gvtParameters, 'gvt_percentage');
-    expect(ratio['scope'], 'perMovement');
-    expect(ratio['requestPath'], 'gvt_percentage');
-    expect(ratio['default'], 3000);
-    expect(ratio['minimum'], 3000);
-    expect(ratio['maximum'], 7500);
-    expect(ratio['step'], 500);
-    expect(ratio['allowedValues'], [
+    final sameRatio = _parameter(gvtParameters, 'gvt_use_same_ratio');
+    expect(sameRatio['default'], true);
+
+    final sharedRatio = _parameter(gvtParameters, 'gvt_percentage');
+    final movementRatios = _parameter(
+      gvtParameters,
+      'gvt_percentage_by_movement',
+    );
+    expect(sharedRatio['scope'], 'global');
+    expect(movementRatios['scope'], 'perMovement');
+    expect(sharedRatio['requestPath'], 'gvt_percentage');
+    expect(movementRatios['requestPath'], 'gvt_percentage');
+    expect(sharedRatio['default'], 3000);
+    expect(sharedRatio['minimum'], 3000);
+    expect(sharedRatio['maximum'], 7500);
+    expect(sharedRatio['step'], 500);
+    expect(sharedRatio['allowedValues'], [
       3000,
       3500,
       4000,
@@ -163,8 +172,22 @@ void main() {
       7000,
       7500,
     ]);
+    expect(movementRatios['allowedValues'], sharedRatio['allowedValues']);
+    expect(sharedRatio['visibleWhen'], {
+      'type': 'equals',
+      'parameterId': 'gvt_use_same_ratio',
+      'value': true,
+    });
+    expect(sharedRatio['enabledWhen'], sharedRatio['visibleWhen']);
+    expect(sharedRatio['requiredWhen'], sharedRatio['visibleWhen']);
+    expect(movementRatios['visibleWhen'], {
+      'type': 'equals',
+      'parameterId': 'gvt_use_same_ratio',
+      'value': false,
+    });
+    expect(movementRatios['enabledWhen'], movementRatios['visibleWhen']);
+    expect(movementRatios['requiredWhen'], movementRatios['visibleWhen']);
     expect(_parameter(gvtParameters, 'gvt_alternate')['default'], false);
-    expect(_parameter(gvtParameters, 'gvt_use_same_ratio')['default'], true);
   });
 
   test('ab_wheel is a first-class source-catalog exercise', () {
@@ -228,22 +251,66 @@ void main() {
     'gvt-10x10-alternate-4-day': true,
   };
   for (final entry in gvtScenarios.entries) {
-    test('${entry.key} matches exact exercise order, repetitions, and loads', () {
-      final actual = _compile(
-        template: gvtTemplate,
-        components: components,
-        sourceSchedules: sourceSchedules,
-        optionRecipes: optionRecipes,
-        optionValues: {
-          'gvt_alternate': entry.value,
-          'gvt_use_same_ratio': true,
-        },
-        gvtPercentage: 3000,
-      );
-      final expected = _goldenScenario(exactGoldens, entry.key);
-      expect(_canonicalCycle(actual), _canonicalGolden(expected));
-    });
+    test(
+      '${entry.key} matches exact exercise order, repetitions, and loads',
+      () {
+        final actual = _compile(
+          template: gvtTemplate,
+          components: components,
+          sourceSchedules: sourceSchedules,
+          optionRecipes: optionRecipes,
+          optionValues: {
+            'gvt_alternate': entry.value,
+            'gvt_use_same_ratio': true,
+          },
+          gvtCommonPercentage: 3000,
+        );
+        final expected = _goldenScenario(exactGoldens, entry.key);
+        expect(_canonicalCycle(actual), _canonicalGolden(expected));
+      },
+    );
   }
+
+  test('GVT shared ratio drives all four movements exactly', () {
+    final actual = _compile(
+      template: gvtTemplate,
+      components: components,
+      sourceSchedules: sourceSchedules,
+      optionRecipes: optionRecipes,
+      optionValues: const {'gvt_alternate': false, 'gvt_use_same_ratio': true},
+      gvtCommonPercentage: 6000,
+    );
+
+    expect(_firstWeekGvtLoads(actual), {
+      'overhead_press': 4500,
+      'deadlift': 11000,
+      'bench_press': 5500,
+      'squat': 8500,
+    });
+  });
+
+  test('GVT independent ratios drive each movement exactly', () {
+    final actual = _compile(
+      template: gvtTemplate,
+      components: components,
+      sourceSchedules: sourceSchedules,
+      optionRecipes: optionRecipes,
+      optionValues: const {'gvt_alternate': false, 'gvt_use_same_ratio': false},
+      gvtPercentagesByMovement: const {
+        'overhead_press': 3000,
+        'deadlift': 4000,
+        'bench_press': 5000,
+        'squat': 6000,
+      },
+    );
+
+    expect(_firstWeekGvtLoads(actual), {
+      'overhead_press': 4500,
+      'deadlift': 7500,
+      'bench_press': 4500,
+      'squat': 8500,
+    });
+  });
 }
 
 Map<String, Object?> _parameter(
@@ -257,7 +324,8 @@ GeneratedCycle _compile({
   required List<SourceSchedule> sourceSchedules,
   required List<SourceCycleOptionRecipe> optionRecipes,
   required Map<String, Object?> optionValues,
-  int? gvtPercentage,
+  int? gvtCommonPercentage,
+  Map<String, int> gvtPercentagesByMovement = const {},
 }) {
   final variant = template.variants.singleWhere(
     (candidate) => candidate.id == _standardVariantId,
@@ -292,10 +360,13 @@ GeneratedCycle _compile({
       MovementId('squat'): OneRepMaxInput(Weight(15000, WeightUnit.lb)),
     },
     globalTrainingMaxRatio: const Percentage(9000),
+    percentageParameters: {
+      if (gvtCommonPercentage != null)
+        'gvt_percentage': Percentage(gvtCommonPercentage),
+    },
     percentageParametersByMovement: {
-      for (final id in _sessionOrder)
-        if (gvtPercentage != null)
-          MovementId(id): {'gvt_percentage': Percentage(gvtPercentage)},
+      for (final entry in gvtPercentagesByMovement.entries)
+        MovementId(entry.key): {'gvt_percentage': Percentage(entry.value)},
     },
     unit: WeightUnit.lb,
     roundingIncrement: const Weight(500, WeightUnit.lb),
@@ -330,6 +401,16 @@ GeneratedCycle _compile({
     request: request,
   );
 }
+
+Map<String, int> _firstWeekGvtLoads(GeneratedCycle cycle) => {
+  for (final session in cycle.weeks.first.sessions)
+    session.movementId.value: session.blocks
+        .singleWhere((block) => block.id == 'gvt_10x10')
+        .sets
+        .map((set) => set.plannedLoad!.centiUnits)
+        .toSet()
+        .single,
+};
 
 Map<String, Object?> _goldenScenario(Map<String, Object?> root, String id) =>
     (root['scenarios']! as List<Object?>)
