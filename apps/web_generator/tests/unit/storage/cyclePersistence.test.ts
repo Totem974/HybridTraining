@@ -35,8 +35,18 @@ function configuration(templateId = "template", variantId = "variant"): CycleCon
       joker: { enabled: false },
       deload: { enabled: false },
     },
-    maxes: { mode: "oneRepMax", globalTrainingMaxRatioBasisPoints: 8500, values: {} },
-    schedule: { id: "schedule", startDate: "2026-07-23", sessionOrder: [] },
+    maxes: {
+      mode: "oneRepMax",
+      globalTrainingMaxRatioBasisPoints: 8500,
+      values: {
+        squat: { weight: { centiUnits: 10000, unit: "kg" } },
+      },
+    },
+    schedule: {
+      id: "schedule",
+      startDate: "2026-07-23T00:00:00.000Z",
+      sessionOrder: ["squat"],
+    },
     equipment: { unit: "kg", barProfileId: "default-kg" },
     output: { title: "Cycle", showPlating: true },
   };
@@ -63,6 +73,68 @@ describe("Cycle draft persistence", () => {
       currentDraftId,
       "obsolete",
     ]);
+    storage.close();
+  });
+
+  it("round-trips a onePlusSet draft without adding rep-max fields", async () => {
+    const storage = new IndexedDbWorkspaceStorage(new IDBFactory());
+    const repository = new WorkspaceDraftRepository<CycleDraftPayload>(storage);
+    const onePlusConfiguration: CycleConfiguration = {
+      ...configuration(),
+      maxes: {
+        mode: "onePlusSet",
+        globalTrainingMaxRatioBasisPoints: 5000,
+        values: {
+          squat: { weight: { centiUnits: 9500, unit: "kg" } },
+        },
+      },
+    };
+    await repository.save(
+      currentDraftId,
+      draftEnvelope(metadata, cycleDraft(onePlusConfiguration)),
+    );
+
+    const restored = await restoreCompatibleDraft(
+      repository,
+      metadata,
+      new Map([["template", new Set(["variant"])]]),
+    );
+    expect(restored?.configuration).toEqual(onePlusConfiguration);
+    storage.close();
+  });
+
+  it("retains but does not restore a draft with unknown onePlusSet fields", async () => {
+    const storage = new IndexedDbWorkspaceStorage(new IDBFactory());
+    const repository = new WorkspaceDraftRepository<unknown>(storage);
+    const invalidConfiguration = {
+      ...configuration(),
+      maxes: {
+        mode: "onePlusSet",
+        globalTrainingMaxRatioBasisPoints: 9000,
+        values: {
+          squat: {
+            weight: { centiUnits: 9500, unit: "kg" },
+            repetitions: 1,
+          },
+        },
+      },
+    };
+    await repository.save(currentDraftId, {
+      ...metadata,
+      payload: {
+        draftVersion: cycleDraftVersion,
+        configuration: invalidConfiguration,
+      },
+    });
+
+    expect(
+      await restoreCompatibleDraft(
+        repository,
+        metadata,
+        new Map([["template", new Set(["variant"])]]),
+      ),
+    ).toBeUndefined();
+    expect(await repository.list()).toHaveLength(1);
     storage.close();
   });
 

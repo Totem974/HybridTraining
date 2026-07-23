@@ -1,6 +1,7 @@
 import type {
   CycleConfiguration,
   CycleRequest,
+  CycleRequestMaxInput,
   Weight,
 } from "../../../../../contracts/v1/generated/contracts";
 export type { CycleConfiguration } from "../../../../../contracts/v1/generated/contracts";
@@ -101,9 +102,7 @@ export function cycleConfigurationToCycleRequest(
     scheduleId: configuration.schedule.id,
     startDate: configuration.schedule.startDate,
     sessionOrder: configuration.schedule.sessionOrder,
-    maxInputs: Object.fromEntries(Object.entries(configuration.maxes.values).map(
-      ([movement, input]) => [movement, { type: configuration.maxes.mode, ...input }],
-    )),
+    maxInputs: configurationMaxInputs(configuration),
     globalTrainingMaxRatioBasisPoints:
       configuration.maxes.globalTrainingMaxRatioBasisPoints,
     options: {
@@ -165,8 +164,12 @@ function cycleRequestToConfiguration(
         movement,
         {
           weight: input.weight,
-          ...(input.repetitions === undefined ? {} : { repetitions: input.repetitions }),
-          ...(input.formula === undefined ? {} : { formula: input.formula }),
+          ...(input.type !== "repMax"
+            ? {}
+            : {
+                repetitions: input.repetitions,
+                ...(input.formula === undefined ? {} : { formula: input.formula }),
+              }),
         },
       ])),
       ...(request.trainingMaxRatioByMovement === undefined
@@ -188,6 +191,45 @@ function cycleRequestToConfiguration(
       showPlating: request.showPlating ?? false,
     },
   } as CycleConfiguration;
+}
+
+function configurationMaxInputs(
+  configuration: CycleConfiguration,
+): Record<string, CycleRequestMaxInput> {
+  const maxes = configuration.maxes;
+  if (maxes.mode === "repMax") {
+    return Object.fromEntries(
+      Object.entries(maxes.values).map(([movement, input]) => [
+        movement,
+        {
+          type: "repMax",
+          weight: input.weight,
+          repetitions: input.repetitions,
+          ...(input.formula === undefined ? {} : { formula: input.formula }),
+        },
+      ]),
+    );
+  }
+  return Object.fromEntries(
+    Object.entries(maxes.values).map(([movement, input]) => [
+      movement,
+      configurationWeightOnlyMaxInput(maxes.mode, input.weight),
+    ]),
+  );
+}
+
+function configurationWeightOnlyMaxInput(
+  type: Exclude<CycleRequestMaxInput["type"], "repMax">,
+  inputWeight: Weight,
+): CycleRequestMaxInput {
+  switch (type) {
+    case "oneRepMax":
+      return { type: "oneRepMax", weight: inputWeight };
+    case "onePlusSet":
+      return { type: "onePlusSet", weight: inputWeight };
+    case "directTrainingMax":
+      return { type: "directTrainingMax", weight: inputWeight };
+  }
 }
 
 function flattenOptions(

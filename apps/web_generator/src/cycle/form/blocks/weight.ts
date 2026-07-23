@@ -31,11 +31,12 @@ export function renderWeightBlock(options: RenderWeightBlockOptions): HTMLElemen
 
   if (mode) block.append(renderSegmented(mode, options, "weight-mode"));
 
-  const activeMode = mode?.choices?.find(
-    (choice) => JSON.stringify(choice.value) === JSON.stringify(mode.value),
-  );
-  const oneRepMode = mode?.choices?.[0];
-  const isOneRepMode = activeMode !== undefined && activeMode === oneRepMode;
+  const activeMode = typeof mode?.value === "string" ? mode.value : undefined;
+  const fixedRepetitions = activeMode === "oneRepMax"
+    ? "1"
+    : activeMode === "onePlusSet"
+      ? "1+"
+      : undefined;
   const unitLabel = selectedChoiceLabel(unit, options.locale);
   const movementList = node("div", "weight-movements");
 
@@ -43,12 +44,12 @@ export function renderWeightBlock(options: RenderWeightBlockOptions): HTMLElemen
     const movement = movementKey(load.path);
     const reps = repetitions.get(movement);
     movementList.append(
-      renderMovementRow(load, reps, unitLabel, isOneRepMode, options),
+      renderMovementRow(load, reps, unitLabel, fixedRepetitions, options),
     );
   }
   block.append(movementList);
 
-  if (ratio && isOneRepMode && fieldIsVisible(ratio, options.values)) {
+  if (ratio && activeMode === "oneRepMax" && fieldIsVisible(ratio, options.values)) {
     block.append(renderRatio(ratio, options));
   }
   if (unit) block.append(renderSegmented(unit, options, "weight-unit"));
@@ -59,7 +60,7 @@ function renderMovementRow(
   load: CycleEditorField,
   repetitions: CycleEditorField | undefined,
   unitLabel: string,
-  oneRepMode: boolean,
+  fixedRepetitions: string | undefined,
   options: RenderWeightBlockOptions,
 ): HTMLElement {
   const row = node("div", "weight-movement");
@@ -71,8 +72,8 @@ function renderMovementRow(
   row.append(marker, name);
 
   const controls = node("div", "weight-movement__controls");
-  if (oneRepMode) {
-    controls.append(readonlyRepetitions("1", options.locale));
+  if (fixedRepetitions !== undefined) {
+    controls.append(readonlyRepetitions(fixedRepetitions, options.locale));
   } else if (repetitions && fieldIsVisible(repetitions, options.values)) {
     const input = numberInput(repetitions, options, "weight-repetitions");
     input.setAttribute(
@@ -117,6 +118,10 @@ function renderSegmented(
   const legend = node("legend", "visually-hidden");
   legend.textContent = localized(field.label, options.locale);
   const choices = node("div", "segmented-control");
+  choices.style.setProperty(
+    "--weight-choice-count",
+    String(Math.max(field.choices?.length ?? 0, 1)),
+  );
   for (const [index, choice] of (field.choices ?? []).entries()) {
     const label = node("label", "weight-segmented__choice");
     const input = document.createElement("input");

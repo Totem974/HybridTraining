@@ -76,6 +76,42 @@ describe("CycleConfiguration codec", () => {
     expect(request.cycleId).toBe("roundtrip");
   });
 
+  it("round-trips onePlusSet as a weight-only configuration and request", () => {
+    const schema = makeSchema("kg", "onePlusSet");
+    const state = normalizeEditorState(schema, {
+      maxMode: "onePlusSet",
+      globalTrainingMaxRatioBasisPoints: 5000,
+      "maxInputs.squat.weight": 95,
+    });
+
+    const configuration = editorValuesToCycleConfiguration(schema, state.values, metadata);
+    expect(configuration.maxes).toEqual({
+      mode: "onePlusSet",
+      globalTrainingMaxRatioBasisPoints: 5000,
+      values: {
+        squat: {
+          weight: { centiUnits: 9500, unit: "kg" },
+        },
+      },
+      ratiosByMovement: {},
+    });
+    expect(cycleConfigurationToEditorValues(configuration, schema)).toMatchObject({
+      maxMode: "onePlusSet",
+      "maxInputs.squat.weight": 95,
+    });
+
+    const request = cycleConfigurationToCycleRequest(
+      configuration,
+      schema,
+      { cycleId: "one-plus-roundtrip" },
+    );
+    expect(request.maxInputs.squat).toEqual({
+      type: "onePlusSet",
+      weight: { centiUnits: 9500, unit: "kg" },
+    });
+    expect(request.globalTrainingMaxRatioBasisPoints).toBe(5000);
+  });
+
   it("migrates an existing v1 request without losing execution data", () => {
     const schema = makeSchema("lb", "repMax");
     const state = normalizeEditorState(schema, { unit: "lb", maxMode: "repMax" });
@@ -94,7 +130,7 @@ const metadata = { catalogVersion: 42, catalogHash: "catalog-hash" };
 
 function makeSchema(
   unit: "kg" | "lb",
-  mode: "oneRepMax" | "repMax" = "oneRepMax",
+  mode: "oneRepMax" | "onePlusSet" | "repMax" | "directTrainingMax" = "oneRepMax",
 ): CycleEditorSchema {
   const fields: CycleEditorSchema["fields"] = [
     field("templateId", "template", "choice", "full_body", ["full_body"]),
@@ -102,7 +138,13 @@ function makeSchema(
     field("scheduleId", "scheduling", "choice", "three_day", ["three_day"]),
     field("sessionOrder", "scheduling", "token-order", ["squat"]),
     field("startDate", "scheduling", "date", "2026-07-27"),
-    field("maxMode", "weight", "segmented", mode, ["oneRepMax", "repMax"]),
+    field(
+      "maxMode",
+      "weight",
+      "segmented",
+      mode,
+      ["oneRepMax", "onePlusSet", "repMax", "directTrainingMax"],
+    ),
     field("unit", "weight", "segmented", unit, ["kg", "lb"]),
     field("globalTrainingMaxRatioBasisPoints", "weight", "percentage", 9000),
     field("maxInputs.squat.weight", "weight", "weight", 120),

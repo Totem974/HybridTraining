@@ -20,9 +20,10 @@ function fields(mode: string): CycleEditorField[] {
       label: "Maximum type",
       value: mode,
       choices: [
-        { value: "one", label: "1 Rep Max" },
-        { value: "training", label: "Training Max" },
-        { value: "set", label: "1+ Set" },
+        { value: "oneRepMax", label: "1 Rep Max" },
+        { value: "onePlusSet", label: "1+ Set" },
+        { value: "directTrainingMax", label: "Training Max" },
+        { value: "repMax", label: "Rep Max" },
       ],
     },
     {
@@ -56,7 +57,7 @@ function fields(mode: string): CycleEditorField[] {
         value: 5,
         minimum: 1,
         maximum: 20,
-        visibleWhen: [{ path: "maxMode", operator: "equals" as const, value: "set" }],
+        visibleWhen: [{ path: "maxMode", operator: "equals" as const, value: "repMax" }],
       },
     ]),
     {
@@ -74,7 +75,7 @@ function fields(mode: string): CycleEditorField[] {
   ];
 }
 
-function render(mode = "one") {
+function render(mode = "oneRepMax") {
   const schemaFields = fields(mode);
   const dispatch = vi.fn();
   const result = renderWeightBlock({
@@ -96,24 +97,45 @@ describe("Weight block", () => {
 
     expect(
       [...result.querySelectorAll(".weight-mode label")].map((label) => label.textContent),
-    ).toEqual(["1 Rep Max", "Training Max", "1+ Set"]);
+    ).toEqual(["1 Rep Max", "1+ Set", "Training Max", "Rep Max"]);
+    expect(
+      result.querySelector<HTMLElement>(".weight-mode .segmented-control")
+        ?.style.getPropertyValue("--weight-choice-count"),
+    ).toBe("4");
     expect(result.querySelectorAll(".weight-movement")).toHaveLength(4);
     expect(result.querySelectorAll(".weight-repetitions--fixed")).toHaveLength(4);
+    expect(
+      [...result.querySelectorAll(".weight-repetitions--fixed")].map(
+        (repetitions) => repetitions.textContent,
+      ),
+    ).toEqual(["1", "1", "1", "1"]);
     expect(
       result.querySelector<HTMLInputElement>(".weight-ratio__input")?.value,
     ).toBe("90");
     expect(result.lastElementChild?.classList.contains("weight-unit")).toBe(true);
   });
 
+  it("renders onePlusSet as a fixed 1+ rep and hides the global ratio", () => {
+    const { result } = render("onePlusSet");
+
+    expect(result.querySelectorAll("input.weight-repetitions")).toHaveLength(0);
+    expect(
+      [...result.querySelectorAll(".weight-repetitions--fixed")].map(
+        (repetitions) => repetitions.textContent,
+      ),
+    ).toEqual(["1+", "1+", "1+", "1+"]);
+    expect(result.querySelector(".weight-ratio")).toBeNull();
+  });
+
   it("shows editable repetitions only when their schema condition matches", () => {
-    const { result } = render("set");
+    const { result } = render("repMax");
 
     expect(result.querySelectorAll("input.weight-repetitions")).toHaveLength(4);
     expect(result.querySelector(".weight-ratio")).toBeNull();
   });
 
   it("keeps direct Training Max rows free of per-movement ratios", () => {
-    const { result } = render("training");
+    const { result } = render("directTrainingMax");
     expect(result.querySelectorAll(".weight-repetitions")).toHaveLength(0);
     expect(result.querySelector(".weight-ratio")).toBeNull();
     expect(result.textContent).not.toContain("maxInputs");

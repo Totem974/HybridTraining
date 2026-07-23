@@ -67,6 +67,44 @@ describe("buildCycleRequest", () => {
     expect(request.includeDeload).toBe(false);
   });
 
+  it("serializes onePlusSet inputs with weight only and keeps the ratio opaque", () => {
+    const onePlusSchema: CycleEditorSchema = {
+      ...schema,
+      fields: baseFields.map((candidate) =>
+        candidate.path === "maxMode"
+          ? {
+              ...candidate,
+              value: "onePlusSet",
+              choices: [
+                { value: "oneRepMax", label: "1RM" },
+                { value: "onePlusSet", label: "1+" },
+              ],
+            }
+          : candidate
+      ),
+    };
+    const state = normalizeEditorState(onePlusSchema, {
+      maxMode: "onePlusSet",
+      globalTrainingMaxRatioBasisPoints: 5000,
+      "maxInputs.squat.weight": 95,
+      "maxInputs.bench.weight": 76,
+    });
+
+    const request = buildCycleRequest(state.schema, state.values);
+
+    expect(request.maxInputs).toEqual({
+      squat: {
+        type: "onePlusSet",
+        weight: { centiUnits: 9500, unit: "kg" },
+      },
+      bench: {
+        type: "onePlusSet",
+        weight: { centiUnits: 7600, unit: "kg" },
+      },
+    });
+    expect(request.globalTrainingMaxRatioBasisPoints).toBe(5000);
+  });
+
   it("nests canonical cycle options and serializes option weights", () => {
     const optionSchema: CycleEditorSchema = {
       ...schema,

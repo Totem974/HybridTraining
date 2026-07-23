@@ -51,6 +51,21 @@ describe("Cycle configuration sharing", () => {
       .toEqual(["overhead_press", "deadlift"]);
   });
 
+  it("round-trips a weight-only onePlusSet configuration", () => {
+    const configuration = makeConfiguration({
+      maxes: {
+        mode: "onePlusSet",
+        globalTrainingMaxRatioBasisPoints: 5000,
+        values: {
+          squat: { weight: { centiUnits: 9500, unit: "kg" } },
+        },
+      },
+    });
+
+    expect(decodeCycleConfiguration(encodeCycleConfiguration(configuration)))
+      .toEqual(configuration);
+  });
+
   it.each([
     "",
     "not+base64",
@@ -89,6 +104,36 @@ describe("Cycle configuration sharing", () => {
       .toThrowError(expect.objectContaining({
         code: "UNSUPPORTED_CYCLE_CONFIGURATION",
       }));
+  });
+
+  it("rejects unknown onePlusSet value fields during import", () => {
+    const configuration = makeConfiguration({
+      maxes: {
+        mode: "onePlusSet",
+        globalTrainingMaxRatioBasisPoints: 9000,
+        values: {
+          squat: { weight: { centiUnits: 9500, unit: "kg" } },
+        },
+      },
+    });
+    const unsupported = {
+      ...configuration,
+      maxes: {
+        ...configuration.maxes,
+        values: {
+          squat: {
+            weight: { centiUnits: 9500, unit: "kg" },
+            repetitions: 1,
+          },
+        },
+      },
+    };
+
+    expect(() =>
+      decodeCycleConfiguration(toBase64Url(JSON.stringify(unsupported)))
+    ).toThrowError(expect.objectContaining({
+      code: "UNSUPPORTED_CYCLE_CONFIGURATION",
+    }));
   });
 
   it("rejects encoded and decoded payloads over the size limit", () => {

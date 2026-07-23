@@ -4,6 +4,7 @@ import type {
 } from "../../../../../contracts/v1/generated/contracts";
 import type { JsonValue } from "../form/types";
 import type { EnvelopeLike, VersionedEnvelopeRepository } from "../../storage";
+import { isSupportedCycleConfiguration } from "../configuration/share";
 
 export const currentDraftId = "cycle-current";
 export const cycleDraftVersion = 2;
@@ -94,7 +95,7 @@ function metadataMatches(envelope: EnvelopeLike, metadata: ContractMetadata): bo
 
 function isCycleDraftPayload(value: unknown): value is CycleDraftPayload {
   return isRecord(value) && value.draftVersion === cycleDraftVersion &&
-    isCycleConfiguration(value.configuration);
+    isSupportedCycleConfiguration(value.configuration);
 }
 
 function isLegacyDraftPayload(value: unknown): value is LegacyCycleDraftPayloadV1 {
@@ -102,14 +103,6 @@ function isLegacyDraftPayload(value: unknown): value is LegacyCycleDraftPayloadV
     typeof value.templateId === "string" &&
     typeof value.variantId === "string" &&
     isRecord(value.values);
-}
-
-function isCycleConfiguration(value: unknown): value is CycleConfiguration {
-  return isRecord(value) && value.format === "hybrid-training-cycle" &&
-    value.configurationVersion === 1 && isRecord(value.template) &&
-    typeof value.template.id === "string" &&
-    typeof value.template.variantId === "string" && isRecord(value.schedule) &&
-    typeof value.schedule.id === "string";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

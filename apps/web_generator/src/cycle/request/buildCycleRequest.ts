@@ -23,18 +23,22 @@ export function buildCycleRequest(
   const sessionOrder = stringList(values.sessionOrder);
   if (sessionOrder.length === 0) throw new Error("SESSION_ORDER_REQUIRED");
 
-  const maxMode = stringValue(values.maxMode, "oneRepMax") as CycleRequestMaxInput["type"];
+  const maxMode = maxInputType(values.maxMode);
   const maxInputs = Object.fromEntries(schema.movementIds.map((movement) => {
-    const input: CycleRequestMaxInput = {
-      type: maxMode,
-      weight: weight(numberValue(values, `maxInputs.${movement}.weight`, 100), unit),
-      ...(maxMode === "repMax"
-        ? {
-            repetitions: Math.round(numberValue(values, `maxInputs.${movement}.repetitions`, 5)),
-            formula: "epley",
-          }
-        : {}),
-    };
+    const inputWeight = weight(
+      numberValue(values, `maxInputs.${movement}.weight`, 100),
+      unit,
+    );
+    const input: CycleRequestMaxInput = maxMode === "repMax"
+      ? {
+          type: "repMax",
+          weight: inputWeight,
+          repetitions: Math.round(
+            numberValue(values, `maxInputs.${movement}.repetitions`, 5),
+          ),
+          formula: "epley",
+        }
+      : weightOnlyMaxInput(maxMode, inputWeight);
     return [movement, input];
   }));
 
@@ -143,6 +147,33 @@ function movementPercentageScope(
 
 function stableCycleId(schema: CycleEditorSchema, startDate: string): string {
   return `cycle-${schema.templateId}-${schema.variantId}-${startDate || "unscheduled"}`;
+}
+
+function maxInputType(value: JsonValue | undefined): CycleRequestMaxInput["type"] {
+  const mode = stringValue(value, "oneRepMax");
+  switch (mode) {
+    case "oneRepMax":
+    case "onePlusSet":
+    case "repMax":
+    case "directTrainingMax":
+      return mode;
+    default:
+      throw new Error(`UNKNOWN_MAX_INPUT_TYPE:${mode}`);
+  }
+}
+
+function weightOnlyMaxInput(
+  type: Exclude<CycleRequestMaxInput["type"], "repMax">,
+  inputWeight: ReturnType<typeof weight>,
+): CycleRequestMaxInput {
+  switch (type) {
+    case "oneRepMax":
+      return { type: "oneRepMax", weight: inputWeight };
+    case "onePlusSet":
+      return { type: "onePlusSet", weight: inputWeight };
+    case "directTrainingMax":
+      return { type: "directTrainingMax", weight: inputWeight };
+  }
 }
 
 function weight(value: number, unit: "kg" | "lb") {

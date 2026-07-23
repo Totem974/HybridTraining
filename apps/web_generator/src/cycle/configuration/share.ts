@@ -96,6 +96,18 @@ export class CycleShareError extends Error {
   }
 }
 
+export function isSupportedCycleConfiguration(
+  value: unknown,
+): value is CycleConfiguration {
+  try {
+    assertSupportedConfiguration(value);
+    return true;
+  } catch (error) {
+    if (error instanceof CycleShareError) return false;
+    throw error;
+  }
+}
+
 function assertSupportedConfiguration(
   value: unknown,
 ): asserts value is CycleConfiguration {
@@ -127,6 +139,83 @@ function assertSupportedConfiguration(
   ) {
     throw new CycleShareError("UNSUPPORTED_CYCLE_CONFIGURATION");
   }
+  assertSupportedMaxes(value.maxes);
+}
+
+function assertSupportedMaxes(maxes: Record<string, unknown>): void {
+  const expectedKeys = new Set([
+    "mode",
+    "globalTrainingMaxRatioBasisPoints",
+    "values",
+    "ratiosByMovement",
+  ]);
+  const mode = maxes.mode;
+  if (
+    (mode !== "oneRepMax"
+      && mode !== "onePlusSet"
+      && mode !== "repMax"
+      && mode !== "directTrainingMax")
+    || !isBasisPoints(maxes.globalTrainingMaxRatioBasisPoints)
+    || !isRecord(maxes.values)
+    || Object.keys(maxes.values).length === 0
+    || Object.keys(maxes).some((key) => !expectedKeys.has(key))
+  ) {
+    throw new CycleShareError("UNSUPPORTED_CYCLE_CONFIGURATION");
+  }
+
+  for (const value of Object.values(maxes.values)) {
+    assertSupportedMaxValue(value, mode);
+  }
+  if (
+    maxes.ratiosByMovement !== undefined
+    && (
+      !isRecord(maxes.ratiosByMovement)
+      || Object.values(maxes.ratiosByMovement).some(
+        (ratio) => !isBasisPoints(ratio),
+      )
+    )
+  ) {
+    throw new CycleShareError("UNSUPPORTED_CYCLE_CONFIGURATION");
+  }
+}
+
+function assertSupportedMaxValue(
+  value: unknown,
+  mode: "oneRepMax" | "onePlusSet" | "repMax" | "directTrainingMax",
+): void {
+  const allowedKeys = mode === "repMax"
+    ? new Set(["weight", "repetitions", "formula"])
+    : new Set(["weight"]);
+  if (
+    !isRecord(value)
+    || !isWeight(value.weight)
+    || Object.keys(value).some((key) => !allowedKeys.has(key))
+    || (
+      mode === "repMax"
+      && (
+        !Number.isInteger(value.repetitions)
+        || (value.repetitions as number) < 1
+        || (
+          value.formula !== undefined
+          && (typeof value.formula !== "string" || value.formula.length === 0)
+        )
+      )
+    )
+  ) {
+    throw new CycleShareError("UNSUPPORTED_CYCLE_CONFIGURATION");
+  }
+}
+
+function isWeight(value: unknown): boolean {
+  return isRecord(value)
+    && Object.keys(value).length === 2
+    && Number.isInteger(value.centiUnits)
+    && (value.centiUnits as number) >= 0
+    && (value.unit === "kg" || value.unit === "lb");
+}
+
+function isBasisPoints(value: unknown): boolean {
+  return Number.isInteger(value) && (value as number) >= 0 && (value as number) <= 20000;
 }
 
 function canonicalJson(value: unknown, ancestors = new Set<object>()): string {
