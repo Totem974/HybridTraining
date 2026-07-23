@@ -775,14 +775,12 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
         };
       case PlusSetMode.enabled:
         if (index == plusTarget) {
-          final minimum = switch (repetitions) {
-            FixedRepetitions(:final count) => count,
-            RepetitionRange(:final minimum) => minimum,
-            AmrapRepetitions(:final minimum) => minimum ?? 1,
-            PlusSetRepetitions(:final minimum) => minimum,
-            _ => null,
-          };
-          if (minimum != null) replacement = PlusSetRepetitions(minimum);
+          switch (repetitions) {
+            case AmrapRepetitions(:final minimum):
+              replacement = PlusSetRepetitions(minimum ?? 1);
+            default:
+              break;
+          }
         }
     }
     if (replacement == null) return definition;

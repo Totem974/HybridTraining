@@ -64,12 +64,16 @@ void main() {
     );
   });
 
-  test('plus-set mode can disable or explicitly mark the heaviest set', () {
+  test('plus-set mode preserves catalog eligibility', () {
     final disabled = compiler.compile(
       _definition(weekCount: 1),
       _request(const MainWorkExecutionOptions(plusSet: PlusSetMode.disabled)),
     );
     final enabled = compiler.compile(
+      _definition(weekCount: 1),
+      _request(const MainWorkExecutionOptions(plusSet: PlusSetMode.enabled)),
+    );
+    final ineligible = compiler.compile(
       _definition(weekCount: 1, fixedTopSet: true),
       _request(const MainWorkExecutionOptions(plusSet: PlusSetMode.enabled)),
     );
@@ -81,6 +85,20 @@ void main() {
     expect(
       enabled.weeks.single.sessions.single.blocks.first.sets.last.repetitions,
       {'type': 'plus_set', 'minimum': 5},
+    );
+    expect(
+      ineligible
+          .weeks
+          .single
+          .sessions
+          .single
+          .blocks
+          .first
+          .sets
+          .last
+          .repetitions,
+      {'type': 'fixed', 'count': 5},
+      reason: '5s Pro and other fixed prescriptions must stay non-AMRAP.',
     );
   });
 }
