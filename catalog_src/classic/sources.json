@@ -5,8 +5,29 @@
     {
       "ruleId": "or.assistance.bodyweight_observed_volume",
       "work": "Original 5/3/1 application",
-      "edition": "2.6.1",
-      "section": "Bodyweight controls observed 2026-07-21: 75-150 total repetitions by 5; 1-10 sets",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "Capture 2026-07-22 (application last updated 2024-11-20): Bodyweight controls 75-150 by 5, 1-10 sets, and divideSets behavior",
+      "reviewStatus": "referenceAppObserved"
+    },
+    {
+      "ruleId": "or.assistance.triumvirate_observed_mapping",
+      "work": "Original 5/3/1 application",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "Triumvirate exercise, set and repetition mappings observed 2026-07-22",
+      "reviewStatus": "referenceAppObserved"
+    },
+    {
+      "ruleId": "or.assistance.periodization_bible_observed_mapping",
+      "work": "Original 5/3/1 application",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "Periodization Bible exercise, set and repetition mappings observed 2026-07-22",
+      "reviewStatus": "referenceAppObserved"
+    },
+    {
+      "ruleId": "or.assistance.bodyweight_observed_mapping",
+      "work": "Original 5/3/1 application",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "Bodyweight exercise mappings by main lift observed 2026-07-22",
       "reviewStatus": "referenceAppObserved"
     },
     {
