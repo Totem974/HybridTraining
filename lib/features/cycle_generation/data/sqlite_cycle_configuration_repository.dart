@@ -132,6 +132,64 @@ final class SqliteCycleConfigurationRepository
         'Cycle configuration metadata does not match its envelope.',
       );
     }
+    _validateStructure(decoded);
+  }
+
+  static void _validateStructure(Map<String, Object?> decoded) {
+    const expectedKeys = {
+      'format',
+      'configurationVersion',
+      'catalogVersion',
+      'catalogHash',
+      'template',
+      'commonOptions',
+      'maxes',
+      'schedule',
+      'equipment',
+      'output',
+    };
+    if (decoded.keys.any((key) => !expectedKeys.contains(key)) ||
+        decoded['template'] is! Map<String, Object?> ||
+        decoded['commonOptions'] is! Map<String, Object?> ||
+        decoded['maxes'] is! Map<String, Object?> ||
+        decoded['schedule'] is! Map<String, Object?> ||
+        decoded['equipment'] is! Map<String, Object?> ||
+        decoded['output'] is! Map<String, Object?>) {
+      throw const FormatException('Invalid cycle configuration structure.');
+    }
+
+    final template = decoded['template']! as Map<String, Object?>;
+    final commonOptions = decoded['commonOptions']! as Map<String, Object?>;
+    final maxes = decoded['maxes']! as Map<String, Object?>;
+    final schedule = decoded['schedule']! as Map<String, Object?>;
+    final equipment = decoded['equipment']! as Map<String, Object?>;
+    final output = decoded['output']! as Map<String, Object?>;
+    final hasProfile = equipment['barProfileId'] is String;
+    final hasInlineBar = equipment['bar'] is Map<String, Object?>;
+
+    if (template['id'] is! String ||
+        (template['id']! as String).trim().isEmpty ||
+        template['variantId'] is! String ||
+        template['options'] is! Map<String, Object?> ||
+        commonOptions['warmUp'] is! Map<String, Object?> ||
+        commonOptions['joker'] is! Map<String, Object?> ||
+        commonOptions['deload'] is! Map<String, Object?> ||
+        !const {
+          'oneRepMax',
+          'directTrainingMax',
+          'repMax',
+        }.contains(maxes['mode']) ||
+        maxes['globalTrainingMaxRatioBasisPoints'] is! int ||
+        maxes['values'] is! Map<String, Object?> ||
+        schedule['id'] is! String ||
+        schedule['startDate'] is! String ||
+        schedule['sessionOrder'] is! List<Object?> ||
+        !const {'kg', 'lb'}.contains(equipment['unit']) ||
+        hasProfile == hasInlineBar ||
+        output['title'] is! String ||
+        output['showPlating'] is! bool) {
+      throw const FormatException('Invalid cycle configuration structure.');
+    }
   }
 
   static Map<String, Object?> _toRow(CycleConfigurationRecord configuration) =>

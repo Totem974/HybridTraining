@@ -140,6 +140,39 @@ test('share URL restores the canonical configuration locally', async ({ page }) 
   expect(external).toEqual([]);
 });
 
+test('shared plating choice takes precedence over the local preference', async ({ page }) => {
+  const external = await openIntegratedCycle(page);
+  const showPlating = page.getByRole('checkbox', {
+    name: /show plating|afficher les plaques/i,
+  });
+  if (await showPlating.isChecked()) await showPlating.uncheck();
+  await expect(showPlating).not.toBeChecked();
+  const sharedWithoutPlating = page.url();
+
+  await showPlating.check();
+  await expect(showPlating).toBeChecked();
+  await page.goto(sharedWithoutPlating);
+
+  await expect(page.locator('[data-cycle-ready="true"]')).toHaveCount(1);
+  await expect(showPlating).not.toBeChecked();
+  expect(external).toEqual([]);
+});
+
+test('invalid shared configuration is ignored without blocking Cycle', async ({ page }) => {
+  const malformed = Buffer.from(JSON.stringify({
+    format: 'hybrid-training-cycle',
+    configurationVersion: 1,
+    catalogVersion: 7,
+    catalogHash: 'sha256:test',
+  })).toString('base64url');
+
+  await page.goto(`/cycle/?cycle=${malformed}`);
+
+  await expect(page.locator('[data-cycle-ready="true"]')).toHaveCount(1);
+  await expect(page).not.toHaveURL(new RegExp(`cycle=${malformed}`));
+  await awaitGeneratedProgram(page);
+});
+
 for (const width of [1440, 390, 320]) {
   test(`responsive Cycle flow remains usable at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: width > 500 ? 1000 : 844 });

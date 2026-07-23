@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -35,10 +36,9 @@ void main() {
   test(
     'opaque configuration JSON survives create, update, and reopen',
     () async {
-      const originalJson =
-          '{"format":"hybrid-training-cycle","configurationVersion":1,'
-          '"catalogVersion":7,"catalogHash":"sha256:catalog",'
-          '"template":{"id":"classic_boring_but_big"}}';
+      final originalJson = _configurationJson(
+        templateId: 'classic_boring_but_big',
+      );
       final created = _record(configurationJson: originalJson);
       await repository.create(created);
       await file.close();
@@ -49,10 +49,7 @@ void main() {
       expect(loaded?.profileId, isNull);
       expect(loaded?.createdAt, created.createdAt);
 
-      const updatedJson =
-          '{"format":"hybrid-training-cycle","configurationVersion":1,'
-          '"catalogVersion":7,"catalogHash":"sha256:catalog",'
-          '"template":{"id":"classic_full_body"}}';
+      final updatedJson = _configurationJson(templateId: 'classic_full_body');
       await reopened.update(
         _record(
           name: 'Full Body',
@@ -80,6 +77,19 @@ void main() {
     expect(await repository.find('cycle-1'), isNotNull);
   });
 
+  test('accepts every canonical max input mode', () async {
+    for (final mode in const ['oneRepMax', 'directTrainingMax', 'repMax']) {
+      final id = 'cycle-$mode';
+      await repository.create(
+        _record(
+          id: id,
+          configurationJson: _configurationJson(maxMode: mode),
+        ),
+      );
+      expect(await repository.find(id), isNotNull);
+    }
+  });
+
   test('rejects malformed or mismatched configuration envelopes', () async {
     expect(
       () => repository.create(_record(configurationJson: '{}')),
@@ -95,28 +105,81 @@ void main() {
       ),
       throwsA(isA<FormatException>()),
     );
+    expect(
+      () => repository.create(
+        _record(
+          configurationJson:
+              '{"format":"hybrid-training-cycle","configurationVersion":1,'
+              '"catalogVersion":7,"catalogHash":"sha256:catalog"}',
+        ),
+      ),
+      throwsA(isA<FormatException>()),
+    );
+    expect(
+      () => repository.create(
+        _record(
+          configurationJson: jsonEncode({
+            ...jsonDecode(_configurationJson(templateId: 'classic_full_body'))
+                as Map<String, Object?>,
+            'unexpected': true,
+          }),
+        ),
+      ),
+      throwsA(isA<FormatException>()),
+    );
   });
 }
 
 CycleConfigurationRecord _record({
+  String id = 'cycle-1',
   String name = 'Cycle',
-  String configurationJson =
-      '{"format":"hybrid-training-cycle","configurationVersion":1,'
-      '"catalogVersion":7,"catalogHash":"sha256:catalog"}',
+  String? configurationJson,
   DateTime? createdAt,
   DateTime? updatedAt,
 }) {
   final created = createdAt ?? DateTime.utc(2026, 7, 23);
   return CycleConfigurationRecord(
-    id: 'cycle-1',
+    id: id,
     profileId: null,
     name: name,
     formatVersion: 1,
     catalogVersion: 7,
     catalogHash: 'sha256:catalog',
-    configurationJson: configurationJson,
+    configurationJson: configurationJson ?? _configurationJson(),
     createdAt: created,
     updatedAt: updatedAt ?? created,
     archivedAt: null,
   );
 }
+
+String _configurationJson({
+  String templateId = 'classic_boring_but_big',
+  String maxMode = 'oneRepMax',
+}) => jsonEncode({
+  'format': 'hybrid-training-cycle',
+  'configurationVersion': 1,
+  'catalogVersion': 7,
+  'catalogHash': 'sha256:catalog',
+  'template': {
+    'id': templateId,
+    'variantId': 'original',
+    'options': <String, Object?>{},
+  },
+  'commonOptions': {
+    'warmUp': <String, Object?>{'enabled': true},
+    'joker': <String, Object?>{'enabled': false},
+    'deload': <String, Object?>{'enabled': true},
+  },
+  'maxes': {
+    'mode': maxMode,
+    'globalTrainingMaxRatioBasisPoints': 9000,
+    'values': <String, Object?>{},
+  },
+  'schedule': {
+    'id': 'four_days',
+    'startDate': '2026-07-27T00:00:00.000Z',
+    'sessionOrder': <Object?>['overhead_press', 'deadlift'],
+  },
+  'equipment': {'unit': 'kg', 'barProfileId': 'default_kg'},
+  'output': {'title': '5/3/1', 'showPlating': false},
+});

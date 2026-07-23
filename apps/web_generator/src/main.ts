@@ -58,6 +58,7 @@ let workspaceStorage: IndexedDbWorkspaceStorage | undefined;
 let drafts: WorkspaceDraftRepository<CycleDraftPayload> | undefined;
 let configurations: SavedConfigurationRepository<object> | undefined;
 let snapshots: TrainingSnapshotRepository<object> | undefined;
+let startupWarning = '';
 
 const translations = {
   en: { eyebrow: 'Training tools', pageTitle: 'Cycle generator', pageSummary: 'Configure and generate a training cycle locally in your browser.', weight: 'Weight', template: 'Template', additionalOptions: 'Additional options', plating: 'Plating & barbell', scheduling: 'Scheduling', output: 'Output', program: 'Program' },
@@ -76,7 +77,7 @@ async function start(): Promise<void> {
     const restored = drafts
       ? await restoreCompatibleDraft(drafts, client.contractMetadata(), allowed)
       : undefined;
-    const fromUrl = readCycleConfigurationFromUrl();
+    const fromUrl = validatedConfigurationFromUrl();
     const restoredConfiguration = fromUrl ?? restored?.configuration;
     const preferred = restoredConfiguration
       ? catalog.templates.find((item) => item.id === restoredConfiguration.template.id)
@@ -91,7 +92,7 @@ async function start(): Promise<void> {
     );
     installLocaleControls();
     root.dataset.cycleReady = 'true';
-    if (status) status.textContent = '';
+    if (status) status.textContent = startupWarning;
   } catch (error) {
     root.dataset.cycleReady = 'false';
     if (status) status.textContent = message(error);
@@ -116,7 +117,7 @@ async function loadSchema(
     : candidates;
   const merged = {
     ...candidateValues,
-    showPlating: preferences.read().showPlating,
+    showPlating: candidateValues.showPlating ?? preferences.read().showPlating,
   };
   const normalized = normalizeEditorState(next, merged, new Set([
     'templateId',
@@ -289,6 +290,7 @@ function installTransferControls(): void {
 
 function validateImportedConfiguration(configuration: CycleConfiguration): ValidationReport {
   try {
+    client.configurationToCycleRequest<CycleRequest>(configuration);
     const schemaRequest = {
       apiVersion: 'v1',
       schemaVersion: 1,
@@ -453,6 +455,23 @@ function updateShareUrl(): void {
     '',
     createCycleShareUrl(currentConfiguration),
   );
+}
+
+function validatedConfigurationFromUrl(): CycleConfiguration | undefined {
+  try {
+    const configuration = readCycleConfigurationFromUrl();
+    if (!configuration) return undefined;
+    client.configurationToCycleRequest<CycleRequest>(configuration);
+    return configuration;
+  } catch {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('cycle');
+    window.history.replaceState({}, '', url);
+    startupWarning = locale === 'fr'
+      ? 'Lien de configuration invalide ignoré.'
+      : 'Invalid configuration link ignored.';
+    return undefined;
+  }
 }
 
 function installLocaleControls(): void {

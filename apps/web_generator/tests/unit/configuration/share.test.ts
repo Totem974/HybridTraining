@@ -72,6 +72,25 @@ describe("Cycle configuration sharing", () => {
     );
   });
 
+  it("rejects truncated documents and unknown top-level fields", () => {
+    const truncated = {
+      format: "hybrid-training-cycle",
+      configurationVersion: 1,
+      catalogVersion: 7,
+      catalogHash: "sha256:test",
+    };
+    expect(() => decodeCycleConfiguration(toBase64Url(JSON.stringify(truncated))))
+      .toThrowError(expect.objectContaining({
+        code: "UNSUPPORTED_CYCLE_CONFIGURATION",
+      }));
+
+    const extended = { ...makeConfiguration(), unexpected: true };
+    expect(() => decodeCycleConfiguration(toBase64Url(JSON.stringify(extended))))
+      .toThrowError(expect.objectContaining({
+        code: "UNSUPPORTED_CYCLE_CONFIGURATION",
+      }));
+  });
+
   it("rejects encoded and decoded payloads over the size limit", () => {
     const oversizedConfiguration = makeConfiguration({
       output: {

@@ -99,10 +99,31 @@ export class CycleShareError extends Error {
 function assertSupportedConfiguration(
   value: unknown,
 ): asserts value is CycleConfiguration {
+  const expectedKeys = new Set([
+    "format",
+    "configurationVersion",
+    "catalogVersion",
+    "catalogHash",
+    "template",
+    "commonOptions",
+    "maxes",
+    "schedule",
+    "equipment",
+    "output",
+  ]);
   if (
     !isRecord(value)
     || value.format !== "hybrid-training-cycle"
     || value.configurationVersion !== 1
+    || typeof value.catalogVersion !== "number"
+    || typeof value.catalogHash !== "string"
+    || !isRecord(value.template)
+    || !isRecord(value.commonOptions)
+    || !isRecord(value.maxes)
+    || !isRecord(value.schedule)
+    || !isRecord(value.equipment)
+    || !isRecord(value.output)
+    || Object.keys(value).some((key) => !expectedKeys.has(key))
   ) {
     throw new CycleShareError("UNSUPPORTED_CYCLE_CONFIGURATION");
   }
