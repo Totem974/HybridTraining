@@ -833,6 +833,15 @@
                   "revision": 1
                 }
               ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
             }
           ]
         }
@@ -934,6 +943,15 @@
                   "revision": 1
                 }
               ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
             }
           ]
         }
@@ -1032,6 +1050,15 @@
                 },
                 {
                   "id": "main_standard_531_week",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
                   "revision": 1
                 }
               ]
