@@ -104,6 +104,109 @@ describe("Scheduling accessibility", () => {
       value: ["deadlift", "squat", "press"],
     });
   });
+
+  it("reorders sessions with touch Pointer Events", () => {
+    const root = shell();
+    document.body.append(root);
+    const dispatch = vi.fn();
+    renderCycleForm({ schema, root, dispatch, locale: "en" });
+    const items = root.querySelectorAll<HTMLElement>(".schedule-order__item");
+
+    expect(items[0]?.style.touchAction).toBe("none");
+    dispatchPointer(items[0]!, "pointerdown", {
+      pointerId: 7,
+      pointerType: "touch",
+      button: 0,
+    });
+    expect(items[0]?.classList.contains("is-dragging")).toBe(true);
+
+    dispatchPointer(items[2]!, "pointermove", {
+      pointerId: 7,
+      pointerType: "touch",
+      button: -1,
+      clientX: 20,
+      clientY: 20,
+    });
+    expect(items[2]?.classList.contains("is-drag-over")).toBe(true);
+
+    dispatchPointer(items[2]!, "pointerup", {
+      pointerId: 7,
+      pointerType: "touch",
+      button: 0,
+      clientX: 20,
+      clientY: 20,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: "cycle.field.changed",
+      schemaId: "schedule-test",
+      fieldId: "session-order",
+      path: "schedule.sessionOrder",
+      value: ["deadlift", "squat", "press"],
+    });
+    expect(items[0]?.classList.contains("is-dragging")).toBe(false);
+    expect(items[2]?.classList.contains("is-drag-over")).toBe(false);
+    root.remove();
+  });
+
+  it("cancels touch reordering without emitting a partial order", () => {
+    const root = shell();
+    document.body.append(root);
+    const dispatch = vi.fn();
+    renderCycleForm({ schema, root, dispatch, locale: "en" });
+    const items = root.querySelectorAll<HTMLElement>(".schedule-order__item");
+
+    dispatchPointer(items[0]!, "pointerdown", {
+      pointerId: 11,
+      pointerType: "pen",
+      button: 0,
+    });
+    dispatchPointer(items[1]!, "pointermove", {
+      pointerId: 11,
+      pointerType: "pen",
+      button: -1,
+    });
+    dispatchPointer(items[1]!, "pointercancel", {
+      pointerId: 11,
+      pointerType: "pen",
+      button: 0,
+    });
+
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(root.querySelector(".is-dragging")).toBeNull();
+    expect(root.querySelector(".is-drag-over")).toBeNull();
+    root.remove();
+  });
+
+  it("does not start pointer dragging from a keyboard move button", () => {
+    const root = shell();
+    document.body.append(root);
+    const dispatch = vi.fn();
+    renderCycleForm({ schema, root, dispatch, locale: "en" });
+    const items = root.querySelectorAll<HTMLElement>(".schedule-order__item");
+    const moveButton = items[0]?.querySelector<HTMLButtonElement>(
+      ".schedule-token__move:not(:disabled)",
+    );
+
+    dispatchPointer(moveButton!, "pointerdown", {
+      pointerId: 13,
+      pointerType: "touch",
+      button: 0,
+    });
+    dispatchPointer(items[2]!, "pointermove", {
+      pointerId: 13,
+      pointerType: "touch",
+      button: -1,
+    });
+    dispatchPointer(items[2]!, "pointerup", {
+      pointerId: 13,
+      pointerType: "touch",
+      button: 0,
+    });
+
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(root.querySelector(".is-dragging")).toBeNull();
+    root.remove();
+  });
 });
 
 class MemoryDataTransfer {
@@ -118,4 +221,28 @@ class MemoryDataTransfer {
   getData(_format: string): string {
     return this.value;
   }
+}
+
+function dispatchPointer(
+  target: EventTarget,
+  type: "pointerdown" | "pointermove" | "pointerup" | "pointercancel",
+  init: {
+    readonly pointerId: number;
+    readonly pointerType: "touch" | "pen" | "mouse";
+    readonly button: number;
+    readonly clientX?: number;
+    readonly clientY?: number;
+  },
+): void {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+  for (const [property, value] of Object.entries({
+    pointerId: init.pointerId,
+    pointerType: init.pointerType,
+    button: init.button,
+    clientX: init.clientX ?? 0,
+    clientY: init.clientY ?? 0,
+  })) {
+    Object.defineProperty(event, property, { configurable: true, value });
+  }
+  target.dispatchEvent(event);
 }

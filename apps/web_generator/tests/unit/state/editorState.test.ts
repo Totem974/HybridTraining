@@ -70,6 +70,27 @@ const schema: CycleEditorSchema = {
   ],
 };
 
+const tokenOrderSchema: CycleEditorSchema = {
+  ...schema,
+  sessionIds: ["press", "deadlift", "squat"],
+  fields: [
+    ...schema.fields,
+    {
+      id: "session-order",
+      path: "schedule.sessionOrder",
+      region: "scheduling",
+      kind: "token-order",
+      label: "Session order",
+      value: ["press", "deadlift", "squat"],
+      choices: [
+        { value: "press", label: "Press" },
+        { value: "deadlift", label: "Deadlift" },
+        { value: "squat", label: "Squat" },
+      ],
+    },
+  ],
+};
+
 describe("generic Cycle editor state", () => {
   it("purges conditional children when their parent changes", () => {
     const enabled = normalizeEditorState(schema, {
@@ -134,5 +155,56 @@ describe("generic Cycle editor state", () => {
     );
 
     expect(normalized.values.includeDeload).toBe(true);
+  });
+
+  it("accepts a complete unique permutation for token-order fields", () => {
+    const normalized = normalizeEditorState(tokenOrderSchema, {
+      "schedule.sessionOrder": ["squat", "press", "deadlift"],
+    });
+
+    expect(normalized.values["schedule.sessionOrder"]).toEqual([
+      "squat",
+      "press",
+      "deadlift",
+    ]);
+  });
+
+  it.each([
+    ["duplicate tokens", ["press", "press", "squat"]],
+    ["unknown tokens", ["press", "deadlift", "row"]],
+    ["an incomplete order", ["press", "squat"]],
+    ["an order with extra tokens", ["press", "deadlift", "squat", "row"]],
+    ["non-string tokens", ["press", "deadlift", 3]],
+  ])("rejects %s in token-order fields", (_description, candidate) => {
+    const normalized = normalizeEditorState(tokenOrderSchema, {
+      "schedule.sessionOrder": candidate,
+    });
+
+    expect(normalized.values["schedule.sessionOrder"]).toEqual([
+      "press",
+      "deadlift",
+      "squat",
+    ]);
+  });
+
+  it("uses the schema order as the token universe when choices are omitted", () => {
+    const withoutChoices: CycleEditorSchema = {
+      ...tokenOrderSchema,
+      fields: tokenOrderSchema.fields.map((field) => {
+        if (field.id !== "session-order") return field;
+        const { choices, ...withoutTokenChoices } = field;
+        void choices;
+        return withoutTokenChoices;
+      }),
+    };
+    const normalized = normalizeEditorState(withoutChoices, {
+      "schedule.sessionOrder": ["deadlift", "squat", "press"],
+    });
+
+    expect(normalized.values["schedule.sessionOrder"]).toEqual([
+      "deadlift",
+      "squat",
+      "press",
+    ]);
   });
 });

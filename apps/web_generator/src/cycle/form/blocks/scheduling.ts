@@ -130,11 +130,96 @@ function renderOrder(
     reordered.splice(destination, 0, moved);
     emit(dispatch, schemaId, field, reordered);
   };
+  let pointerDrag: {
+    readonly pointerId: number;
+    readonly source: number;
+    destination: number;
+    readonly sourceItem: HTMLElement;
+  } | undefined;
+  const clearPointerTarget = (): void => {
+    list.querySelectorAll(".is-drag-over").forEach((entry) =>
+      entry.classList.remove("is-drag-over"));
+  };
+  const itemFromPointer = (event: PointerEvent): HTMLElement | undefined => {
+    const candidates: Array<Element | null> = [];
+    if (typeof document.elementFromPoint === "function") {
+      candidates.push(document.elementFromPoint(event.clientX, event.clientY));
+    }
+    candidates.push(event.target instanceof Element ? event.target : null);
+    for (const candidate of candidates) {
+      const item = candidate?.closest<HTMLElement>(".schedule-order__item");
+      if (item?.parentElement === list) return item;
+    }
+    return undefined;
+  };
+  const updatePointerTarget = (event: PointerEvent): void => {
+    if (!pointerDrag) return;
+    const item = itemFromPointer(event);
+    const destination = Number(item?.dataset.orderIndex);
+    clearPointerTarget();
+    if (!item || !Number.isInteger(destination)) {
+      pointerDrag.destination = pointerDrag.source;
+      return;
+    }
+    pointerDrag.destination = destination;
+    if (destination !== pointerDrag.source) item.classList.add("is-drag-over");
+  };
+  const onPointerMove = (event: PointerEvent): void => {
+    if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
+    event.preventDefault();
+    updatePointerTarget(event);
+  };
+  const cleanupPointerDrag = (): void => {
+    if (!pointerDrag) return;
+    pointerDrag.sourceItem.classList.remove("is-dragging");
+    clearPointerTarget();
+    pointerDrag = undefined;
+    document.removeEventListener("pointermove", onPointerMove);
+    document.removeEventListener("pointerup", onPointerUp);
+    document.removeEventListener("pointercancel", onPointerCancel);
+  };
+  const onPointerUp = (event: PointerEvent): void => {
+    if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
+    event.preventDefault();
+    updatePointerTarget(event);
+    const { source, destination } = pointerDrag;
+    cleanupPointerDrag();
+    reorder(source, destination);
+  };
+  const onPointerCancel = (event: PointerEvent): void => {
+    if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
+    cleanupPointerDrag();
+  };
+  const startPointerDrag = (
+    event: PointerEvent,
+    source: number,
+    sourceItem: HTMLElement,
+  ): void => {
+    if (
+      !enabled ||
+      pointerDrag ||
+      event.pointerType === "mouse" ||
+      event.button !== 0 ||
+      (event.target instanceof Element && event.target.closest("button"))
+    ) return;
+    event.preventDefault();
+    pointerDrag = {
+      pointerId: event.pointerId,
+      source,
+      destination: source,
+      sourceItem,
+    };
+    sourceItem.classList.add("is-dragging");
+    document.addEventListener("pointermove", onPointerMove, { passive: false });
+    document.addEventListener("pointerup", onPointerUp);
+    document.addEventListener("pointercancel", onPointerCancel);
+  };
   values.forEach((value, index) => {
     const choice = field.choices?.find((item) => serialized(item.value) === serialized(value));
     const item = node("li", "schedule-order__item");
     const itemLabel = choice ? localized(choice.label, locale) : "—";
     item.draggable = enabled;
+    item.style.touchAction = enabled ? "none" : "auto";
     item.dataset.orderIndex = String(index);
     item.setAttribute(
       "aria-label",
@@ -193,6 +278,9 @@ function renderOrder(
       item.classList.remove("is-drag-over");
       const source = Number(event.dataTransfer?.getData("text/plain"));
       if (Number.isInteger(source)) reorder(source, index);
+    });
+    item.addEventListener("pointerdown", (event) => {
+      startPointerDrag(event, index, item);
     });
     controls.append(moveButton(-1), moveButton(1));
     item.append(handle, label, controls);

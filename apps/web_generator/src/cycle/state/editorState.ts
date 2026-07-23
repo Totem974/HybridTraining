@@ -99,6 +99,9 @@ export function activeSchemaFields(
 }
 
 function isAllowedValue(field: CycleEditorField, value: JsonValue): boolean {
+  if (field.kind === "token-order") {
+    return isCompleteTokenOrder(field, value);
+  }
   if (field.choices?.length) {
     return field.choices.some((choice) => sameValue(choice.value, value));
   }
@@ -108,6 +111,31 @@ function isAllowedValue(field: CycleEditorField, value: JsonValue): boolean {
     if (field.maximum !== undefined && value > field.maximum) return false;
   }
   return switchKind(field, value);
+}
+
+function isCompleteTokenOrder(
+  field: CycleEditorField,
+  value: JsonValue,
+): boolean {
+  if (!Array.isArray(value) || !value.every((item) => typeof item === "string")) {
+    return false;
+  }
+  const choiceTokens = field.choices?.map((choice) => choice.value);
+  const expected = choiceTokens?.length ? choiceTokens : field.value;
+  if (
+    !Array.isArray(expected) ||
+    !expected.every((item) => typeof item === "string")
+  ) {
+    return false;
+  }
+  const expectedTokens = expected as readonly string[];
+  const candidateTokens = value as readonly string[];
+  const expectedSet = new Set(expectedTokens);
+  const candidateSet = new Set(candidateTokens);
+  return expectedSet.size === expectedTokens.length &&
+    candidateSet.size === candidateTokens.length &&
+    candidateTokens.length === expectedTokens.length &&
+    candidateTokens.every((token) => expectedSet.has(token));
 }
 
 function switchKind(field: CycleEditorField, value: JsonValue): boolean {
@@ -122,7 +150,7 @@ function switchKind(field: CycleEditorField, value: JsonValue): boolean {
     case "weight":
       return typeof value === "number" && Number.isFinite(value);
     case "token-order":
-      return Array.isArray(value) && value.every((item) => typeof item === "string");
+      return false;
     case "date":
     case "text":
       return typeof value === "string";
