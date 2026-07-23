@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-const localOrigin = 'http://127.0.0.1:4173';
+const localOrigin = 'http://127.0.0.1:4175';
 const visualEvidenceDirectory = resolve('tests', 'visual-evidence');
 
 async function openIntegratedCycle(page: Page): Promise<string[]> {

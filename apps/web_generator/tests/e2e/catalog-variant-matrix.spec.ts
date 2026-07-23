@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
-const localOrigin = 'http://127.0.0.1:4173';
+const localOrigin = 'http://127.0.0.1:4175';
 
 type SelectOption = {
   label: string;

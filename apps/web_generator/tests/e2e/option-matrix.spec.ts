@@ -1,7 +1,7 @@
 import { expect, test, type Download, type Locator, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
-const localOrigin = 'http://127.0.0.1:4173';
+const localOrigin = 'http://127.0.0.1:4175';
 
 async function openCycle(page: Page): Promise<string[]> {
   const external: string[] = [];
