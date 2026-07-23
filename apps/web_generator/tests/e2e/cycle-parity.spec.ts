@@ -91,6 +91,85 @@ test('catalog-driven options remain effective after template changes', async ({ 
   expect(external).toEqual([]);
 });
 
+test('Generation filters templates between Classic and Beyond', async ({ page }) => {
+  const external = await openIntegratedCycle(page);
+  const generation = page.getByTestId('generation-row').getByRole('combobox');
+  const template = page.getByTestId('template-row').getByRole('combobox');
+
+  await expect(generation).toHaveValue(JSON.stringify('classic'));
+  await generation.selectOption(JSON.stringify('beyond'));
+  await expect(generation).toHaveValue(JSON.stringify('beyond'));
+  await expect(template).toHaveValue(/"beyond_/);
+  expect(await template.locator('option').evaluateAll(
+    (options) => options.every((option) => JSON.parse(
+      (option as HTMLOptionElement).value,
+    ).startsWith('beyond_')),
+  )).toBe(true);
+
+  await generation.selectOption(JSON.stringify('classic'));
+  await expect(generation).toHaveValue(JSON.stringify('classic'));
+  await expect(template).not.toHaveValue(/"beyond_/);
+  expect(external).toEqual([]);
+});
+
+test('Additional Options keeps Warm-up, Joker Sets and Deload for every template', async ({ page }) => {
+  const external = await openIntegratedCycle(page);
+  const generation = page.getByTestId('generation-row').getByRole('combobox');
+  const template = page.getByTestId('template-row').getByRole('combobox');
+
+  for (const generationId of ['classic', 'beyond']) {
+    await generation.selectOption(JSON.stringify(generationId));
+    const templateIds = await template.locator('option').evaluateAll(
+      (options) => options.map((option) => (option as HTMLOptionElement).value),
+    );
+    for (const templateId of templateIds) {
+      await template.selectOption(templateId);
+      await expect(
+        page.locator(
+          '[data-cycle-region="additional-options"] '
+          + '.additional-options__primary > [data-option-group]',
+        ),
+      ).toHaveCount(3);
+    }
+  }
+
+  expect(external).toEqual([]);
+});
+
+test('Plating spans the editor before the Scheduling and Output row', async ({ page }) => {
+  const external = await openIntegratedCycle(page);
+  const layout = await page.evaluate(() => {
+    const form = document.querySelector('#cycle-form')!.getBoundingClientRect();
+    const plating = document.querySelector('#plating')!.getBoundingClientRect();
+    const scheduling = document.querySelector('#scheduling')!.getBoundingClientRect();
+    const output = document.querySelector('#output')!.getBoundingClientRect();
+    const program = document.querySelector('#program')!.getBoundingClientRect();
+    return {
+      formWidth: form.width,
+      platingWidth: plating.width,
+      platingBottom: plating.bottom,
+      schedulingTop: scheduling.top,
+      schedulingLeft: scheduling.left,
+      outputTop: output.top,
+      outputLeft: output.left,
+      programTop: program.top,
+      rowBottom: Math.max(scheduling.bottom, output.bottom),
+    };
+  });
+
+  expect(Math.abs(layout.formWidth - layout.platingWidth)).toBeLessThan(2);
+  expect(layout.schedulingTop).toBeGreaterThanOrEqual(layout.platingBottom);
+  if ((page.viewportSize()?.width ?? 1440) > 770) {
+    expect(Math.abs(layout.schedulingTop - layout.outputTop)).toBeLessThan(2);
+    expect(layout.outputLeft).toBeGreaterThan(layout.schedulingLeft);
+  } else {
+    expect(layout.outputTop).toBeGreaterThan(layout.schedulingTop);
+    expect(Math.abs(layout.outputLeft - layout.schedulingLeft)).toBeLessThan(2);
+  }
+  expect(layout.programTop).toBeGreaterThanOrEqual(layout.rowBottom);
+  expect(external).toEqual([]);
+});
+
 test('plating visibility and local persistence survive reload', async ({ page }) => {
   const external = await openIntegratedCycle(page);
   await page.getByRole('checkbox', { name: /show plating|afficher les plaques/i }).check();

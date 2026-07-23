@@ -130,4 +130,46 @@ describe("Additional Options block", () => {
       value: false,
     });
   });
+
+  it("keeps all three primary columns when a template exposes no options", () => {
+    const root = shell();
+    renderCycleForm({
+      schema: { ...schema, fields: [] },
+      root,
+      dispatch: vi.fn(),
+      locale: "fr",
+    });
+
+    const groups = root.querySelectorAll(
+      ".additional-options__primary > [data-option-group]",
+    );
+    expect([...groups].map((group) => (group as HTMLElement).dataset.optionGroup))
+      .toEqual(["warmup", "joker", "deload"]);
+    expect(root.querySelectorAll(".additional-options__empty")).toHaveLength(3);
+    expect(root.textContent).toContain("Non disponible pour ce modèle");
+  });
+
+  it("keeps an ungrouped engine option below the three primary columns", () => {
+    const root = shell();
+    renderCycleForm({
+      schema: {
+        ...schema,
+        fields: [{
+          id: "phase",
+          path: "options.fullBody.phase",
+          region: "additional-options",
+          label: "Phase",
+          kind: "choice",
+          value: "phase_one",
+          choices: [{ value: "phase_one", label: "Phase one" }],
+        }],
+      },
+      root,
+      dispatch: vi.fn(),
+      locale: "en",
+    });
+
+    expect(root.querySelector("[data-testid=phase]")).not.toBeNull();
+    expect(root.querySelector(".additional-options__secondary")).not.toBeNull();
+  });
 });
