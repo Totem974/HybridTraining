@@ -154,36 +154,9 @@ BridgeService _initializedService() {
       );
     }
   }
-  _addBodyweightDeloadFixture(bundle);
   final service = BridgeService(LocalTrainingEngineBindings());
   service.initialize(jsonEncode(bundle));
   return service;
-}
-
-void _addBodyweightDeloadFixture(Map<String, Object?> bundle) {
-  // The current Bodyweight catalog variant has no source deload week. Add one
-  // only in this integration fixture so the bridge test can prove that
-  // scheduled assistance is preserved on an existing deload week.
-  final documents = (bundle['documents']! as List).cast<Map>();
-  final templatesDocument = documents
-      .map((document) => document.cast<String, Object?>())
-      .singleWhere((document) => document['path'] == 'classic/templates.json');
-  final content = (templatesDocument['content']! as Map)
-      .cast<String, Object?>();
-  final templates = (content['templates']! as List).cast<Map>();
-  final bodyweight = templates
-      .map((template) => template.cast<String, Object?>())
-      .singleWhere((template) => template['id'] == 'classic_bodyweight');
-  final variants = (bodyweight['variants']! as List).cast<Map>();
-  final fourDay = variants
-      .map((variant) => variant.cast<String, Object?>())
-      .singleWhere((variant) => variant['id'] == 'four_day');
-  (fourDay['weekPlans']! as List).add({
-    'weekNumber': 4,
-    'componentIds': [
-      {'id': 'deload_original_40_50_60', 'revision': 1},
-    ],
-  });
 }
 
 Map<String, Object?> _bodyweightRequest({required bool includeDeload}) =>

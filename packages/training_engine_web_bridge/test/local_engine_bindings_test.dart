@@ -267,13 +267,34 @@ void main() {
             )
             as Map<String, Object?>;
     final templates = (index['templates'] as List).cast<Map<String, Object?>>();
+    final publicVariants = {
+      for (final template in templates)
+        template['id']! as String: (template['variantIds']! as List)
+            .cast<String>()
+            .toSet(),
+    };
+    final publicVariantCount = publicVariants.values.fold<int>(
+      0,
+      (count, variants) => count + variants.length,
+    );
+
     expect(templates.first['id'], 'classic_boring_but_big');
     expect(
       templates
           .map((template) => (template['generation'] as Map)['id'])
           .toSet(),
-      {'classic', 'beyond'},
+      containsAll(_requiredPublicGenerationIds),
     );
+    expect(publicVariants.keys, containsAll(_requiredPublicVariants.keys));
+    for (final entry in _requiredPublicVariants.entries) {
+      expect(
+        publicVariants[entry.key],
+        containsAll(entry.value),
+        reason: entry.key,
+      );
+    }
+    expect(templates.length, greaterThanOrEqualTo(19));
+    expect(publicVariantCount, greaterThanOrEqualTo(37));
     expect(
       templates.any((template) => template['id'] == 'forever_bbb_leader'),
       isFalse,
@@ -282,6 +303,20 @@ void main() {
 
   test('editor filters template choices by catalog generation', () {
     final service = initializedService();
+    final index =
+        jsonDecode(
+              service.catalogIndex(
+                jsonEncode({'apiVersion': 'v1', 'schemaVersion': 1}),
+              ),
+            )
+            as Map<String, Object?>;
+    final publicTemplates = (index['templates'] as List)
+        .cast<Map<String, Object?>>();
+    final generationByTemplate = {
+      for (final template in publicTemplates)
+        template['id']! as String:
+            ((template['generation']! as Map)['id']! as String),
+    };
 
     Map<String, Object?> schema(String templateId, String variantId) =>
         jsonDecode(
@@ -306,7 +341,7 @@ void main() {
       (generation['choices'] as List).cast<Map<String, Object?>>().map(
         (choice) => choice['value'],
       ),
-      ['classic', 'beyond'],
+      containsAll(_requiredPublicGenerationIds),
     );
     final classicTemplates = classicFields.singleWhere(
       (field) => field['id'] == 'template',
@@ -334,6 +369,62 @@ void main() {
       ),
       everyElement(startsWith('beyond_')),
     );
+
+    const sourceCases = [
+      (
+        generationId: 'source_parity',
+        templateId: 'source_calculator_boring_but_big',
+        variantId: 'original_5x10',
+        requiredTemplateIds: {'source_calculator_boring_but_big'},
+      ),
+      (
+        generationId: 'source_fsl_gvt',
+        templateId: 'source_calculator_first_set_last',
+        variantId: 'standard',
+        requiredTemplateIds: {
+          'source_calculator_first_set_last',
+          'source_calculator_gvt',
+        },
+      ),
+      (
+        generationId: 'source_bbb_challenge',
+        templateId: 'source_calculator_bbb_challenge',
+        variantId: 'six_weeks',
+        requiredTemplateIds: {'source_calculator_bbb_challenge'},
+      ),
+      (
+        generationId: 'source_two_day',
+        templateId: 'source_calculator_two_days_per_week',
+        variantId: 'option_one',
+        requiredTemplateIds: {'source_calculator_two_days_per_week'},
+      ),
+    ];
+    for (final item in sourceCases) {
+      final fields = (schema(item.templateId, item.variantId)['fields'] as List)
+          .cast<Map<String, Object?>>();
+      expect(
+        fields.singleWhere((field) => field['id'] == 'generation')['value'],
+        item.generationId,
+      );
+      final templateChoices =
+          (fields.singleWhere((field) => field['id'] == 'template')['choices']
+                  as List)
+              .cast<Map<String, Object?>>()
+              .map((choice) => choice['value']! as String)
+              .toSet();
+      expect(
+        templateChoices,
+        containsAll(item.requiredTemplateIds),
+        reason: item.generationId,
+      );
+      for (final templateId in templateChoices) {
+        expect(
+          generationByTemplate[templateId],
+          item.generationId,
+          reason: '$templateId must stay inside its generation',
+        );
+      }
+    }
   });
 
   test(
@@ -629,6 +720,56 @@ void main() {
 }
 
 const _weight = {'centiUnits': 10000, 'unit': 'lb'};
+const _requiredPublicGenerationIds = {
+  'classic',
+  'beyond',
+  'source_parity',
+  'source_fsl_gvt',
+  'source_bbb_challenge',
+  'source_two_day',
+};
+const _requiredPublicVariants = <String, Set<String>>{
+  'beyond_boring_but_big': {
+    'same_lift_5x10_50_two_cycles',
+    'variation_i_5x10_wave',
+    'variation_ii_descending_volume',
+  },
+  'beyond_pyramid': {'four_day_two_cycles'},
+  'beyond_first_set_last': {'amrap_four_day_two_cycles'},
+  'beyond_fives_progression': {'main_lifts_four_day_two_cycles'},
+  'classic_for_beginners': {'original_progression'},
+  'classic_full_body': {'original', 'updated', 'full_boring'},
+  'classic_531': {'four_day', 'three_day_rotation', 'two_day_rotation'},
+  'classic_boring_but_big': {'same_lift_5x10'},
+  'classic_jack_shit': {'main_lift_only'},
+  'classic_simplest_strength': {'original', 'powerlifting'},
+  'classic_triumvirate': {'four_day'},
+  'classic_periodization_bible': {'four_day'},
+  'classic_bodyweight': {'four_day'},
+  'powerlifting_classic_531': {'four_day_531_deload'},
+  'source_calculator_bbb_challenge': {
+    'six_weeks',
+    'three_months',
+    'thirteen_weeks',
+  },
+  'source_calculator_first_set_last': {'standard'},
+  'source_calculator_gvt': {'standard'},
+  'source_calculator_boring_but_big': {
+    'original_5x10',
+    'less_boring_5x10',
+    'five_by_five_80',
+    'five_by_three_90',
+    'five_by_one_100',
+    'beyond_variation_one',
+    'beyond_variation_two',
+    'two_days_per_week',
+  },
+  'source_calculator_two_days_per_week': {
+    'option_one',
+    'option_two',
+    'option_three',
+  },
+};
 const _cycleReferenceLeader = {
   'templateId': 'forever_bbb_leader',
   'variantId': 'fives_pro_5x10_50',
