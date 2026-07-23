@@ -131,11 +131,29 @@ void main() {
     );
   });
 
-  test('can omit deload blocks without template-specific branching', () {
+  test('omits the complete deload week without template branching', () {
+    final baseDefinition = definition();
+    final mainBlocks = baseDefinition.weeks.single.blocks
+        .where((block) => block.role != 'deload')
+        .toList(growable: false);
+    final deloadBlocks = baseDefinition.weeks.single.blocks
+        .where((block) => block.role == 'deload')
+        .toList(growable: false);
     final result = const CycleCompilerImpl().compile(
-      definition(),
+      ResolvedCycleDefinition(
+        catalogVersion: baseDefinition.catalogVersion,
+        templateId: baseDefinition.templateId,
+        variantId: baseDefinition.variantId,
+        sessionMovementIds: baseDefinition.sessionMovementIds,
+        sourceReference: baseDefinition.sourceReference,
+        weeks: [
+          WeekDefinition(number: 1, blocks: mainBlocks),
+          WeekDefinition(number: 2, blocks: deloadBlocks),
+        ],
+      ),
       request(includeDeload: false),
     );
+    expect(result.weeks.map((week) => week.number), [1]);
     expect(
       result.weeks.single.sessions.first.blocks.map((block) => block.role),
       ['warm-up', 'main work'],
