@@ -49,7 +49,11 @@ export function renderWeightBlock(options: RenderWeightBlockOptions): HTMLElemen
   }
   block.append(movementList);
 
-  if (ratio && activeMode === "oneRepMax" && fieldIsVisible(ratio, options.values)) {
+  if (
+    ratio &&
+    (activeMode === "oneRepMax" || activeMode === "repMax") &&
+    fieldIsVisible(ratio, options.values)
+  ) {
     block.append(renderRatio(ratio, options));
   }
   if (unit) block.append(renderSegmented(unit, options, "weight-unit"));

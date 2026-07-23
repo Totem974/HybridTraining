@@ -127,11 +127,13 @@ describe("Weight block", () => {
     expect(result.querySelector(".weight-ratio")).toBeNull();
   });
 
-  it("shows editable repetitions only when their schema condition matches", () => {
+  it("shows editable repetitions and the TM ratio for a rep max", () => {
     const { result } = render("repMax");
 
     expect(result.querySelectorAll("input.weight-repetitions")).toHaveLength(4);
-    expect(result.querySelector(".weight-ratio")).toBeNull();
+    expect(
+      result.querySelector<HTMLInputElement>(".weight-ratio__input")?.value,
+    ).toBe("90");
   });
 
   it("keeps direct Training Max rows free of per-movement ratios", () => {
