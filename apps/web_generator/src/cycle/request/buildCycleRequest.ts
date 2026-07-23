@@ -39,8 +39,19 @@ export function buildCycleRequest(
   }));
 
   const optionFields = active.filter((field) => field.path.startsWith("options."));
+  const movementIds = new Set(schema.movementIds);
+  const movementPercentageFields = new Map(
+    optionFields.flatMap((field) => {
+      const scope = movementPercentageScope(field.path, field.kind, movementIds);
+      return scope ? [[field.path, scope] as const] : [];
+    }),
+  );
   const optionValues: Record<string, unknown> = {};
   for (const field of optionFields) {
+    // Movement-scoped percentages belong to the compiler parameter map, not
+    // Cycle options. This keeps the options contract free of catalog-specific
+    // parameter names.
+    if (movementPercentageFields.has(field.path)) continue;
     const path = field.path.slice("options.".length);
     const rawValue = values[field.path];
     const value = field.kind === "weight"
@@ -56,8 +67,20 @@ export function buildCycleRequest(
     optionValues.fullBody.profile = schema.variantId;
   }
   const percentageParameters = Object.fromEntries(optionFields
-    .filter((field) => field.kind === "percentage" && typeof values[field.path] === "number")
+    .filter((field) =>
+      field.kind === "percentage" &&
+      !movementPercentageFields.has(field.path) &&
+      typeof values[field.path] === "number"
+    )
     .map((field) => [field.path.slice("options.".length), Math.round(values[field.path] as number)]));
+  const percentageParametersByMovement: Record<string, Record<string, number>> = {};
+  for (const field of optionFields) {
+    const scope = movementPercentageFields.get(field.path);
+    const value = values[field.path];
+    if (!scope || typeof value !== "number" || !Number.isFinite(value)) continue;
+    (percentageParametersByMovement[scope.movementId] ??= {})[scope.parameterId] =
+      Math.round(value);
+  }
 
   const platesPerSide = active
     .filter((field) => field.path.startsWith("plates."))
@@ -84,7 +107,7 @@ export function buildCycleRequest(
     ),
     trainingMaxRatioByMovement: {},
     percentageParameters,
-    percentageParametersByMovement: {},
+    percentageParametersByMovement,
     options: optionValues,
     unit,
     barProfile: {
@@ -97,6 +120,24 @@ export function buildCycleRequest(
     programTitle: stringValue(values.programTitle, "5/3/1"),
     showPlating: values.showPlating === true,
   };
+}
+
+function movementPercentageScope(
+  path: string,
+  kind: CycleEditorSchema["fields"][number]["kind"],
+  movementIds: ReadonlySet<string>,
+): { readonly parameterId: string; readonly movementId: string } | undefined {
+  if (kind !== "percentage") return undefined;
+  const segments = path.split(".");
+  if (
+    segments.length !== 3 ||
+    segments[0] !== "options" ||
+    segments[1] === "" ||
+    !movementIds.has(segments[2]!)
+  ) {
+    return undefined;
+  }
+  return { parameterId: segments[1]!, movementId: segments[2]! };
 }
 
 function stableCycleId(schema: CycleEditorSchema, startDate: string): string {

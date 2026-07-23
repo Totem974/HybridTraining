@@ -110,6 +110,91 @@ describe("buildCycleRequest", () => {
     expect(request.options).toMatchObject({ joker_enabled: true, joker_percentage: 25 });
     expect(request.percentageParameters).toEqual({ joker_percentage: 25 });
   });
+
+  it("collects generic movement-scoped percentages without polluting options", () => {
+    const parameterSchema: CycleEditorSchema = {
+      ...schema,
+      fields: [
+        ...baseFields,
+        field(
+          "supplemental-global",
+          "options.supplemental_ratio",
+          "template",
+          "percentage",
+          5000,
+        ),
+        field(
+          "supplemental-squat",
+          "options.supplemental_ratio.squat",
+          "template",
+          "percentage",
+          5500,
+        ),
+        field(
+          "supplemental-bench",
+          "options.supplemental_ratio.bench",
+          "template",
+          "percentage",
+          6000,
+        ),
+      ],
+    };
+    const state = normalizeEditorState(parameterSchema);
+    const request = buildCycleRequest(state.schema, state.values);
+
+    expect(request.percentageParameters).toMatchObject({
+      supplemental_ratio: 5000,
+    });
+    expect(request.percentageParametersByMovement).toEqual({
+      squat: { supplemental_ratio: 5500 },
+      bench: { supplemental_ratio: 6000 },
+    });
+    expect(request.options).toMatchObject({ supplemental_ratio: 5000 });
+    expect(request.options).not.toHaveProperty("supplemental_ratio.squat");
+    expect(request.options).not.toHaveProperty("supplemental_ratio.bench");
+  });
+
+  it("ignores inactive and non-movement nested percentages", () => {
+    const parameterSchema: CycleEditorSchema = {
+      ...schema,
+      fields: [
+        ...baseFields,
+        field("toggle", "options.custom_enabled", "template", "boolean", false),
+        field(
+          "inactive-squat",
+          "options.custom_ratio.squat",
+          "template",
+          "percentage",
+          6500,
+          {
+            enabledWhen: [{
+              path: "options.custom_enabled",
+              operator: "equals",
+              value: true,
+            }],
+          },
+        ),
+        field(
+          "nested-common",
+          "options.joker.ceilingBasisPoints",
+          "additional-options",
+          "percentage",
+          1000,
+        ),
+      ],
+    };
+    const state = normalizeEditorState(parameterSchema);
+    const request = buildCycleRequest(state.schema, state.values);
+
+    expect(request.percentageParametersByMovement).toEqual({});
+    expect(request.percentageParameters).toMatchObject({
+      "joker.ceilingBasisPoints": 1000,
+    });
+    expect(request.options).toMatchObject({
+      custom_enabled: false,
+      joker: { ceilingBasisPoints: 1000 },
+    });
+  });
 });
 
 function field(
