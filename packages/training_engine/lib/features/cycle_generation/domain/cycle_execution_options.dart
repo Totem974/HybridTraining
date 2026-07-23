@@ -33,6 +33,26 @@ final class JokerExecutionOptions {
 
 enum DeloadType { type1, type2, type3, type4, type5, highIntensity }
 
+enum WorkWeekOrder { catalog, fiveThreeOne, threeFiveOne }
+
+enum WorkSetOrder { catalog, standard, bastard }
+
+enum PlusSetMode { catalog, enabled, disabled }
+
+final class MainWorkExecutionOptions {
+  const MainWorkExecutionOptions({
+    this.weekOrder = WorkWeekOrder.catalog,
+    this.setOrder = WorkSetOrder.catalog,
+    this.plusSet = PlusSetMode.catalog,
+  });
+
+  final WorkWeekOrder weekOrder;
+  final WorkSetOrder setOrder;
+  final PlusSetMode plusSet;
+
+  PlusSetMode get plusSetMode => plusSet;
+}
+
 final class DeloadExecutionOptions {
   const DeloadExecutionOptions({
     required this.enabled,
@@ -51,16 +71,19 @@ final class DeloadExecutionOptions {
 
 final class CycleExecutionOptions {
   const CycleExecutionOptions({
+    this.mainWork = const MainWorkExecutionOptions(),
     this.warmUp = const WarmUpExecutionOptions.disabled(),
     this.joker = const JokerExecutionOptions.disabled(),
     this.deload = const DeloadExecutionOptions.disabled(),
   });
 
+  final MainWorkExecutionOptions mainWork;
   final WarmUpExecutionOptions warmUp;
   final JokerExecutionOptions joker;
   final DeloadExecutionOptions deload;
 
   CycleExecutionOptions normalized() => CycleExecutionOptions(
+    mainWork: mainWork,
     warmUp: warmUp.enabled
         ? WarmUpExecutionOptions(
             enabled: true,

@@ -87,6 +87,15 @@ final class AmrapRepetitions extends RepetitionPrescription {
   Map<String, Object> toJson() => {'type': 'amrap', 'minimum': ?minimum};
 }
 
+final class PlusSetRepetitions extends RepetitionPrescription {
+  const PlusSetRepetitions(this.minimum) : assert(minimum > 0);
+
+  final int minimum;
+
+  @override
+  Map<String, Object> toJson() => {'type': 'plus_set', 'minimum': minimum};
+}
+
 final class JokerRepetitions extends RepetitionPrescription {
   const JokerRepetitions();
   @override
@@ -193,6 +202,38 @@ final class BodyweightLoad extends LoadPrescription {
 
 final class Unloaded extends LoadPrescription {
   const Unloaded();
+}
+
+final class UnconfiguredLoad extends LoadPrescription {
+  const UnconfiguredLoad();
+}
+
+sealed class SetMultiplicity {
+  const SetMultiplicity();
+}
+
+final class FixedSetMultiplicity extends SetMultiplicity {
+  const FixedSetMultiplicity(this.count) : assert(count > 0);
+
+  final int count;
+}
+
+final class ParameterizedSetMultiplicity extends SetMultiplicity {
+  const ParameterizedSetMultiplicity({
+    required this.parameterId,
+    required this.defaultValue,
+    required this.minimum,
+    required this.maximum,
+  }) : assert(parameterId != ''),
+       assert(minimum > 0),
+       assert(maximum >= minimum),
+       assert(defaultValue >= minimum),
+       assert(defaultValue <= maximum);
+
+  final String parameterId;
+  final int defaultValue;
+  final int minimum;
+  final int maximum;
 }
 
 enum RelativeSetPosition { first, second, top }

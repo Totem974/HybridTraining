@@ -342,6 +342,11 @@ final class CycleCompilerImpl implements CycleCompiler {
         desired = loadCalculator.percentage(_oneRepMax(maxInput), value);
       case FixedLoad(:final weight):
         desired = weight;
+      case UnconfiguredLoad():
+        throw const CycleGenerationException(
+          CycleGenerationErrorCode.invalidCycleOptions,
+          'An unconfigured load cannot be compiled.',
+        );
       case BodyweightLoad() || Unloaded():
         desired = null;
       case RelativeSetLoad(:final position, :final multiplierBasisPoints):

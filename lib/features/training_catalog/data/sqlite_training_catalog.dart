@@ -1278,6 +1278,7 @@ Map<String, Object> encodeCatalogLoadPrescription(LoadPrescription load) =>
       },
       BodyweightLoad() => {'type': 'bodyweight'},
       Unloaded() => {'type': 'unloaded'},
+      UnconfiguredLoad() => {'type': 'unconfigured'},
     };
 
 final class _CanonicalSelection {

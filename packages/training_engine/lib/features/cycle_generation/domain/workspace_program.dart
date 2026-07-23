@@ -123,10 +123,11 @@ final class WorkspaceProgramCodec {
       'position': position.name,
       'multiplierBasisPoints': multiplierBasisPoints,
     },
+    UnconfiguredLoad() ||
     MainWorkSetPlusLoad() ||
     WarmUpBaseLoad() ||
     TrainingMaxRampLoad() => throw const WorkspaceProgramFormatException(
-      'Resolved option loads cannot be stored in user-defined programs',
+      'Resolved or unconfigured loads cannot be stored in user-defined programs',
     ),
   };
 
