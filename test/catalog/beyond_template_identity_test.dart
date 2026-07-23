@@ -8,8 +8,9 @@ void main() {
     ..._templates('catalog_src/beyond/templates/bbb.v1.json'),
     ..._templates('catalog_src/beyond/templates/main_variations.v1.json'),
   ];
-  final powerliftingTemplates =
-      _templates('catalog_src/powerlifting/templates.json');
+  final powerliftingTemplates = _templates(
+    'catalog_src/powerlifting/templates.json',
+  );
 
   test('public template IDs and labels are unique and non-contradictory', () {
     final templates = [...beyondTemplates, ...powerliftingTemplates];
@@ -17,15 +18,24 @@ void main() {
     expect(ids.toSet(), hasLength(ids.length));
     for (final template in templates) {
       final labels = template['labels']! as Map<String, Object?>;
-      expect((labels['en']! as String).trim(), isNotEmpty, reason: '${template['id']}');
-      expect((labels['fr']! as String).trim(), isNotEmpty, reason: '${template['id']}');
+      expect(
+        (labels['en']! as String).trim(),
+        isNotEmpty,
+        reason: '${template['id']}',
+      );
+      expect(
+        (labels['fr']! as String).trim(),
+        isNotEmpty,
+        reason: '${template['id']}',
+      );
       final variantIds = (template['variants']! as List<Object?>)
           .cast<Map<String, Object?>>()
           .map((item) => item['id'])
           .toList();
       expect(variantIds.toSet(), hasLength(variantIds.length));
-      for (final variant in (template['variants']! as List<Object?>)
-          .cast<Map<String, Object?>>()) {
+      for (final variant
+          in (template['variants']! as List<Object?>)
+              .cast<Map<String, Object?>>()) {
         final id = variant['id']! as String;
         final schedules = (variant['scheduleIds']! as List<Object?>)
             .cast<Map<String, Object?>>()
@@ -38,22 +48,26 @@ void main() {
     }
   });
 
-  test('inventory cycle template IDs resolve exactly to declared templates', () {
-    final beyondInventory = _inventory('catalog_src/beyond/inventory.json');
-    final powerliftingInventory =
-        _inventory('catalog_src/powerlifting/inventory.json');
-    final declared = {
-      for (final template in [...beyondTemplates, ...powerliftingTemplates])
-        template['id']! as String,
-    };
-    final inventoryIds = {
-      for (final entry in [...beyondInventory, ...powerliftingInventory])
-        if (entry['classification'] == 'cycleTemplate')
-          entry['cycleTemplateId']! as String,
-    };
-    expect(inventoryIds, containsAll(declared));
-    expect(declared, containsAll(inventoryIds));
-  });
+  test(
+    'inventory cycle template IDs resolve exactly to declared templates',
+    () {
+      final beyondInventory = _inventory('catalog_src/beyond/inventory.json');
+      final powerliftingInventory = _inventory(
+        'catalog_src/powerlifting/inventory.json',
+      );
+      final declared = {
+        for (final template in [...beyondTemplates, ...powerliftingTemplates])
+          template['id']! as String,
+      };
+      final inventoryIds = {
+        for (final entry in [...beyondInventory, ...powerliftingInventory])
+          if (entry['classification'] == 'cycleTemplate')
+            entry['cycleTemplateId']! as String,
+      };
+      expect(inventoryIds, containsAll(declared));
+      expect(declared, containsAll(inventoryIds));
+    },
+  );
 }
 
 List<Map<String, Object?>> _templates(String path) =>

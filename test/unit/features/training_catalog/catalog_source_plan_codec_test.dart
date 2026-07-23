@@ -20,7 +20,9 @@ void main() {
       File('catalog_src/classic/templates.json').readAsStringSync(),
     );
     final optionRecipes = codec.decodeCycleOptionRecipes(
-      File('catalog_src/shared/cycle_option_recipes_v1.json').readAsStringSync(),
+      File(
+        'catalog_src/shared/cycle_option_recipes_v1.json',
+      ).readAsStringSync(),
     );
     final template = templates.firstWhere((item) => item.id == 'classic_531');
     final variant = template.variants.firstWhere(

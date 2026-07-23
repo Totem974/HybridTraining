@@ -9,19 +9,23 @@ void main() {
     ..._templates('catalog_src/beyond/templates/main_variations.v1.json'),
     ..._templates('catalog_src/powerlifting/templates.json'),
   ];
-  final foreverTemplates =
-      _templates('catalog_src/forever/cycle_templates.json');
+  final foreverTemplates = _templates(
+    'catalog_src/forever/cycle_templates.json',
+  );
 
-  test('Beyond and Powerlifting templates declare the public Cycle surface', () {
-    expect(publicTemplates, isNotEmpty);
-    for (final template in publicTemplates) {
-      expect(
-        template['surface'],
-        'cyclePublic',
-        reason: '${template['id']} must be selected declaratively',
-      );
-    }
-  });
+  test(
+    'Beyond and Powerlifting templates declare the public Cycle surface',
+    () {
+      expect(publicTemplates, isNotEmpty);
+      for (final template in publicTemplates) {
+        expect(
+          template['surface'],
+          'cyclePublic',
+          reason: '${template['id']} must be selected declaratively',
+        );
+      }
+    },
+  );
 
   test('Forever cycle recipes declare an internal-only surface', () {
     expect(foreverTemplates, isNotEmpty);
@@ -35,9 +39,10 @@ void main() {
   });
 
   test('surface uses only the two canonical stable values', () {
-    final surfaces = [...publicTemplates, ...foreverTemplates]
-        .map((template) => template['surface'])
-        .toSet();
+    final surfaces = [
+      ...publicTemplates,
+      ...foreverTemplates,
+    ].map((template) => template['surface']).toSet();
     expect(surfaces, {'cyclePublic', 'foreverInternal'});
   });
 }
@@ -45,6 +50,5 @@ void main() {
 List<Map<String, Object?>> _templates(String path) {
   final document =
       jsonDecode(File(path).readAsStringSync()) as Map<String, Object?>;
-  return (document['templates']! as List<Object?>)
-      .cast<Map<String, Object?>>();
+  return (document['templates']! as List<Object?>).cast<Map<String, Object?>>();
 }
