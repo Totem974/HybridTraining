@@ -1,6 +1,11 @@
 import { renderCycleForm, localized, type CycleEditorSchema, type CycleFormIntent, type JsonValue } from './cycle/form';
 import { renderProgram, type CycleResponseLike } from './cycle/program';
-import { buildCycleRequest } from './cycle/request/buildCycleRequest';
+import {
+  cycleConfigurationToCycleRequest,
+  cycleConfigurationToEditorValues,
+  editorValuesToCycleConfiguration,
+  migrateCycleRequestV1ToConfiguration,
+} from './cycle/configuration';
 import { changeEditorValue, normalizeEditorState } from './cycle/state/editorState';
 import {
   currentDraftId,
@@ -21,7 +26,7 @@ import {
   type LocalArtifact,
 } from './storage';
 import { PreferencesStore, type Locale } from './storage/preferences';
-import type { CycleResponse, ValidationReport } from '../../../contracts/v1/generated/contracts';
+import type { CycleConfiguration, CycleRequest, CycleResponse, ValidationReport } from '../../../contracts/v1/generated/contracts';
 
 interface CatalogIndex {
   readonly templates: readonly {
@@ -41,6 +46,7 @@ let catalog: CatalogIndex;
 let schema: CycleEditorSchema;
 let values: Record<string, JsonValue> = {};
 let defaultValues: Record<string, JsonValue> = {};
+let currentConfiguration: CycleConfiguration;
 let disposeForm: (() => void) | undefined;
 let lastRequest: object | undefined;
 let lastResponse: CycleResponse | undefined;
@@ -67,16 +73,19 @@ async function start(): Promise<void> {
     const restored = drafts
       ? await restoreCompatibleDraft(drafts, client.contractMetadata(), allowed)
       : undefined;
-    const preferred = restored
-      ? catalog.templates.find((item) => item.id === restored.templateId)
+    const restoredConfiguration = restored?.configuration;
+    const preferred = restoredConfiguration
+      ? catalog.templates.find((item) => item.id === restoredConfiguration.template.id)
       : catalog.templates[0];
-    const preferredVariant = restored?.variantId ?? preferred?.variantIds[0];
+    const preferredVariant = restoredConfiguration?.template.variantId ?? preferred?.variantIds[0];
     if (!preferred || !preferredVariant) throw new Error('CATALOG_HAS_NO_CYCLE_VARIANTS');
     await loadSchema(
       preferred.id,
       preferredVariant,
-      restored?.values,
-      restored?.scheduleId,
+      restoredConfiguration
+        ? cycleConfigurationToEditorValues(restoredConfiguration)
+        : undefined,
+      restoredConfiguration?.schedule.id,
     );
     installLocaleControls();
     root.dataset.cycleReady = 'true';
@@ -113,6 +122,11 @@ async function loadSchema(
   schema = normalized.schema;
   values = normalized.values;
   defaultValues = normalized.defaults;
+  currentConfiguration = editorValuesToCycleConfiguration(
+    schema,
+    values,
+    client.contractMetadata(),
+  );
   renderEditor();
   persistDraft();
   scheduleGeneration();
@@ -159,6 +173,11 @@ async function handleIntent(intent: CycleFormIntent): Promise<void> {
   schema = normalized.schema;
   values = normalized.values;
   defaultValues = normalized.defaults;
+  currentConfiguration = editorValuesToCycleConfiguration(
+    schema,
+    values,
+    client.contractMetadata(),
+  );
   if (intent.path === 'showPlating' && typeof intent.value === 'boolean') {
     preferences.setShowPlating(intent.value);
   }
@@ -173,7 +192,7 @@ function scheduleGeneration(): void {
 }
 
 function generate(): void {
-  generateRequest(buildCycleRequest(schema, values));
+  generateRequest(cycleConfigurationToCycleRequest(currentConfiguration, schema));
 }
 
 function generateRequest(request: object): void {
@@ -224,10 +243,10 @@ function installTransferControls(): void {
         await file.text(),
         'configuration',
         (candidate) => metadataMatchesCurrent(candidate)
-          ? validateImportedRequest(candidate.payload as Record<string, unknown>)
+          ? validateImportedConfiguration(importConfiguration(candidate.payload))
           : ({ valid: false, errors: [{ code: 'VERSION_MISMATCH' }] }),
       );
-      await hydrateImportedRequest(imported.payload as Record<string, unknown>);
+      await hydrateImportedConfiguration(importConfiguration(imported.payload));
     } catch (error) {
       if (status) status.textContent = message(error);
     } finally {
@@ -236,8 +255,10 @@ function installTransferControls(): void {
   });
   controls.append(
     transferButton(locale === 'fr' ? 'Exporter la configuration' : 'Export configuration', () => {
-      const request = buildCycleRequest(schema, values);
-      download('cycle-configuration.json', exportConfiguration(artifact('configuration', request)));
+      download(
+        'cycle-configuration.json',
+        exportConfiguration(artifact('configuration', currentConfiguration)),
+      );
     }),
     transferButton(locale === 'fr' ? 'Exporter le programme' : 'Export program', () => {
       if (!lastResponse) throw new Error('GENERATE_BEFORE_EXPORT');
@@ -249,14 +270,14 @@ function installTransferControls(): void {
   mount.append(controls);
 }
 
-function validateImportedRequest(request: Record<string, unknown>): ValidationReport {
+function validateImportedConfiguration(configuration: CycleConfiguration): ValidationReport {
   try {
     const schemaRequest = {
       apiVersion: 'v1',
       schemaVersion: 1,
-      templateId: typeof request.templateId === 'string' ? request.templateId : '',
-      variantId: typeof request.variantId === 'string' ? request.variantId : '',
-      ...(typeof request.scheduleId === 'string' ? { scheduleId: request.scheduleId } : {}),
+      templateId: configuration.template.id,
+      variantId: configuration.template.variantId,
+      scheduleId: configuration.schedule.id,
     };
     let importedSchema: CycleEditorSchema;
     try {
@@ -265,15 +286,23 @@ function validateImportedRequest(request: Record<string, unknown>): ValidationRe
       const { scheduleId: _, ...withoutStaleSchedule } = schemaRequest;
       importedSchema = client.cycleEditorSchema<CycleEditorSchema>(withoutStaleSchedule);
     }
-    const importedState = normalizeEditorState(importedSchema, requestValues(request), new Set([
+    const importedState = normalizeEditorState(
+      importedSchema,
+      cycleConfigurationToEditorValues(configuration),
+      new Set([
       'templateId',
       'variantId',
       'scheduleId',
       'sessionOrder',
-    ]));
-    const cycleId = typeof request.cycleId === 'string' ? request.cycleId : undefined;
+      ]),
+    );
+    const normalizedConfiguration = editorValuesToCycleConfiguration(
+      importedState.schema,
+      importedState.values,
+      client.contractMetadata(),
+    );
     return client.validateCycle<ValidationReport>(
-      buildCycleRequest(importedState.schema, importedState.values, cycleId ? { cycleId } : {}),
+      cycleConfigurationToCycleRequest(normalizedConfiguration, importedState.schema),
     );
   } catch {
     return {
@@ -336,7 +365,7 @@ function persistDraft(): void {
   if (!drafts || !client || !schema) return;
   void drafts.save(
     currentDraftId,
-    draftEnvelope(client.contractMetadata(), cycleDraft(values)),
+    draftEnvelope(client.contractMetadata(), cycleDraft(currentConfiguration)),
   ).catch(() => undefined);
 }
 
@@ -344,7 +373,7 @@ function persistGeneration(request: object, response: CycleResponse): void {
   if (configurations) {
     void configurations.save(
       'cycle-latest',
-      artifact('configuration', request),
+      artifact('configuration', currentConfiguration),
     ).catch(() => undefined);
   }
   if (snapshots) {
@@ -364,94 +393,36 @@ function metadataMatchesCurrent(candidate: LocalArtifact): boolean {
     candidate.catalogHash === metadata.catalogHash;
 }
 
-async function hydrateImportedRequest(request: Record<string, unknown>): Promise<void> {
-  const templateId = typeof request.templateId === 'string' ? request.templateId : '';
-  const variantId = typeof request.variantId === 'string' ? request.variantId : '';
-  const scheduleId = typeof request.scheduleId === 'string' ? request.scheduleId : undefined;
-  const importedValues = requestValues(request);
+async function hydrateImportedConfiguration(configuration: CycleConfiguration): Promise<void> {
+  const templateId = configuration.template.id;
+  const variantId = configuration.template.variantId;
+  const scheduleId = configuration.schedule.id;
+  const importedValues = cycleConfigurationToEditorValues(configuration);
   try {
     await loadSchema(templateId, variantId, importedValues, scheduleId);
   } catch {
     await loadSchema(templateId, variantId, importedValues);
   }
   if (generationTimer) clearTimeout(generationTimer);
-  const cycleId = typeof request.cycleId === 'string' ? request.cycleId : undefined;
-  generateRequest(buildCycleRequest(schema, values, cycleId ? { cycleId } : {}));
+  generateRequest(cycleConfigurationToCycleRequest(currentConfiguration, schema));
 }
 
-function requestValues(request: Record<string, unknown>): Record<string, JsonValue> {
-  const result: Record<string, JsonValue> = {};
-  for (const key of ['templateId', 'variantId', 'scheduleId', 'sessionOrder', 'unit', 'programTitle', 'showPlating']) {
-    if (request[key] !== undefined) result[key] = request[key];
+function importConfiguration(payload: unknown): CycleConfiguration {
+  if (!isPlainRecord(payload)) throw new Error('INVALID_CONFIGURATION_PAYLOAD');
+  if (payload.format === 'hybrid-training-cycle' && payload.configurationVersion === 1) {
+    return structuredClone(payload) as unknown as CycleConfiguration;
   }
-  if (typeof request.startDate === 'string') result.startDate = request.startDate.slice(0, 10);
-  if (typeof request.globalTrainingMaxRatioBasisPoints === 'number') {
-    result.globalTrainingMaxRatioBasisPoints = request.globalTrainingMaxRatioBasisPoints;
+  if (payload.apiVersion === 'v1' && payload.schemaVersion === 1) {
+    return migrateCycleRequestV1ToConfiguration(
+      payload as unknown as CycleRequest,
+      client.contractMetadata(),
+    );
   }
-  const maxInputs = record(request.maxInputs);
-  for (const [movement, rawInput] of Object.entries(maxInputs)) {
-    const input = record(rawInput);
-    if (typeof input.type === 'string') result.maxMode = input.type;
-    const inputWeight = record(input.weight);
-    if (typeof inputWeight.centiUnits === 'number') {
-      result[`maxInputs.${movement}.weight`] = inputWeight.centiUnits / 100;
-    }
-    if (typeof input.repetitions === 'number') {
-      result[`maxInputs.${movement}.repetitions`] = input.repetitions;
-    }
-  }
-  const optionValues = record(request.options);
-  flattenOptionValues(optionValues, 'options', result);
-  for (const [id, value] of Object.entries(record(request.percentageParameters))) {
-    result[`options.${id}`] = value;
-  }
-  const barProfile = record(request.barProfile);
-  const barWeight = record(barProfile.weight);
-  if (typeof barWeight.centiUnits === 'number') result.barWeight = barWeight.centiUnits / 100;
-  const plateCounts = new Map<number, number>();
-  if (Array.isArray(barProfile.platesPerSide)) {
-    for (const rawPlate of barProfile.platesPerSide) {
-      const plate = record(rawPlate);
-      if (typeof plate.centiUnits !== 'number') continue;
-      const denomination = plate.centiUnits / 100;
-      plateCounts.set(denomination, (plateCounts.get(denomination) ?? 0) + 1);
-    }
-  }
-  for (const [denomination, count] of plateCounts) result[`plates.${denomination}`] = count;
-  return result;
+  throw new Error('UNSUPPORTED_CONFIGURATION_VERSION');
 }
 
-function flattenOptionValues(
-  source: Record<string, JsonValue>,
-  prefix: string,
-  target: Record<string, JsonValue>,
-): void {
-  for (const [key, value] of Object.entries(source)) {
-    const path = `${prefix}.${key}`;
-    if (isPlainRecord(value) && !isWeightValue(value)) {
-      flattenOptionValues(value, path, target);
-    } else {
-      target[path] = isPlainRecord(value) && isWeightValue(value)
-        ? value.centiUnits / 100
-        : structuredClone(value);
-    }
-  }
-}
-
-function isPlainRecord(value: unknown): value is Record<string, JsonValue> {
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function isWeightValue(
-  value: Record<string, JsonValue>,
-): value is Record<string, JsonValue> & { centiUnits: number; unit: 'kg' | 'lb' } {
-  return typeof value.centiUnits === 'number' && (value.unit === 'kg' || value.unit === 'lb');
-}
-
-function record(value: unknown): Record<string, JsonValue> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
-    ? value as Record<string, JsonValue>
-    : {};
 }
 
 function installLocaleControls(): void {

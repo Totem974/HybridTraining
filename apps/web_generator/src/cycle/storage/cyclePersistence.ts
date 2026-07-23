@@ -11,18 +11,8 @@ export const cycleDraftVersion = 2;
 export interface CanonicalCycleDraftPayload {
   readonly draftVersion: 2;
   readonly configuration: CycleConfiguration;
-  readonly editorValues: Readonly<Record<string, JsonValue>>;
 }
-
-/** @deprecated Temporary adapter removed when main writes CycleConfiguration. */
-export interface EditorValuesCycleDraftPayload {
-  readonly draftVersion: 2;
-  readonly editorValues: Readonly<Record<string, JsonValue>>;
-}
-
-export type CycleDraftPayload =
-  | CanonicalCycleDraftPayload
-  | EditorValuesCycleDraftPayload;
+export type CycleDraftPayload = CanonicalCycleDraftPayload;
 
 export interface LegacyCycleDraftPayloadV1 {
   readonly draftVersion: 1;
@@ -33,11 +23,7 @@ export interface LegacyCycleDraftPayloadV1 {
 }
 
 export interface RestoredCycleDraft {
-  readonly templateId: string;
-  readonly variantId: string;
-  readonly scheduleId?: string;
-  readonly values: Readonly<Record<string, JsonValue>>;
-  readonly configuration?: CycleConfiguration;
+  readonly configuration: CycleConfiguration;
 }
 
 export type LegacyDraftMigration = (
@@ -68,7 +54,9 @@ export async function restoreCompatibleDraft<T>(
   const migrated = isLegacyDraftPayload(payload) ? migrateLegacy?.(payload) : undefined;
   const decoded = decodeDraft(migrated ?? payload);
   if (!decoded ||
-    allowedSelections.get(decoded.templateId)?.has(decoded.variantId) !== true) {
+    allowedSelections.get(decoded.configuration.template.id)?.has(
+      decoded.configuration.template.variantId,
+    ) !== true) {
     return undefined;
   }
 
@@ -84,45 +72,16 @@ export async function restoreCompatibleDraft<T>(
 
 export function cycleDraft(
   configuration: CycleConfiguration,
-  editorValues: Readonly<Record<string, JsonValue>>,
-): CanonicalCycleDraftPayload;
-/** @deprecated Pass a canonical CycleConfiguration and editor values. */
-export function cycleDraft(
-  editorValues: Readonly<Record<string, JsonValue>>,
-): EditorValuesCycleDraftPayload;
-export function cycleDraft(
-  configurationOrValues: CycleConfiguration | Readonly<Record<string, JsonValue>>,
-  editorValues?: Readonly<Record<string, JsonValue>>,
-): CycleDraftPayload {
-  if (isCycleConfiguration(configurationOrValues)) {
-    if (!editorValues) throw new TypeError("editorValues are required with CycleConfiguration");
-    return {
-      draftVersion: cycleDraftVersion,
-      configuration: structuredClone(configurationOrValues),
-      editorValues: structuredClone(editorValues),
-    };
-  }
+): CanonicalCycleDraftPayload {
   return {
     draftVersion: cycleDraftVersion,
-    editorValues: structuredClone(configurationOrValues),
+    configuration: structuredClone(configuration),
   };
 }
 
 function decodeDraft(value: unknown): RestoredCycleDraft | undefined {
   if (!isCycleDraftPayload(value)) return undefined;
-  const values = value.editorValues;
-  const configuration = "configuration" in value ? value.configuration : undefined;
-  const templateId = configuration?.template.id ?? stringValue(values.templateId);
-  const variantId = configuration?.template.variantId ?? stringValue(values.variantId);
-  const scheduleId = configuration?.schedule.id ?? stringValue(values.scheduleId);
-  if (!templateId || !variantId) return undefined;
-  return {
-    templateId,
-    variantId,
-    ...(scheduleId ? { scheduleId } : {}),
-    values: structuredClone(values),
-    ...(configuration ? { configuration: structuredClone(configuration) } : {}),
-  };
+  return { configuration: structuredClone(value.configuration) };
 }
 
 function metadataMatches(envelope: EnvelopeLike, metadata: ContractMetadata): boolean {
@@ -134,9 +93,8 @@ function metadataMatches(envelope: EnvelopeLike, metadata: ContractMetadata): bo
 }
 
 function isCycleDraftPayload(value: unknown): value is CycleDraftPayload {
-  if (!isRecord(value) || value.draftVersion !== cycleDraftVersion ||
-    !isRecord(value.editorValues)) return false;
-  return value.configuration === undefined || isCycleConfiguration(value.configuration);
+  return isRecord(value) && value.draftVersion === cycleDraftVersion &&
+    isCycleConfiguration(value.configuration);
 }
 
 function isLegacyDraftPayload(value: unknown): value is LegacyCycleDraftPayloadV1 {
@@ -152,10 +110,6 @@ function isCycleConfiguration(value: unknown): value is CycleConfiguration {
     typeof value.template.id === "string" &&
     typeof value.template.variantId === "string" && isRecord(value.schedule) &&
     typeof value.schedule.id === "string";
-}
-
-function stringValue(value: JsonValue | undefined): string | undefined {
-  return typeof value === "string" && value !== "" ? value : undefined;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

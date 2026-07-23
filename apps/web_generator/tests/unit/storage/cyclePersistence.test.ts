@@ -27,6 +27,8 @@ function configuration(templateId = "template", variantId = "variant"): CycleCon
   return {
     format: "hybrid-training-cycle",
     configurationVersion: 1,
+    catalogVersion: 2,
+    catalogHash: "catalog",
     template: { id: templateId, variantId, options: {} },
     commonOptions: {
       warmUp: { enabled: false },
@@ -44,13 +46,7 @@ describe("Cycle draft persistence", () => {
   it("round-trips a compatible v2 configuration and retains obsolete records", async () => {
     const storage = new IndexedDbWorkspaceStorage(new IDBFactory());
     const repository = new WorkspaceDraftRepository<CycleDraftPayload>(storage);
-    const editorValues = {
-      templateId: "template",
-      variantId: "variant",
-      scheduleId: "schedule",
-      "options.warmup": true,
-    };
-    const payload = cycleDraft(configuration(), editorValues);
+    const payload = cycleDraft(configuration());
     await repository.save(currentDraftId, draftEnvelope(metadata, payload));
     await repository.save("obsolete", {
       ...draftEnvelope(metadata, payload),
@@ -62,13 +58,7 @@ describe("Cycle draft persistence", () => {
       metadata,
       new Map([["template", new Set(["variant"])]]),
     );
-    expect(restored).toEqual({
-      templateId: "template",
-      variantId: "variant",
-      scheduleId: "schedule",
-      values: editorValues,
-      configuration: configuration(),
-    });
+    expect(restored).toEqual({ configuration: configuration() });
     expect((await repository.list()).map((record) => record.id).sort()).toEqual([
       currentDraftId,
       "obsolete",
@@ -79,10 +69,7 @@ describe("Cycle draft persistence", () => {
   it("keeps a current draft whose selection disappeared from the catalog", async () => {
     const storage = new IndexedDbWorkspaceStorage(new IDBFactory());
     const repository = new WorkspaceDraftRepository<CycleDraftPayload>(storage);
-    const payload = cycleDraft(configuration("removed"), {
-      templateId: "removed",
-      variantId: "variant",
-    });
+    const payload = cycleDraft(configuration("removed"));
     await repository.save(currentDraftId, draftEnvelope(metadata, payload));
     expect(await restoreCompatibleDraft(repository, metadata, new Map())).toBeUndefined();
     expect(await repository.list()).toHaveLength(1);
@@ -103,19 +90,14 @@ describe("Cycle draft persistence", () => {
       },
     });
 
-    const migratedPayload = cycleDraft(configuration(), {
-      templateId: "template",
-      variantId: "variant",
-      scheduleId: "schedule",
-      ratio: 50,
-    });
+    const migratedPayload = cycleDraft(configuration());
     const restored = await restoreCompatibleDraft(
       repository,
       metadata,
       new Map([["template", new Set(["variant"])]]),
       () => migratedPayload,
     );
-    expect(restored?.values.ratio).toBe(50);
+    expect(restored?.configuration).toEqual(configuration());
     const rewritten = await repository.load(currentDraftId);
     expect((rewritten?.envelope.payload as CycleDraftPayload).draftVersion).toBe(cycleDraftVersion);
     expect((rewritten?.envelope.payload as CycleDraftPayload)).toEqual(migratedPayload);
