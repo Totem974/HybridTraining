@@ -136,6 +136,7 @@ async function loadSchema(
   variantId: string,
   candidates: Readonly<Record<string, JsonValue>> | CycleConfiguration = {},
   scheduleId?: string,
+  preserveTemplateOptions = true,
 ): Promise<void> {
   const next = client.cycleEditorSchema<CycleEditorSchema>({
     apiVersion: 'v1',
@@ -147,8 +148,15 @@ async function loadSchema(
   const candidateValues = isCycleConfiguration(candidates)
     ? cycleConfigurationToEditorValues(candidates, next)
     : candidates;
+  const reusableCandidates = preserveTemplateOptions
+    ? candidateValues
+    : Object.fromEntries(
+        Object.entries(candidateValues).filter(
+          ([path]) => !path.startsWith('options.') && path !== 'includeDeload',
+        ),
+      );
   const merged = {
-    ...candidateValues,
+    ...reusableCandidates,
     showPlating: candidateValues.showPlating ?? preferences.read().showPlating,
   };
   const normalized = normalizeEditorState(next, merged, new Set([
@@ -156,6 +164,7 @@ async function loadSchema(
     'variantId',
     'scheduleId',
     'sessionOrder',
+    'trainingDays',
   ]));
   schema = normalized.schema;
   values = normalized.values;
@@ -196,17 +205,19 @@ async function handleIntent(intent: CycleFormIntent): Promise<void> {
       (item) => item.generation.id === intent.value,
     );
     if (selected?.variantIds[0]) {
-      await loadSchema(selected.id, selected.variantIds[0], values);
+      await loadSchema(selected.id, selected.variantIds[0], values, undefined, false);
     }
     return;
   }
   if (intent.path === 'templateId' && typeof intent.value === 'string') {
     const selected = catalog.templates.find((item) => item.id === intent.value);
-    if (selected?.variantIds[0]) await loadSchema(selected.id, selected.variantIds[0], values);
+    if (selected?.variantIds[0]) {
+      await loadSchema(selected.id, selected.variantIds[0], values, undefined, false);
+    }
     return;
   }
   if (intent.path === 'variantId' && typeof intent.value === 'string') {
-    await loadSchema(String(values.templateId), intent.value, values);
+    await loadSchema(String(values.templateId), intent.value, values, undefined, false);
     return;
   }
   if (intent.path === 'scheduleId' && typeof intent.value === 'string') {

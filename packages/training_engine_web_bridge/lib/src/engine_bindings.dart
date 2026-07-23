@@ -213,7 +213,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     var templateId = _string(request, 'templateId');
     var variantId = _string(request, 'variantId');
     final alias = _templateAlias(templateId, variantId);
-    final optionOverrides = alias == null
+    final aliasOptionOverrides = alias == null
         ? const <String, Object?>{}
         : _map(alias['optionOverrides'], 'option overrides');
     if (alias != null) {
@@ -238,6 +238,14 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     final rawVariant = _list(rawTemplate, 'variants')
         .map((item) => _map(item, 'variant'))
         .singleWhere((item) => item['id'] == variantId);
+    final validExample = _optionalMap(rawVariant['validExample']);
+    final optionOverrides = <String, Object?>{
+      ...aliasOptionOverrides,
+      if (validExample['includeWarmUp'] is bool)
+        'warmUp.enabled': validExample['includeWarmUp'],
+      if (validExample['includeDeload'] is bool)
+        'deload.enabled': validExample['includeDeload'],
+    };
     final optionReference = _map(
       rawVariant['optionSchemaId'],
       'option schema reference',
@@ -864,8 +872,13 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   }
 
   GeneratedCycle _generate(String requestJson) {
+    final source = _map(jsonDecode(requestJson), 'cycle request');
     final json = normalizeCycleRequest(
-      _map(jsonDecode(requestJson), 'cycle request'),
+      source,
+      catalogOptionKeys: _catalogOptionKeys(
+        _string(source, 'templateId'),
+        _string(source, 'variantId'),
+      ),
     );
     _resolveTemplateAliasAndFullBody(json);
     _rejectUnknown(json, const {
@@ -909,7 +922,11 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       variantId,
       sessionOrder,
       scheduleId: selectedSchedule.reference.id,
-      optionValues: _catalogOptionValues(_map(json['options'], 'options')),
+      optionValues: _catalogOptionValues(
+        templateId,
+        variantId,
+        _map(json['options'], 'options'),
+      ),
     );
     final ratioByMovement = _optionalMap(
       json['trainingMaxRatioByMovement'] ??
@@ -1127,22 +1144,29 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
           )
           .firstOrNull;
 
-  Map<String, Object?> _catalogOptionValues(Map<String, Object?> options) {
-    final fullBody = options['fullBody'];
-    if (fullBody == null) return const {};
-    final selection = _map(fullBody, 'options.fullBody');
-    final values = <String, Object?>{};
-    if (selection['phase'] != null) values['phase'] = selection['phase'];
-    if (selection['liftProfiles'] case final Object rawProfiles) {
-      final profiles = _map(rawProfiles, 'options.fullBody.liftProfiles');
-      for (final entry in profiles.entries) {
-        values['${entry.key}_set_profile'] = entry.value;
-      }
-    }
-    return values;
+  Set<String> _catalogOptionKeys(String templateId, String variantId) {
+    final alias = _templateAlias(templateId, variantId);
+    final resolvedTemplateId = alias == null
+        ? templateId
+        : _string(alias, 'templateId');
+    final resolvedVariantId = alias == null
+        ? variantId
+        : _string(alias, 'variantId');
+    return {
+      for (final parameter in _optionParameters(
+        resolvedTemplateId,
+        resolvedVariantId,
+      ))
+        ((parameter['requestPath'] as String?) ?? _string(parameter, 'id'))
+            .split('.')
+            .first,
+    };
   }
 
-  Map<String, Object?> _optionDefaults(String templateId, String variantId) {
+  List<Map<String, Object?>> _optionParameters(
+    String templateId,
+    String variantId,
+  ) {
     final template = _rawTemplateRecords.singleWhere(
       (item) => item['id'] == templateId,
     );
@@ -1158,13 +1182,48 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
           item['id'] == reference['id'] &&
           item['revision'] == reference['revision'],
     );
+    return [
+      for (final raw in _list(schema, 'parameters')) _map(raw, 'parameter'),
+    ];
+  }
+
+  Map<String, Object?> _catalogOptionValues(
+    String templateId,
+    String variantId,
+    Map<String, Object?> options,
+  ) {
+    final values = <String, Object?>{};
+    for (final parameter in _optionParameters(templateId, variantId)) {
+      final id = _string(parameter, 'id');
+      final path = (parameter['requestPath'] as String?) ?? id;
+      Object? value = options;
+      for (final segment in path.split('.')) {
+        if (value is! Map || !value.containsKey(segment)) {
+          value = null;
+          break;
+        }
+        value = value[segment];
+      }
+      if (value != null) values[id] = value;
+    }
+    final fullBody = options['fullBody'];
+    if (fullBody == null) return values;
+    final selection = _map(fullBody, 'options.fullBody');
+    if (selection['phase'] != null) values['phase'] = selection['phase'];
+    if (selection['liftProfiles'] case final Object rawProfiles) {
+      final profiles = _map(rawProfiles, 'options.fullBody.liftProfiles');
+      for (final entry in profiles.entries) {
+        values['${entry.key}_set_profile'] = entry.value;
+      }
+    }
+    return values;
+  }
+
+  Map<String, Object?> _optionDefaults(String templateId, String variantId) {
     return {
-      for (final raw in _list(schema, 'parameters'))
-        if (_map(raw, 'parameter')['default'] != null)
-          _string(_map(raw, 'parameter'), 'id'): _map(
-            raw,
-            'parameter',
-          )['default'],
+      for (final parameter in _optionParameters(templateId, variantId))
+        if (parameter['default'] != null)
+          _string(parameter, 'id'): parameter['default'],
     };
   }
 
@@ -1202,13 +1261,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
   }
 
   List<int> _defaultTrainingDays(SourceSchedule schedule) {
-    final id = schedule.reference.id;
-    final frequency = id.contains('two_day')
-        ? 2
-        : id.contains('three_day')
-        ? 3
-        : schedule.sessions.length;
-    return List<int>.generate(frequency, (index) => index + 1);
+    return List<int>.generate(schedule.sessions.length, (index) => index + 1);
   }
 
   Map<String, Object?> _metadata() {
