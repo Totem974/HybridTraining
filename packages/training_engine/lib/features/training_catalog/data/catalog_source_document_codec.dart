@@ -38,11 +38,13 @@ final class SourceSchedule {
     required this.reference,
     required this.sessions,
     this.type = CycleScheduleMode.fixed,
+    this.sessionBlockOrder = SessionBlockOrder.componentMajor,
     this.sessionsPerWeek,
   });
   final ComponentReference reference;
   final List<SourceSession> sessions;
   final CycleScheduleMode type;
+  final SessionBlockOrder sessionBlockOrder;
   final int? sessionsPerWeek;
 }
 
@@ -279,9 +281,18 @@ final class CatalogSourceDocumentCodec {
               'type',
               'sessions',
             },
-            optional: const {'sessionsPerWeek'},
+            optional: const {'sessionsPerWeek', 'sessionBlockOrder'},
           );
           final type = _scheduleMode(map);
+          final sessionBlockOrder = _sessionBlockOrder(
+            map['sessionBlockOrder'],
+          );
+          if (sessionBlockOrder == SessionBlockOrder.movementMajor &&
+              type != CycleScheduleMode.multiMovement) {
+            throw const FormatException(
+              'movementMajor sessionBlockOrder requires a multiMovement schedule.',
+            );
+          }
           final sessions = _list(map, 'sessions')
               .map((value) {
                 final session = _map(value, 'session');
@@ -293,6 +304,22 @@ final class CatalogSourceDocumentCodec {
                 );
               })
               .toList(growable: false);
+          if (sessionBlockOrder == SessionBlockOrder.movementMajor) {
+            if (sessions.every((session) => session.movementIds.length < 2)) {
+              throw const FormatException(
+                'movementMajor sessionBlockOrder requires a session with multiple movements.',
+              );
+            }
+            for (final session in sessions) {
+              if (session.movementIds.isEmpty ||
+                  session.movementIds.toSet().length !=
+                      session.movementIds.length) {
+                throw const FormatException(
+                  'movementMajor session movementIds must be non-empty and unique.',
+                );
+              }
+            }
+          }
           final sessionsPerWeek = map['sessionsPerWeek'] == null
               ? null
               : _positiveInt(map, 'sessionsPerWeek');
@@ -302,6 +329,7 @@ final class CatalogSourceDocumentCodec {
           return SourceSchedule(
             reference: _recordReference(map),
             type: type,
+            sessionBlockOrder: sessionBlockOrder,
             sessions: sessions,
             sessionsPerWeek: sessionsPerWeek,
           );
@@ -1197,6 +1225,17 @@ final class CatalogSourceDocumentCodec {
         'finite' => CycleScheduleMode.finite,
         final value => throw FormatException('Unknown schedule type $value.'),
       };
+
+  SessionBlockOrder _sessionBlockOrder(Object? value) {
+    if (value == null) return SessionBlockOrder.componentMajor;
+    if (value is! String ||
+        !SessionBlockOrder.values.any((order) => order.name == value)) {
+      throw const FormatException(
+        'sessionBlockOrder must be componentMajor or movementMajor.',
+      );
+    }
+    return SessionBlockOrder.values.byName(value);
+  }
 
   void _validateScheduleCadence(
     CycleScheduleMode type,

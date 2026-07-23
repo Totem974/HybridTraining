@@ -13,10 +13,32 @@ final class CatalogScheduleDataResolver {
         'sessionsPerWeek is required for scheduled compilation.',
       );
     }
+    if (source.sessionBlockOrder == SessionBlockOrder.movementMajor &&
+        source.type != CycleScheduleMode.multiMovement) {
+      throw const FormatException(
+        'movementMajor sessionBlockOrder requires a multiMovement schedule.',
+      );
+    }
+    if (source.sessionBlockOrder == SessionBlockOrder.movementMajor) {
+      if (source.sessions.every((session) => session.movementIds.length < 2)) {
+        throw const FormatException(
+          'movementMajor sessionBlockOrder requires a session with multiple movements.',
+        );
+      }
+      for (final session in source.sessions) {
+        if (session.movementIds.isEmpty ||
+            session.movementIds.toSet().length != session.movementIds.length) {
+          throw const FormatException(
+            'movementMajor session movementIds must be non-empty and unique.',
+          );
+        }
+      }
+    }
     _validateCadence(source, sessionsPerWeek);
     return ResolvedCycleSchedule(
       id: source.reference.id,
       mode: source.type,
+      sessionBlockOrder: source.sessionBlockOrder,
       sessions: List.unmodifiable([
         for (final session in source.sessions)
           ScheduleSessionTemplate(

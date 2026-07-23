@@ -231,6 +231,77 @@ void main() {
     expect(cycle.weeks.single.sessions.first.movementId.value, 'AB');
   });
 
+  test(
+    'movement-major order groups complete lift work after joker overlays',
+    () {
+      ResolvedCycleSchedule schedule(SessionBlockOrder order) =>
+          ResolvedCycleSchedule(
+            id: 'paired_schedule',
+            mode: CycleScheduleMode.multiMovement,
+            sessionBlockOrder: order,
+            sessions: const [
+              ScheduleSessionTemplate(
+                id: SessionId('AB'),
+                role: 'multiLift',
+                movementIds: [MovementId('a'), MovementId('b')],
+              ),
+              ScheduleSessionTemplate(
+                id: SessionId('CD'),
+                role: 'multiLift',
+                movementIds: [MovementId('c'), MovementId('d')],
+              ),
+            ],
+            allowedFrequencies: const {2},
+          );
+      GeneratedCycle compile(SessionBlockOrder order) =>
+          compiler.compileScheduled(
+            definition: _interleavedPairedDefinition(),
+            schedule: schedule(order),
+            selection: const CycleScheduleSelection(
+              trainingDays: [1, 4],
+              sessionOrder: [SessionId('AB'), SessionId('CD')],
+            ),
+            request: _request(
+              const [1, 4],
+              sessionIds: const ['AB', 'CD'],
+              cycleOptions: const CycleExecutionOptions(
+                joker: JokerExecutionOptions(
+                  enabled: true,
+                  ceilingBasisPoints: 500,
+                ),
+              ),
+            ),
+          );
+      List<String> firstSession(GeneratedCycle cycle) => cycle
+          .weeks
+          .single
+          .sessions
+          .first
+          .blocks
+          .map((block) => '${block.movementId.value}:${block.role}')
+          .toList(growable: false);
+
+      expect(firstSession(compile(SessionBlockOrder.componentMajor)), [
+        'a:warm_up',
+        'b:warm_up',
+        'a:main_work',
+        'a:joker',
+        'b:main_work',
+        'b:joker',
+        'accessory:assistance',
+      ]);
+      expect(firstSession(compile(SessionBlockOrder.movementMajor)), [
+        'a:warm_up',
+        'a:main_work',
+        'a:joker',
+        'b:warm_up',
+        'b:main_work',
+        'b:joker',
+        'accessory:assistance',
+      ]);
+    },
+  );
+
   test('invalid frequency and session order are rejected structurally', () {
     final definition = _fourLiftDefinition(CycleScheduleMode.rotating);
     final schedule = _fourLiftSchedule(CycleScheduleMode.rotating, const {3});
@@ -391,10 +462,94 @@ ResolvedCycleDefinition _pairedDefinition() => ResolvedCycleDefinition(
   ],
 );
 
+ResolvedCycleDefinition _interleavedPairedDefinition() =>
+    ResolvedCycleDefinition(
+      catalogVersion: 2,
+      templateId: 'paired',
+      variantId: 'ordered-paired',
+      sessionMovementIds: const [MovementId('AB'), MovementId('CD')],
+      sourceReference: 'test',
+      scheduleReference: const ComponentReference('paired_schedule', 1),
+      scheduleMode: CycleScheduleMode.multiMovement,
+      optionRecipes: const ResolvedCycleOptionRecipes(
+        joker: ResolvedJokerRecipe(
+          blockId: 'joker',
+          steps: [
+            JokerRecipeStep(
+              cumulativeIncreaseBasisPoints: 500,
+              repetitions: FixedRepetitions(5),
+            ),
+          ],
+        ),
+      ),
+      weeks: [
+        WeekDefinition(
+          number: 1,
+          sessions: [
+            SessionDefinition(
+              id: const MovementId('AB'),
+              role: 'AB',
+              sourceRole: 'multiLift',
+              blocks: [
+                for (final entry in const [
+                  (id: 'warm-a', role: 'warm_up', movement: 'a'),
+                  (id: 'warm-b', role: 'warm_up', movement: 'b'),
+                  (id: 'main-a', role: 'main_work', movement: 'a'),
+                  (id: 'main-b', role: 'main_work', movement: 'b'),
+                ])
+                  BlockDefinition(
+                    id: entry.id,
+                    role: entry.role,
+                    movementId: MovementId(entry.movement),
+                    sets: const [
+                      PrescribedSetDefinition(
+                        repetitions: FixedRepetitions(5),
+                        load: TrainingMaxPercentageLoad(Percentage(5000)),
+                      ),
+                    ],
+                  ),
+                const BlockDefinition(
+                  id: 'accessory',
+                  role: 'assistance',
+                  movementId: MovementId('accessory'),
+                  sets: [
+                    PrescribedSetDefinition(
+                      repetitions: FixedRepetitions(10),
+                      load: Unloaded(),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SessionDefinition(
+              id: const MovementId('CD'),
+              role: 'CD',
+              sourceRole: 'multiLift',
+              blocks: [
+                for (final movement in const ['c', 'd'])
+                  BlockDefinition(
+                    id: 'main-$movement',
+                    role: 'main_work',
+                    movementId: MovementId(movement),
+                    sets: const [
+                      PrescribedSetDefinition(
+                        repetitions: FixedRepetitions(5),
+                        load: TrainingMaxPercentageLoad(Percentage(5000)),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+
 CycleRequest _request(
   List<int> days, {
   bool includeDeload = true,
   List<String> sessionIds = _sessionIds,
+  CycleExecutionOptions cycleOptions = const CycleExecutionOptions(),
 }) => CycleRequest(
   cycleId: 'scheduled',
   startDate: DateTime(2026, 1, 10),
@@ -422,4 +577,5 @@ CycleRequest _request(
     ],
   ),
   includeDeload: includeDeload,
+  cycleOptions: cycleOptions,
 );

@@ -141,9 +141,14 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
             request,
             options,
           );
+          final ordered = _orderSessionBlocks(
+            effective,
+            schedule.sessionBlockOrder,
+            source.template.movementIds,
+          );
           blocks.addAll(
             _compileBlocks(
-              effective,
+              ordered,
               source.template.movementIds.first,
               sourceMaxes,
               request,
@@ -1645,6 +1650,34 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
               mainWorkSemantics: block.mainWorkSemantics,
             ),
     ];
+  }
+
+  List<BlockDefinition> _orderSessionBlocks(
+    List<BlockDefinition> blocks,
+    SessionBlockOrder order,
+    List<MovementId> movementOrder,
+  ) {
+    if (order == SessionBlockOrder.componentMajor || blocks.length < 2) {
+      return blocks;
+    }
+    final orderedMovements = <MovementId>[];
+    final seen = <MovementId>{};
+    for (final movement in movementOrder) {
+      if (seen.add(movement)) orderedMovements.add(movement);
+    }
+    for (final block in blocks) {
+      final movement = block.movementId;
+      if (movement != null && seen.add(movement)) {
+        orderedMovements.add(movement);
+      }
+    }
+    return List.unmodifiable([
+      for (final movement in orderedMovements)
+        for (final block in blocks)
+          if (block.movementId == movement) block,
+      for (final block in blocks)
+        if (block.movementId == null) block,
+    ]);
   }
 
   List<BlockDefinition> _replaceRoleAtAnchor(

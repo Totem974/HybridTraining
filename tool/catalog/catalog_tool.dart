@@ -1010,15 +1010,20 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
         }
       }
     case 'schedules':
-      _exact(value, {
-        'id',
-        'revision',
-        'labels',
-        'sourceRuleIds',
-        'type',
-        'sessionsPerWeek',
-        'sessions',
-      }, at);
+      _exact(
+        value,
+        {
+          'id',
+          'revision',
+          'labels',
+          'sourceRuleIds',
+          'type',
+          'sessionsPerWeek',
+          'sessions',
+        },
+        at,
+        optional: const {'sessionBlockOrder'},
+      );
       _common(value, at);
       if (!const {
         'fixed',
@@ -1028,10 +1033,48 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
       }.contains(value['type'])) {
         throw FormatException('unknown schedule type ${value['type']}');
       }
+      final sessionBlockOrder = value['sessionBlockOrder'] ?? 'componentMajor';
+      if (!const {
+        'componentMajor',
+        'movementMajor',
+      }.contains(sessionBlockOrder)) {
+        throw FormatException(
+          '$at.sessionBlockOrder must be componentMajor or movementMajor',
+        );
+      }
+      if (sessionBlockOrder == 'movementMajor' &&
+          value['type'] != 'multiMovement') {
+        throw FormatException(
+          '$at movementMajor sessionBlockOrder requires a multiMovement schedule',
+        );
+      }
       final sessions = _objects(value['sessions'], '$at.sessions');
       for (var i = 0; i < sessions.length; i++) {
         _exact(sessions[i], {'id', 'role', 'movementIds'}, '$at.sessions[$i]');
         _strings(sessions[i]['movementIds'], '$at.sessions[$i].movementIds');
+      }
+      if (sessionBlockOrder == 'movementMajor') {
+        final movementLists = [
+          for (var i = 0; i < sessions.length; i++)
+            [
+              for (final movement
+                  in sessions[i]['movementIds']! as List<Object?>)
+                movement! as String,
+            ],
+        ];
+        if (movementLists.every((movements) => movements.length < 2)) {
+          throw FormatException(
+            '$at movementMajor sessionBlockOrder requires a session with multiple movements',
+          );
+        }
+        for (final movements in movementLists) {
+          if (movements.isEmpty ||
+              movements.toSet().length != movements.length) {
+            throw FormatException(
+              '$at movementMajor session movementIds must be non-empty and unique',
+            );
+          }
+        }
       }
       final sessionsPerWeek = value['sessionsPerWeek'];
       if (sessionsPerWeek is! int ||

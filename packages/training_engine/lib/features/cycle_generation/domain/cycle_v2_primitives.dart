@@ -39,6 +39,7 @@ final class ResolvedCycleSchedule {
     required this.mode,
     required this.sessions,
     required this.allowedFrequencies,
+    this.sessionBlockOrder = SessionBlockOrder.componentMajor,
     this.finiteSlots = const [],
   }) : assert(id != '');
 
@@ -46,6 +47,7 @@ final class ResolvedCycleSchedule {
   final CycleScheduleMode mode;
   final List<ScheduleSessionTemplate> sessions;
   final Set<int> allowedFrequencies;
+  final SessionBlockOrder sessionBlockOrder;
   final List<FiniteScheduleSlot> finiteSlots;
 }
 

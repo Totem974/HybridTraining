@@ -32,9 +32,13 @@ strict primitive `block` payload.
 
 `schedules` contains `schedules`: `id`, `revision`, `labels`, `sourceRuleIds`,
 `type` (`fixed`, `rotating`, `multiMovement`, `finite`), `sessionsPerWeek`
-(an integer from 1 to 7), and ordered `sessions`. `fixed` and `multiMovement`
-schedules use one weekly slot per session. A `rotating` schedule may use fewer
-weekly slots than its ordered session templates.
+(an integer from 1 to 7), optional `sessionBlockOrder` (`componentMajor` or
+`movementMajor`), and ordered `sessions`. The block-order default is
+`componentMajor`; `movementMajor` is valid only for `multiMovement` schedules
+and groups each movement's complete work after runtime option overlays.
+`fixed` and `multiMovement` schedules use one weekly slot per session. A
+`rotating` schedule may use fewer weekly slots than its ordered session
+templates.
 
 `templates` contains `templates`: `id`, `revision`, `labels`, `sourceRuleIds`,
 and `variants`. Every variant has `id`, `revision`, `labels`, `sourceRuleIds`,

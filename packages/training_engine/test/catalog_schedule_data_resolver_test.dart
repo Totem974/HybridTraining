@@ -29,6 +29,7 @@ void main() {
 
     expect(schedule.id, 'arbitrary_schedule_name');
     expect(schedule.mode, CycleScheduleMode.rotating);
+    expect(schedule.sessionBlockOrder, SessionBlockOrder.componentMajor);
     expect(schedule.allowedFrequencies, {3});
     expect(schedule.sessions.map((session) => session.id.value), [
       'day_a',
@@ -58,6 +59,7 @@ void main() {
     const source = SourceSchedule(
       reference: ComponentReference('paired', 1),
       type: CycleScheduleMode.multiMovement,
+      sessionBlockOrder: SessionBlockOrder.movementMajor,
       sessionsPerWeek: 2,
       sessions: [
         SourceSession(
@@ -76,6 +78,7 @@ void main() {
     final schedule = resolver.resolve(source);
 
     expect(schedule.allowedFrequencies, {2});
+    expect(schedule.sessionBlockOrder, SessionBlockOrder.movementMajor);
     expect(
       schedule.sessions.map(
         (session) =>
@@ -130,6 +133,29 @@ void main() {
           (error) => error.message,
           'message',
           contains('must equal the session count for fixed schedules'),
+        ),
+      ),
+    );
+  });
+
+  test('rejects movement-major ordering on a non-multi-movement schedule', () {
+    const source = SourceSchedule(
+      reference: ComponentReference('invalid_order', 1),
+      type: CycleScheduleMode.fixed,
+      sessionBlockOrder: SessionBlockOrder.movementMajor,
+      sessionsPerWeek: 1,
+      sessions: [
+        SourceSession(id: 'main', role: 'mainLift', movementIds: ['squat']),
+      ],
+    );
+
+    expect(
+      () => resolver.resolve(source),
+      throwsA(
+        isA<FormatException>().having(
+          (error) => error.message,
+          'message',
+          contains('requires a multiMovement schedule'),
         ),
       ),
     );

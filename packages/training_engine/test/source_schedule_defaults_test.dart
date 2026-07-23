@@ -31,6 +31,7 @@ void main() {
       'labels',
       'sourceRuleIds',
       'type',
+      'sessionBlockOrder',
       'sessionsPerWeek',
       'sessions',
     });
@@ -42,6 +43,7 @@ void main() {
         .singleWhere((schedule) => schedule.reference.id == _sourceScheduleId);
     expect(schedule.reference.revision, 1);
     expect(schedule.type, CycleScheduleMode.multiMovement);
+    expect(schedule.sessionBlockOrder, SessionBlockOrder.movementMajor);
     expect(schedule.sessionsPerWeek, 2);
     expect(schedule.sessions.map((session) => session.id), [
       'deadlift_overhead_press',
@@ -69,6 +71,7 @@ void main() {
 
     expect(resolved.id, _sourceScheduleId);
     expect(resolved.mode, CycleScheduleMode.multiMovement);
+    expect(resolved.sessionBlockOrder, SessionBlockOrder.movementMajor);
     expect(resolved.allowedFrequencies, {2});
     expect(resolved.sessions.map((session) => session.id.value), [
       'deadlift_overhead_press',
@@ -85,6 +88,45 @@ void main() {
       ],
     );
   });
+
+  test(
+    'movement-major block order is rejected outside multi-movement schedules',
+    () {
+      final source = jsonEncode({
+        'schemaVersion': 1,
+        'kind': 'schedules',
+        'schedules': [
+          {
+            'id': 'invalid_order',
+            'revision': 1,
+            'labels': {'en': 'Invalid', 'fr': 'Invalide'},
+            'sourceRuleIds': ['test.invalid'],
+            'type': 'fixed',
+            'sessionBlockOrder': 'movementMajor',
+            'sessionsPerWeek': 1,
+            'sessions': [
+              {
+                'id': 'squat',
+                'role': 'mainLift',
+                'movementIds': ['squat'],
+              },
+            ],
+          },
+        ],
+      });
+
+      expect(
+        () => codec.decodeSchedules(source),
+        throwsA(
+          isA<FormatException>().having(
+            (error) => error.message,
+            'message',
+            contains('requires a multiMovement schedule'),
+          ),
+        ),
+      );
+    },
+  );
 
   test('classic deload skip-warm-up default stays source-backed', () {
     final source = File(

@@ -1405,6 +1405,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       reference: schedule.reference,
       sessions: schedule.sessions,
       type: schedule.type,
+      sessionBlockOrder: schedule.sessionBlockOrder,
       sessionsPerWeek: frequency,
     );
   }

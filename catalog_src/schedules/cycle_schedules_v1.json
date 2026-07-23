@@ -48,6 +48,7 @@
       "labels": {"en": "Two-day paired-lift source order", "fr": "Deux jours, mouvements appariés dans l’ordre source"},
       "sourceRuleIds": ["or.schedule.two_day_option_1"],
       "type": "multiMovement",
+      "sessionBlockOrder": "movementMajor",
       "sessionsPerWeek": 2,
       "sessions": [
         {"id": "deadlift_overhead_press", "role": "multiLift", "movementIds": ["deadlift", "overhead_press"]},
