@@ -1,9 +1,11 @@
 {
   "fixtureVersion": 1,
   "catalogVersion": 2,
-  "cycleVariantCount": 19,
+  "cycleVariantCount": 21,
   "cycleFixtures": [
     "beyond_boring_but_big--same_lift_5x10_50_two_cycles",
+    "beyond_boring_but_big--variation_i_5x10_wave",
+    "beyond_boring_but_big--variation_ii_descending_volume",
     "beyond_first_set_last--amrap_four_day_two_cycles",
     "beyond_fives_progression--main_lifts_four_day_two_cycles",
     "beyond_pyramid--four_day_two_cycles",

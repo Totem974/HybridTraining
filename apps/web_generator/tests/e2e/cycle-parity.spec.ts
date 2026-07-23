@@ -46,6 +46,29 @@ test('BBB exposes catalog options and changes the generated assistance work', as
   expect(external).toEqual([]);
 });
 
+test('Beyond BBB exposes and generates both sourced wave variants', async ({ page }) => {
+  const external = await openIntegratedCycle(page);
+  await page
+    .getByTestId('generation-row')
+    .getByRole('combobox')
+    .selectOption(JSON.stringify('beyond'));
+  await page
+    .getByTestId('template-row')
+    .getByRole('combobox')
+    .selectOption(JSON.stringify('beyond_boring_but_big'));
+  const variant = page.getByTestId('variant-row').getByRole('combobox');
+
+  await variant.selectOption(JSON.stringify('variation_i_5x10_wave'));
+  await awaitGeneratedProgram(page);
+  await expect(page.locator('.program-week').nth(1)).toContainText(/10\s*[×x]/i);
+
+  await variant.selectOption(JSON.stringify('variation_ii_descending_volume'));
+  await awaitGeneratedProgram(page);
+  await expect(page.locator('.program-week').nth(1)).toContainText(/8\s*[×x]/i);
+  await expect(page.locator('.program-week').nth(2)).toContainText(/5\s*[×x]/i);
+  expect(external).toEqual([]);
+});
+
 test('Two Days renders only valid schedule tokens and generates', async ({ page }) => {
   const external = await openIntegratedCycle(page);
   await page.getByTestId('template-row').getByRole('combobox').selectOption(JSON.stringify('classic_531'));

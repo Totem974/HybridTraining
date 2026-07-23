@@ -236,7 +236,8 @@
                     {
                         "id":  "beyond_020",
                         "generation":  "beyond",
-                        "classification":  "documentation",
+                        "classification":  "cycleTemplate",
+                        "cycleTemplateId":  "beyond_boring_but_big",
                         "title":  {
                                       "en":  "Boring But Big - Variation I",
                                       "fr":  "Boring But Big - Variation I"
@@ -248,7 +249,8 @@
                     {
                         "id":  "beyond_021",
                         "generation":  "beyond",
-                        "classification":  "documentation",
+                        "classification":  "cycleTemplate",
+                        "cycleTemplateId":  "beyond_boring_but_big",
                         "title":  {
                                       "en":  "Boring But Big - Variation II",
                                       "fr":  "Boring But Big - Variation II"

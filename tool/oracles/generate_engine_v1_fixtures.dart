@@ -10,6 +10,27 @@ import '../catalog/catalog_tool.dart' as catalog_tool;
 
 const _catalogVersion = 2;
 const _fixtureVersion = 1;
+const _legacyCycleFixtureOrdinals = <String, int>{
+  'beyond_boring_but_big--same_lift_5x10_50_two_cycles': 0,
+  'beyond_first_set_last--amrap_four_day_two_cycles': 1,
+  'beyond_fives_progression--main_lifts_four_day_two_cycles': 2,
+  'beyond_pyramid--four_day_two_cycles': 3,
+  'classic_531--four_day': 4,
+  'classic_531--three_day_rotation': 5,
+  'classic_531--two_day_rotation': 6,
+  'classic_bodyweight--four_day': 7,
+  'classic_boring_but_big--same_lift_5x10': 8,
+  'classic_for_beginners--original_progression': 9,
+  'classic_full_body--full_boring': 10,
+  'classic_full_body--original': 11,
+  'classic_full_body--updated': 12,
+  'classic_jack_shit--main_lift_only': 13,
+  'classic_periodization_bible--four_day': 14,
+  'classic_simplest_strength--original': 15,
+  'classic_simplest_strength--powerlifting': 16,
+  'classic_triumvirate--four_day': 17,
+  'powerlifting_classic_531--four_day_531_deload': 18,
+};
 
 Future<void> main(List<String> arguments) async {
   final output = Directory(
@@ -30,9 +51,13 @@ Future<void> generateEngineV1Fixtures(Directory output) async {
     final catalog = SqliteTrainingCatalog(database);
     final index = await catalog.loadIndex(catalogVersion: _catalogVersion);
     final fixtures = <Map<String, Object?>>[];
-    var ordinal = 0;
+    var nextNewOrdinal = _legacyCycleFixtureOrdinals.length;
     for (final template in index.templates) {
       for (final variantId in template.variantIds) {
+        final fixtureId = '${template.id}--$variantId';
+        // Existing fixture inputs remain stable when a catalog variant is added.
+        final ordinal =
+            _legacyCycleFixtureOrdinals[fixtureId] ?? nextNewOrdinal++;
         final definition = await catalog.resolve(
           catalogVersion: _catalogVersion,
           templateId: template.id,
@@ -54,7 +79,7 @@ Future<void> generateEngineV1Fixtures(Directory output) async {
                 .cast<String>();
         final fixture = _buildCycleFixture(
           definition: definition,
-          ordinal: ordinal++,
+          ordinal: ordinal,
           example: example,
           allowedSchedules: allowedSchedules,
         );
