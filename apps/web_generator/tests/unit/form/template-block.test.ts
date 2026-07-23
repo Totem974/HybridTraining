@@ -84,6 +84,12 @@ describe("renderTemplateBlock", () => {
         ".template-selection-rows .template-selection-chevron",
       ),
     ).toHaveLength(3);
+    expect(host.querySelector(".template-selection-rows")?.getAttribute("role"))
+      .toBe("group");
+    expect(
+      host.querySelector(".template-selection-chevron")?.getAttribute("aria-hidden"),
+    ).toBe("true");
+    expect(host.querySelector(".template-selection-chevron")?.textContent).toBe("›");
     expect(host.querySelector("[data-testid=generation] option")?.textContent)
       .toBe("Classic");
     expect(host.querySelector("[data-testid=variant] option")?.textContent).toBe(
@@ -96,9 +102,16 @@ describe("renderTemplateBlock", () => {
     host.append(renderTemplateBlock(context()));
     const rows = host.querySelector(".template-selection-rows");
     const options = host.querySelector(".template-dynamic-options");
-    expect(rows?.nextElementSibling).toBe(options);
-    expect(options?.querySelector("input[type=checkbox]")).not.toBeNull();
-    expect(options?.querySelector("[data-testid=phase]")).not.toBeNull();
+    const group = rows?.nextElementSibling;
+    expect(group?.classList.contains("template-options-group")).toBe(true);
+    expect(group?.querySelector(".template-options-heading")?.textContent)
+      .toBe("Template options");
+    expect(group?.getAttribute("aria-labelledby")).toBe(
+      group?.querySelector(".template-options-heading")?.id,
+    );
+    expect(group?.querySelector(".template-dynamic-options")).toBe(options);
+    expect(group?.querySelector("input[type=checkbox]")).not.toBeNull();
+    expect(group?.querySelector("[data-testid=phase]")).not.toBeNull();
   });
 
   it("dispatches the selected schema value without template rules", () => {
@@ -115,5 +128,19 @@ describe("renderTemplateBlock", () => {
       path: "variantId",
       value: "two-day",
     });
+  });
+
+  it("localizes accessible group labels without changing schema choices", () => {
+    const renderContext = { ...context(), locale: "fr" };
+    const host = document.createElement("div");
+    host.append(renderTemplateBlock(renderContext));
+
+    expect(
+      host.querySelector(".template-selection-rows")?.getAttribute("aria-label"),
+    ).toBe("Sélection du programme");
+    expect(host.querySelector(".template-options-heading")?.textContent)
+      .toBe("Options du modèle");
+    expect(host.querySelector("[data-testid=generation] option")?.textContent)
+      .toBe("Classic");
   });
 });
