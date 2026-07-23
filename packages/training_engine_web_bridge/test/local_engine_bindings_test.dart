@@ -5,7 +5,7 @@ import 'package:test/test.dart';
 import 'package:training_engine_web_bridge/training_engine_web_bridge.dart';
 
 void main() {
-  BridgeService initializedService() {
+  BridgeService initializedService({bool exposePerMovementOption = false}) {
     final service = BridgeService(LocalTrainingEngineBindings());
     final catalogPath =
         Platform.environment['TRAINING_ENGINE_CATALOG_BUNDLE'] ??
@@ -20,6 +20,21 @@ void main() {
         );
       }
       final content = document['content'] as Map;
+      if (exposePerMovementOption && content['kind'] == 'optionSchemas') {
+        for (final schema in (content['optionSchemas'] as List).cast<Map>()) {
+          if (schema['id'] != 'beyond_bbb_same_lift_options') continue;
+          for (final parameter in (schema['parameters'] as List).cast<Map>()) {
+            if (parameter['id'] == 'bbb_percentage') {
+              parameter['presentationGroup'] = 'supplemental';
+              parameter['visibleWhen'] = {
+                'type': 'equals',
+                'parameterId': 'bbb_percentage',
+                'value': 5000,
+              };
+            }
+          }
+        }
+      }
       if (content['kind'] == 'templates') {
         for (final template in (content['templates'] as List).cast<Map>()) {
           if (template['id'] == 'classic_boring_but_big') {
@@ -176,6 +191,55 @@ void main() {
       everyElement(startsWith('beyond_')),
     );
   });
+
+  test(
+    'editor expands a per-movement catalog option without template rules',
+    () {
+      final service = initializedService(exposePerMovementOption: true);
+      final schema =
+          jsonDecode(
+                service.cycleEditorSchema(
+                  jsonEncode({
+                    'apiVersion': 'v1',
+                    'schemaVersion': 1,
+                    'templateId': 'beyond_boring_but_big',
+                    'variantId': 'same_lift_5x10_50_two_cycles',
+                  }),
+                ),
+              )
+              as Map<String, Object?>;
+      final fields = (schema['fields'] as List).cast<Map<String, Object?>>();
+      final movements = (schema['movementIds'] as List).cast<String>();
+      final percentages = fields
+          .where(
+            (field) => (field['id'] as String).startsWith('bbb_percentage.'),
+          )
+          .toList(growable: false);
+
+      expect(percentages, hasLength(movements.length));
+      for (final movement in movements) {
+        final field = percentages.singleWhere(
+          (candidate) => candidate['id'] == 'bbb_percentage.$movement',
+        );
+        expect(field['path'], 'options.bbb_percentage.$movement');
+        expect(field['kind'], 'percentage');
+        expect(field['value'], 5000);
+        expect(field['minimum'], 5000);
+        expect(field['maximum'], 5000);
+        expect(field['visibleWhen'], [
+          {
+            'path': 'options.bbb_percentage.$movement',
+            'operator': 'equals',
+            'value': 5000,
+          },
+        ]);
+        final labels = field['label'] as Map;
+        expect(labels['en'], contains('BBB percentage'));
+        expect(labels['en'], isNot(endsWith(movement)));
+        expect(labels['fr'], contains('Pourcentage BBB'));
+      }
+    },
+  );
 
   test('generateCycle resolves and applies the catalog option recipe', () {
     final service = initializedService();

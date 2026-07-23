@@ -256,6 +256,10 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
         _string(parameter, 'id'):
             parameter['requestPath'] as String? ?? _string(parameter, 'id'),
     };
+    final optionScopes = {
+      for (final parameter in optionParameters)
+        _string(parameter, 'id'): parameter['scope'] as String? ?? 'global',
+    };
     final defaultScheduleReference =
         rawVariant['validExample'] is Map<String, Object?>
         ? _map(rawVariant['validExample'], 'example')['scheduleId'] as String?
@@ -439,7 +443,13 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       ],
       for (final parameter in optionParameters)
         if (parameter['presentationGroup'] != 'hidden')
-          _optionField(parameter, optionRequestPaths, optionOverrides),
+          ..._optionFields(
+            parameter,
+            optionRequestPaths,
+            optionScopes,
+            optionOverrides,
+            movements,
+          ),
       _field(
         id: 'bar-weight',
         path: 'barWeight',
@@ -1202,13 +1212,60 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     'severity': 'error',
   };
 
+  Iterable<Map<String, Object?>> _optionFields(
+    Map<String, Object?> parameter,
+    Map<String, String> requestPaths,
+    Map<String, String> scopes,
+    Map<String, Object?> optionOverrides,
+    List<String> movementIds,
+  ) {
+    if (scopes[_string(parameter, 'id')] != 'perMovement') {
+      return [_optionField(parameter, requestPaths, scopes, optionOverrides)];
+    }
+    if (parameter['type'] != 'percentage') {
+      throw FormatException(
+        'UNSUPPORTED_PER_MOVEMENT_EDITOR_TYPE:${parameter['type']}',
+      );
+    }
+    return [
+      for (final movementId in movementIds)
+        _optionField(
+          parameter,
+          requestPaths,
+          scopes,
+          optionOverrides,
+          movementId: movementId,
+        ),
+    ];
+  }
+
   Map<String, Object?> _optionField(
     Map<String, Object?> parameter,
     Map<String, String> requestPaths,
-    Map<String, Object?> optionOverrides,
-  ) {
+    Map<String, String> scopes,
+    Map<String, Object?> optionOverrides, {
+    String? movementId,
+  }) {
+    final parameterId = _string(parameter, 'id');
     final type = parameter['type'] as String;
     final presentationGroup = parameter['presentationGroup'] as String?;
+    final baseRequestPath = requestPaths[parameterId]!;
+    final requestPath = movementId == null
+        ? baseRequestPath
+        : '$baseRequestPath.$movementId';
+    final scopedRequestPaths = {
+      for (final entry in requestPaths.entries)
+        entry.key: movementId != null && scopes[entry.key] == 'perMovement'
+            ? '${entry.value}.$movementId'
+            : entry.value,
+    };
+    final baseLabel = {
+      'en': parameter['labelEn'] ?? parameterId,
+      'fr': parameter['labelFr'] ?? parameter['labelEn'] ?? parameterId,
+    };
+    final movementLabel = movementId == null
+        ? null
+        : _movementLabels[movementId];
     final kind = switch (type) {
       'boolean' => 'boolean',
       'integer' => 'integer',
@@ -1218,19 +1275,27 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       _ => 'text',
     };
     return _field(
-      id: parameter['id'] as String,
-      path: 'options.${requestPaths[_string(parameter, 'id')]}',
+      id: movementId == null ? parameterId : '$parameterId.$movementId',
+      path: 'options.$requestPath',
       region: const {'warmup', 'joker', 'deload'}.contains(presentationGroup)
           ? 'additional-options'
           : 'template',
       group: presentationGroup,
       groupLabel: _optionGroupLabel(presentationGroup),
       kind: kind,
-      label: {
-        'en': parameter['labelEn'] ?? parameter['id'],
-        'fr': parameter['labelFr'] ?? parameter['labelEn'] ?? parameter['id'],
-      },
-      value: optionOverrides[parameter['id']] ?? parameter['default'],
+      label: movementLabel == null
+          ? baseLabel
+          : {
+              'en': '${baseLabel['en']} — ${movementLabel['en'] ?? movementId}',
+              'fr':
+                  '${baseLabel['fr']} — '
+                  '${movementLabel['fr'] ?? movementLabel['en'] ?? movementId}',
+            },
+      value: _scopedOptionValue(
+        optionOverrides[parameterId],
+        parameter['default'],
+        movementId,
+      ),
       minimum: parameter['minimum'] as num?,
       maximum: parameter['maximum'] as num?,
       step: parameter['step'] as num?,
@@ -1239,10 +1304,31 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
             in (parameter['allowedValues'] as List<Object?>? ?? const []))
           {'value': value, 'label': value.toString()},
       ],
-      visibleWhen: _editorConditions(parameter['visibleWhen'], requestPaths),
-      enabledWhen: _editorConditions(parameter['enabledWhen'], requestPaths),
+      visibleWhen: _editorConditions(
+        parameter['visibleWhen'],
+        scopedRequestPaths,
+      ),
+      enabledWhen: _editorConditions(
+        parameter['enabledWhen'],
+        scopedRequestPaths,
+      ),
     );
   }
+}
+
+Object? _scopedOptionValue(
+  Object? override,
+  Object? defaultValue,
+  String? movementId,
+) {
+  if (movementId == null) return override ?? defaultValue;
+  if (override is Map && override.containsKey(movementId)) {
+    return override[movementId];
+  }
+  if (defaultValue is Map && defaultValue.containsKey(movementId)) {
+    return defaultValue[movementId];
+  }
+  return override ?? defaultValue;
 }
 
 Map<String, Object?> _engineTemplateDocument(Map<String, Object?> document) {
