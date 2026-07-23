@@ -7,6 +7,20 @@ final class ComponentReference {
   final int revision;
 }
 
+final class CatalogWeekOrigin {
+  const CatalogWeekOrigin({
+    required this.phaseId,
+    required this.phaseIteration,
+    required this.sourceWeekNumber,
+  }) : assert(phaseId != ''),
+       assert(phaseIteration > 0),
+       assert(sourceWeekNumber > 0);
+
+  final String phaseId;
+  final int phaseIteration;
+  final int sourceWeekNumber;
+}
+
 final class CatalogWeekPlan {
   const CatalogWeekPlan({required this.weekNumber, required this.components})
     : assert(weekNumber > 0);

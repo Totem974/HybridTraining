@@ -32,6 +32,7 @@ void main() {
         CycleScheduleMode.fixed,
         CycleScheduleMode.rotating,
         CycleScheduleMode.multiMovement,
+        CycleScheduleMode.finite,
       ]);
       expect(schedule.sessions.single.movementIds, [_press, _deadlift]);
       expect(schedule.allowedFrequencies, {2, 3});

@@ -1,12 +1,18 @@
 import '../domain/catalog_cycle_primitives.dart';
 import '../domain/cycle_contract.dart';
 import '../domain/cycle_execution_options.dart';
+import '../domain/cycle_schedule_mode.dart';
 
 final class PlanSession {
-  const PlanSession({required this.id, required this.movementIds});
+  const PlanSession({
+    required this.id,
+    required this.movementIds,
+    this.sourceRole = 'mainLift',
+  });
 
   final MovementId id;
   final List<MovementId> movementIds;
+  final String sourceRole;
 }
 
 final class PlanComponent {
@@ -34,6 +40,10 @@ final class CatalogPlan {
     this.weekPlans = const [],
     this.phases = const [],
     this.optionRecipes = const ResolvedCycleOptionRecipes(),
+    this.scheduleReference,
+    this.scheduleMode,
+    this.assistancePlanIds = const [],
+    this.conditioningDefinitionIds = const [],
   });
 
   final int catalogVersion;
@@ -45,6 +55,10 @@ final class CatalogPlan {
   final List<CatalogWeekPlan> weekPlans;
   final List<CatalogPhase> phases;
   final ResolvedCycleOptionRecipes optionRecipes;
+  final ComponentReference? scheduleReference;
+  final CycleScheduleMode? scheduleMode;
+  final List<ComponentReference> assistancePlanIds;
+  final List<ComponentReference> conditioningDefinitionIds;
 }
 
 final class CatalogPlanResolver {
@@ -90,11 +104,17 @@ final class CatalogPlanResolver {
         for (final week in expanded)
           WeekDefinition(
             number: week.number,
+            origin: CatalogWeekOrigin(
+              phaseId: week.phaseId,
+              phaseIteration: week.phaseIteration,
+              sourceWeekNumber: week.sourceWeekNumber,
+            ),
             sessions: [
               for (final session in plan.sessions)
                 SessionDefinition(
                   id: session.id,
                   role: session.id.value,
+                  sourceRole: session.sourceRole,
                   blocks: _blocksFor(session, week.components, componentByKey),
                 ),
             ],
@@ -102,6 +122,12 @@ final class CatalogPlanResolver {
       ],
       sourceReference: plan.sourceReference,
       optionRecipes: plan.optionRecipes,
+      scheduleReference: plan.scheduleReference,
+      scheduleMode: plan.scheduleMode,
+      assistancePlanIds: List.unmodifiable(plan.assistancePlanIds),
+      conditioningDefinitionIds: List.unmodifiable(
+        plan.conditioningDefinitionIds,
+      ),
     );
   }
 

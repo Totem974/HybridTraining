@@ -1,4 +1,6 @@
+import 'catalog_cycle_primitives.dart';
 import 'cycle_execution_options.dart';
+import 'cycle_schedule_mode.dart';
 
 enum WeightUnit { kg, lb }
 
@@ -333,10 +335,12 @@ final class SessionDefinition {
     required this.id,
     required this.role,
     required this.blocks,
+    this.sourceRole,
   });
   final MovementId id;
   final String role;
   final List<BlockDefinition> blocks;
+  final String? sourceRole;
 }
 
 final class WeekDefinition {
@@ -344,10 +348,12 @@ final class WeekDefinition {
     required this.number,
     this.blocks = const [],
     this.sessions = const [],
+    this.origin,
   });
   final int number;
   final List<BlockDefinition> blocks;
   final List<SessionDefinition> sessions;
+  final CatalogWeekOrigin? origin;
 }
 
 final class ResolvedCycleDefinition {
@@ -359,6 +365,10 @@ final class ResolvedCycleDefinition {
     required this.weeks,
     required this.sourceReference,
     this.optionRecipes = const ResolvedCycleOptionRecipes(),
+    this.scheduleReference,
+    this.scheduleMode,
+    this.assistancePlanIds = const [],
+    this.conditioningDefinitionIds = const [],
   });
   final int catalogVersion;
   final String templateId;
@@ -367,6 +377,10 @@ final class ResolvedCycleDefinition {
   final List<WeekDefinition> weeks;
   final String sourceReference;
   final ResolvedCycleOptionRecipes optionRecipes;
+  final ComponentReference? scheduleReference;
+  final CycleScheduleMode? scheduleMode;
+  final List<ComponentReference> assistancePlanIds;
+  final List<ComponentReference> conditioningDefinitionIds;
 }
 
 final class BarProfile {

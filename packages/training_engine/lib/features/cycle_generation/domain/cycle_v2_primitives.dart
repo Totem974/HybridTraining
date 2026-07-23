@@ -1,10 +1,9 @@
 import 'cycle_contract.dart';
+import 'cycle_schedule_mode.dart';
 
 extension type const SessionId(String value) {}
 
 extension type const ExerciseId(String value) {}
-
-enum CycleScheduleMode { fixed, rotating, multiMovement }
 
 final class ScheduleSessionTemplate {
   const ScheduleSessionTemplate({

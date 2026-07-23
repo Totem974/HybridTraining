@@ -524,7 +524,7 @@ const _schedulesDocument = {
       'revision': 1,
       'labels': {'en': 'Schedule', 'fr': 'Schedule'},
       'sourceRuleIds': ['rule'],
-      'type': 'weekly',
+      'type': 'fixed',
       'sessions': [
         {
           'id': 'upper',

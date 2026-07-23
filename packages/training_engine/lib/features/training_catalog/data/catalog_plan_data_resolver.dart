@@ -62,6 +62,7 @@ final class CatalogPlanDataResolver {
         PlanSession(
           id: MovementId(session.id),
           movementIds: [for (final id in session.movementIds) MovementId(id)],
+          sourceRole: session.role,
         ),
     ];
     final planComponents = [
@@ -95,6 +96,12 @@ final class CatalogPlanDataResolver {
       components: planComponents,
       weekPlans: selectedWeekPlans,
       phases: selectedPhases,
+      scheduleReference: scheduleReference,
+      scheduleMode: schedule.single.type,
+      assistancePlanIds: List.unmodifiable(variant.assistancePlanIds),
+      conditioningDefinitionIds: List.unmodifiable(
+        variant.conditioningDefinitionIds,
+      ),
       optionRecipes: _resolveOptionRecipes(
         variant,
         optionRecipes,

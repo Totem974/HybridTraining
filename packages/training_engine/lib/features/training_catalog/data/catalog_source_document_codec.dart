@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../../cycle_generation/domain/catalog_cycle_primitives.dart';
 import '../../cycle_generation/domain/cycle_contract.dart';
 import '../../cycle_generation/domain/cycle_execution_options.dart';
+import '../../cycle_generation/domain/cycle_schedule_mode.dart';
 
 final class SourceComponent {
   const SourceComponent({
@@ -18,15 +19,25 @@ final class SourceComponent {
 }
 
 final class SourceSchedule {
-  const SourceSchedule({required this.reference, required this.sessions});
+  const SourceSchedule({
+    required this.reference,
+    required this.sessions,
+    this.type = CycleScheduleMode.fixed,
+  });
   final ComponentReference reference;
   final List<SourceSession> sessions;
+  final CycleScheduleMode type;
 }
 
 final class SourceSession {
-  const SourceSession({required this.id, required this.movementIds});
+  const SourceSession({
+    required this.id,
+    required this.movementIds,
+    this.role = 'mainLift',
+  });
   final String id;
   final List<String> movementIds;
+  final String role;
 }
 
 final class SourceVariant {
@@ -40,6 +51,8 @@ final class SourceVariant {
     required this.optionSchemaId,
     this.componentSelections = const [],
     this.optionRecipeId,
+    this.assistancePlanIds = const [],
+    this.conditioningDefinitionIds = const [],
   });
   final String id;
   final int revision;
@@ -50,6 +63,8 @@ final class SourceVariant {
   final ComponentReference optionSchemaId;
   final List<SourceComponentSelection> componentSelections;
   final ComponentReference? optionRecipeId;
+  final List<ComponentReference> assistancePlanIds;
+  final List<ComponentReference> conditioningDefinitionIds;
 }
 
 final class SourceBlockRecipe {
@@ -179,6 +194,7 @@ final class CatalogSourceDocumentCodec {
           });
           return SourceSchedule(
             reference: _recordReference(map),
+            type: _scheduleMode(map),
             sessions: _list(map, 'sessions')
                 .map((value) {
                   final session = _map(value, 'session');
@@ -186,6 +202,7 @@ final class CatalogSourceDocumentCodec {
                   return SourceSession(
                     id: _string(session, 'id'),
                     movementIds: _strings(session, 'movementIds'),
+                    role: _string(session, 'role'),
                   );
                 })
                 .toList(growable: false),
@@ -465,6 +482,16 @@ final class CatalogSourceDocumentCodec {
       scheduleIds: _list(map, 'scheduleIds')
           .map((value) => _reference(_map(value, 'reference')))
           .toList(growable: false),
+      assistancePlanIds: map['assistancePlanIds'] == null
+          ? const []
+          : _list(map, 'assistancePlanIds')
+                .map((value) => _reference(_map(value, 'reference')))
+                .toList(growable: false),
+      conditioningDefinitionIds: map['conditioningDefinitionIds'] == null
+          ? const []
+          : _list(map, 'conditioningDefinitionIds')
+                .map((value) => _reference(_map(value, 'reference')))
+                .toList(growable: false),
       weekPlans: map['weekPlans'] == null
           ? const []
           : _weekPlans(_list(map, 'weekPlans')),
@@ -776,6 +803,15 @@ final class CatalogSourceDocumentCodec {
 
   ComponentReference _recordReference(Map<String, Object?> map) =>
       ComponentReference(_string(map, 'id'), _int(map, 'revision'));
+
+  CycleScheduleMode _scheduleMode(Map<String, Object?> map) =>
+      switch (_string(map, 'type')) {
+        'fixed' => CycleScheduleMode.fixed,
+        'rotating' => CycleScheduleMode.rotating,
+        'multiMovement' => CycleScheduleMode.multiMovement,
+        'finite' => CycleScheduleMode.finite,
+        final value => throw FormatException('Unknown schedule type $value.'),
+      };
 
   static Map<String, Object?> _map(Object? value, String label) =>
       value is Map<String, Object?>
