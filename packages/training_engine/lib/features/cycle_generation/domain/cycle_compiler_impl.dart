@@ -717,6 +717,13 @@ final class CycleCompilerImpl implements CycleCompiler {
   ) {
     final recipes = definition.optionRecipes;
     var blocks = List<BlockDefinition>.of(_blocksFor(week, sessionId));
+    final isSourceDeloadWeek = blocks.any((block) => block.role == 'deload');
+    // `includeDeload` remains the v1 compatibility authority. The bridge
+    // normalizer keeps it synchronized with the typed deload option when that
+    // option is present, while old snapshots can still rely on this field.
+    if (isSourceDeloadWeek && !request.includeDeload) {
+      return const <BlockDefinition>[];
+    }
     final deloadType = options.deload.type;
     final selectedDeloadBlocks = options.deload.enabled && deloadType != null
         ? _overlayBlocks(

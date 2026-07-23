@@ -434,12 +434,40 @@ void main() {
 
     test('does not emit empty weeks or sessions', () {
       final cycle = _compile(
+        includeDeload: false,
         definition: _definition(
           deloadBase: true,
           deload: {DeloadType.type1: _recipe(WeightUnit.kg, const [])},
         ),
         options: const CycleExecutionOptions(
           deload: DeloadExecutionOptions(enabled: false),
+        ),
+      );
+      expect(cycle.weeks, isEmpty);
+    });
+
+    test('disabled deload removes its entire week including warm-up', () {
+      final cycle = _compile(
+        includeDeload: false,
+        definition: _definition(
+          deloadBase: true,
+          warmUp: {
+            WarmUpType.original: _recipe(WeightUnit.kg, [
+              _block('warm', 'warm_up', const Unloaded()),
+            ]),
+          },
+          deload: {
+            DeloadType.type1: _recipe(WeightUnit.kg, [
+              _block('deload', 'deload', const Unloaded()),
+            ]),
+          },
+        ),
+        options: const CycleExecutionOptions(
+          warmUp: WarmUpExecutionOptions(
+            enabled: true,
+            type: WarmUpType.original,
+          ),
+          deload: DeloadExecutionOptions.disabled(),
         ),
       );
       expect(cycle.weeks, isEmpty);
@@ -555,6 +583,7 @@ BlockDefinition _block(
 GeneratedCycle _compile({
   ResolvedCycleDefinition? definition,
   WeightUnit unit = WeightUnit.kg,
+  bool includeDeload = true,
   CycleExecutionOptions options = const CycleExecutionOptions(),
 }) => const CycleCompilerImpl().compile(
   definition ?? _definition(),
@@ -574,6 +603,7 @@ GeneratedCycle _compile({
           Weight(value, unit),
       ],
     ),
+    includeDeload: includeDeload,
     cycleOptions: options,
   ),
 );

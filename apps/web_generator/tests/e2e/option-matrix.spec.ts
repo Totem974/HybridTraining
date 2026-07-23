@@ -243,12 +243,14 @@ test('deload matrix covers off, 1..5 skip transitions and High Intensity exclusi
 
   await setSwitch(page, 'deload.enabled', false);
   const offFingerprint = await programFingerprint(page);
+  await expect(page.locator('.program-week')).toHaveCount(3);
   const fingerprints = new Map<string, string>([['off', offFingerprint]]);
   const outputs = new Set<string>([offFingerprint]);
   let options = commonOptions(await configuration(page));
   expect(options.deload).toEqual({ enabled: false });
 
   await setSwitch(page, 'deload.enabled', true);
+  await expect(page.locator('.program-week')).toHaveCount(4);
   for (const type of ['deload1', 'deload2', 'deload3', 'deload4', 'deload5']) {
     await setChoice(page.getByTestId('deload.type'), type);
     await expect(page.getByTestId('deload.skipWarmUp')).toBeVisible();
