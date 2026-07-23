@@ -734,12 +734,21 @@ final class CatalogSourceDocumentCodec {
       sets: _list(map, 'sets')
           .map((value) {
             final set = _map(value, 'set');
-            _keys(set, const {'repetitions', 'load'});
+            _keys(
+              set,
+              const {'repetitions', 'load', 'multiplicity'},
+              optional: const {'multiplicity'},
+            );
             final reps = _map(set['repetitions'], 'repetitions');
             final load = _map(set['load'], 'load');
             return PrescribedSetDefinition(
               repetitions: _repetitions(reps),
               load: _load(load),
+              multiplicity: set['multiplicity'] == null
+                  ? const FixedSetMultiplicity(1)
+                  : _multiplicity(
+                      _map(set['multiplicity'], 'set multiplicity'),
+                    ),
             );
           })
           .toList(growable: false),
@@ -859,7 +868,25 @@ final class CatalogSourceDocumentCodec {
     switch (_string(map, 'type')) {
       case 'fixed':
         _keys(map, const {'type', 'count'});
-        return FixedRepetitions(_int(map, 'count'));
+        return FixedRepetitions(_positiveInt(map, 'count'));
+      case 'parameterized_fixed':
+        _keys(map, const {
+          'type',
+          'parameterId',
+          'default',
+          'minimum',
+          'maximum',
+        });
+        final parameter = _boundedIntegerParameter(
+          map,
+          'parameterized fixed repetitions',
+        );
+        return ParameterizedFixedRepetitions(
+          parameterId: parameter.parameterId,
+          defaultValue: parameter.defaultValue,
+          minimum: parameter.minimum,
+          maximum: parameter.maximum,
+        );
       case 'range':
         _keys(map, const {'type', 'minimum', 'maximum'});
         return RepetitionRange(_int(map, 'minimum'), _int(map, 'maximum'));
@@ -904,6 +931,51 @@ final class CatalogSourceDocumentCodec {
       default:
         throw FormatException("Unknown repetition type ${map['type']}.");
     }
+  }
+
+  SetMultiplicity _multiplicity(Map<String, Object?> map) {
+    switch (_string(map, 'type')) {
+      case 'fixed':
+        _keys(map, const {'type', 'count'});
+        return FixedSetMultiplicity(_positiveInt(map, 'count'));
+      case 'parameterized':
+        _keys(map, const {
+          'type',
+          'parameterId',
+          'default',
+          'minimum',
+          'maximum',
+        });
+        final parameter = _boundedIntegerParameter(
+          map,
+          'parameterized set multiplicity',
+        );
+        return ParameterizedSetMultiplicity(
+          parameterId: parameter.parameterId,
+          defaultValue: parameter.defaultValue,
+          minimum: parameter.minimum,
+          maximum: parameter.maximum,
+        );
+      default:
+        throw FormatException("Unknown set multiplicity type ${map['type']}.");
+    }
+  }
+
+  ({String parameterId, int defaultValue, int minimum, int maximum})
+  _boundedIntegerParameter(Map<String, Object?> map, String label) {
+    final parameterId = _nonEmptyString(map, 'parameterId');
+    final defaultValue = _positiveInt(map, 'default');
+    final minimum = _positiveInt(map, 'minimum');
+    final maximum = _positiveInt(map, 'maximum');
+    if (maximum < minimum || defaultValue < minimum || defaultValue > maximum) {
+      throw FormatException('$label requires minimum <= default <= maximum.');
+    }
+    return (
+      parameterId: parameterId,
+      defaultValue: defaultValue,
+      minimum: minimum,
+      maximum: maximum,
+    );
   }
 
   LoadPrescription _load(Map<String, Object?> map) {

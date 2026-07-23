@@ -1610,11 +1610,32 @@ void _block(Object? raw, String at) {
   final sets = _objects(value['sets'], '$at.sets');
   for (var i = 0; i < sets.length; i++) {
     final set = sets[i];
-    _exact(set, {'repetitions', 'load'}, '$at.sets[$i]');
+    _exact(
+      set,
+      {'repetitions', 'load', 'multiplicity'},
+      '$at.sets[$i]',
+      optional: {'multiplicity'},
+    );
+    if (set['multiplicity'] case final Object multiplicity) {
+      _setMultiplicity(multiplicity, '$at.sets[$i].multiplicity');
+    }
     final reps = _object(set['repetitions'], '$at.sets[$i].repetitions');
     switch (reps['type']) {
       case 'fixed':
         _exact(reps, {'type', 'count'}, '$at primitive repetitions');
+        _positiveCatalogInteger(
+          reps['count'],
+          '$at primitive repetitions.count',
+        );
+      case 'parameterized_fixed':
+        _exact(reps, {
+          'type',
+          'parameterId',
+          'default',
+          'minimum',
+          'maximum',
+        }, '$at primitive repetitions');
+        _boundedCatalogIntegerParameter(reps, '$at primitive repetitions');
       case 'range':
         _exact(reps, {
           'type',
@@ -1723,6 +1744,46 @@ void _block(Object? raw, String at) {
         throw FormatException('unknown primitive load ${load['type']}');
     }
   }
+}
+
+void _setMultiplicity(Object? raw, String at) {
+  final value = _object(raw, at);
+  switch (value['type']) {
+    case 'fixed':
+      _exact(value, {'type', 'count'}, at);
+      _positiveCatalogInteger(value['count'], '$at.count');
+    case 'parameterized':
+      _exact(value, {
+        'type',
+        'parameterId',
+        'default',
+        'minimum',
+        'maximum',
+      }, at);
+      _boundedCatalogIntegerParameter(value, at);
+    default:
+      throw FormatException('unknown set multiplicity ${value['type']}');
+  }
+}
+
+void _boundedCatalogIntegerParameter(Map<String, Object?> value, String at) {
+  if (value['parameterId'] is! String ||
+      (value['parameterId']! as String).trim().isEmpty) {
+    throw FormatException('$at.parameterId must be a non-empty string');
+  }
+  final defaultValue = _positiveCatalogInteger(value['default'], '$at.default');
+  final minimum = _positiveCatalogInteger(value['minimum'], '$at.minimum');
+  final maximum = _positiveCatalogInteger(value['maximum'], '$at.maximum');
+  if (maximum < minimum || defaultValue < minimum || defaultValue > maximum) {
+    throw FormatException('$at requires minimum <= default <= maximum');
+  }
+}
+
+int _positiveCatalogInteger(Object? value, String at) {
+  if (value is! int || value <= 0) {
+    throw FormatException('$at must be a positive integer');
+  }
+  return value;
 }
 
 void _common(Map<String, Object?> value, String at) {

@@ -24,6 +24,7 @@ export 'features/training_catalog/domain/catalog_codec.dart';
 export 'features/training_catalog/domain/catalog_coverage.dart';
 export 'features/training_catalog/domain/catalog_index.dart';
 export 'features/training_catalog/domain/catalog_models.dart';
+export 'features/training_catalog/application/catalog_set_parameter_resolver.dart';
 export 'features/training_catalog/application/option_schema_composer.dart';
 export 'features/training_catalog/data/catalog_plan_data_resolver.dart';
 export 'features/training_catalog/data/catalog_schedule_data_resolver.dart';

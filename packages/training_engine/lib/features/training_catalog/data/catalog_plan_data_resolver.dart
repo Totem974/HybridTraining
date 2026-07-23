@@ -2,14 +2,17 @@ import '../../cycle_generation/application/catalog_plan_resolver.dart';
 import '../../cycle_generation/domain/catalog_cycle_primitives.dart';
 import '../../cycle_generation/domain/cycle_contract.dart';
 import '../../cycle_generation/domain/cycle_execution_options.dart';
+import '../application/catalog_set_parameter_resolver.dart';
 import 'catalog_source_document_codec.dart';
 
 final class CatalogPlanDataResolver {
   const CatalogPlanDataResolver({
     this.componentMaterializer = const PlanComponentMaterializer(),
+    this.setParameterResolver = const CatalogSetParameterResolver(),
   });
 
   final PlanComponentMaterializer componentMaterializer;
+  final CatalogSetParameterResolver setParameterResolver;
 
   CatalogPlan resolve({
     required int catalogVersion,
@@ -73,7 +76,11 @@ final class CatalogPlanDataResolver {
       for (final component in components)
         PlanComponent(
           reference: component.reference,
-          block: component.block,
+          block: setParameterResolver.resolveBlock(
+            component.block,
+            optionValues: optionValues,
+            optionDefaults: optionDefaults,
+          ),
           mainWorkSemantics: component.mainWorkSemantics,
           sessionMovementBindings: [
             for (final binding in component.sessionMovementBindings)

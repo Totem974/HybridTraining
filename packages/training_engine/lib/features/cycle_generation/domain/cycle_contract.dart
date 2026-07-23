@@ -72,6 +72,31 @@ final class FixedRepetitions extends RepetitionPrescription {
   Map<String, Object> toJson() => {'type': 'fixed', 'count': count};
 }
 
+final class ParameterizedFixedRepetitions extends RepetitionPrescription {
+  const ParameterizedFixedRepetitions({
+    required this.parameterId,
+    required this.defaultValue,
+    required this.minimum,
+    required this.maximum,
+  }) : assert(parameterId != ''),
+       assert(minimum > 0),
+       assert(maximum >= minimum),
+       assert(defaultValue >= minimum),
+       assert(defaultValue <= maximum);
+
+  final String parameterId;
+  final int defaultValue;
+  final int minimum;
+  final int maximum;
+
+  @override
+  Map<String, Object> toJson() {
+    throw StateError(
+      'Parameterized repetitions must be resolved before serialization.',
+    );
+  }
+}
+
 final class RepetitionRange extends RepetitionPrescription {
   const RepetitionRange(this.minimum, this.maximum)
     : assert(minimum > 0),
@@ -342,11 +367,13 @@ final class PrescribedSetDefinition {
   const PrescribedSetDefinition({
     required this.repetitions,
     required this.load,
+    this.multiplicity = const FixedSetMultiplicity(1),
     this.execution = const SetExecution.straight(),
     this.runtimeGates = const [],
   });
   final RepetitionPrescription repetitions;
   final LoadPrescription load;
+  final SetMultiplicity multiplicity;
   final SetExecution execution;
   final List<RuntimeGate> runtimeGates;
 }

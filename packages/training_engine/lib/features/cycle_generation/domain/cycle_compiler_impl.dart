@@ -984,6 +984,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
 
   void _validate(ResolvedCycleDefinition definition, CycleRequest request) {
     _validateCommon(request);
+    _validateResolvedSets(definition);
     if (request.trainingDays.length != request.sessionOrder.length) {
       throw const CycleGenerationException(
         CycleGenerationErrorCode.invalidTrainingDays,
@@ -1048,6 +1049,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
     CycleRequest request,
   ) {
     _validateCommon(request);
+    _validateResolvedSets(definition);
     if (!_sameInts(request.trainingDays, selection.trainingDays) ||
         !_sameSessionOrder(request.sessionOrder, selection.sessionOrder)) {
       throw const CycleGenerationException(
@@ -1185,6 +1187,63 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
       for (final week in definition.weeks) {
         for (final sessionId in selection.sessionOrder) {
           validateSource(week.number, sessionId);
+        }
+      }
+    }
+  }
+
+  void _validateResolvedSets(ResolvedCycleDefinition definition) {
+    if (definition.optionRecipes.joker?.steps.any(
+          (step) => step.repetitions is ParameterizedFixedRepetitions,
+        ) ??
+        false) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.invalidCycleOptions,
+        'Parameterized repetitions must be resolved before compilation.',
+      );
+    }
+    for (final set in _definitionSets(definition)) {
+      if (set.repetitions is ParameterizedFixedRepetitions) {
+        throw const CycleGenerationException(
+          CycleGenerationErrorCode.invalidCycleOptions,
+          'Parameterized repetitions must be resolved before compilation.',
+        );
+      }
+      switch (set.multiplicity) {
+        case FixedSetMultiplicity(count: 1):
+          break;
+        case FixedSetMultiplicity() || ParameterizedSetMultiplicity():
+          throw const CycleGenerationException(
+            CycleGenerationErrorCode.invalidCycleOptions,
+            'Set multiplicity must be expanded before compilation.',
+          );
+      }
+    }
+  }
+
+  Iterable<PrescribedSetDefinition> _definitionSets(
+    ResolvedCycleDefinition definition,
+  ) sync* {
+    for (final week in definition.weeks) {
+      for (final block in week.blocks) {
+        yield* block.sets;
+      }
+      for (final session in week.sessions) {
+        for (final block in session.blocks) {
+          yield* block.sets;
+        }
+      }
+    }
+    for (final recipe in [
+      ...definition.optionRecipes.warmUp.values,
+      ...definition.optionRecipes.deload.values,
+    ]) {
+      for (final overlay in [
+        ...recipe.unitIndependent,
+        for (final overlays in recipe.byUnit.values) ...overlays,
+      ]) {
+        for (final block in overlay.blocks) {
+          yield* block.sets;
         }
       }
     }
