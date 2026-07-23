@@ -82,9 +82,7 @@ async function start(): Promise<void> {
     await loadSchema(
       preferred.id,
       preferredVariant,
-      restoredConfiguration
-        ? cycleConfigurationToEditorValues(restoredConfiguration)
-        : undefined,
+      restoredConfiguration,
       restoredConfiguration?.schedule.id,
     );
     installLocaleControls();
@@ -99,7 +97,7 @@ async function start(): Promise<void> {
 async function loadSchema(
   templateId: string,
   variantId: string,
-  candidates: Readonly<Record<string, JsonValue>> = {},
+  candidates: Readonly<Record<string, JsonValue>> | CycleConfiguration = {},
   scheduleId?: string,
 ): Promise<void> {
   const next = client.cycleEditorSchema<CycleEditorSchema>({
@@ -109,8 +107,11 @@ async function loadSchema(
     variantId,
     ...(scheduleId ? { scheduleId } : {}),
   });
+  const candidateValues = isCycleConfiguration(candidates)
+    ? cycleConfigurationToEditorValues(candidates, next)
+    : candidates;
   const merged = {
-    ...candidates,
+    ...candidateValues,
     showPlating: preferences.read().showPlating,
   };
   const normalized = normalizeEditorState(next, merged, new Set([
@@ -288,7 +289,7 @@ function validateImportedConfiguration(configuration: CycleConfiguration): Valid
     }
     const importedState = normalizeEditorState(
       importedSchema,
-      cycleConfigurationToEditorValues(configuration),
+      cycleConfigurationToEditorValues(configuration, importedSchema),
       new Set([
       'templateId',
       'variantId',
@@ -397,11 +398,10 @@ async function hydrateImportedConfiguration(configuration: CycleConfiguration): 
   const templateId = configuration.template.id;
   const variantId = configuration.template.variantId;
   const scheduleId = configuration.schedule.id;
-  const importedValues = cycleConfigurationToEditorValues(configuration);
   try {
-    await loadSchema(templateId, variantId, importedValues, scheduleId);
+    await loadSchema(templateId, variantId, configuration, scheduleId);
   } catch {
-    await loadSchema(templateId, variantId, importedValues);
+    await loadSchema(templateId, variantId, configuration);
   }
   if (generationTimer) clearTimeout(generationTimer);
   generateRequest(cycleConfigurationToCycleRequest(currentConfiguration, schema));
@@ -423,6 +423,11 @@ function importConfiguration(payload: unknown): CycleConfiguration {
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isCycleConfiguration(value: unknown): value is CycleConfiguration {
+  return isPlainRecord(value) && value.format === 'hybrid-training-cycle' &&
+    value.configurationVersion === 1;
 }
 
 function installLocaleControls(): void {

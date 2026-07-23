@@ -72,6 +72,10 @@ function payload(artifact: Record<string, unknown>): Record<string, unknown> {
   return artifact.payload as Record<string, unknown>;
 }
 
+function commonOptions(artifact: Record<string, unknown>): Record<string, unknown> {
+  return payload(artifact).commonOptions as Record<string, unknown>;
+}
+
 test('Full Body Original phases are distinct while Updated and Full Boring expose no phase', async ({ page }) => {
   const external = await openCycle(page);
   await chooseTemplate(page, 'Full Body');
@@ -101,10 +105,31 @@ test('Full Body Original phases are distinct while Updated and Full Boring expos
 test('legacy Full Body ID imports as canonical Original plus phase', async ({ page }) => {
   const external = await openCycle(page);
   const exported = await configuration(page);
-  const request = payload(exported);
-  request.templateId = 'classic_full_body_phase_2';
-  request.variantId = 'phase_2';
-  request.options = {};
+  const configurationPayload = payload(exported);
+  const maxes = configurationPayload.maxes as Record<string, unknown>;
+  const schedule = configurationPayload.schedule as Record<string, unknown>;
+  const equipment = configurationPayload.equipment as Record<string, unknown>;
+  const output = configurationPayload.output as Record<string, unknown>;
+  const request: Record<string, unknown> = {
+    apiVersion: 'v1',
+    schemaVersion: 1,
+    cycleId: 'legacy-full-body',
+    templateId: 'classic_full_body_phase_2',
+    variantId: 'phase_2',
+    scheduleId: schedule.id,
+    startDate: schedule.startDate,
+    sessionOrder: schedule.sessionOrder,
+    maxInputs: Object.fromEntries(Object.entries(maxes.values as Record<string, object>)
+      .map(([movement, input]) => [movement, { type: maxes.mode, ...input }])),
+    globalTrainingMaxRatioBasisPoints: maxes.globalTrainingMaxRatioBasisPoints,
+    options: {},
+    unit: equipment.unit,
+    barProfile: equipment.bar,
+    includeDeload: false,
+    programTitle: output.title,
+    showPlating: output.showPlating,
+  };
+  exported.payload = request;
   await page.locator('input[type="file"]').setInputFiles({
     name: 'legacy-full-body.json',
     mimeType: 'application/json',
@@ -164,21 +189,21 @@ test('Beyond warm-up toggles conditional bases and preserves numeric defaults ac
   await expect(page.getByTestId('warmUp.bases.upperBody')).toBeVisible();
 
   await page.getByRole('radio', { name: /^lb$/i }).check();
-  let options = payload(await configuration(page)).options as Record<string, unknown>;
+  let options = commonOptions(await configuration(page));
   let warmUp = options.warmUp as Record<string, unknown>;
   let bases = warmUp.bases as Record<string, Record<string, unknown>>;
   expect(bases.lowerBody).toMatchObject({ centiUnits: 13500, unit: 'lb' });
   expect(bases.upperBody).toMatchObject({ centiUnits: 9500, unit: 'lb' });
 
   await page.getByRole('radio', { name: /^kg$/i }).check();
-  options = payload(await configuration(page)).options as Record<string, unknown>;
+  options = commonOptions(await configuration(page));
   warmUp = options.warmUp as Record<string, unknown>;
   bases = warmUp.bases as Record<string, Record<string, unknown>>;
   expect(bases.lowerBody).toMatchObject({ centiUnits: 13500, unit: 'kg' });
   expect(bases.upperBody).toMatchObject({ centiUnits: 9500, unit: 'kg' });
 
   await setSwitch(page, 'warmUp.enabled', false);
-  options = payload(await configuration(page)).options as Record<string, unknown>;
+  options = commonOptions(await configuration(page));
   expect(options.warmUp).toEqual({ enabled: false });
   expect(external).toEqual([]);
 });
@@ -207,7 +232,7 @@ test('deload matrix covers off, 1..5 skip transitions and High Intensity exclusi
   const offFingerprint = await programFingerprint(page);
   const fingerprints = new Map<string, string>([['off', offFingerprint]]);
   const outputs = new Set<string>([offFingerprint]);
-  let options = payload(await configuration(page)).options as Record<string, unknown>;
+  let options = commonOptions(await configuration(page));
   expect(options.deload).toEqual({ enabled: false });
 
   await setSwitch(page, 'deload.enabled', true);
@@ -224,7 +249,7 @@ test('deload matrix covers off, 1..5 skip transitions and High Intensity exclusi
 
   await setChoice(page.getByTestId('deload.type'), 'highIntensity');
   await expect(page.getByTestId('deload.skipWarmUp')).toHaveCount(0);
-  options = payload(await configuration(page)).options as Record<string, unknown>;
+  options = commonOptions(await configuration(page));
   expect(options.deload).toEqual({ enabled: true, type: 'highIntensity' });
   const highIntensity = await programFingerprint(page);
   fingerprints.set('highIntensity', highIntensity);
