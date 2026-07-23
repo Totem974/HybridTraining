@@ -1,0 +1,652 @@
+{
+  "schemaVersion": 1,
+  "kind": "components",
+  "components": [
+    {
+      "id": "source_two_day_one_dumbbell_row",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Option One dumbbell row", "fr": "Option One rowing haltere"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"loadSelection": "userSelectedBecauseSourcePrescribesNoLoad", "setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["deadlift_overhead_press"]},
+      "block": {
+        "id": "two_day_one_dumbbell_row",
+        "role": "assistance",
+        "movementId": "dumbbell_row",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "unloaded"},
+            "multiplicity": {"type": "fixed", "count": 3}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_one_dip",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Option One dip", "fr": "Option One dips"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["deadlift_overhead_press"]},
+      "block": {
+        "id": "two_day_one_dip",
+        "role": "assistance",
+        "movementId": "dip",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "bodyweight"},
+            "multiplicity": {"type": "fixed", "count": 3}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_one_good_morning",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Option One good morning", "fr": "Option One good morning"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"loadSelection": "userSelectedBecauseSourcePrescribesNoLoad", "setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["deadlift_overhead_press"]},
+      "block": {
+        "id": "two_day_one_good_morning",
+        "role": "assistance",
+        "movementId": "good_morning",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "unloaded"},
+            "multiplicity": {"type": "fixed", "count": 3}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_one_curl",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Option One bicep curl", "fr": "Option One curl biceps"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"loadSelection": "userSelectedBecauseSourcePrescribesNoLoad", "setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["deadlift_overhead_press"]},
+      "block": {
+        "id": "two_day_one_curl",
+        "role": "assistance",
+        "movementId": "curl",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "unloaded"},
+            "multiplicity": {"type": "fixed", "count": 3}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_one_pull_up",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Option One pull-up", "fr": "Option One traction"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["squat_bench_press"]},
+      "block": {
+        "id": "two_day_one_pull_up",
+        "role": "assistance",
+        "movementId": "pull_up",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "bodyweight"},
+            "multiplicity": {"type": "fixed", "count": 3}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_one_back_raise",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Option One back raise", "fr": "Option One extension lombaire"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["squat_bench_press"]},
+      "block": {
+        "id": "two_day_one_back_raise",
+        "role": "assistance",
+        "movementId": "back_raise",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 15},
+            "load": {"type": "bodyweight"},
+            "multiplicity": {"type": "fixed", "count": 3}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_one_dumbbell_bench_press",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Option One dumbbell bench press", "fr": "Option One developpe couche halteres"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"loadSelection": "userSelectedBecauseSourcePrescribesNoLoad", "setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["squat_bench_press"]},
+      "block": {
+        "id": "two_day_one_dumbbell_bench_press",
+        "role": "assistance",
+        "movementId": "dumbbell_bench_press",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "unloaded"},
+            "multiplicity": {"type": "fixed", "count": 3}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_one_rear_lateral_raise",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Option One rear lateral raise", "fr": "Option One elevation posterieure"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"loadSelection": "userSelectedBecauseSourcePrescribesNoLoad", "setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["squat_bench_press"]},
+      "block": {
+        "id": "two_day_one_rear_lateral_raise",
+        "role": "assistance",
+        "movementId": "rear_lateral_raise",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 20},
+            "load": {"type": "unloaded"},
+            "multiplicity": {"type": "fixed", "count": 3}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_two_secondary_bench",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "Option Two bench secondary", "fr": "Option Two developpe couche secondaire"},
+      "sourceRuleIds": ["app.source_calculator.two_day_option_two"],
+      "parameterSchemaIds": [],
+      "constraints": {"loadSelection": "userSelectedBecauseSourcePrescribesNoLoad", "setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["overhead_press"]},
+      "block": {
+        "id": "two_day_two_secondary_bench",
+        "role": "supplemental",
+        "movementId": "bench_press",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "unloaded"},
+            "multiplicity": {"type": "fixed", "count": 5}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_two_secondary_squat",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "Option Two squat secondary", "fr": "Option Two squat secondaire"},
+      "sourceRuleIds": ["app.source_calculator.two_day_option_two"],
+      "parameterSchemaIds": [],
+      "constraints": {"loadSelection": "userSelectedBecauseSourcePrescribesNoLoad", "setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["deadlift"]},
+      "block": {
+        "id": "two_day_two_secondary_squat",
+        "role": "supplemental",
+        "movementId": "squat",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "unloaded"},
+            "multiplicity": {"type": "fixed", "count": 5}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_two_secondary_press",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "Option Two press secondary", "fr": "Option Two developpe militaire secondaire"},
+      "sourceRuleIds": ["app.source_calculator.two_day_option_two"],
+      "parameterSchemaIds": [],
+      "constraints": {"loadSelection": "userSelectedBecauseSourcePrescribesNoLoad", "setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["bench_press"]},
+      "block": {
+        "id": "two_day_two_secondary_press",
+        "role": "supplemental",
+        "movementId": "overhead_press",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "unloaded"},
+            "multiplicity": {"type": "fixed", "count": 5}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_two_secondary_front_squat",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "Option Two front squat secondary", "fr": "Option Two squat avant secondaire"},
+      "sourceRuleIds": ["app.source_calculator.two_day_option_two"],
+      "parameterSchemaIds": [],
+      "constraints": {"loadSelection": "userSelectedBecauseSourcePrescribesNoLoad", "setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["squat"]},
+      "block": {
+        "id": "two_day_two_secondary_front_squat",
+        "role": "supplemental",
+        "movementId": "front_squat",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "unloaded"},
+            "multiplicity": {"type": "fixed", "count": 5}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_rotating_ohp_dumbbell_row",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Two-day press dumbbell row", "fr": "Deux jours rowing haltere developpe militaire"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"loadSelection": "userSelectedBecauseSourcePrescribesNoLoad", "setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["overhead_press"]},
+      "block": {
+        "id": "two_day_rotating_dumbbell_row",
+        "role": "assistance",
+        "movementId": "dumbbell_row",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "unloaded"},
+            "multiplicity": {"type": "fixed", "count": 5}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_rotating_ohp_side_bend",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Two-day press dumbbell side bend", "fr": "Deux jours flexion laterale haltere"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"loadSelection": "userSelectedBecauseSourcePrescribesNoLoad", "setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["overhead_press"]},
+      "block": {
+        "id": "two_day_rotating_side_bend",
+        "role": "assistance",
+        "movementId": "dumbbell_side_bend",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "unloaded"},
+            "multiplicity": {"type": "fixed", "count": 5}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_rotating_deadlift_good_morning",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Two-day deadlift good morning", "fr": "Deux jours good morning souleve de terre"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"loadSelection": "userSelectedBecauseSourcePrescribesNoLoad", "setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["deadlift"]},
+      "block": {
+        "id": "two_day_rotating_good_morning",
+        "role": "assistance",
+        "movementId": "good_morning",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "unloaded"},
+            "multiplicity": {"type": "fixed", "count": 5}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_rotating_deadlift_sit_up",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Two-day deadlift sit-up", "fr": "Deux jours redressement assis souleve de terre"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["deadlift"]},
+      "block": {
+        "id": "two_day_rotating_sit_up",
+        "role": "assistance",
+        "movementId": "sit_up",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 15},
+            "load": {"type": "bodyweight"},
+            "multiplicity": {"type": "fixed", "count": 5}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_rotating_bench_pull_up",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Two-day bench pull-up", "fr": "Deux jours traction developpe couche"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["bench_press"]},
+      "block": {
+        "id": "two_day_rotating_pull_up",
+        "role": "assistance",
+        "movementId": "pull_up",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "bodyweight"},
+            "multiplicity": {"type": "fixed", "count": 6}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_rotating_bench_ab_wheel",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Two-day bench ab wheel", "fr": "Deux jours roue abdominale developpe couche"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["bench_press"]},
+      "block": {
+        "id": "two_day_rotating_ab_wheel",
+        "role": "assistance",
+        "movementId": "ab_wheel",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "bodyweight"},
+            "multiplicity": {"type": "fixed", "count": 5}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_two_squat_stiff_leg_deadlift",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Option Two squat stiff-leg deadlift", "fr": "Option Two souleve de terre jambes tendues"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"loadSelection": "userSelectedBecauseSourcePrescribesNoLoad", "setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["squat"]},
+      "block": {
+        "id": "two_day_two_stiff_leg_deadlift",
+        "role": "assistance",
+        "movementId": "stiff_leg_deadlift",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "unloaded"},
+            "multiplicity": {"type": "fixed", "count": 5}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_three_squat_hamstring_curl",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Option Three squat hamstring curl", "fr": "Option Three flexion ischio-jambiers"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"loadSelection": "userSelectedBecauseSourcePrescribesNoLoad", "setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["squat"]},
+      "block": {
+        "id": "two_day_three_hamstring_curl",
+        "role": "assistance",
+        "movementId": "hamstring_curl",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "unloaded"},
+            "multiplicity": {"type": "fixed", "count": 5}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_rotating_squat_hanging_leg_raise",
+      "revision": 1,
+      "role": "assistance",
+      "labels": {"en": "Two-day squat hanging leg raise", "fr": "Deux jours releve de jambes suspendu squat"},
+      "sourceRuleIds": ["app.source_calculator.two_day_assistance"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"], "sessionIds": ["squat"]},
+      "block": {
+        "id": "two_day_rotating_hanging_leg_raise",
+        "role": "assistance",
+        "movementId": "hanging_leg_raise",
+        "sets": [
+          {
+            "repetitions": {"type": "fixed", "count": 10},
+            "load": {"type": "bodyweight"},
+            "multiplicity": {"type": "fixed", "count": 5}
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_three_before_65_75_85",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "Option Three second lift 65/75/85 before", "fr": "Option Three second mouvement 65/75/85 avant"},
+      "sourceRuleIds": ["app.source_calculator.two_day_option_three"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"]},
+      "sessionMovementBindings": [
+        {"sessionId": "overhead_press", "movementId": "bench_press"},
+        {"sessionId": "deadlift", "movementId": "squat"}
+      ],
+      "block": {
+        "id": "two_day_three_second_lift",
+        "role": "supplemental",
+        "sets": [
+          {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 6500}},
+          {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+          {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 8500}}
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_three_after_65_75_85",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "Option Three second lift 65/75/85 after", "fr": "Option Three second mouvement 65/75/85 apres"},
+      "sourceRuleIds": ["app.source_calculator.two_day_option_three"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"]},
+      "sessionMovementBindings": [
+        {"sessionId": "bench_press", "movementId": "overhead_press"},
+        {"sessionId": "squat", "movementId": "deadlift"}
+      ],
+      "block": {
+        "id": "two_day_three_second_lift",
+        "role": "supplemental",
+        "sets": [
+          {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 6500}},
+          {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+          {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 8500}}
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_three_before_70_80_90",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "Option Three second lift 70/80/90 before", "fr": "Option Three second mouvement 70/80/90 avant"},
+      "sourceRuleIds": ["app.source_calculator.two_day_option_three"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"]},
+      "sessionMovementBindings": [
+        {"sessionId": "overhead_press", "movementId": "bench_press"},
+        {"sessionId": "deadlift", "movementId": "squat"}
+      ],
+      "block": {
+        "id": "two_day_three_second_lift",
+        "role": "supplemental",
+        "sets": [
+          {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 7000}},
+          {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 8000}},
+          {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 9000}}
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_three_after_70_80_90",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "Option Three second lift 70/80/90 after", "fr": "Option Three second mouvement 70/80/90 apres"},
+      "sourceRuleIds": ["app.source_calculator.two_day_option_three"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"]},
+      "sessionMovementBindings": [
+        {"sessionId": "bench_press", "movementId": "overhead_press"},
+        {"sessionId": "squat", "movementId": "deadlift"}
+      ],
+      "block": {
+        "id": "two_day_three_second_lift",
+        "role": "supplemental",
+        "sets": [
+          {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 7000}},
+          {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 8000}},
+          {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 9000}}
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_three_before_75_85_95",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "Option Three second lift 75x5/85x3/95x1 before", "fr": "Option Three second mouvement 75x5/85x3/95x1 avant"},
+      "sourceRuleIds": ["app.source_calculator.two_day_option_three"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"]},
+      "sessionMovementBindings": [
+        {"sessionId": "overhead_press", "movementId": "bench_press"},
+        {"sessionId": "deadlift", "movementId": "squat"}
+      ],
+      "block": {
+        "id": "two_day_three_second_lift",
+        "role": "supplemental",
+        "sets": [
+          {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+          {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 8500}},
+          {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 9500}}
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_three_after_75_85_95",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "Option Three second lift 75x5/85x3/95x1 after", "fr": "Option Three second mouvement 75x5/85x3/95x1 apres"},
+      "sourceRuleIds": ["app.source_calculator.two_day_option_three"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"]},
+      "sessionMovementBindings": [
+        {"sessionId": "bench_press", "movementId": "overhead_press"},
+        {"sessionId": "squat", "movementId": "deadlift"}
+      ],
+      "block": {
+        "id": "two_day_three_second_lift",
+        "role": "supplemental",
+        "sets": [
+          {"repetitions": {"type": "fixed", "count": 5}, "load": {"type": "training_max_percentage", "basisPoints": 7500}},
+          {"repetitions": {"type": "fixed", "count": 3}, "load": {"type": "training_max_percentage", "basisPoints": 8500}},
+          {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 9500}}
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_three_before_80_90_100",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "Option Three second lift 80/90/100 for singles before", "fr": "Option Three second mouvement 80/90/100 en simples avant"},
+      "sourceRuleIds": ["app.source_calculator.two_day_option_three"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"]},
+      "sessionMovementBindings": [
+        {"sessionId": "overhead_press", "movementId": "bench_press"},
+        {"sessionId": "deadlift", "movementId": "squat"}
+      ],
+      "block": {
+        "id": "two_day_three_second_lift",
+        "role": "supplemental",
+        "sets": [
+          {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 8000}},
+          {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 9000}},
+          {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 10000}}
+        ]
+      }
+    },
+    {
+      "id": "source_two_day_three_after_80_90_100",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {"en": "Option Three second lift 80/90/100 for singles after", "fr": "Option Three second mouvement 80/90/100 en simples apres"},
+      "sourceRuleIds": ["app.source_calculator.two_day_option_three"],
+      "parameterSchemaIds": [],
+      "constraints": {"setOrder": "declared"},
+      "compatibilities": {"generations": ["source_two_day"]},
+      "sessionMovementBindings": [
+        {"sessionId": "bench_press", "movementId": "overhead_press"},
+        {"sessionId": "squat", "movementId": "deadlift"}
+      ],
+      "block": {
+        "id": "two_day_three_second_lift",
+        "role": "supplemental",
+        "sets": [
+          {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 8000}},
+          {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 9000}},
+          {"repetitions": {"type": "fixed", "count": 1}, "load": {"type": "training_max_percentage", "basisPoints": 10000}}
+        ]
+      }
+    }
+  ]
+}

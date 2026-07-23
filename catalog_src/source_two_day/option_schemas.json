@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "kind": "optionSchemas",
+  "optionSchemas": [
+    {
+      "id": "source_two_day_option_one_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "app.source_calculator.two_day_option_one"
+      ],
+      "includeSchemaIds": [
+        {
+          "id": "classic_crosscut_options",
+          "revision": 1
+        }
+      ],
+      "parameters": []
+    },
+    {
+      "id": "source_two_day_option_two_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "app.source_calculator.two_day_option_two"
+      ],
+      "includeSchemaIds": [
+        {
+          "id": "classic_crosscut_options",
+          "revision": 1
+        }
+      ],
+      "parameters": []
+    },
+    {
+      "id": "source_two_day_option_three_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "app.source_calculator.two_day_option_three"
+      ],
+      "includeSchemaIds": [
+        {
+          "id": "classic_crosscut_options",
+          "revision": 1
+        }
+      ],
+      "parameters": [
+        {
+          "id": "second_lift_profile",
+          "presentationGroup": "template",
+          "labelEn": "Second Lift Sets",
+          "labelFr": "Series du second mouvement",
+          "type": "enumeration",
+          "scope": "global",
+          "default": "65_75_85",
+          "minimum": null,
+          "maximum": null,
+          "step": null,
+          "allowedValues": [
+            "65_75_85",
+            "70_80_90",
+            "75_85_95",
+            "80_90_100"
+          ],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        }
+      ]
+    }
+  ]
+}

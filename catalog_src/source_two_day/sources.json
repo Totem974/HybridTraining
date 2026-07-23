@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "kind": "sources",
+  "sources": [
+    {
+      "ruleId": "app.source_calculator.two_day_option_one",
+      "work": "Original 5/3/1 calculator",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "Two Days/Week Option One paired-lift ordering and generated prescriptions observed in the exact 2026-07-23 local capture",
+      "reviewStatus": "referenceAppObserved"
+    },
+    {
+      "ruleId": "app.source_calculator.two_day_option_two",
+      "work": "Original 5/3/1 calculator",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "Two Days/Week Option Two rotation and generated prescriptions observed in the exact 2026-07-23 local capture",
+      "reviewStatus": "referenceAppObserved"
+    },
+    {
+      "ruleId": "app.source_calculator.two_day_option_three",
+      "work": "Original 5/3/1 calculator",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "Two Days/Week Option Three second-lift profiles, ordering, and generated prescriptions observed in the exact 2026-07-23 local capture",
+      "reviewStatus": "referenceAppObserved"
+    },
+    {
+      "ruleId": "app.source_calculator.two_day_assistance",
+      "work": "Original 5/3/1 calculator",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "Two Days/Week assistance exercise, set, repetition, rotation, and deload mappings observed in the exact 2026-07-23 local capture",
+      "reviewStatus": "referenceAppObserved"
+    }
+  ]
+}
