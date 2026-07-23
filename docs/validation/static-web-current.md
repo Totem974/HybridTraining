@@ -22,6 +22,9 @@ ses compteurs, ses tailles et ses mesures ne décrivent pas l'état actuel.
 | Moteur Dart pur | 186/186 tests réussis |
 | Bridge Web | 54/54 tests réussis |
 | Contrats JSON v1 | 16/16 tests réussis |
+| Application Flutter de référence | 468/468 tests réussis |
+| Analyse Flutter | aucune anomalie |
+| Build Flutter Web release | réussi |
 | Tests unitaires Web | 98/98 réussis |
 | Matrice E2E | 85 réussis, 26 ignorés intentionnellement |
 | Parité Cycle native | 37/37 |

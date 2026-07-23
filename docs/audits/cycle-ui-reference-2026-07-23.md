@@ -78,6 +78,8 @@ brutes. Sa surface Cycle publique contient 19 templates et 37 variantes.
 | Parité Forever | 1/1 |
 | Tests moteur | 186/186 |
 | Tests bridge | 54/54 |
+| Tests Flutter de référence | 468/468 |
+| Analyse et build Flutter Web release | réussis |
 | Tests Web unitaires | 98/98 |
 | Tests des contrats | 16/16 |
 | Tests E2E | 85 réussis, 26 ignorés intentionnellement |
