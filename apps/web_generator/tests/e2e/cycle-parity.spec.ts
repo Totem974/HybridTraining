@@ -48,22 +48,46 @@ test('BBB exposes catalog options and changes the generated assistance work', as
 
 test('Beyond BBB exposes and generates both sourced wave variants', async ({ page }) => {
   const external = await openIntegratedCycle(page);
-  await page
+  await page.evaluate(() => {
+    const engine = window.hybridTrainingEngine;
+    if (!engine) throw new Error('ENGINE_BRIDGE_UNAVAILABLE');
+    const generateCycle = engine.generateCycle.bind(engine);
+    engine.generateCycle = (requestJson: string) => {
+      document.documentElement.dataset.lastCycleRequest = requestJson;
+      return generateCycle(requestJson);
+    };
+  });
+  const generation = page
     .getByTestId('generation-row')
-    .getByRole('combobox')
-    .selectOption(JSON.stringify('beyond'));
-  await page
+    .getByRole('combobox');
+  await generation.selectOption(JSON.stringify('beyond'));
+  await expect(generation).toHaveValue(JSON.stringify('beyond'));
+  const template = page
     .getByTestId('template-row')
-    .getByRole('combobox')
-    .selectOption(JSON.stringify('beyond_boring_but_big'));
+    .getByRole('combobox');
+  await expect(template.locator('option[value*="beyond_boring_but_big"]')).toHaveCount(1);
+  await template.selectOption(JSON.stringify('beyond_boring_but_big'));
+  await expect(template).toHaveValue(JSON.stringify('beyond_boring_but_big'));
   const variant = page.getByTestId('variant-row').getByRole('combobox');
 
+  await expect(variant.locator('option[value*="variation_i_5x10_wave"]')).toHaveCount(1);
   await variant.selectOption(JSON.stringify('variation_i_5x10_wave'));
-  await awaitGeneratedProgram(page);
+  await expect(variant).toHaveValue(JSON.stringify('variation_i_5x10_wave'));
+  await expect.poll(async () => {
+    const raw = await page.locator('html').getAttribute('data-last-cycle-request');
+    return raw ? JSON.parse(raw).variantId : undefined;
+  }).toBe('variation_i_5x10_wave');
+  const firstRequest = JSON.parse(
+    (await page.locator('html').getAttribute('data-last-cycle-request'))!,
+  );
+  expect(firstRequest.includeDeload).toBe(true);
+  expect(firstRequest.options).toEqual({});
+  await expect(page.locator('.program-week')).toHaveCount(7);
   await expect(page.locator('.program-week').nth(1)).toContainText(/10\s*[×x]/i);
 
   await variant.selectOption(JSON.stringify('variation_ii_descending_volume'));
-  await awaitGeneratedProgram(page);
+  await expect(variant).toHaveValue(JSON.stringify('variation_ii_descending_volume'));
+  await expect(page.locator('.program-week')).toHaveCount(7);
   await expect(page.locator('.program-week').nth(1)).toContainText(/8\s*[×x]/i);
   await expect(page.locator('.program-week').nth(2)).toContainText(/5\s*[×x]/i);
   expect(external).toEqual([]);

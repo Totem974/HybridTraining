@@ -13,7 +13,7 @@ Map<String, Object?> normalizeCycleRequest(Map<String, Object?> source) {
 
   _migrateWarmUp(options, request['unit'] as String?);
   _migrateJoker(options);
-  _migrateDeload(options, request);
+  _migrateDeload(options);
   _migrateFullBody(options);
   _cleanAndValidate(options);
 
@@ -54,10 +54,7 @@ void _migrateJoker(Map<String, Object?> options) {
       : <String, Object?>{'enabled': true, 'ceilingBasisPoints': index * 500};
 }
 
-void _migrateDeload(
-  Map<String, Object?> options,
-  Map<String, Object?> request,
-) {
+void _migrateDeload(Map<String, Object?> options) {
   if (options['deload'] is Map) return;
   final legacy = options.remove('deload');
   if (legacy != null) {
@@ -74,15 +71,6 @@ void _migrateDeload(
     }
     options.remove('deloadSkipWarmup');
     return;
-  }
-  if (request['includeDeload'] case final bool enabled) {
-    options['deload'] = enabled
-        ? <String, Object?>{
-            'enabled': true,
-            'type': 'deload1',
-            'skipWarmUp': false,
-          }
-        : <String, Object?>{'enabled': false};
   }
 }
 

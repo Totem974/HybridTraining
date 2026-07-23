@@ -7,16 +7,14 @@
     "sourceRuleIds": ["beyond_015", "beyond_016"],
     "parameters": [
       {"id":"training_max_ratio","presentationGroup":"hidden","type":"percentage","scope":"global","default":9000,"minimum":8500,"maximum":9000,"step":500,"allowedValues":[8500,9000],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
-      {"id":"bbb_percentage","presentationGroup":"hidden","labelEn":"BBB percentage","labelFr":"Pourcentage BBB","type":"percentage","scope":"perMovement","default":5000,"minimum":5000,"maximum":5000,"step":null,"allowedValues":[5000],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
-      {"id":"include_deload","presentationGroup":"hidden","labelEn":"Deload after cycle","labelFr":"Deload après le cycle","type":"boolean","scope":"global","default":true,"minimum":null,"maximum":null,"step":null,"allowedValues":[true],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}}
+      {"id":"bbb_percentage","presentationGroup":"hidden","labelEn":"BBB percentage","labelFr":"Pourcentage BBB","type":"percentage","scope":"perMovement","default":5000,"minimum":5000,"maximum":5000,"step":null,"allowedValues":[5000],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}}
     ]
   }, {
     "id": "beyond_bbb_fixed_wave_options",
     "revision": 1,
     "sourceRuleIds": ["beyond_020", "beyond_021"],
     "parameters": [
-      {"id":"training_max_ratio","presentationGroup":"hidden","type":"percentage","scope":"global","default":9000,"minimum":8500,"maximum":9000,"step":500,"allowedValues":[8500,9000],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}},
-      {"id":"include_deload","presentationGroup":"hidden","labelEn":"Deload after cycle","labelFr":"Deload après le cycle","type":"boolean","scope":"global","default":true,"minimum":null,"maximum":null,"step":null,"allowedValues":[true],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}}
+      {"id":"training_max_ratio","presentationGroup":"hidden","type":"percentage","scope":"global","default":9000,"minimum":8500,"maximum":9000,"step":500,"allowedValues":[8500,9000],"visibleWhen":{"type":"always"},"enabledWhen":{"type":"always"},"requiredWhen":{"type":"always"}}
     ]
   }]
 }

@@ -1370,6 +1370,11 @@ void _parameter(Map<String, Object?> value, String at) {
   if (!const {'global', 'perMovement', 'perSession'}.contains(value['scope'])) {
     throw FormatException('unknown parameter scope ${value['scope']}');
   }
+  if (value['scope'] == 'perMovement' && value['type'] != 'percentage') {
+    throw FormatException(
+      '$at perMovement currently supports percentage parameters only',
+    );
+  }
   if (value['allowedValues'] is! List<Object?>) {
     throw const FormatException('allowedValues must be an array');
   }

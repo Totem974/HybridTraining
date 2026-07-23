@@ -33,8 +33,8 @@
       ],
       "optionSchemaId": {"id":"beyond_bbb_same_lift_options","revision":1},
       "scheduleIds": [{"id":"schedule_four_day_fixed","revision":1}],
-      "compatibilities": {"trainingMaxRequired":true,"supplementalMovementRelation":"sameAsMain","trainingMaxCheckpointAfterWeek":3},
-      "validExample": {"scheduleId":"schedule_four_day_fixed","trainingMaxRatio":9000,"options":{"bbb_percentage":5000,"include_deload":true}}
+      "compatibilities": {"trainingMaxRequired":true,"supplementalMovementRelation":"sameAsMain","trainingMaxCheckpointAfterWeek":3,"includeDeloadRequired":true},
+      "validExample": {"scheduleId":"schedule_four_day_fixed","trainingMaxRatio":9000,"options":{"bbb_percentage":5000}}
     }, {
       "id": "variation_i_5x10_wave",
       "revision": 1,
@@ -55,8 +55,8 @@
       ],
       "optionSchemaId": {"id":"beyond_bbb_fixed_wave_options","revision":1},
       "scheduleIds": [{"id":"schedule_four_day_fixed","revision":1}],
-      "compatibilities": {"trainingMaxRequired":true,"supplementalMovementRelation":"sameAsMain","trainingMaxCheckpointAfterWeek":3},
-      "validExample": {"scheduleId":"schedule_four_day_fixed","trainingMaxRatio":9000,"options":{"include_deload":true}}
+      "compatibilities": {"trainingMaxRequired":true,"supplementalMovementRelation":"sameAsMain","trainingMaxCheckpointAfterWeek":3,"includeDeloadRequired":true},
+      "validExample": {"scheduleId":"schedule_four_day_fixed","trainingMaxRatio":9000,"options":{}}
     }, {
       "id": "variation_ii_descending_volume",
       "revision": 1,
@@ -77,8 +77,8 @@
       ],
       "optionSchemaId": {"id":"beyond_bbb_fixed_wave_options","revision":1},
       "scheduleIds": [{"id":"schedule_four_day_fixed","revision":1}],
-      "compatibilities": {"trainingMaxRequired":true,"supplementalMovementRelation":"sameAsMain","trainingMaxCheckpointAfterWeek":3},
-      "validExample": {"scheduleId":"schedule_four_day_fixed","trainingMaxRatio":9000,"options":{"include_deload":true}}
+      "compatibilities": {"trainingMaxRequired":true,"supplementalMovementRelation":"sameAsMain","trainingMaxCheckpointAfterWeek":3,"includeDeloadRequired":true},
+      "validExample": {"scheduleId":"schedule_four_day_fixed","trainingMaxRatio":9000,"options":{}}
     }]
   }]
 }

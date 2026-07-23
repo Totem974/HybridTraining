@@ -58,6 +58,25 @@ void main() {
     expect((response['snapshot'] as Map<String, Object?>)['kind'], 'cycle');
   });
 
+  test('Beyond BBB fixed wave includes its structural deload', () {
+    final service = initializedService();
+    final response =
+        jsonDecode(
+              service.generateCycle(
+                jsonEncode({
+                  ..._cycleRequest,
+                  'templateId': 'beyond_boring_but_big',
+                  'variantId': 'variation_i_5x10_wave',
+                  'includeDeload': true,
+                  'options': <String, Object?>{},
+                }),
+              ),
+            )
+            as Map<String, Object?>;
+    final cycle = response['cycle'] as Map<String, Object?>;
+    expect(cycle['weeks'], hasLength(7));
+  });
+
   test('configuration projection round-trips through cycle generation', () {
     final service = initializedService();
     final metadata = jsonDecode(service.engineInfo()) as Map<String, Object?>;

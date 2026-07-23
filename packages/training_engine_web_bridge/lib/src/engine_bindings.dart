@@ -450,6 +450,26 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
             optionOverrides,
             movements,
           ),
+      if (_optionalMap(
+            rawVariant['compatibilities'],
+          )['includeDeloadRequired'] ==
+          true)
+        _field(
+          id: 'include-deload-required',
+          path: 'includeDeload',
+          region: 'output',
+          kind: 'boolean',
+          label: const {'en': 'Include deload', 'fr': 'Inclure le deload'},
+          value: true,
+          readOnly: true,
+          visibleWhen: const [
+            {
+              'path': '__catalogHiddenOption',
+              'operator': 'equals',
+              'value': true,
+            },
+          ],
+        ),
       _field(
         id: 'bar-weight',
         path: 'barWeight',

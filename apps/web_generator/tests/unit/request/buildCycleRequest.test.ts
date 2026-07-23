@@ -99,6 +99,28 @@ describe("buildCycleRequest", () => {
     expect(request.includeDeload).toBe(true);
   });
 
+  it("preserves a forced hidden catalog deload default", () => {
+    const forcedDeloadSchema: CycleEditorSchema = {
+      ...schema,
+      fields: [
+        ...baseFields,
+        field("forced-deload", "includeDeload", "output", "boolean", true, {
+          readOnly: true,
+          visibleWhen: [{
+            path: "__catalogHiddenOption",
+            operator: "equals",
+            value: true,
+          }],
+        }),
+      ],
+    };
+    const state = normalizeEditorState(forcedDeloadSchema);
+    const request = buildCycleRequest(state.schema, state.values);
+
+    expect(request.includeDeload).toBe(true);
+    expect(request.options).not.toHaveProperty("deload");
+  });
+
   it("includes bounded Joker child only when enabled by schema conditions", () => {
     const initial = normalizeEditorState(schema);
     const enabled = normalizeEditorState(initial.schema, {

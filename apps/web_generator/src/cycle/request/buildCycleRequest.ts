@@ -116,7 +116,8 @@ export function buildCycleRequest(
     },
     includeDeload: activePaths.has("options.deload.enabled")
       ? values["options.deload.enabled"] === true
-      : false,
+      : values.includeDeload === true ||
+        schema.fields.find((field) => field.path === "includeDeload")?.value === true,
     programTitle: stringValue(values.programTitle, "5/3/1"),
     showPlating: values.showPlating === true,
   };

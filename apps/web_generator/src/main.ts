@@ -10,6 +10,7 @@ import {
   readCycleConfigurationFromUrl,
 } from './cycle/configuration/share';
 import { changeEditorValue, normalizeEditorState } from './cycle/state/editorState';
+import { buildCycleRequest } from './cycle/request/buildCycleRequest';
 import {
   createCycleGenerationScheduler,
   type CycleGenerationScheduler,
@@ -236,9 +237,7 @@ async function handleIntent(intent: CycleFormIntent): Promise<void> {
 
 function scheduleGeneration(): void {
   try {
-    generationScheduler.schedule(
-      client.configurationToCycleRequest<CycleRequest>(currentConfiguration),
-    );
+    generationScheduler.schedule(buildCycleRequest(schema, values));
   } catch (error) {
     if (status) status.textContent = message(error);
   }
@@ -246,9 +245,7 @@ function scheduleGeneration(): void {
 
 async function generate(): Promise<void> {
   try {
-    await generationScheduler.flush(
-      client.configurationToCycleRequest<CycleRequest>(currentConfiguration),
-    );
+    await generationScheduler.flush(buildCycleRequest(schema, values));
   } catch (error) {
     if (status) status.textContent = message(error);
   }
