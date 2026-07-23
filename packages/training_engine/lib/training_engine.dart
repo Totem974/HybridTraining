@@ -1,6 +1,7 @@
 library;
 
 export 'features/cycle_generation/application/catalog_plan_resolver.dart';
+export 'features/cycle_generation/application/cycle_v1_schedule_selection_adapter.dart';
 export 'features/cycle_generation/domain/catalog_cycle_primitives.dart';
 export 'features/cycle_generation/domain/cycle_calculations.dart';
 export 'features/cycle_generation/domain/cycle_compiler_impl.dart';
@@ -9,6 +10,7 @@ export 'features/cycle_generation/domain/cycle_execution_options.dart';
 export 'features/cycle_generation/domain/cycle_generation_error.dart';
 export 'features/cycle_generation/domain/cycle_option_schema.dart';
 export 'features/cycle_generation/domain/cycle_schedule_mode.dart';
+export 'features/cycle_generation/domain/cycle_schedule_contract.dart';
 export 'features/cycle_generation/domain/cycle_v2_primitives.dart';
 export 'features/cycle_generation/domain/workspace_program.dart';
 export 'features/forever/application/forever_composer_impl.dart';

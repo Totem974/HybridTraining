@@ -2,8 +2,11 @@ import 'cycle_calculations.dart';
 import 'cycle_contract.dart';
 import 'cycle_execution_options.dart';
 import 'cycle_generation_error.dart';
+import 'cycle_schedule_contract.dart';
+import 'cycle_schedule_mode.dart';
+import 'cycle_v2_primitives.dart';
 
-final class CycleCompilerImpl implements CycleCompiler {
+final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
   const CycleCompilerImpl({
     this.maxResolver = const TrainingMaxResolver(),
     this.loadCalculator = const LoadCalculator(),
@@ -23,27 +26,7 @@ final class CycleCompilerImpl implements CycleCompiler {
     final options = request.cycleOptions.normalized();
     _validateOptions(definition, request, options);
     final requiredMaxes = _requiredMaximums(definition, request);
-    final maxes = <MovementId, Weight>{};
-    for (final movement in requiredMaxes) {
-      final input = request.maxInputs[movement];
-      if (input == null) {
-        throw CycleGenerationException(
-          CycleGenerationErrorCode.missingMaximum,
-          'No maximum was supplied for ${movement.value}.',
-        );
-      }
-      final ratio =
-          request.trainingMaxRatioByMovement[movement] ??
-          request.globalTrainingMaxRatio;
-      final resolved = maxResolver.resolve(input, ratio);
-      if (resolved.unit != request.unit) {
-        throw CycleGenerationException(
-          CycleGenerationErrorCode.unitMismatch,
-          'Maximum for ${movement.value} does not use ${request.unit.name}.',
-        );
-      }
-      maxes[movement] = resolved;
-    }
+    final maxes = _resolveMaximums(requiredMaxes, request);
 
     var cursor = DateTime(
       request.startDate.year,
@@ -87,6 +70,89 @@ final class CycleCompilerImpl implements CycleCompiler {
         for (final entry in maxes.entries) entry.key.value: entry.value,
       },
       weeks: weeks,
+    );
+  }
+
+  @override
+  GeneratedCycle compileScheduled({
+    required ResolvedCycleDefinition definition,
+    required ResolvedCycleSchedule schedule,
+    required CycleScheduleSelection selection,
+    required CycleRequest request,
+  }) {
+    _validateScheduled(definition, schedule, selection, request);
+    final options = request.cycleOptions.normalized();
+    _validateOptions(definition, request, options);
+    final layout = _buildScheduleLayout(
+      definition,
+      schedule,
+      selection,
+      request.includeDeload,
+    );
+    final maxes = _resolveMaximums(
+      _requiredScheduledMaximums(definition, layout, request, options),
+      request,
+    );
+
+    var cursor = DateTime(
+      request.startDate.year,
+      request.startDate.month,
+      request.startDate.day,
+    );
+    final weeks = <GeneratedWeek>[];
+    for (final displayedWeek in layout) {
+      final sessions = <GeneratedSession>[];
+      for (var dayIndex = 0; dayIndex < displayedWeek.days.length; dayIndex++) {
+        final day = displayedWeek.days[dayIndex];
+        cursor = _onOrAfter(cursor, selection.trainingDays[dayIndex]);
+        final blocks = <GeneratedBlock>[];
+        for (final source in day.sources) {
+          final effective = _effectiveBlocks(
+            definition,
+            source.week,
+            MovementId(source.template.id.value),
+            request,
+            options,
+          );
+          blocks.addAll(
+            _compileBlocks(
+              effective,
+              source.template.movementIds.first,
+              maxes,
+              request,
+            ),
+          );
+        }
+        if (blocks.isNotEmpty) {
+          sessions.add(
+            GeneratedSession(
+              id: '${request.cycleId}-w${displayedWeek.number}-s${dayIndex + 1}',
+              date: cursor,
+              movementId: MovementId(day.sources.first.template.id.value),
+              blocks: List.unmodifiable(blocks),
+            ),
+          );
+        }
+        cursor = cursor.add(const Duration(days: 1));
+      }
+      if (sessions.isNotEmpty) {
+        weeks.add(
+          GeneratedWeek(
+            number: displayedWeek.number,
+            sessions: List.unmodifiable(sessions),
+          ),
+        );
+      }
+    }
+    return GeneratedCycle(
+      id: request.cycleId,
+      catalogVersion: definition.catalogVersion,
+      templateId: definition.templateId,
+      variantId: definition.variantId,
+      effectiveTrainingMaxes: {
+        for (final entry in maxes.entries) entry.key.value: entry.value,
+      },
+      weeks: List.unmodifiable(weeks),
     );
   }
 
@@ -575,15 +641,61 @@ final class CycleCompilerImpl implements CycleCompiler {
     }
   }
 
+  Map<MovementId, Weight> _resolveMaximums(
+    Set<MovementId> required,
+    CycleRequest request,
+  ) {
+    final maxes = <MovementId, Weight>{};
+    for (final movement in required) {
+      final input = request.maxInputs[movement];
+      if (input == null) {
+        throw CycleGenerationException(
+          CycleGenerationErrorCode.missingMaximum,
+          'No maximum was supplied for ${movement.value}.',
+        );
+      }
+      final ratio =
+          request.trainingMaxRatioByMovement[movement] ??
+          request.globalTrainingMaxRatio;
+      final resolved = maxResolver.resolve(input, ratio);
+      if (resolved.unit != request.unit) {
+        throw CycleGenerationException(
+          CycleGenerationErrorCode.unitMismatch,
+          'Maximum for ${movement.value} does not use ${request.unit.name}.',
+        );
+      }
+      maxes[movement] = resolved;
+    }
+    return maxes;
+  }
+
   void _validate(ResolvedCycleDefinition definition, CycleRequest request) {
+    _validateCommon(request);
+    if (request.trainingDays.length != request.sessionOrder.length) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.invalidTrainingDays,
+        'One weekday from 1 to 7 is required for every session.',
+      );
+    }
+    final supported = definition.sessionMovementIds.toSet();
+    if (request.sessionOrder.length != definition.sessionMovementIds.length ||
+        request.sessionOrder.toSet().length != supported.length ||
+        !request.sessionOrder.toSet().containsAll(supported)) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.unsupportedMovement,
+        'Session order must contain every definition movement exactly once.',
+      );
+    }
+  }
+
+  void _validateCommon(CycleRequest request) {
     if (request.cycleId.trim().isEmpty) {
       throw const CycleGenerationException(
         CycleGenerationErrorCode.emptyCycleId,
         'Cycle id cannot be empty.',
       );
     }
-    if (request.trainingDays.length != request.sessionOrder.length ||
-        request.trainingDays.isEmpty ||
+    if (request.trainingDays.isEmpty ||
         request.trainingDays.any((day) => day < 1 || day > 7)) {
       throw const CycleGenerationException(
         CycleGenerationErrorCode.invalidTrainingDays,
@@ -594,15 +706,6 @@ final class CycleCompilerImpl implements CycleCompiler {
       throw const CycleGenerationException(
         CycleGenerationErrorCode.duplicateTrainingDays,
         'Training weekdays must be unique.',
-      );
-    }
-    final supported = definition.sessionMovementIds.toSet();
-    if (request.sessionOrder.length != definition.sessionMovementIds.length ||
-        request.sessionOrder.toSet().length != supported.length ||
-        !request.sessionOrder.toSet().containsAll(supported)) {
-      throw const CycleGenerationException(
-        CycleGenerationErrorCode.unsupportedMovement,
-        'Session order must contain every definition movement exactly once.',
       );
     }
     if (request.roundingIncrement.centiUnits <= 0) {
@@ -624,6 +727,308 @@ final class CycleCompilerImpl implements CycleCompiler {
       );
     }
   }
+
+  void _validateScheduled(
+    ResolvedCycleDefinition definition,
+    ResolvedCycleSchedule schedule,
+    CycleScheduleSelection selection,
+    CycleRequest request,
+  ) {
+    _validateCommon(request);
+    if (!_sameInts(request.trainingDays, selection.trainingDays) ||
+        !_sameSessionOrder(request.sessionOrder, selection.sessionOrder)) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.invalidSessionOrder,
+        'CycleRequest and CycleScheduleSelection must describe the same schedule.',
+      );
+    }
+    if (schedule.sessions.isEmpty ||
+        schedule.sessions.any((session) => session.movementIds.isEmpty) ||
+        schedule.allowedFrequencies.isEmpty) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.invalidScheduleDefinition,
+        'A resolved schedule requires sessions, movements, and frequencies.',
+      );
+    }
+    if (schedule.allowedFrequencies.any(
+          (frequency) => frequency < 1 || frequency > 7,
+        ) ||
+        !schedule.allowedFrequencies.contains(selection.trainingDays.length)) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.invalidScheduleFrequency,
+        'The selected weekly frequency is not allowed by this schedule.',
+      );
+    }
+    final templates = {
+      for (final session in schedule.sessions) session.id.value: session,
+    };
+    if (templates.length != schedule.sessions.length) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.invalidScheduleDefinition,
+        'Schedule session identifiers must be unique.',
+      );
+    }
+    final selected = selection.sessionOrder.map((id) => id.value).toList();
+    if (selected.toSet().length != selected.length ||
+        selected.length != templates.length ||
+        !selected.toSet().containsAll(templates.keys)) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.invalidSessionOrder,
+        'Session order must contain every schedule session exactly once.',
+      );
+    }
+    if (definition.scheduleReference case final reference?) {
+      if (reference.id != schedule.id) {
+        throw const CycleGenerationException(
+          CycleGenerationErrorCode.invalidScheduleDefinition,
+          'The resolved schedule does not match the cycle definition.',
+        );
+      }
+    }
+    if (definition.scheduleMode case final mode?) {
+      if (mode != schedule.mode) {
+        throw const CycleGenerationException(
+          CycleGenerationErrorCode.invalidScheduleDefinition,
+          'The resolved schedule mode does not match the cycle definition.',
+        );
+      }
+    }
+    final frequency = selection.trainingDays.length;
+    switch (schedule.mode) {
+      case CycleScheduleMode.fixed || CycleScheduleMode.multiMovement:
+        if (frequency != schedule.sessions.length ||
+            schedule.finiteSlots.isNotEmpty) {
+          throw const CycleGenerationException(
+            CycleGenerationErrorCode.invalidScheduleFrequency,
+            'Fixed and multi-movement schedules require one day per session.',
+          );
+        }
+      case CycleScheduleMode.rotating:
+        if (frequency > schedule.sessions.length ||
+            schedule.finiteSlots.isNotEmpty) {
+          throw const CycleGenerationException(
+            CycleGenerationErrorCode.invalidScheduleFrequency,
+            'A rotating schedule cannot have more days than sessions.',
+          );
+        }
+      case CycleScheduleMode.finite:
+        if (schedule.finiteSlots.isEmpty) {
+          throw const CycleGenerationException(
+            CycleGenerationErrorCode.invalidScheduleDefinition,
+            'A finite schedule requires an explicit finite sequence.',
+          );
+        }
+    }
+
+    final weeks = <int, WeekDefinition>{};
+    for (final week in definition.weeks) {
+      if (weeks.containsKey(week.number)) {
+        throw const CycleGenerationException(
+          CycleGenerationErrorCode.invalidScheduleDefinition,
+          'Definition week numbers must be unique.',
+        );
+      }
+      weeks[week.number] = week;
+    }
+    if (weeks.isEmpty) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.invalidScheduleDefinition,
+        'A scheduled cycle requires at least one definition week.',
+      );
+    }
+    void validateSource(int weekNumber, SessionId sessionId) {
+      final week = weeks[weekNumber];
+      if (week == null ||
+          week.sessions
+                  .where((session) => session.id.value == sessionId.value)
+                  .length !=
+              1) {
+        throw const CycleGenerationException(
+          CycleGenerationErrorCode.invalidScheduleDefinition,
+          'Every scheduled source must resolve to exactly one session.',
+        );
+      }
+    }
+
+    if (schedule.mode == CycleScheduleMode.finite) {
+      for (final slot in schedule.finiteSlots) {
+        if (slot.sources.isEmpty) {
+          throw const CycleGenerationException(
+            CycleGenerationErrorCode.invalidScheduleDefinition,
+            'Finite schedule slots cannot be empty.',
+          );
+        }
+        for (final source in slot.sources) {
+          if (!templates.containsKey(source.sessionId.value)) {
+            throw const CycleGenerationException(
+              CycleGenerationErrorCode.invalidScheduleDefinition,
+              'A finite schedule references an unknown session.',
+            );
+          }
+          validateSource(source.definitionWeekNumber, source.sessionId);
+        }
+      }
+    } else {
+      for (final week in definition.weeks) {
+        for (final sessionId in selection.sessionOrder) {
+          validateSource(week.number, sessionId);
+        }
+      }
+    }
+  }
+
+  List<_ScheduledWeek> _buildScheduleLayout(
+    ResolvedCycleDefinition definition,
+    ResolvedCycleSchedule schedule,
+    CycleScheduleSelection selection,
+    bool includeDeload,
+  ) {
+    final templates = {
+      for (final template in schedule.sessions) template.id.value: template,
+    };
+    final weeks = {for (final week in definition.weeks) week.number: week};
+    _ScheduledSource source(WeekDefinition week, SessionId sessionId) =>
+        _ScheduledSource(week: week, template: templates[sessionId.value]!);
+
+    switch (schedule.mode) {
+      case CycleScheduleMode.fixed || CycleScheduleMode.multiMovement:
+        return [
+              for (final week in definition.weeks)
+                if (includeDeload || !_isDeloadWeek(week))
+                  _ScheduledWeek(
+                    number: 0,
+                    days: [
+                      for (final sessionId in selection.sessionOrder)
+                        _ScheduledDay(sources: [source(week, sessionId)]),
+                    ],
+                  ),
+            ].indexed
+            .map(
+              (entry) =>
+                  _ScheduledWeek(number: entry.$1 + 1, days: entry.$2.days),
+            )
+            .toList(growable: false);
+      case CycleScheduleMode.rotating:
+        return _rotatingLayout(
+          definition.weeks,
+          selection,
+          source,
+          includeDeload,
+        );
+      case CycleScheduleMode.finite:
+        final slots = <_ScheduledDay>[];
+        for (final slot in schedule.finiteSlots) {
+          final sources = [
+            for (final item in slot.sources)
+              if (includeDeload ||
+                  !_isDeloadWeek(weeks[item.definitionWeekNumber]!))
+                source(weeks[item.definitionWeekNumber]!, item.sessionId),
+          ];
+          if (sources.isNotEmpty) {
+            slots.add(_ScheduledDay(sources: List.unmodifiable(sources)));
+          }
+        }
+        final result = <_ScheduledWeek>[];
+        final frequency = selection.trainingDays.length;
+        for (var offset = 0; offset < slots.length; offset += frequency) {
+          result.add(
+            _ScheduledWeek(
+              number: result.length + 1,
+              days: List.unmodifiable(
+                slots.sublist(
+                  offset,
+                  (offset + frequency).clamp(0, slots.length),
+                ),
+              ),
+            ),
+          );
+        }
+        return List.unmodifiable(result);
+    }
+  }
+
+  List<_ScheduledWeek> _rotatingLayout(
+    List<WeekDefinition> sourceWeeks,
+    CycleScheduleSelection selection,
+    _ScheduledSource Function(WeekDefinition, SessionId) source,
+    bool includeDeload,
+  ) {
+    final result = <_ScheduledWeek>[];
+    final work = <WeekDefinition>[];
+    final frequency = selection.trainingDays.length;
+
+    void flushWork() {
+      if (work.isEmpty) return;
+      final sources = [
+        for (final week in work)
+          for (final sessionId in selection.sessionOrder)
+            source(week, sessionId),
+      ];
+      for (var offset = 0; offset < sources.length; offset += frequency) {
+        result.add(
+          _ScheduledWeek(
+            number: result.length + 1,
+            days: [
+              for (
+                var index = offset;
+                index < sources.length && index < offset + frequency;
+                index++
+              )
+                _ScheduledDay(sources: [sources[index]]),
+            ],
+          ),
+        );
+      }
+      work.clear();
+    }
+
+    for (final week in sourceWeeks) {
+      if (!_isDeloadWeek(week)) {
+        work.add(week);
+        continue;
+      }
+      flushWork();
+      if (!includeDeload) continue;
+      final count = selection.sessionOrder.length;
+      final quotient = count ~/ frequency;
+      final remainder = count % frequency;
+      var cursor = 0;
+      final days = <_ScheduledDay>[];
+      for (var day = 0; day < frequency; day++) {
+        final size = quotient + (day < remainder ? 1 : 0);
+        final group = selection.sessionOrder.sublist(cursor, cursor + size);
+        cursor += size;
+        days.add(
+          _ScheduledDay(
+            sources: [for (final sessionId in group) source(week, sessionId)],
+          ),
+        );
+      }
+      result.add(
+        _ScheduledWeek(
+          number: result.length + 1,
+          days: List.unmodifiable(days),
+        ),
+      );
+    }
+    flushWork();
+    return List.unmodifiable(result);
+  }
+
+  bool _isDeloadWeek(WeekDefinition week) => [
+    ...week.blocks,
+    for (final session in week.sessions) ...session.blocks,
+  ].any((block) => block.role == 'deload');
+
+  bool _sameInts(List<int> left, List<int> right) =>
+      left.length == right.length &&
+      left.indexed.every((entry) => entry.$2 == right[entry.$1]);
+
+  bool _sameSessionOrder(List<MovementId> legacy, List<SessionId> selected) =>
+      legacy.length == selected.length &&
+      legacy.indexed.every(
+        (entry) => entry.$2.value == selected[entry.$1].value,
+      );
 
   void _validateOptions(
     ResolvedCycleDefinition definition,
@@ -852,15 +1257,7 @@ final class CycleCompilerImpl implements CycleCompiler {
           request,
           options,
         )) {
-          if (block.sets.any(
-            (set) =>
-                set.load is TrainingMaxPercentageLoad ||
-                set.load is ParameterizedTrainingMaxPercentageLoad ||
-                set.load is OneRepMaxPercentageLoad ||
-                set.load is RelativeSetLoad ||
-                set.load is MainWorkSetPlusLoad ||
-                set.load is TrainingMaxRampLoad,
-          )) {
+          if (_requiresMaximum(block)) {
             result.add(block.movementId ?? sessionId);
           }
         }
@@ -869,8 +1266,66 @@ final class CycleCompilerImpl implements CycleCompiler {
     return result;
   }
 
+  Set<MovementId> _requiredScheduledMaximums(
+    ResolvedCycleDefinition definition,
+    List<_ScheduledWeek> layout,
+    CycleRequest request,
+    CycleExecutionOptions options,
+  ) {
+    final result = <MovementId>{};
+    for (final week in layout) {
+      for (final day in week.days) {
+        for (final source in day.sources) {
+          final sessionId = MovementId(source.template.id.value);
+          for (final block in _effectiveBlocks(
+            definition,
+            source.week,
+            sessionId,
+            request,
+            options,
+          )) {
+            if (_requiresMaximum(block)) {
+              result.add(block.movementId ?? source.template.movementIds.first);
+            }
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  bool _requiresMaximum(BlockDefinition block) => block.sets.any(
+    (set) =>
+        set.load is TrainingMaxPercentageLoad ||
+        set.load is ParameterizedTrainingMaxPercentageLoad ||
+        set.load is OneRepMaxPercentageLoad ||
+        set.load is RelativeSetLoad ||
+        set.load is MainWorkSetPlusLoad ||
+        set.load is TrainingMaxRampLoad,
+  );
+
   DateTime _onOrAfter(DateTime date, int weekday) {
     final days = (weekday - date.weekday + 7) % 7;
     return date.add(Duration(days: days));
   }
+}
+
+final class _ScheduledSource {
+  const _ScheduledSource({required this.week, required this.template});
+
+  final WeekDefinition week;
+  final ScheduleSessionTemplate template;
+}
+
+final class _ScheduledDay {
+  const _ScheduledDay({required this.sources});
+
+  final List<_ScheduledSource> sources;
+}
+
+final class _ScheduledWeek {
+  const _ScheduledWeek({required this.number, required this.days});
+
+  final int number;
+  final List<_ScheduledDay> days;
 }

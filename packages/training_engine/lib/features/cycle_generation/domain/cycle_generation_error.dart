@@ -12,6 +12,10 @@ enum CycleGenerationErrorCode {
   missingRelativeLoadTarget,
   ambiguousRelativeLoadTarget,
   invalidCycleOptions,
+  invalidScheduleFrequency,
+  invalidSessionOrder,
+  invalidScheduleDefinition,
+  unsupportedScheduleMode,
 }
 
 final class CycleGenerationException implements Exception {

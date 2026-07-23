@@ -10,12 +10,27 @@ final class ScheduleSessionTemplate {
     required this.id,
     required this.role,
     required this.movementIds,
-  }) : assert(role != ''),
-       assert(movementIds.length > 0);
+  }) : assert(role != '');
 
   final SessionId id;
   final String role;
   final List<MovementId> movementIds;
+}
+
+final class FiniteScheduleSource {
+  const FiniteScheduleSource({
+    required this.definitionWeekNumber,
+    required this.sessionId,
+  }) : assert(definitionWeekNumber > 0);
+
+  final int definitionWeekNumber;
+  final SessionId sessionId;
+}
+
+final class FiniteScheduleSlot {
+  const FiniteScheduleSlot({required this.sources});
+
+  final List<FiniteScheduleSource> sources;
 }
 
 final class ResolvedCycleSchedule {
@@ -24,22 +39,21 @@ final class ResolvedCycleSchedule {
     required this.mode,
     required this.sessions,
     required this.allowedFrequencies,
-  }) : assert(id != ''),
-       assert(sessions.length > 0),
-       assert(allowedFrequencies.length > 0);
+    this.finiteSlots = const [],
+  }) : assert(id != '');
 
   final String id;
   final CycleScheduleMode mode;
   final List<ScheduleSessionTemplate> sessions;
   final Set<int> allowedFrequencies;
+  final List<FiniteScheduleSlot> finiteSlots;
 }
 
 final class CycleScheduleSelection {
   const CycleScheduleSelection({
     required this.trainingDays,
     required this.sessionOrder,
-  }) : assert(trainingDays.length > 0),
-       assert(sessionOrder.length > 0);
+  });
 
   final List<int> trainingDays;
   final List<SessionId> sessionOrder;
