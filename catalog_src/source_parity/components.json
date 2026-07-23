@@ -1,0 +1,337 @@
+{
+  "schemaVersion": 1,
+  "kind": "components",
+  "components": [
+    {
+      "id": "source_bbb_original_5x10_variable",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "Source BBB Original 5x10",
+        "fr": "BBB Original source 5x10"
+      },
+      "sourceRuleIds": [
+        "or.bbb.same_lift",
+        "or.bbb.loading",
+        "app.source_calculator.bbb_variants"
+      ],
+      "parameterSchemaIds": [
+        "bbb_percentage"
+      ],
+      "constraints": {
+        "movementRelation": "sameAsMain",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_parity"
+        ]
+      },
+      "block": {
+        "id": "supplemental",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "parameterized_training_max_percentage",
+              "parameterId": "bbb_percentage",
+              "defaultBasisPoints": 3000,
+              "minimumBasisPoints": 3000,
+              "maximumBasisPoints": 7500
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "parameterized_training_max_percentage",
+              "parameterId": "bbb_percentage",
+              "defaultBasisPoints": 3000,
+              "minimumBasisPoints": 3000,
+              "maximumBasisPoints": 7500
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "parameterized_training_max_percentage",
+              "parameterId": "bbb_percentage",
+              "defaultBasisPoints": 3000,
+              "minimumBasisPoints": 3000,
+              "maximumBasisPoints": 7500
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "parameterized_training_max_percentage",
+              "parameterId": "bbb_percentage",
+              "defaultBasisPoints": 3000,
+              "minimumBasisPoints": 3000,
+              "maximumBasisPoints": 7500
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "parameterized_training_max_percentage",
+              "parameterId": "bbb_percentage",
+              "defaultBasisPoints": 3000,
+              "minimumBasisPoints": 3000,
+              "maximumBasisPoints": 7500
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_five_by_five_80",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "Source BBB 5x5 at 80%",
+        "fr": "BBB source 5x5 à 80 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_variants"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "movementRelation": "sameAsMain",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_parity"
+        ]
+      },
+      "block": {
+        "id": "supplemental",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 5
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 8000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 5
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 8000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 5
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 8000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 5
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 8000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 5
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 8000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_five_by_three_90",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "Source BBB 5x3 at 90%",
+        "fr": "BBB source 5x3 à 90 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_variants"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "movementRelation": "sameAsMain",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_parity"
+        ]
+      },
+      "block": {
+        "id": "supplemental",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 3
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 9000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 3
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 9000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 3
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 9000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 3
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 9000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 3
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 9000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_five_by_one_100",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "Source BBB 5x1 at 100%",
+        "fr": "BBB source 5x1 à 100 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_variants"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "movementRelation": "sameAsMain",
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_parity"
+        ]
+      },
+      "block": {
+        "id": "supplemental",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 1
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 10000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 1
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 10000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 1
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 10000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 1
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 10000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 1
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 10000
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

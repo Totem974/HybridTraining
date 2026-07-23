@@ -1,0 +1,701 @@
+{
+  "schemaVersion": 1,
+  "kind": "templates",
+  "generation": {
+    "id": "source_parity",
+    "labels": {
+      "en": "Source parity",
+      "fr": "Parité source"
+    }
+  },
+  "templates": [
+    {
+      "id": "source_calculator_boring_but_big",
+      "revision": 1,
+      "surface": "cyclePublic",
+      "labels": {
+        "en": "Boring But Big — source calculator",
+        "fr": "Boring But Big — calculateur source"
+      },
+      "sourceRuleIds": [
+        "or.bbb.same_lift",
+        "app.source_calculator.bbb_variants",
+        "app.source_calculator.bbb_assistance_mapping"
+      ],
+      "variants": [
+        {
+          "id": "original_5x10",
+          "revision": 1,
+          "labels": {
+            "en": "Original (5x10)",
+            "fr": "Original (5x10)"
+          },
+          "sourceRuleIds": [
+            "or.bbb.same_lift",
+            "or.bbb.loading",
+            "app.source_calculator.bbb_variants"
+          ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
+          "optionSchemaId": {
+            "id": "source_bbb_original_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            },
+            {
+              "id": "schedule_three_day_rotating",
+              "revision": 1
+            }
+          ],
+          "assistancePlanIds": [
+            {
+              "id": "source_bbb_exact_assistance",
+              "revision": 1
+            }
+          ],
+          "conditioningDefinitionIds": [],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "supplementalMovementRelation": "sameAsMain"
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeWarmUp": true,
+            "includeDeload": true,
+            "assistancePlanId": "source_bbb_exact_assistance",
+            "percentageParametersByMovement": {
+              "overhead_press": {
+                "bbb_percentage": 3000
+              },
+              "deadlift": {
+                "bbb_percentage": 3000
+              },
+              "bench_press": {
+                "bbb_percentage": 3000
+              },
+              "squat": {
+                "bbb_percentage": 3000
+              }
+            }
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_original_5x10_variable",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_original_5x10_variable",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_original_5x10_variable",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "five_by_five_80",
+          "revision": 1,
+          "labels": {
+            "en": "5x5 @ 80%",
+            "fr": "5x5 à 80 %"
+          },
+          "sourceRuleIds": [
+            "app.source_calculator.bbb_variants"
+          ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
+          "optionSchemaId": {
+            "id": "source_bbb_fixed_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            },
+            {
+              "id": "schedule_three_day_rotating",
+              "revision": 1
+            }
+          ],
+          "assistancePlanIds": [
+            {
+              "id": "source_bbb_exact_assistance",
+              "revision": 1
+            }
+          ],
+          "conditioningDefinitionIds": [],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "supplementalMovementRelation": "sameAsMain"
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeWarmUp": true,
+            "includeDeload": true,
+            "assistancePlanId": "source_bbb_exact_assistance"
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_five_by_five_80",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_five_by_five_80",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_five_by_five_80",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "five_by_three_90",
+          "revision": 1,
+          "labels": {
+            "en": "5x3 @ 90%",
+            "fr": "5x3 à 90 %"
+          },
+          "sourceRuleIds": [
+            "app.source_calculator.bbb_variants"
+          ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
+          "optionSchemaId": {
+            "id": "source_bbb_fixed_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            },
+            {
+              "id": "schedule_three_day_rotating",
+              "revision": 1
+            }
+          ],
+          "assistancePlanIds": [
+            {
+              "id": "source_bbb_exact_assistance",
+              "revision": 1
+            }
+          ],
+          "conditioningDefinitionIds": [],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "supplementalMovementRelation": "sameAsMain"
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeWarmUp": true,
+            "includeDeload": true,
+            "assistancePlanId": "source_bbb_exact_assistance"
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_five_by_three_90",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_five_by_three_90",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_five_by_three_90",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "five_by_one_100",
+          "revision": 1,
+          "labels": {
+            "en": "5x1 @ 100%",
+            "fr": "5x1 à 100 %"
+          },
+          "sourceRuleIds": [
+            "app.source_calculator.bbb_variants"
+          ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
+          "optionSchemaId": {
+            "id": "source_bbb_fixed_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            },
+            {
+              "id": "schedule_three_day_rotating",
+              "revision": 1
+            }
+          ],
+          "assistancePlanIds": [
+            {
+              "id": "source_bbb_exact_assistance",
+              "revision": 1
+            }
+          ],
+          "conditioningDefinitionIds": [],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "supplementalMovementRelation": "sameAsMain"
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeWarmUp": true,
+            "includeDeload": true,
+            "assistancePlanId": "source_bbb_exact_assistance"
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_five_by_one_100",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_five_by_one_100",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_five_by_one_100",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "beyond_variation_one",
+          "revision": 1,
+          "labels": {
+            "en": "Beyond Variation 1",
+            "fr": "Beyond Variation 1"
+          },
+          "sourceRuleIds": [
+            "beyond_020",
+            "app.source_calculator.bbb_variants"
+          ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
+          "optionSchemaId": {
+            "id": "source_bbb_fixed_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            },
+            {
+              "id": "schedule_three_day_rotating",
+              "revision": 1
+            }
+          ],
+          "assistancePlanIds": [
+            {
+              "id": "source_bbb_exact_assistance",
+              "revision": 1
+            }
+          ],
+          "conditioningDefinitionIds": [],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "supplementalMovementRelation": "sameAsMain"
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeWarmUp": true,
+            "includeDeload": true,
+            "assistancePlanId": "source_bbb_exact_assistance"
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                },
+                {
+                  "id": "beyond_bbb_variation_i_5x10_65",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                },
+                {
+                  "id": "beyond_bbb_variation_i_5x10_70",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                },
+                {
+                  "id": "beyond_bbb_variation_i_5x10_75",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "beyond_variation_two",
+          "revision": 1,
+          "labels": {
+            "en": "Beyond Variation 2",
+            "fr": "Beyond Variation 2"
+          },
+          "sourceRuleIds": [
+            "beyond_021",
+            "app.source_calculator.bbb_variants"
+          ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
+          "optionSchemaId": {
+            "id": "source_bbb_fixed_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            },
+            {
+              "id": "schedule_three_day_rotating",
+              "revision": 1
+            }
+          ],
+          "assistancePlanIds": [
+            {
+              "id": "source_bbb_exact_assistance",
+              "revision": 1
+            }
+          ],
+          "conditioningDefinitionIds": [],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "supplementalMovementRelation": "sameAsMain"
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeWarmUp": true,
+            "includeDeload": true,
+            "assistancePlanId": "source_bbb_exact_assistance"
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                },
+                {
+                  "id": "beyond_bbb_variation_ii_5x10_65",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                },
+                {
+                  "id": "beyond_bbb_variation_ii_5x8_70",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                },
+                {
+                  "id": "beyond_bbb_variation_ii_5x5_75",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

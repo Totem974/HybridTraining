@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "kind": "sources",
+  "sources": [
+    {
+      "ruleId": "app.source_calculator.bbb_variants",
+      "work": "Original 5/3/1 calculator",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "Boring But Big variant controls and generated programs observed in the exact 2026-07-22 local capture",
+      "reviewStatus": "referenceAppObserved"
+    },
+    {
+      "ruleId": "app.source_calculator.bbb_assistance_mapping",
+      "work": "Original 5/3/1 calculator",
+      "edition": "Version 2.2, recovered local runtime",
+      "section": "Boring But Big assistance exercise, set, repetition, and deload mappings observed in the exact 2026-07-22 local capture",
+      "reviewStatus": "referenceAppObserved"
+    }
+  ]
+}

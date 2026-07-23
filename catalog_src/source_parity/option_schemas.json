@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "kind": "optionSchemas",
+  "optionSchemas": [
+    {
+      "id": "source_bbb_original_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "or.bbb.loading",
+        "app.source_calculator.bbb_variants"
+      ],
+      "includeSchemaIds": [
+        {
+          "id": "classic_crosscut_options",
+          "revision": 1
+        }
+      ],
+      "parameters": [
+        {
+          "id": "bbb_percentage",
+          "presentationGroup": "template",
+          "labelEn": "5 x 10 @",
+          "labelFr": "5 x 10 à",
+          "requestPath": "percentageParametersByMovement.bbb_percentage",
+          "type": "percentage",
+          "scope": "perMovement",
+          "default": 3000,
+          "minimum": 3000,
+          "maximum": 7500,
+          "step": 500,
+          "allowedValues": [
+            3000,
+            3500,
+            4000,
+            4500,
+            5000,
+            5500,
+            6000,
+            6500,
+            7000,
+            7500
+          ],
+          "visibleWhen": {
+            "type": "always"
+          },
+          "enabledWhen": {
+            "type": "always"
+          },
+          "requiredWhen": {
+            "type": "always"
+          }
+        }
+      ]
+    },
+    {
+      "id": "source_bbb_fixed_options",
+      "revision": 1,
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_variants"
+      ],
+      "includeSchemaIds": [
+        {
+          "id": "classic_crosscut_options",
+          "revision": 1
+        }
+      ],
+      "parameters": []
+    }
+  ]
+}
