@@ -45,7 +45,7 @@ void main() {
         ...codec.decodeSchedules(File(path).readAsStringSync()),
     ];
 
-    expect(schedules, hasLength(10));
+    expect(schedules, hasLength(11));
     expect(
       schedules.where((item) => item.type == CycleScheduleMode.fixed),
       hasLength(1),
@@ -56,7 +56,7 @@ void main() {
     );
     expect(
       schedules.where((item) => item.type == CycleScheduleMode.multiMovement),
-      hasLength(6),
+      hasLength(7),
     );
     expect(
       schedules.where((item) => item.type == CycleScheduleMode.finite),
@@ -71,6 +71,7 @@ void main() {
         'schedule_four_day_fixed': 4,
         'schedule_three_day_rotating': 3,
         'schedule_two_day_multi_movement_option_one': 2,
+        'schedule_two_day_paired_source_order': 2,
         'schedule_two_day_rotating_four_lifts': 2,
         'classic_extended_two_day_option_one': 2,
         'classic_extended_two_day_option_two': 2,

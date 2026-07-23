@@ -43,6 +43,18 @@
       ]
     },
     {
+      "id": "schedule_two_day_paired_source_order",
+      "revision": 1,
+      "labels": {"en": "Two-day paired-lift source order", "fr": "Deux jours, mouvements appariés dans l’ordre source"},
+      "sourceRuleIds": ["or.schedule.two_day_option_1"],
+      "type": "multiMovement",
+      "sessionsPerWeek": 2,
+      "sessions": [
+        {"id": "deadlift_overhead_press", "role": "multiLift", "movementIds": ["deadlift", "overhead_press"]},
+        {"id": "squat_bench_press", "role": "multiLift", "movementIds": ["squat", "bench_press"]}
+      ]
+    },
+    {
       "id": "schedule_two_day_rotating_four_lifts",
       "revision": 1,
       "labels": {"en": "Two-day rotating four-lift schedule", "fr": "Rotation des quatre mouvements sur deux jours"},

@@ -160,7 +160,7 @@
           "labelFr": "Sauter l’échauffement",
           "type": "boolean",
           "scope": "global",
-          "default": false,
+          "default": true,
           "minimum": null,
           "maximum": null,
           "step": null,
