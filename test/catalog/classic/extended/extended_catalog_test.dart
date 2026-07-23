@@ -89,8 +89,14 @@ void main() {
             );
             final labels = valueLabel['labels']! as Map<String, Object?>;
             expect(labels.keys.toSet(), {'en', 'fr'});
-            expect(labels['en'], isA<String>().having((value) => value, 'en', isNotEmpty));
-            expect(labels['fr'], isA<String>().having((value) => value, 'fr', isNotEmpty));
+            expect(
+              labels['en'],
+              isA<String>().having((value) => value, 'en', isNotEmpty),
+            );
+            expect(
+              labels['fr'],
+              isA<String>().having((value) => value, 'fr', isNotEmpty),
+            );
           }
           expect(labeledValues, unorderedEquals(allowedValues));
         }
