@@ -2,6 +2,7 @@ import '../domain/catalog_cycle_primitives.dart';
 import '../domain/cycle_contract.dart';
 import '../domain/cycle_execution_options.dart';
 import '../domain/cycle_schedule_mode.dart';
+import '../domain/load_rounding_policy.dart';
 
 final class PlanSession {
   const PlanSession({
@@ -46,6 +47,7 @@ final class CatalogPlan {
     this.scheduleMode,
     this.assistancePlanIds = const [],
     this.conditioningDefinitionIds = const [],
+    this.loadRoundingPolicy = LoadRoundingPolicy.nearest,
   });
 
   final int catalogVersion;
@@ -61,6 +63,7 @@ final class CatalogPlan {
   final CycleScheduleMode? scheduleMode;
   final List<ComponentReference> assistancePlanIds;
   final List<ComponentReference> conditioningDefinitionIds;
+  final LoadRoundingPolicy loadRoundingPolicy;
 }
 
 final class CatalogPlanResolver {
@@ -130,6 +133,7 @@ final class CatalogPlanResolver {
       conditioningDefinitionIds: List.unmodifiable(
         plan.conditioningDefinitionIds,
       ),
+      loadRoundingPolicy: plan.loadRoundingPolicy,
     );
   }
 

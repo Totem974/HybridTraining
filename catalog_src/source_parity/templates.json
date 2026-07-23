@@ -26,6 +26,7 @@
         {
           "id": "original_5x10",
           "revision": 1,
+          "loadRoundingPolicy": "up",
           "labels": {
             "en": "Original (5x10)",
             "fr": "Original (5x10)"
@@ -151,6 +152,7 @@
         {
           "id": "five_by_five_80",
           "revision": 1,
+          "loadRoundingPolicy": "up",
           "labels": {
             "en": "5x5 @ 80%",
             "fr": "5x5 à 80 %"
@@ -260,6 +262,7 @@
         {
           "id": "five_by_three_90",
           "revision": 1,
+          "loadRoundingPolicy": "up",
           "labels": {
             "en": "5x3 @ 90%",
             "fr": "5x3 à 90 %"
@@ -369,6 +372,7 @@
         {
           "id": "five_by_one_100",
           "revision": 1,
+          "loadRoundingPolicy": "up",
           "labels": {
             "en": "5x1 @ 100%",
             "fr": "5x1 à 100 %"
@@ -478,6 +482,7 @@
         {
           "id": "beyond_variation_one",
           "revision": 1,
+          "loadRoundingPolicy": "up",
           "labels": {
             "en": "Beyond Variation 1",
             "fr": "Beyond Variation 1"
@@ -588,6 +593,7 @@
         {
           "id": "beyond_variation_two",
           "revision": 1,
+          "loadRoundingPolicy": "up",
           "labels": {
             "en": "Beyond Variation 2",
             "fr": "Beyond Variation 2"

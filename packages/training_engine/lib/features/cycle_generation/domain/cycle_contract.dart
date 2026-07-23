@@ -1,6 +1,7 @@
 import 'catalog_cycle_primitives.dart';
 import 'cycle_execution_options.dart';
 import 'cycle_schedule_mode.dart';
+import 'load_rounding_policy.dart';
 
 enum WeightUnit { kg, lb }
 
@@ -404,6 +405,7 @@ final class ResolvedCycleDefinition {
     this.scheduleMode,
     this.assistancePlanIds = const [],
     this.conditioningDefinitionIds = const [],
+    this.loadRoundingPolicy = LoadRoundingPolicy.nearest,
   });
   final int catalogVersion;
   final String templateId;
@@ -416,6 +418,7 @@ final class ResolvedCycleDefinition {
   final CycleScheduleMode? scheduleMode;
   final List<ComponentReference> assistancePlanIds;
   final List<ComponentReference> conditioningDefinitionIds;
+  final LoadRoundingPolicy loadRoundingPolicy;
 }
 
 final class BarProfile {

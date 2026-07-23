@@ -103,6 +103,7 @@ final class CatalogPlanDataResolver {
       conditioningDefinitionIds: List.unmodifiable(
         variant.conditioningDefinitionIds,
       ),
+      loadRoundingPolicy: variant.loadRoundingPolicy,
       optionRecipes: _resolveOptionRecipes(
         variant,
         optionRecipes,

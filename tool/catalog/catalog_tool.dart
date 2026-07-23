@@ -1045,6 +1045,7 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
             'validExample',
             'componentSelections',
             'optionRecipeId',
+            'loadRoundingPolicy',
           },
           vat,
           optional: {
@@ -1054,6 +1055,7 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
             'conditioningDefinitionIds',
             'componentSelections',
             'optionRecipeId',
+            'loadRoundingPolicy',
           },
         );
         _common(v, vat);
@@ -1091,6 +1093,12 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
         }
         _object(v['compatibilities'], '$vat.compatibilities');
         _object(v['validExample'], '$vat.validExample');
+        if (v['loadRoundingPolicy'] != null &&
+            !const {'nearest', 'up'}.contains(v['loadRoundingPolicy'])) {
+          throw FormatException(
+            '$vat.loadRoundingPolicy must be nearest or up',
+          );
+        }
         if (v['componentSelections'] case final List<Object?> selections) {
           for (var j = 0; j < selections.length; j++) {
             final selection = _object(

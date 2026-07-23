@@ -1,5 +1,6 @@
 import 'cycle_contract.dart';
 import 'cycle_generation_error.dart';
+import 'load_rounding_policy.dart';
 
 final class EpleyRepMaxFormula {
   const EpleyRepMaxFormula();
@@ -79,7 +80,11 @@ final class LoadCalculator {
     base.unit,
   );
 
-  Weight roundToIncrement(Weight weight, Weight increment) {
+  Weight roundToIncrement(
+    Weight weight,
+    Weight increment, {
+    LoadRoundingPolicy policy = LoadRoundingPolicy.nearest,
+  }) {
     if (increment.centiUnits <= 0) {
       throw const CycleGenerationException(
         CycleGenerationErrorCode.invalidRoundingIncrement,
@@ -92,11 +97,15 @@ final class LoadCalculator {
         'Load and rounding increment units must match.',
       );
     }
-    return Weight(
-      _divideAndRound(weight.centiUnits, increment.centiUnits) *
-          increment.centiUnits,
-      weight.unit,
-    );
+    final incrementCount = switch (policy) {
+      LoadRoundingPolicy.nearest => _divideAndRound(
+        weight.centiUnits,
+        increment.centiUnits,
+      ),
+      LoadRoundingPolicy.up =>
+        (weight.centiUnits + increment.centiUnits - 1) ~/ increment.centiUnits,
+    };
+    return Weight(incrementCount * increment.centiUnits, weight.unit);
   }
 }
 

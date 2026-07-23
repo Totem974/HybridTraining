@@ -4,6 +4,7 @@ import '../../cycle_generation/domain/catalog_cycle_primitives.dart';
 import '../../cycle_generation/domain/cycle_contract.dart';
 import '../../cycle_generation/domain/cycle_execution_options.dart';
 import '../../cycle_generation/domain/cycle_schedule_mode.dart';
+import '../../cycle_generation/domain/load_rounding_policy.dart';
 
 final class SourceComponent {
   const SourceComponent({
@@ -57,6 +58,7 @@ final class SourceVariant {
     this.optionRecipeId,
     this.assistancePlanIds = const [],
     this.conditioningDefinitionIds = const [],
+    this.loadRoundingPolicy = LoadRoundingPolicy.nearest,
   });
   final String id;
   final int revision;
@@ -69,6 +71,7 @@ final class SourceVariant {
   final ComponentReference? optionRecipeId;
   final List<ComponentReference> assistancePlanIds;
   final List<ComponentReference> conditioningDefinitionIds;
+  final LoadRoundingPolicy loadRoundingPolicy;
 }
 
 final class SourceBlockRecipe {
@@ -521,6 +524,7 @@ final class CatalogSourceDocumentCodec {
         'conditioningDefinitionIds',
         'componentSelections',
         'optionRecipeId',
+        'loadRoundingPolicy',
       },
       optional: const {
         'weekPlans',
@@ -529,6 +533,7 @@ final class CatalogSourceDocumentCodec {
         'conditioningDefinitionIds',
         'componentSelections',
         'optionRecipeId',
+        'loadRoundingPolicy',
       },
     );
     if (map.containsKey('weekPlans') == map.containsKey('phases')) {
@@ -573,6 +578,7 @@ final class CatalogSourceDocumentCodec {
                 })
                 .toList(growable: false),
       compatibilities: _map(map['compatibilities'], 'compatibilities'),
+      loadRoundingPolicy: _loadRoundingPolicy(map['loadRoundingPolicy']),
       componentSelections: map['componentSelections'] == null
           ? const []
           : _list(map, 'componentSelections')
@@ -616,6 +622,15 @@ final class CatalogSourceDocumentCodec {
                 })
                 .toList(growable: false),
     );
+  }
+
+  LoadRoundingPolicy _loadRoundingPolicy(Object? value) {
+    if (value == null) return LoadRoundingPolicy.nearest;
+    if (value is! String ||
+        !LoadRoundingPolicy.values.any((policy) => policy.name == value)) {
+      throw const FormatException('loadRoundingPolicy must be nearest or up.');
+    }
+    return LoadRoundingPolicy.values.byName(value);
   }
 
   List<CatalogWeekPlan> _weekPlans(List<Object?> values) => values

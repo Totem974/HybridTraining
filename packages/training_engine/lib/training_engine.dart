@@ -11,6 +11,7 @@ export 'features/cycle_generation/domain/cycle_compiler_impl.dart';
 export 'features/cycle_generation/domain/cycle_contract.dart';
 export 'features/cycle_generation/domain/cycle_execution_options.dart';
 export 'features/cycle_generation/domain/cycle_generation_error.dart';
+export 'features/cycle_generation/domain/load_rounding_policy.dart';
 export 'features/cycle_generation/domain/cycle_option_schema.dart';
 export 'features/cycle_generation/domain/cycle_schedule_mode.dart';
 export 'features/cycle_generation/domain/cycle_schedule_contract.dart';

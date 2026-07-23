@@ -7,6 +7,7 @@ import 'cycle_generation_error.dart';
 import 'cycle_schedule_contract.dart';
 import 'cycle_schedule_mode.dart';
 import 'cycle_v2_primitives.dart';
+import 'load_rounding_policy.dart';
 
 final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
   const CycleCompilerImpl({
@@ -60,7 +61,13 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
             id: '${request.cycleId}-w${week.number}-s${index + 1}',
             date: cursor,
             movementId: movement,
-            blocks: _compileBlocks(blocks, movement, maxes, request),
+            blocks: _compileBlocks(
+              blocks,
+              movement,
+              maxes,
+              request,
+              effectiveDefinition.loadRoundingPolicy,
+            ),
           ),
         );
         cursor = cursor.add(const Duration(days: 1));
@@ -134,6 +141,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
               source.template.movementIds.first,
               maxes,
               request,
+              effectiveDefinition.loadRoundingPolicy,
             ),
           );
           for (final movement in source.template.movementIds) {
@@ -184,6 +192,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
     MovementId sessionMovement,
     Map<MovementId, Weight> maxes,
     CycleRequest request,
+    LoadRoundingPolicy loadRoundingPolicy,
   ) => [
     for (final block in definitions)
       GeneratedBlock(
@@ -197,6 +206,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
           maxes[block.movementId ?? sessionMovement],
           request.maxInputs[block.movementId ?? sessionMovement],
           request,
+          loadRoundingPolicy,
         ),
       ),
   ];
@@ -208,6 +218,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
     Weight? trainingMax,
     TrainingMaxInput? maxInput,
     CycleRequest request,
+    LoadRoundingPolicy loadRoundingPolicy,
   ) {
     final result = <GeneratedSet>[];
     final options = request.cycleOptions.normalized().mainWork;
@@ -235,6 +246,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
             maxInput,
             request,
             result.length,
+            loadRoundingPolicy,
           ),
         );
       } else {
@@ -247,6 +259,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
             trainingMax,
             maxInput,
             request,
+            loadRoundingPolicy,
           ),
         );
       }
@@ -264,6 +277,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
     TrainingMaxInput? maxInput,
     CycleRequest request,
     int startIndex,
+    LoadRoundingPolicy loadRoundingPolicy,
   ) {
     if (trainingMax == null || repetitions is! PercentageThresholdRepetitions) {
       throw const CycleGenerationException(
@@ -345,6 +359,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
           trainingMax,
           maxInput,
           request,
+          loadRoundingPolicy,
         ),
     ];
   }
@@ -392,6 +407,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
     Weight? trainingMax,
     TrainingMaxInput? maxInput,
     CycleRequest request,
+    LoadRoundingPolicy loadRoundingPolicy,
   ) {
     final load = definition.load;
     Weight? desired;
@@ -499,6 +515,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
       final rounded = loadCalculator.roundToIncrement(
         desired,
         request.roundingIncrement,
+        policy: loadRoundingPolicy,
       );
       selection = plateCalculator.select(rounded, request.barProfile);
     }
@@ -770,6 +787,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
       scheduleMode: definition.scheduleMode,
       assistancePlanIds: definition.assistancePlanIds,
       conditioningDefinitionIds: definition.conditioningDefinitionIds,
+      loadRoundingPolicy: definition.loadRoundingPolicy,
     );
   }
 
