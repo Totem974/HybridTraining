@@ -24,8 +24,12 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
   ) {
     _validate(definition, request);
     final options = request.cycleOptions.normalized();
-    _validateOptions(definition, request, options);
-    final requiredMaxes = _requiredMaximums(definition, request);
+    final effectiveDefinition = _applyWeekOrder(
+      definition,
+      options.mainWork.weekOrder,
+    );
+    _validateOptions(effectiveDefinition, request, options);
+    final requiredMaxes = _requiredMaximums(effectiveDefinition, request);
     final maxes = _resolveMaximums(requiredMaxes, request);
 
     var cursor = DateTime(
@@ -34,12 +38,12 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
       request.startDate.day,
     );
     final weeks = <GeneratedWeek>[];
-    for (final week in definition.weeks) {
+    for (final week in effectiveDefinition.weeks) {
       final sessions = <GeneratedSession>[];
       for (var index = 0; index < request.sessionOrder.length; index++) {
         final movement = request.sessionOrder[index];
         final blocks = _effectiveBlocks(
-          definition,
+          effectiveDefinition,
           week,
           movement,
           request,
@@ -82,15 +86,19 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
   }) {
     _validateScheduled(definition, schedule, selection, request);
     final options = request.cycleOptions.normalized();
-    _validateOptions(definition, request, options);
-    final layout = _buildScheduleLayout(
+    final effectiveDefinition = _applyWeekOrder(
       definition,
+      options.mainWork.weekOrder,
+    );
+    _validateOptions(effectiveDefinition, request, options);
+    final layout = _buildScheduleLayout(
+      effectiveDefinition,
       schedule,
       selection,
       request.includeDeload,
     );
     final maxes = _resolveMaximums(
-      _requiredScheduledMaximums(definition, layout, request, options),
+      _requiredScheduledMaximums(effectiveDefinition, layout, request, options),
       request,
     );
 
@@ -108,7 +116,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
         final blocks = <GeneratedBlock>[];
         for (final source in day.sources) {
           final effective = _effectiveBlocks(
-            definition,
+            effectiveDefinition,
             source.week,
             MovementId(source.template.id.value),
             request,
@@ -187,7 +195,22 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
     CycleRequest request,
   ) {
     final result = <GeneratedSet>[];
-    for (final definition in block.sets) {
+    final options = request.cycleOptions.normalized().mainWork;
+    final indices = List<int>.generate(block.sets.length, (index) => index);
+    final orderedIndices =
+        _isMainWork(block) && options.setOrder == WorkSetOrder.bastard
+        ? indices.reversed
+        : indices;
+    final plusTarget = _isMainWork(block)
+        ? _heaviestMainWorkSetIndex(block)
+        : null;
+    for (final index in orderedIndices) {
+      final definition = _effectiveMainWorkSet(
+        block.sets[index],
+        index: index,
+        plusTarget: plusTarget,
+        mode: options.plusSet,
+      );
       if (definition.load case final TrainingMaxRampLoad ramp) {
         result.addAll(
           _compileRampSets(
@@ -638,6 +661,11 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
           CycleGenerationErrorCode.missingMaximum,
           'A direct training max cannot resolve a 1RM percentage.',
         );
+      case OnePlusSetInput():
+        throw const CycleGenerationException(
+          CycleGenerationErrorCode.missingMaximum,
+          'A 1+ set input cannot resolve a 1RM percentage.',
+        );
     }
   }
 
@@ -668,6 +696,125 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
     }
     return maxes;
   }
+
+  ResolvedCycleDefinition _applyWeekOrder(
+    ResolvedCycleDefinition definition,
+    WorkWeekOrder order,
+  ) {
+    if (order == WorkWeekOrder.catalog) return definition;
+    final transformed = <WeekDefinition>[];
+    for (final target in definition.weeks) {
+      final sourceNumber = target.origin?.sourceWeekNumber ?? target.number;
+      final desiredNumber = switch (order) {
+        WorkWeekOrder.catalog => sourceNumber,
+        WorkWeekOrder.fiveThreeOne => sourceNumber,
+        WorkWeekOrder.threeFiveOne => switch (sourceNumber) {
+          1 => 2,
+          2 => 1,
+          _ => sourceNumber,
+        },
+      };
+      final donors = definition.weeks.where(
+        (candidate) =>
+            _samePhase(target, candidate) &&
+            (candidate.origin?.sourceWeekNumber ?? candidate.number) ==
+                desiredNumber,
+      );
+      final donor = donors.length == 1 ? donors.single : target;
+      transformed.add(
+        WeekDefinition(
+          number: target.number,
+          blocks: List.unmodifiable(donor.blocks),
+          sessions: List.unmodifiable(donor.sessions),
+          origin: target.origin,
+        ),
+      );
+    }
+    return ResolvedCycleDefinition(
+      catalogVersion: definition.catalogVersion,
+      templateId: definition.templateId,
+      variantId: definition.variantId,
+      sessionMovementIds: definition.sessionMovementIds,
+      weeks: List.unmodifiable(transformed),
+      sourceReference: definition.sourceReference,
+      optionRecipes: definition.optionRecipes,
+      scheduleReference: definition.scheduleReference,
+      scheduleMode: definition.scheduleMode,
+      assistancePlanIds: definition.assistancePlanIds,
+      conditioningDefinitionIds: definition.conditioningDefinitionIds,
+    );
+  }
+
+  bool _samePhase(WeekDefinition left, WeekDefinition right) {
+    final leftOrigin = left.origin;
+    final rightOrigin = right.origin;
+    if (leftOrigin == null || rightOrigin == null) {
+      return leftOrigin == null && rightOrigin == null;
+    }
+    return leftOrigin.phaseId == rightOrigin.phaseId &&
+        leftOrigin.phaseIteration == rightOrigin.phaseIteration;
+  }
+
+  PrescribedSetDefinition _effectiveMainWorkSet(
+    PrescribedSetDefinition definition, {
+    required int index,
+    required int? plusTarget,
+    required PlusSetMode mode,
+  }) {
+    if (plusTarget == null || mode == PlusSetMode.catalog) return definition;
+    final repetitions = definition.repetitions;
+    RepetitionPrescription? replacement;
+    switch (mode) {
+      case PlusSetMode.catalog:
+        break;
+      case PlusSetMode.disabled:
+        replacement = switch (repetitions) {
+          AmrapRepetitions(:final minimum) => FixedRepetitions(minimum ?? 1),
+          PlusSetRepetitions(:final minimum) => FixedRepetitions(minimum),
+          _ => null,
+        };
+      case PlusSetMode.enabled:
+        if (index == plusTarget) {
+          final minimum = switch (repetitions) {
+            FixedRepetitions(:final count) => count,
+            RepetitionRange(:final minimum) => minimum,
+            AmrapRepetitions(:final minimum) => minimum ?? 1,
+            PlusSetRepetitions(:final minimum) => minimum,
+            _ => null,
+          };
+          if (minimum != null) replacement = PlusSetRepetitions(minimum);
+        }
+    }
+    if (replacement == null) return definition;
+    return PrescribedSetDefinition(
+      repetitions: replacement,
+      load: definition.load,
+      execution: definition.execution,
+      runtimeGates: definition.runtimeGates,
+    );
+  }
+
+  int? _heaviestMainWorkSetIndex(BlockDefinition block) {
+    int? bestIndex;
+    var bestBasisPoints = -1;
+    for (final entry in block.sets.indexed) {
+      final basisPoints = switch (entry.$2.load) {
+        TrainingMaxPercentageLoad(:final percentage) => percentage.basisPoints,
+        ParameterizedTrainingMaxPercentageLoad(:final defaultValue) =>
+          defaultValue.basisPoints,
+        OneRepMaxPercentageLoad(:final percentage) => percentage.basisPoints,
+        _ => null,
+      };
+      if (basisPoints != null && basisPoints >= bestBasisPoints) {
+        bestBasisPoints = basisPoints;
+        bestIndex = entry.$1;
+      }
+    }
+    return bestIndex ?? (block.sets.isEmpty ? null : block.sets.length - 1);
+  }
+
+  bool _isMainWork(BlockDefinition block) =>
+      const {'main_work', 'main work'}.contains(block.role);
 
   void _validate(ResolvedCycleDefinition definition, CycleRequest request) {
     _validateCommon(request);

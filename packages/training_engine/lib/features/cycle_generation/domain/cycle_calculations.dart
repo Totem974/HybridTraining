@@ -39,6 +39,21 @@ final class TrainingMaxResolver {
         base = epley.estimate(weight, repetitions);
       case DirectTrainingMaxInput(:final weight):
         return weight;
+      case OnePlusSetInput(:final weight, :final topSetPercentage):
+        if (topSetPercentage.basisPoints <= 0 ||
+            topSetPercentage.basisPoints > 10000) {
+          throw const CycleGenerationException(
+            CycleGenerationErrorCode.invalidTrainingMaxRatio,
+            'The 1+ set percentage must be greater than 0% and at most 100%.',
+          );
+        }
+        return Weight(
+          _divideAndRound(
+            weight.centiUnits * 10000,
+            topSetPercentage.basisPoints,
+          ),
+          weight.unit,
+        );
     }
     return Weight(
       _divideAndRound(base.centiUnits * ratio.basisPoints, 10000),

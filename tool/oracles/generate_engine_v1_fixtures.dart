@@ -299,6 +299,7 @@ String _maxInputKind(TrainingMaxInput input) => switch (input) {
   OneRepMaxInput() => 'oneRepMax',
   RepMaxInput() => 'repMax',
   DirectTrainingMaxInput() => 'directTrainingMax',
+  OnePlusSetInput() => 'onePlusSet',
 };
 
 Map<String, Object?> _maxInputJson(TrainingMaxInput input) => switch (input) {
@@ -315,6 +316,11 @@ Map<String, Object?> _maxInputJson(TrainingMaxInput input) => switch (input) {
   DirectTrainingMaxInput(:final weight) => {
     'type': 'directTrainingMax',
     'weight': weight.toJson(),
+  },
+  OnePlusSetInput(:final weight, :final topSetPercentage) => {
+    'type': 'onePlusSet',
+    'weight': weight.toJson(),
+    'topSetPercentageBasisPoints': topSetPercentage.basisPoints,
   },
 };
 

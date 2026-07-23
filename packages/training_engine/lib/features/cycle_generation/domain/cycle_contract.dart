@@ -49,6 +49,16 @@ final class DirectTrainingMaxInput extends TrainingMaxInput {
   final Weight weight;
 }
 
+final class OnePlusSetInput extends TrainingMaxInput {
+  const OnePlusSetInput(
+    this.weight, {
+    this.topSetPercentage = const Percentage(9500),
+  });
+
+  final Weight weight;
+  final Percentage topSetPercentage;
+}
+
 sealed class RepetitionPrescription {
   const RepetitionPrescription();
   Map<String, Object> toJson();
