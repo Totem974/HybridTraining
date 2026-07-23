@@ -81,8 +81,8 @@ a {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem);
   align-items: end;
-  gap: var(--space-5);
-  padding-block: var(--space-6) var(--space-5);
+  gap: var(--space-4);
+  padding-block: var(--space-5) var(--space-4);
 }
 
 .header-topline {
@@ -125,9 +125,9 @@ a {
 
 .brand-mark {
   display: flex;
-  flex: 0 0 58px;
-  width: 58px;
-  height: 58px;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
   align-items: center;
   justify-content: center;
   gap: 4px;
@@ -144,11 +144,11 @@ a {
 
 .brand-mark__bar:nth-child(1),
 .brand-mark__bar:nth-child(3) {
-  height: 20px;
+  height: 17px;
 }
 
 .brand-mark__bar:nth-child(2) {
-  height: 34px;
+  height: 28px;
 }
 
 .eyebrow,
@@ -167,7 +167,7 @@ h2 {
 }
 
 h1 {
-  font-size: clamp(2rem, 4vw, 2.875rem);
+  font-size: clamp(1.65rem, 3vw, 2.25rem);
   font-weight: 950;
   letter-spacing: -0.035em;
   line-height: 1.08;
@@ -234,7 +234,7 @@ h1 {
 .editor-section > h2,
 .program-section > h2 {
   margin: 0 0 var(--space-2) var(--space-1);
-  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-size: clamp(1.25rem, 2vw, 1.6rem);
   font-weight: 950;
   letter-spacing: 0.035em;
   line-height: 1.2;
@@ -242,7 +242,7 @@ h1 {
 }
 
 .panel {
-  min-height: 5rem;
+  min-height: 3.5rem;
   padding: var(--panel-padding);
   border: 1px solid color-mix(in srgb, var(--color-border) 24%, transparent);
   border-radius: var(--radius-card);
@@ -339,10 +339,10 @@ h1 {
   }
 
   .brand-mark {
-    flex-basis: 52px;
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
   }
 
   .header-summary {
@@ -371,7 +371,7 @@ h1 {
   }
 
   h1 {
-    font-size: 1.8rem;
+    font-size: 1.55rem;
   }
 }
 

@@ -1,6 +1,6 @@
 .weight-block {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--space-3);
   min-width: 0;
 }
 
@@ -34,7 +34,7 @@
   min-height: var(--touch-target);
   grid-template-columns: 0.55rem minmax(7.5rem, 1fr) auto;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .weight-movement__marker {
