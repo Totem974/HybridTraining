@@ -654,12 +654,18 @@ final class SqliteTrainingCatalog
         'enabledWhen',
         'requiredWhen',
       },
-      optional: const {'presentationGroup', 'labelEn', 'labelFr'},
+      optional: const {
+        'presentationGroup',
+        'labelEn',
+        'labelFr',
+        'valueLabels',
+      },
     );
     final allowed = map['allowedValues'];
     if (allowed is! List<Object?>) {
       throw const CatalogFormatException('allowedValues must be a list');
     }
+    _validateOptionValueLabels(map, allowed);
     return CycleOptionDefinition(
       id: map['id']! as String,
       type: CycleOptionType.values.byName(map['type']! as String),
@@ -684,6 +690,66 @@ final class SqliteTrainingCatalog
       labelEn: map['labelEn'] as String? ?? '',
       labelFr: map['labelFr'] as String? ?? '',
     );
+  }
+
+  static void _validateOptionValueLabels(
+    Map<String, Object?> parameter,
+    List<Object?> allowedValues,
+  ) {
+    if (!parameter.containsKey('valueLabels')) return;
+    if (parameter['type'] != 'enumeration') {
+      throw const CatalogFormatException(
+        'valueLabels are supported only for enumeration parameters',
+      );
+    }
+    final rawValueLabels = parameter['valueLabels'];
+    if (rawValueLabels is! List<Object?> || rawValueLabels.isEmpty) {
+      throw const CatalogFormatException(
+        'valueLabels must be a non-empty list',
+      );
+    }
+    final seenValues = <Object?>[];
+    for (final rawEntry in rawValueLabels) {
+      final entry = _objectMap(rawEntry, 'valueLabel');
+      _exactKeys(entry, const {'value', 'labels'});
+      final labeledValue = entry['value'];
+      if (labeledValue is! String &&
+          labeledValue is! num &&
+          labeledValue is! bool) {
+        throw const CatalogFormatException(
+          'valueLabel.value must be a JSON scalar',
+        );
+      }
+      if (!allowedValues.any((allowed) => allowed == labeledValue)) {
+        throw CatalogFormatException(
+          'valueLabel.value $labeledValue is not an allowed value',
+        );
+      }
+      if (seenValues.any((seen) => seen == labeledValue)) {
+        throw CatalogFormatException(
+          'Duplicate valueLabel.value $labeledValue',
+        );
+      }
+      seenValues.add(labeledValue);
+      final labels = _objectMap(entry['labels'], 'valueLabel.labels');
+      _exactKeys(labels, const {'en', 'fr'});
+      for (final locale in const ['en', 'fr']) {
+        final label = labels[locale];
+        if (label is! String || label.trim().isEmpty) {
+          throw CatalogFormatException(
+            'valueLabel.labels.$locale must be a non-empty string',
+          );
+        }
+      }
+    }
+    if (seenValues.length != allowedValues.length ||
+        allowedValues.any(
+          (allowed) => !seenValues.any((labeled) => labeled == allowed),
+        )) {
+      throw const CatalogFormatException(
+        'valueLabels must cover every allowed value exactly once',
+      );
+    }
   }
 
   static CycleOptionCondition _decodeCondition(Map<String, Object?> map) {
