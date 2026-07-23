@@ -103,6 +103,38 @@ describe("Cycle draft persistence", () => {
     storage.close();
   });
 
+  it("round-trips movement-scoped GVT ratios in a compatible draft", async () => {
+    const storage = new IndexedDbWorkspaceStorage(new IDBFactory());
+    const repository = new WorkspaceDraftRepository<CycleDraftPayload>(storage);
+    const gvtConfiguration: CycleConfiguration = {
+      ...configuration("source_calculator_gvt", "standard"),
+      template: {
+        id: "source_calculator_gvt",
+        variantId: "standard",
+        options: {
+          gvt_percentage: {
+            overhead_press: 3000,
+            deadlift: 3500,
+            bench_press: 4000,
+            squat: 4500,
+          },
+        },
+      },
+    };
+    await repository.save(
+      currentDraftId,
+      draftEnvelope(metadata, cycleDraft(gvtConfiguration)),
+    );
+
+    const restored = await restoreCompatibleDraft(
+      repository,
+      metadata,
+      new Map([["source_calculator_gvt", new Set(["standard"])]]),
+    );
+    expect(restored?.configuration).toEqual(gvtConfiguration);
+    storage.close();
+  });
+
   it("retains but does not restore a draft with unknown onePlusSet fields", async () => {
     const storage = new IndexedDbWorkspaceStorage(new IDBFactory());
     const repository = new WorkspaceDraftRepository<unknown>(storage);

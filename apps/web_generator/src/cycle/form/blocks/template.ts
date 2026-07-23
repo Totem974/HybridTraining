@@ -114,21 +114,39 @@ function renderDynamicOption(
   input.id = safeId(field.id);
   input.name = field.path;
   input.type = field.kind === "text" ? "text" : "number";
-  input.value = field.value == null ? "" : String(field.value);
+  const percentageScale = field.kind === "percentage" ? 100 : 1;
+  input.value = field.value == null
+    ? ""
+    : String(
+        typeof field.value === "number"
+          ? field.value / percentageScale
+          : field.value,
+      );
   input.disabled = !fieldIsEnabled(field, context.values);
   input.dataset.testid = field.id;
-  if (field.minimum !== undefined) input.min = String(field.minimum);
-  if (field.maximum !== undefined) input.max = String(field.maximum);
-  if (field.step !== undefined) input.step = String(field.step);
+  if (field.minimum !== undefined) {
+    input.min = String(field.minimum / percentageScale);
+  }
+  if (field.maximum !== undefined) {
+    input.max = String(field.maximum / percentageScale);
+  }
+  if (field.step !== undefined) input.step = String(field.step / percentageScale);
   input.addEventListener("change", () => {
     const value = field.kind === "text"
       ? input.value
       : Number.isFinite(input.valueAsNumber)
-        ? input.valueAsNumber
+        ? Math.round(input.valueAsNumber * percentageScale)
         : null;
     emitChange(context.dispatch, context.schemaId, field, value);
   });
   wrapper.append(label, input);
+  if (field.kind === "percentage") {
+    const unit = document.createElement("span");
+    unit.className = "field-unit";
+    unit.setAttribute("aria-hidden", "true");
+    unit.textContent = "%";
+    wrapper.append(unit);
+  }
   return wrapper;
 }
 

@@ -66,6 +66,27 @@ describe("Cycle configuration sharing", () => {
       .toEqual(configuration);
   });
 
+  it("round-trips movement-scoped GVT ratios in template options", () => {
+    const configuration = makeConfiguration({
+      template: {
+        id: "source_calculator_gvt",
+        variantId: "standard",
+        options: {
+          gvt_percentage: {
+            overhead_press: 3000,
+            deadlift: 3500,
+            bench_press: 4000,
+            squat: 4500,
+          },
+          gvt_use_same_ratio: false,
+        },
+      },
+    });
+
+    expect(decodeCycleConfiguration(encodeCycleConfiguration(configuration)))
+      .toEqual(configuration);
+  });
+
   it.each([
     "",
     "not+base64",

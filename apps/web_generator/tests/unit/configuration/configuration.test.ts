@@ -41,6 +41,64 @@ describe("CycleConfiguration codec", () => {
     });
   });
 
+  it("round-trips active GVT ratios through configuration without adding them to options", () => {
+    const base = makeSchema("kg");
+    const schema: CycleEditorSchema = {
+      ...base,
+      movementIds: ["squat", "bench_press"],
+      fields: [
+        ...base.fields,
+        field(
+          "options.gvt_percentage.squat",
+          "template",
+          "percentage",
+          3000,
+        ),
+        field(
+          "options.gvt_percentage.bench_press",
+          "template",
+          "percentage",
+          3000,
+        ),
+        field(
+          "options.gvt_use_same_ratio",
+          "template",
+          "boolean",
+          true,
+        ),
+      ],
+    };
+    const state = normalizeEditorState(schema, {
+      "options.gvt_percentage.squat": 5500,
+      "options.gvt_percentage.bench_press": 6000,
+      "options.gvt_use_same_ratio": false,
+    });
+
+    const configuration = editorValuesToCycleConfiguration(
+      schema,
+      state.values,
+      metadata,
+    );
+    expect(configuration.template.options).toMatchObject({
+      gvt_percentage: {
+        squat: 5500,
+        bench_press: 6000,
+      },
+      gvt_use_same_ratio: false,
+    });
+    expect(cycleConfigurationToEditorValues(configuration, schema)).toMatchObject({
+      "options.gvt_percentage.squat": 5500,
+      "options.gvt_percentage.bench_press": 6000,
+    });
+
+    const request = cycleConfigurationToCycleRequest(configuration, schema);
+    expect(request.percentageParametersByMovement).toEqual({
+      squat: { gvt_percentage: 5500 },
+      bench_press: { gvt_percentage: 6000 },
+    });
+    expect(request.options).not.toHaveProperty("gvt_percentage");
+  });
+
   it.each(["kg", "lb"] as const)("preserves centi-unit equipment in %s", (unit) => {
     const schema = makeSchema(unit);
     const values = normalizeEditorState(schema, {

@@ -66,6 +66,17 @@ function context(): CycleBlockRenderContext {
         value: "phase_one",
         choices: [{ value: "phase_one", label: "Phase one" }],
       },
+      {
+        id: "gvt-percentage",
+        path: "options.gvt_percentage.squat",
+        region: "template",
+        kind: "percentage",
+        label: "10 x 10 @",
+        value: 3500,
+        minimum: 3000,
+        maximum: 7500,
+        step: 500,
+      },
     ],
   };
 }
@@ -127,6 +138,31 @@ describe("renderTemplateBlock", () => {
       fieldId: "variant",
       path: "variantId",
       value: "two-day",
+    });
+  });
+
+  it("renders template percentages as human percents and dispatches basis points", () => {
+    const renderContext = context();
+    const host = document.createElement("div");
+    host.append(renderTemplateBlock(renderContext));
+    const input = host.querySelector(
+      "[data-testid=gvt-percentage]",
+    ) as HTMLInputElement;
+
+    expect(input.value).toBe("35");
+    expect(input.min).toBe("30");
+    expect(input.max).toBe("75");
+    expect(input.step).toBe("5");
+    expect(input.nextElementSibling?.textContent).toBe("%");
+
+    input.value = "42.5";
+    input.dispatchEvent(new Event("change"));
+    expect(renderContext.dispatch).toHaveBeenCalledWith({
+      type: "cycle.field.changed",
+      schemaId: "editor",
+      fieldId: "gvt-percentage",
+      path: "options.gvt_percentage.squat",
+      value: 4250,
     });
   });
 

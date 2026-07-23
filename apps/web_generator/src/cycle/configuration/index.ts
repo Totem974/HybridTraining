@@ -7,6 +7,7 @@ import type {
 export type { CycleConfiguration } from "../../../../../contracts/v1/generated/contracts";
 import type { CycleEditorSchema, JsonValue } from "../form/types";
 import { buildCycleRequest, type BuildCycleRequestOptions } from "../request/buildCycleRequest";
+import { activeSchemaFields } from "../state/editorState";
 
 export interface CatalogMetadata {
   readonly catalogVersion: number;
@@ -21,7 +22,32 @@ export function editorValuesToCycleConfiguration(
   catalog: CatalogMetadata = schema,
 ): CycleConfiguration {
   const request = buildCycleRequest(schema, values);
-  return cycleRequestToConfiguration(request, catalog);
+  const configuration = cycleRequestToConfiguration(request, catalog);
+  const templateOptions = structuredClone(
+    configuration.template.options,
+  ) as Record<string, unknown>;
+
+  for (const field of activeSchemaFields(schema, values)) {
+    if (!field.path.startsWith("options.")) continue;
+    const path = field.path.slice("options.".length);
+    const [root] = path.split(".");
+    if (!root || commonOptionNames.has(root)) continue;
+    const value = values[field.path];
+    if (value === undefined) continue;
+    setNested(
+      templateOptions,
+      path,
+      configurationOptionValue(field.kind, value, request.unit),
+    );
+  }
+
+  return {
+    ...configuration,
+    template: {
+      ...configuration.template,
+      options: templateOptions,
+    },
+  };
 }
 
 export function cycleConfigurationToEditorValues(
@@ -105,10 +131,6 @@ export function cycleConfigurationToCycleRequest(
     maxInputs: configurationMaxInputs(configuration),
     globalTrainingMaxRatioBasisPoints:
       configuration.maxes.globalTrainingMaxRatioBasisPoints,
-    options: {
-      ...configuration.template.options,
-      ...configuration.commonOptions,
-    },
     unit: configuration.equipment.unit,
     barProfile: configuration.equipment.bar,
     includeDeload: configuration.commonOptions.deload.enabled,
@@ -121,6 +143,37 @@ export function cycleConfigurationToCycleRequest(
       ? {}
       : { trainingMaxRatioByMovement: configuration.maxes.ratiosByMovement }),
   };
+}
+
+function configurationOptionValue(
+  kind: CycleEditorSchema["fields"][number]["kind"],
+  value: JsonValue,
+  unit: "kg" | "lb",
+): unknown {
+  if (kind !== "weight") return structuredClone(value);
+  if (typeof value === "number") {
+    return { centiUnits: Math.round(value * 100), unit };
+  }
+  if (isWeight(value)) {
+    return { centiUnits: Math.round(value.centiUnits), unit };
+  }
+  return structuredClone(value);
+}
+
+function setNested(
+  target: Record<string, unknown>,
+  path: string,
+  value: unknown,
+): void {
+  const segments = path.split(".").filter(Boolean);
+  let cursor = target;
+  for (const segment of segments.slice(0, -1)) {
+    const current = cursor[segment];
+    if (!isRecord(current) || isWeight(current)) cursor[segment] = {};
+    cursor = cursor[segment] as Record<string, unknown>;
+  }
+  const last = segments.at(-1);
+  if (last !== undefined) cursor[last] = value;
 }
 
 export function migrateCycleRequestV1ToConfiguration(
