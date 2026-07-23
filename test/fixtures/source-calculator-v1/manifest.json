@@ -34,7 +34,7 @@
     "entrypoint": "/calculator/"
   },
   "exactGoldenMatrix": {
-    "scenarioCount": 22,
+    "scenarioCount": 35,
     "units": ["lbs", "kg"],
     "explicitBehaviorAssertions": [
       "gvtAlternateExerciseWithCommonRatio",
@@ -46,7 +46,9 @@
     "weightScale": 1000,
     "preserveWeekOrder": true,
     "preserveSessionOrder": true,
+    "preserveExerciseOrder": true,
     "preserveSetOrder": true,
+    "preservePlateOrder": true,
     "jokerSourceValue": -1,
     "amrapSourceValue": 0
   }

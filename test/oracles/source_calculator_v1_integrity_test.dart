@@ -114,6 +114,7 @@ void main() {
     for (final observation in observations) {
       expect(observationIds.add(_requiredString(observation, 'id')), isTrue);
       expect({
+        'exactGolden',
         'documented',
         'partialExact',
         'pendingExactCapture',
@@ -200,6 +201,87 @@ void main() {
         expect(anomalyIds, contains(anomalyId));
       }
     }
+  });
+
+  test('exact-golden metadata references the complete frozen matrix', () {
+    final exactGoldens = _readObject(root, 'exact-goldens.json');
+    final scenarios = _objects(
+      exactGoldens['scenarios'],
+      r'exactGoldens.$.scenarios',
+    );
+    final scenarioIds = {
+      for (final scenario in scenarios) _requiredString(scenario, 'id'),
+    };
+    expect(exactGoldens['scenarioCount'], 35);
+    expect(scenarioIds, hasLength(35));
+
+    final manifest = _readObject(root, 'manifest.json');
+    expect(
+      _object(
+        manifest['exactGoldenMatrix'],
+        r'manifest.$.exactGoldenMatrix',
+      )['scenarioCount'],
+      scenarios.length,
+    );
+    final provenance = _readObject(root, 'provenance.json');
+    expect(
+      _object(
+        provenance['exactGoldenCapture'],
+        r'provenance.$.exactGoldenCapture',
+      )['scenarioCount'],
+      scenarios.length,
+    );
+
+    final coverage = _readObject(root, 'coverage.json');
+    for (final item in _objects(
+      coverage['acceptanceMatrix'],
+      r'coverage.$.acceptanceMatrix',
+    )) {
+      if (item['captureStatus'] != 'exactGolden') continue;
+      final references = _strings(
+        item['goldenScenarioIds'],
+        '${item['id']}.goldenScenarioIds',
+      );
+      expect(references, isNotEmpty, reason: item['id'] as String);
+      expect(
+        scenarioIds,
+        containsAll(references),
+        reason: item['id'] as String,
+      );
+    }
+
+    const standaloneTwoDays = {
+      'two-day-option-one-deload',
+      'two-day-option-one-no-deload',
+      'two-day-option-two-deload',
+      'two-day-option-two-no-deload',
+      'two-day-option-three-profile-65-75-85',
+      'two-day-option-three-profile-70-80-90',
+      'two-day-option-three-profile-75-85-95',
+      'two-day-option-three-profile-80-90-100',
+      'two-day-option-three-no-deload',
+      'two-day-option-one-reordered-pairs',
+      'two-day-option-three-reordered-lifts',
+      'two-day-option-one-warmup-joker',
+      'two-day-option-three-deload-two',
+    };
+    expect(scenarioIds, containsAll(standaloneTwoDays));
+
+    final optionOne = _objects(
+      _readObject(root, 'observations.json')['observations'],
+      r'observations.$.observations',
+    ).singleWhere((item) => item['id'] == 'OBS-STANDALONE-TWO-DAYS-OPTION-ONE');
+    expect(optionOne['captureStatus'], 'exactGolden');
+    expect(
+      _strings(
+        _object(
+          optionOne['expected'],
+          r'optionOne.$.expected',
+        )['week1FirstSessionAssistance'],
+        r'optionOne.$.expected.week1FirstSessionAssistance',
+      ),
+      contains('bicepCurl 3x10'),
+    );
   });
 
   test(

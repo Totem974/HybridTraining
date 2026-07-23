@@ -94,7 +94,8 @@
         "bbb-challenge-six-weeks",
         "bbb-challenge-six-weeks-same-lift",
         "bbb-challenge-three-months",
-        "bbb-challenge-thirteen-weeks"
+        "bbb-challenge-thirteen-weeks",
+        "bbb-challenge-thirteen-weeks-kg"
       ]
     },
     {
@@ -115,7 +116,38 @@
       "observationIds": ["OBS-SCHEDULE-TWO-DAY-BBB"],
       "goldenScenarioIds": ["bbb-2-day"]
     },
-    {"id": "standalone-two-days-option-one", "captureStatus": "partialExact", "observationIds": ["OBS-STANDALONE-TWO-DAYS-OPTION-ONE"]},
+    {
+      "id": "standalone-two-days-option-one",
+      "captureStatus": "exactGolden",
+      "observationIds": ["OBS-STANDALONE-TWO-DAYS-OPTION-ONE"],
+      "goldenScenarioIds": [
+        "two-day-option-one-deload",
+        "two-day-option-one-no-deload",
+        "two-day-option-one-reordered-pairs",
+        "two-day-option-one-warmup-joker"
+      ]
+    },
+    {
+      "id": "standalone-two-days-option-two",
+      "captureStatus": "exactGolden",
+      "goldenScenarioIds": [
+        "two-day-option-two-deload",
+        "two-day-option-two-no-deload"
+      ]
+    },
+    {
+      "id": "standalone-two-days-option-three",
+      "captureStatus": "exactGolden",
+      "goldenScenarioIds": [
+        "two-day-option-three-profile-65-75-85",
+        "two-day-option-three-profile-70-80-90",
+        "two-day-option-three-profile-75-85-95",
+        "two-day-option-three-profile-80-90-100",
+        "two-day-option-three-no-deload",
+        "two-day-option-three-reordered-lifts",
+        "two-day-option-three-deload-two"
+      ]
+    },
     {"id": "plating-edge-cases", "captureStatus": "documented", "observationIds": ["OBS-PLATING"]},
     {"id": "persistence-and-legacy-url", "captureStatus": "documented", "observationIds": ["OBS-PERSISTENCE"]},
     {"id": "responsive-1440-390-320", "captureStatus": "documented", "observationIds": ["OBS-RESPONSIVE"]}

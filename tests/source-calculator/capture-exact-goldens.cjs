@@ -267,6 +267,149 @@ const SCENARIOS = Object.freeze([
     checkboxValues: [],
     days: 3,
   }),
+  scenario('two-day-option-one-deload', ['twoDay.optionOne', 'twoDay.deload.enabled'], {
+    family: '2 Days/Week',
+    selectValues: ['0'],
+    checkboxValues: [],
+    days: 2,
+  }),
+  scenario(
+    'two-day-option-one-no-deload',
+    ['twoDay.optionOne', 'twoDay.deload.disabled'],
+    {
+      family: '2 Days/Week',
+      selectValues: ['0'],
+      checkboxValues: [],
+      days: 2,
+    },
+    BASE_INPUT,
+    null,
+    { additionalOptions: { deloadAfterCycle: false } },
+  ),
+  scenario('two-day-option-two-deload', ['twoDay.optionTwo', 'twoDay.deload.enabled'], {
+    family: '2 Days/Week',
+    selectValues: ['1'],
+    checkboxValues: [],
+    days: 2,
+  }),
+  scenario(
+    'two-day-option-two-no-deload',
+    ['twoDay.optionTwo', 'twoDay.deload.disabled'],
+    {
+      family: '2 Days/Week',
+      selectValues: ['1'],
+      checkboxValues: [],
+      days: 2,
+    },
+    BASE_INPUT,
+    null,
+    { additionalOptions: { deloadAfterCycle: false } },
+  ),
+  scenario(
+    'two-day-option-three-profile-65-75-85',
+    ['twoDay.optionThree', 'twoDay.optionThree.profile.65_75_85'],
+    {
+      family: '2 Days/Week',
+      selectValues: ['2', '0'],
+      checkboxValues: [],
+      days: 2,
+    },
+  ),
+  scenario(
+    'two-day-option-three-profile-70-80-90',
+    ['twoDay.optionThree.profile.70_80_90'],
+    {
+      family: '2 Days/Week',
+      selectValues: ['2', '1'],
+      checkboxValues: [],
+      days: 2,
+    },
+  ),
+  scenario(
+    'two-day-option-three-profile-75-85-95',
+    ['twoDay.optionThree.profile.75_85_95'],
+    {
+      family: '2 Days/Week',
+      selectValues: ['2', '2'],
+      checkboxValues: [],
+      days: 2,
+    },
+  ),
+  scenario(
+    'two-day-option-three-profile-80-90-100',
+    ['twoDay.optionThree.profile.80_90_100'],
+    {
+      family: '2 Days/Week',
+      selectValues: ['2', '3'],
+      checkboxValues: [],
+      days: 2,
+    },
+  ),
+  scenario(
+    'two-day-option-three-no-deload',
+    ['twoDay.optionThree', 'twoDay.deload.disabled'],
+    {
+      family: '2 Days/Week',
+      selectValues: ['2', '0'],
+      checkboxValues: [],
+      days: 2,
+    },
+    BASE_INPUT,
+    null,
+    { additionalOptions: { deloadAfterCycle: false } },
+  ),
+  scenario(
+    'two-day-option-one-reordered-pairs',
+    ['twoDay.schedule.pairedReordered'],
+    {
+      family: '2 Days/Week',
+      selectValues: ['0'],
+      checkboxValues: [],
+      days: 2,
+    },
+    BASE_INPUT,
+    null,
+    { scheduleOrder: ['Squat', 'Deadlift'] },
+  ),
+  scenario(
+    'two-day-option-three-reordered-lifts',
+    ['twoDay.schedule.rotationReordered'],
+    {
+      family: '2 Days/Week',
+      selectValues: ['2', '0'],
+      checkboxValues: [],
+      days: 2,
+    },
+    BASE_INPUT,
+    null,
+    { scheduleOrder: ['Squat', 'Overhead Press', 'Deadlift', 'Bench Press'] },
+  ),
+  scenario(
+    'two-day-option-one-warmup-joker',
+    ['twoDay.optionOne.warmupJoker'],
+    {
+      family: '2 Days/Week',
+      selectValues: ['0'],
+      checkboxValues: [],
+      days: 2,
+    },
+    BASE_INPUT,
+    null,
+    { additionalOptions: { jokerSets: true } },
+  ),
+  scenario(
+    'two-day-option-three-deload-two',
+    ['twoDay.optionThree.deload2'],
+    {
+      family: '2 Days/Week',
+      selectValues: ['2', '0'],
+      checkboxValues: [],
+      days: 2,
+    },
+    BASE_INPUT,
+    null,
+    { additionalOptions: { deloadOption: '1' } },
+  ),
 ]);
 
 function scenario(
@@ -275,8 +418,9 @@ function scenario(
   template,
   weightInput = BASE_INPUT,
   oracleAssertions = null,
+  interactions = {},
 ) {
-  return { id, coverage, template, weightInput, oracleAssertions };
+  return { id, coverage, template, weightInput, oracleAssertions, interactions };
 }
 
 async function main() {
@@ -563,8 +707,16 @@ async function captureScenario(browser, definition) {
     await page.goto(SOURCE_URL, { waitUntil: 'networkidle' });
     await applyBaseInput(page, definition.weightInput);
     await applyTemplate(page, definition.template);
-    await applyAdditionalOptions(page);
-    await applySchedule(page, definition.template.days);
+    const additionalOptions = {
+      ...BASE_INPUT.additionalOptions,
+      ...(definition.interactions.additionalOptions ?? {}),
+    };
+    await applyAdditionalOptions(page, additionalOptions);
+    await applySchedule(
+      page,
+      definition.template.days,
+      definition.interactions.scheduleOrder,
+    );
     await applyOutputOptions(page);
     await page.locator('section.program .container').first().waitFor();
     await page.waitForTimeout(30);
@@ -584,6 +736,17 @@ async function captureScenario(browser, definition) {
         `${definition.id}: requested ${definition.template.days} days, UI selected ${selectedState.scheduling.daysPerWeek}`,
       );
     }
+    if (
+      definition.interactions.scheduleOrder &&
+      stableStringify(selectedState.scheduling.liftOrder) !==
+        stableStringify(definition.interactions.scheduleOrder)
+    ) {
+      throw new Error(
+        `${definition.id}: requested lift order ${definition.interactions.scheduleOrder.join(
+          ', ',
+        )}, UI selected ${selectedState.scheduling.liftOrder.join(', ')}`,
+      );
+    }
     const output = await extractProgram(page);
     const input = {
       commonInputProfile: 'source-v2.2-default-explicit',
@@ -596,6 +759,12 @@ async function captureScenario(browser, definition) {
       input.weightInputOverride = {
         unit: definition.weightInput.unit,
       };
+    }
+    if (definition.interactions.additionalOptions) {
+      input.additionalOptionsOverride = definition.interactions.additionalOptions;
+    }
+    if (definition.interactions.scheduleOrder) {
+      input.scheduleOrderOverride = definition.interactions.scheduleOrder;
     }
     const captured = {
       id: definition.id,
@@ -646,7 +815,7 @@ async function applyTemplate(page, template) {
   }
 }
 
-async function applyAdditionalOptions(page) {
+async function applyAdditionalOptions(page, input) {
   const additional = section(page, 'Additional Options');
   const className = (await additional.getAttribute('class')) ?? '';
   if (className.split(/\s+/).includes('closed')) {
@@ -654,15 +823,17 @@ async function applyAdditionalOptions(page) {
   }
   const selects = additional.locator('select');
   await selects.first().waitFor();
-  await selects.nth(0).selectOption(BASE_INPUT.additionalOptions.warmupOption);
-  await selects.nth(1).selectOption(BASE_INPUT.additionalOptions.deloadOption);
+  await selects.nth(0).selectOption(input.warmupOption);
+  await selects.nth(1).selectOption(input.deloadOption);
   const checkboxes = additional.locator('input[type=checkbox]');
-  await setCheckbox(checkboxes.nth(0), BASE_INPUT.additionalOptions.jokerSets);
-  await setCheckbox(checkboxes.nth(1), BASE_INPUT.additionalOptions.deloadAfterCycle);
-  await setCheckbox(checkboxes.nth(2), BASE_INPUT.additionalOptions.skipWarmup);
+  await setCheckbox(checkboxes.nth(0), input.jokerSets);
+  await setCheckbox(checkboxes.nth(1), input.deloadAfterCycle);
+  if (input.deloadAfterCycle) {
+    await setCheckbox(checkboxes.nth(2), input.skipWarmup);
+  }
 }
 
-async function applySchedule(page, days) {
+async function applySchedule(page, days, desiredOrder) {
   const scheduling = section(page, 'Scheduling');
   const dayTab = scheduling
     .locator('[role=tab]')
@@ -675,9 +846,61 @@ async function applySchedule(page, days) {
       throw new Error(`Scheduling does not expose fixed or selectable ${days}-day cadence`);
     }
   }
+  if (desiredOrder) {
+    await reorderScheduleByKeyboard(scheduling, desiredOrder);
+  }
   const checkboxes = scheduling.locator('input[type=checkbox]');
   await setCheckbox(checkboxes.nth(0), BASE_INPUT.scheduling.bastardWorkOrder);
   await setCheckbox(checkboxes.nth(1), BASE_INPUT.scheduling.threeFiveOneWeekOrder);
+}
+
+async function reorderScheduleByKeyboard(scheduling, desiredOrder) {
+  const readOrder = () =>
+    scheduling.locator('.lift-ordering-lift img').evaluateAll((images) =>
+      images.map((image) => image.alt.replace(/\u00a0/g, ' ').trim()),
+    );
+  const originalOrder = await readOrder();
+  if (
+    originalOrder.length !== desiredOrder.length ||
+    [...originalOrder].sort().join('\n') !== [...desiredOrder].sort().join('\n')
+  ) {
+    throw new Error(
+      `Cannot reorder schedule from [${originalOrder.join(', ')}] to [${desiredOrder.join(
+        ', ',
+      )}]`,
+    );
+  }
+
+  for (let targetIndex = 0; targetIndex < desiredOrder.length; targetIndex += 1) {
+    const currentOrder = await readOrder();
+    const currentIndex = currentOrder.indexOf(desiredOrder[targetIndex]);
+    if (currentIndex === -1) {
+      throw new Error(`Schedule item disappeared: ${desiredOrder[targetIndex]}`);
+    }
+    if (currentIndex === targetIndex) continue;
+
+    const draggable = scheduling.locator('.lift-ordering-lift').nth(currentIndex);
+    await draggable.focus();
+    await draggable.press('Space');
+    const direction = currentIndex > targetIndex ? 'ArrowLeft' : 'ArrowRight';
+    for (
+      let moveIndex = 0;
+      moveIndex < Math.abs(currentIndex - targetIndex);
+      moveIndex += 1
+    ) {
+      await draggable.press(direction);
+    }
+    await draggable.press('Space');
+  }
+
+  const finalOrder = await readOrder();
+  if (stableStringify(finalOrder) !== stableStringify(desiredOrder)) {
+    throw new Error(
+      `Keyboard schedule reorder failed: expected [${desiredOrder.join(
+        ', ',
+      )}], got [${finalOrder.join(', ')}]`,
+    );
+  }
 }
 
 async function applyOutputOptions(page) {

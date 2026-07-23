@@ -176,8 +176,14 @@
     },
     {
       "id": "OBS-STANDALONE-TWO-DAYS-OPTION-ONE",
-      "captureStatus": "partialExact",
+      "captureStatus": "exactGolden",
       "method": "localBlackBoxChromium",
+      "goldenScenarioIds": [
+        "two-day-option-one-deload",
+        "two-day-option-one-no-deload",
+        "two-day-option-one-reordered-pairs",
+        "two-day-option-one-warmup-joker"
+      ],
       "controlValues": [
         {"controlId": "schedule.frequency", "valueId": "two"},
         {"controlId": "template.family", "valueId": "twoDays"},
@@ -191,7 +197,7 @@
           "dumbbellRow 3x10",
           "dip 3x10",
           "goodMorning 3x10",
-          "hamstringCurl 3x10"
+          "bicepCurl 3x10"
         ],
         "week1SecondSessionAssistance": [
           "pullUp 3x10",
