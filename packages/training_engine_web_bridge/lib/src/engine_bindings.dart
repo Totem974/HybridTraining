@@ -386,6 +386,10 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
             'label': {'en': '1 RM', 'fr': '1 RM'},
           },
           {
+            'value': 'onePlusSet',
+            'label': {'en': '1+ set', 'fr': 'Série 1+'},
+          },
+          {
             'value': 'directTrainingMax',
             'label': {'en': 'Training Max', 'fr': 'Training Max'},
           },
@@ -959,11 +963,25 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     for (final entry in _map(json['maxInputs'], 'maxInputs').entries) {
       final value = _map(entry.value, 'max input');
       final kind = (value['type'] ?? value['kind']) as String?;
+      _rejectUnknown(
+        value,
+        kind == 'repMax'
+            ? const {
+                'type',
+                'kind',
+                'weight',
+                'weightCentiUnits',
+                'repetitions',
+                'formula',
+              }
+            : const {'type', 'kind', 'weight', 'weightCentiUnits'},
+      );
       final weight = value['weight'] == null
           ? Weight(_integer(value, 'weightCentiUnits'), unit)
           : _weight(_map(value['weight'], 'maximum weight'));
       maxInputs[MovementId(entry.key)] = switch (kind) {
         'oneRepMax' => OneRepMaxInput(weight),
+        'onePlusSet' => OnePlusSetInput(weight),
         'repMax' => RepMaxInput(
           weight,
           _integer(value, 'repetitions'),

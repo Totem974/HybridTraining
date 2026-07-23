@@ -32,6 +32,7 @@
     "maxes": {
       "oneOf": [
         { "$ref": "#/$defs/oneRepMaxes" },
+        { "$ref": "#/$defs/onePlusSetMaxes" },
         { "$ref": "#/$defs/repMaxes" },
         { "$ref": "#/$defs/directTrainingMaxes" }
       ]
@@ -124,7 +125,7 @@
       "type": "object",
       "required": ["mode", "globalTrainingMaxRatioBasisPoints", "values"],
       "properties": {
-        "mode": { "enum": ["oneRepMax", "repMax", "directTrainingMax"] },
+        "mode": { "enum": ["oneRepMax", "onePlusSet", "repMax", "directTrainingMax"] },
         "globalTrainingMaxRatioBasisPoints": { "$ref": "#/$defs/basisPoints" },
         "values": { "type": "object", "minProperties": 1 },
         "ratiosByMovement": {
@@ -138,6 +139,12 @@
       "allOf": [
         { "$ref": "#/$defs/maxesBase" },
         { "type": "object", "required": ["mode", "values"], "properties": { "mode": { "const": "oneRepMax" }, "values": { "type": "object", "additionalProperties": { "$ref": "#/$defs/maxValue" } } } }
+      ]
+    },
+    "onePlusSetMaxes": {
+      "allOf": [
+        { "$ref": "#/$defs/maxesBase" },
+        { "type": "object", "required": ["mode", "values"], "properties": { "mode": { "const": "onePlusSet" }, "values": { "type": "object", "additionalProperties": { "$ref": "#/$defs/maxValue" } } } }
       ]
     },
     "repMaxes": {

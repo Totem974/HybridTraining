@@ -79,6 +79,7 @@ final class CycleConfigurationCodec {
     );
     final mode = _enum(maxes, 'mode', const {
       'oneRepMax',
+      'onePlusSet',
       'repMax',
       'directTrainingMax',
     }, r'$.maxes');
@@ -96,34 +97,34 @@ final class CycleConfigurationCodec {
     }
     final maxInputs = <String, Object?>{};
     for (final entry in values.entries) {
-      _checkStableId(entry.key, r'$.maxes.values.${entry.key}');
-      final value = _object(entry.value, r'$.maxes.values.${entry.key}');
+      _checkStableId(entry.key, '\$.maxes.values.${entry.key}');
+      final value = _object(entry.value, '\$.maxes.values.${entry.key}');
       final allowed = mode == 'repMax'
           ? const {'weight', 'repetitions', 'formula'}
           : const {'weight'};
       _keys(
         value,
         allowed,
-        r'$.maxes.values.${entry.key}',
+        '\$.maxes.values.${entry.key}',
         optional: mode == 'repMax' ? const {'formula'} : const {},
       );
       final input = <String, Object?>{
         'type': mode,
         'weight': _weight(
           value['weight'],
-          r'$.maxes.values.${entry.key}.weight',
+          '\$.maxes.values.${entry.key}.weight',
         ),
       };
       if (mode == 'repMax') {
         final repetitions = _integer(
           value,
           'repetitions',
-          r'$.maxes.values.${entry.key}',
+          '\$.maxes.values.${entry.key}',
         );
         if (repetitions < 1) {
           _fail(
             'VALUE_OUT_OF_RANGE',
-            r'$.maxes.values.${entry.key}.repetitions',
+            '\$.maxes.values.${entry.key}.repetitions',
             'configuration.invalidRepetitions',
           );
         }
@@ -132,7 +133,7 @@ final class CycleConfigurationCodec {
           input['formula'] = _nonEmptyString(
             value,
             'formula',
-            r'$.maxes.values.${entry.key}',
+            '\$.maxes.values.${entry.key}',
           );
         }
       }

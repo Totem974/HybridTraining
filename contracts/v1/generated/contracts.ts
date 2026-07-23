@@ -18,9 +18,11 @@ export type CycleConfigurationMaxValue = { readonly "weight": Weight; };
 
 export type CycleConfigurationRepMaxValue = { readonly "weight": Weight; readonly "repetitions": number; readonly "formula"?: string; };
 
-export type CycleConfigurationMaxesBase = { readonly "mode": "oneRepMax" | "repMax" | "directTrainingMax"; readonly "globalTrainingMaxRatioBasisPoints": CycleConfigurationBasisPoints; readonly "values": {  }; readonly "ratiosByMovement"?: { readonly [key: string]: CycleConfigurationBasisPoints; }; };
+export type CycleConfigurationMaxesBase = { readonly "mode": "oneRepMax" | "onePlusSet" | "repMax" | "directTrainingMax"; readonly "globalTrainingMaxRatioBasisPoints": CycleConfigurationBasisPoints; readonly "values": {  }; readonly "ratiosByMovement"?: { readonly [key: string]: CycleConfigurationBasisPoints; }; };
 
 export type CycleConfigurationOneRepMaxes = CycleConfigurationMaxesBase & { readonly "mode": "oneRepMax"; readonly "values": { readonly [key: string]: CycleConfigurationMaxValue; }; };
+
+export type CycleConfigurationOnePlusSetMaxes = CycleConfigurationMaxesBase & { readonly "mode": "onePlusSet"; readonly "values": { readonly [key: string]: CycleConfigurationMaxValue; }; };
 
 export type CycleConfigurationRepMaxes = CycleConfigurationMaxesBase & { readonly "mode": "repMax"; readonly "values": { readonly [key: string]: CycleConfigurationRepMaxValue; }; };
 
@@ -28,7 +30,7 @@ export type CycleConfigurationDirectTrainingMaxes = CycleConfigurationMaxesBase 
 
 export type CycleConfigurationBar = { readonly "weight": Weight; readonly "platesPerSide": ReadonlyArray<Weight>; };
 
-export type CycleConfiguration = { readonly "format": "hybrid-training-cycle"; readonly "configurationVersion": 1; readonly "catalogVersion": number; readonly "catalogHash": string; readonly "template": { readonly "id": CycleConfigurationStableId; readonly "variantId": CycleConfigurationStableId; readonly "options": { readonly [key: string]: unknown; }; }; readonly "commonOptions": { readonly "warmUp": CycleRequestWarmUpOptions; readonly "joker": CycleRequestJokerOptions; readonly "deload": CycleRequestDeloadOptions; }; readonly "maxes": CycleConfigurationOneRepMaxes | CycleConfigurationRepMaxes | CycleConfigurationDirectTrainingMaxes; readonly "schedule": { readonly "id": CycleConfigurationStableId; readonly "startDate": string; readonly "sessionOrder": ReadonlyArray<CycleConfigurationStableId>; readonly "trainingDays"?: ReadonlyArray<number>; }; readonly "equipment": { readonly "unit": "kg" | "lb"; readonly "barProfileId": CycleConfigurationStableId; } | { readonly "unit": "kg" | "lb"; readonly "bar": CycleConfigurationBar; }; readonly "output": { readonly "title": string; readonly "showPlating": boolean; }; };
+export type CycleConfiguration = { readonly "format": "hybrid-training-cycle"; readonly "configurationVersion": 1; readonly "catalogVersion": number; readonly "catalogHash": string; readonly "template": { readonly "id": CycleConfigurationStableId; readonly "variantId": CycleConfigurationStableId; readonly "options": { readonly [key: string]: unknown; }; }; readonly "commonOptions": { readonly "warmUp": CycleRequestWarmUpOptions; readonly "joker": CycleRequestJokerOptions; readonly "deload": CycleRequestDeloadOptions; }; readonly "maxes": CycleConfigurationOneRepMaxes | CycleConfigurationOnePlusSetMaxes | CycleConfigurationRepMaxes | CycleConfigurationDirectTrainingMaxes; readonly "schedule": { readonly "id": CycleConfigurationStableId; readonly "startDate": string; readonly "sessionOrder": ReadonlyArray<CycleConfigurationStableId>; readonly "trainingDays"?: ReadonlyArray<number>; }; readonly "equipment": { readonly "unit": "kg" | "lb"; readonly "barProfileId": CycleConfigurationStableId; } | { readonly "unit": "kg" | "lb"; readonly "bar": CycleConfigurationBar; }; readonly "output": { readonly "title": string; readonly "showPlating": boolean; }; };
 
 export type CycleEditorSchemaLocalizedText = string | { readonly [key: string]: string; };
 
@@ -42,7 +44,7 @@ export type CycleEditorSchema = ContractEnvelope & { readonly "apiVersion"?: unk
 
 export type CycleRequestBasisPoints = number;
 
-export type CycleRequestMaxInput = { readonly "type": "oneRepMax" | "repMax" | "directTrainingMax"; readonly "weight": Weight; readonly "repetitions"?: number; readonly "formula"?: string; };
+export type CycleRequestMaxInput = { readonly "type": "oneRepMax"; readonly "weight": Weight; } | { readonly "type": "onePlusSet"; readonly "weight": Weight; } | { readonly "type": "repMax"; readonly "weight": Weight; readonly "repetitions": number; readonly "formula"?: string; } | { readonly "type": "directTrainingMax"; readonly "weight": Weight; };
 
 export type CycleRequestCycleOptions = { readonly "warmUp"?: CycleRequestWarmUpOptions; readonly "joker"?: CycleRequestJokerOptions; readonly "deload"?: CycleRequestDeloadOptions; readonly "fullBody"?: CycleRequestFullBodyOptions; };
 

@@ -24,7 +24,48 @@
   "additionalProperties": false,
   "$defs": {
     "basisPoints": { "type": "integer", "minimum": 0, "maximum": 20000 },
-    "maxInput": { "type": "object", "required": ["type", "weight"], "properties": { "type": { "enum": ["oneRepMax", "repMax", "directTrainingMax"] }, "weight": { "$ref": "common.schema.json#/$defs/weight" }, "repetitions": { "type": "integer", "minimum": 1 }, "formula": { "type": "string" } }, "additionalProperties": false },
+    "maxInput": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "weight"],
+          "properties": {
+            "type": { "const": "oneRepMax" },
+            "weight": { "$ref": "common.schema.json#/$defs/weight" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "weight"],
+          "properties": {
+            "type": { "const": "onePlusSet" },
+            "weight": { "$ref": "common.schema.json#/$defs/weight" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "weight", "repetitions"],
+          "properties": {
+            "type": { "const": "repMax" },
+            "weight": { "$ref": "common.schema.json#/$defs/weight" },
+            "repetitions": { "type": "integer", "minimum": 1 },
+            "formula": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["type", "weight"],
+          "properties": {
+            "type": { "const": "directTrainingMax" },
+            "weight": { "$ref": "common.schema.json#/$defs/weight" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
     "cycleOptions": {
       "type": "object",
       "properties": {

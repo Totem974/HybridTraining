@@ -70,6 +70,17 @@ def test_cycle_configuration_max_mode_is_conditional():
     assert list(validator("cycle_configuration.schema.json").iter_errors(value))
 
 
+def test_one_plus_set_configuration_accepts_weight_only():
+    value = load("fixtures/cycle_configuration.valid.json")
+    value["maxes"]["mode"] = "onePlusSet"
+    value["maxes"]["values"] = {
+        "squat": {"weight": {"centiUnits": 9500, "unit": "kg"}}
+    }
+    assert not list(validator("cycle_configuration.schema.json").iter_errors(value))
+    value["maxes"]["values"]["squat"]["repetitions"] = 1
+    assert list(validator("cycle_configuration.schema.json").iter_errors(value))
+
+
 def test_cycle_configuration_equipment_requires_exactly_one_bar_source():
     value = load("fixtures/cycle_configuration.valid.json")
     value["equipment"]["bar"] = {
@@ -99,6 +110,19 @@ def test_unknown_key_is_rejected():
 def test_unknown_nested_option_key_is_rejected():
     value = load("fixtures/cycle_request.valid.json")
     value["options"]["joker"]["unexpected"] = True
+    assert list(validator("cycle_request.schema.json").iter_errors(value))
+
+
+def test_one_plus_set_request_accepts_weight_only_and_rejects_unknown_keys():
+    value = load("fixtures/cycle_request.valid.json")
+    value["maxInputs"] = {
+        "squat": {
+            "type": "onePlusSet",
+            "weight": {"centiUnits": 9500, "unit": "kg"},
+        }
+    }
+    assert not list(validator("cycle_request.schema.json").iter_errors(value))
+    value["maxInputs"]["squat"]["repetitions"] = 1
     assert list(validator("cycle_request.schema.json").iter_errors(value))
 
 

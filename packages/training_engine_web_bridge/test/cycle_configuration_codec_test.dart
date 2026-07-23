@@ -58,6 +58,64 @@ void main() {
     expect(second, first);
   });
 
+  test('projects onePlusSet as a weight-only max input', () {
+    final configuration = _configuration();
+    configuration['maxes'] = {
+      'mode': 'onePlusSet',
+      'globalTrainingMaxRatioBasisPoints': 5000,
+      'values': {
+        'back_squat': {
+          'weight': {'centiUnits': 9500, 'unit': 'kg'},
+        },
+      },
+    };
+
+    final request = codec.toCycleRequest(
+      configuration,
+      catalogVersion: 42,
+      catalogHash: 'catalog-hash',
+    );
+
+    expect(request['maxInputs'], {
+      'back_squat': {
+        'type': 'onePlusSet',
+        'weight': {'centiUnits': 9500, 'unit': 'kg'},
+      },
+    });
+    expect(request['globalTrainingMaxRatioBasisPoints'], 5000);
+  });
+
+  test('rejects an unknown onePlusSet value key with its path', () {
+    final configuration = _configuration();
+    configuration['maxes'] = {
+      'mode': 'onePlusSet',
+      'globalTrainingMaxRatioBasisPoints': 9000,
+      'values': {
+        'back_squat': {
+          'weight': {'centiUnits': 9500, 'unit': 'kg'},
+          'repetitions': 1,
+        },
+      },
+    };
+
+    expect(
+      () => codec.toCycleRequest(
+        configuration,
+        catalogVersion: 42,
+        catalogHash: 'catalog-hash',
+      ),
+      throwsA(
+        isA<CycleConfigurationFormatException>()
+            .having((error) => error.code, 'code', 'UNKNOWN_KEY')
+            .having(
+              (error) => error.path,
+              'path',
+              r'$.maxes.values.back_squat.repetitions',
+            ),
+      ),
+    );
+  });
+
   test('rejects an unknown key with a structured path', () {
     final configuration = _configuration()..['unexpected'] = true;
     expect(

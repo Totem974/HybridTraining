@@ -58,6 +58,96 @@ void main() {
     expect((response['snapshot'] as Map<String, Object?>)['kind'], 'cycle');
   });
 
+  test('editor exposes onePlusSet without a global PlusSetMode option', () {
+    final service = initializedService();
+    final schema =
+        jsonDecode(
+              service.cycleEditorSchema(
+                jsonEncode({
+                  'apiVersion': 'v1',
+                  'schemaVersion': 1,
+                  'templateId': 'classic_531',
+                  'variantId': 'four_day',
+                }),
+              ),
+            )
+            as Map<String, Object?>;
+    final fields = (schema['fields'] as List).cast<Map<String, Object?>>();
+    final maxMode = fields.singleWhere((field) => field['id'] == 'max-mode');
+    final choices = (maxMode['choices'] as List)
+        .cast<Map<String, Object?>>()
+        .map((choice) => choice['value'])
+        .toList(growable: false);
+
+    expect(choices, contains('onePlusSet'));
+    expect(
+      fields.where(
+        (field) =>
+            field['id'] == 'plusSetMode' ||
+            field['path'] == 'options.plusSetMode',
+      ),
+      isEmpty,
+    );
+  });
+
+  test('onePlusSet derives TM at 95 percent and ignores the global ratio', () {
+    final service = initializedService();
+    Map<String, Object?> request(int globalRatio) => {
+      ..._cycleRequest,
+      'maxInputs': {
+        for (final movement
+            in (_cycleRequest['maxInputs']! as Map<String, Object?>).keys)
+          movement: {
+            'type': 'onePlusSet',
+            'weight': {'centiUnits': 9500, 'unit': 'lb'},
+          },
+      },
+      'globalTrainingMaxRatioBasisPoints': globalRatio,
+    };
+
+    final lowerRatio =
+        jsonDecode(service.generateCycle(jsonEncode(request(5000))))
+            as Map<String, Object?>;
+    final higherRatio =
+        jsonDecode(service.generateCycle(jsonEncode(request(9000))))
+            as Map<String, Object?>;
+    final lowerCycle = lowerRatio['cycle'] as Map<String, Object?>;
+    final higherCycle = higherRatio['cycle'] as Map<String, Object?>;
+    final effectiveTrainingMaxes =
+        lowerCycle['effectiveTrainingMaxes'] as Map<String, Object?>;
+
+    expect(
+      effectiveTrainingMaxes.values,
+      everyElement({'centiUnits': 10000, 'unit': 'lb'}),
+    );
+    expect(higherCycle, lowerCycle);
+  });
+
+  test('onePlusSet rejects unknown input keys at the bridge boundary', () {
+    final service = initializedService();
+    final request = {
+      ..._cycleRequest,
+      'maxInputs': {
+        for (final entry
+            in (_cycleRequest['maxInputs']! as Map<String, Object?>).entries)
+          entry.key: {
+            'type': 'onePlusSet',
+            'weight': _weight,
+            if (entry.key == 'squat') 'repetitions': 1,
+          },
+      },
+    };
+
+    final validation =
+        jsonDecode(service.validateCycle(jsonEncode(request)))
+            as Map<String, Object?>;
+    expect(validation['valid'], false);
+    expect(
+      jsonEncode(validation['errors']),
+      contains('UNKNOWN_KEY:repetitions'),
+    );
+  });
+
   test('Beyond BBB fixed wave includes its structural deload', () {
     final service = initializedService();
     final response =
