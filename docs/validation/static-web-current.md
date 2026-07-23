@@ -26,12 +26,12 @@ ses compteurs, ses tailles et ses mesures ne décrivent pas l'état actuel.
 | Analyse Flutter | aucune anomalie |
 | Build Flutter Web release | réussi |
 | Tests unitaires Web | 98/98 réussis |
-| Matrice E2E | 85 réussis, 26 ignorés intentionnellement |
+| Matrice E2E | 105 réussis, 30 ignorés intentionnellement |
 | Parité Cycle native | 37/37 |
 | Parité Cycle JavaScript | 37/37 |
 | Parité Forever | 1/1 |
 
-Les 26 cas E2E ignorés correspondent à des projets ou tests auxquels ces cas ne
+Les 30 cas E2E ignorés correspondent à des projets ou tests auxquels ces cas ne
 s'appliquent pas. Ils ne représentent ni des échecs ni des validations
 manquantes.
 

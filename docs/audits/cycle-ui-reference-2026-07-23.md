@@ -82,7 +82,7 @@ brutes. Sa surface Cycle publique contient 19 templates et 37 variantes.
 | Analyse et build Flutter Web release | réussis |
 | Tests Web unitaires | 98/98 |
 | Tests des contrats | 16/16 |
-| Tests E2E | 85 réussis, 26 ignorés intentionnellement |
+| Tests E2E | 105 réussis, 30 ignorés intentionnellement |
 
-Les 26 cas E2E ignorés sont des projets ou tests non applicables. Ils ne sont
+Les 30 cas E2E ignorés sont des projets ou tests non applicables. Ils ne sont
 pas des échecs.
