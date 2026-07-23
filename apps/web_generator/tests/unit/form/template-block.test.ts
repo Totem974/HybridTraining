@@ -9,9 +9,25 @@ function context(): CycleBlockRenderContext {
     locale: "en",
     schemaId: "editor",
     dispatch: vi.fn(),
-    values: { templateId: "classic", variantId: "four-day" },
+    values: {
+      generationId: "classic",
+      templateId: "classic",
+      variantId: "four-day",
+    },
     renderDefault: () => document.createDocumentFragment(),
     fields: [
+      {
+        id: "generation",
+        path: "generationId",
+        region: "template",
+        kind: "choice",
+        label: "Generation",
+        value: "classic",
+        choices: [
+          { value: "classic", label: "Classic" },
+          { value: "beyond", label: "Beyond" },
+        ],
+      },
       {
         id: "template",
         path: "templateId",
@@ -41,6 +57,15 @@ function context(): CycleBlockRenderContext {
         label: "Warm-up",
         value: true,
       },
+      {
+        id: "phase",
+        path: "options.fullBody.phase",
+        region: "template",
+        kind: "choice",
+        label: "Phase",
+        value: "phase_one",
+        choices: [{ value: "phase_one", label: "Phase one" }],
+      },
     ],
   };
 }
@@ -49,8 +74,18 @@ describe("renderTemplateBlock", () => {
   it("renders catalogue choices as separated value rows with chevrons", () => {
     const host = document.createElement("div");
     host.append(renderTemplateBlock(context()));
-    expect(host.querySelectorAll(".template-selection-row")).toHaveLength(2);
-    expect(host.querySelectorAll(".template-selection-chevron")).toHaveLength(2);
+    expect(
+      host.querySelectorAll(
+        ".template-selection-rows > .template-selection-row",
+      ),
+    ).toHaveLength(3);
+    expect(
+      host.querySelectorAll(
+        ".template-selection-rows .template-selection-chevron",
+      ),
+    ).toHaveLength(3);
+    expect(host.querySelector("[data-testid=generation] option")?.textContent)
+      .toBe("Classic");
     expect(host.querySelector("[data-testid=variant] option")?.textContent).toBe(
       "Four days",
     );
@@ -63,6 +98,7 @@ describe("renderTemplateBlock", () => {
     const options = host.querySelector(".template-dynamic-options");
     expect(rows?.nextElementSibling).toBe(options);
     expect(options?.querySelector("input[type=checkbox]")).not.toBeNull();
+    expect(options?.querySelector("[data-testid=phase]")).not.toBeNull();
   });
 
   it("dispatches the selected schema value without template rules", () => {

@@ -80,6 +80,19 @@ test('Full Body Original phases are distinct while Updated and Full Boring expos
   const external = await openCycle(page);
   await chooseTemplate(page, 'Full Body');
   await chooseVariant(page, 'Original');
+  const engineFieldIds = await page.evaluate(() => {
+    const schema = JSON.parse(window.hybridTrainingEngine!.cycleEditorSchema(
+      JSON.stringify({
+        apiVersion: 'v1',
+        schemaVersion: 1,
+        templateId: 'classic_full_body',
+        variantId: 'original',
+      }),
+    )) as { fields: Array<{ id: string }> };
+    return schema.fields.map((field) => field.id);
+  });
+  expect(engineFieldIds).toContain('phase');
+  await expect(page.getByTestId('phase')).toBeVisible();
 
   const phaseOutputs = new Set<string>();
   for (const phase of ['phase_one', 'phase_two', 'phase_three']) {

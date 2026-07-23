@@ -96,18 +96,27 @@ final class SourceComponentSelectionChoice {
 
 enum TemplateSurface { cyclePublic, foreverInternal }
 
+final class SourceTemplateGeneration {
+  const SourceTemplateGeneration({required this.id, required this.labels});
+
+  final String id;
+  final Map<String, String> labels;
+}
+
 final class SourceTemplate {
   const SourceTemplate({
     required this.id,
     required this.revision,
     required this.variants,
     required this.surface,
+    required this.generation,
     this.isDefault = false,
   });
   final String id;
   final int revision;
   final List<SourceVariant> variants;
   final TemplateSurface surface;
+  final SourceTemplateGeneration generation;
   final bool isDefault;
 }
 
@@ -186,7 +195,8 @@ final class CatalogSourceDocumentCodec {
   }
 
   List<SourceTemplate> decodeTemplates(String source) {
-    final root = _root(source, 'templates');
+    final root = _root(source, 'templates', optional: const {'generation'});
+    final generation = _templateGeneration(root['generation']);
     return _list(root, 'templates')
         .map((value) {
           final map = _map(value, 'template');
@@ -207,6 +217,7 @@ final class CatalogSourceDocumentCodec {
             id: _string(map, 'id'),
             revision: _int(map, 'revision'),
             surface: TemplateSurface.values.byName(_string(map, 'surface')),
+            generation: generation,
             isDefault: map['isDefault'] == null
                 ? false
                 : _bool(map, 'isDefault'),
@@ -217,6 +228,23 @@ final class CatalogSourceDocumentCodec {
           );
         })
         .toList(growable: false);
+  }
+
+  SourceTemplateGeneration _templateGeneration(Object? value) {
+    if (value == null) {
+      return const SourceTemplateGeneration(
+        id: 'unspecified',
+        labels: {'en': 'Unspecified', 'fr': 'Non spécifiée'},
+      );
+    }
+    final generation = _map(value, 'template generation');
+    _keys(generation, const {'id', 'labels'});
+    final labels = _map(generation['labels'], 'template generation labels');
+    _keys(labels, const {'en', 'fr'});
+    return SourceTemplateGeneration(
+      id: _string(generation, 'id'),
+      labels: {'en': _string(labels, 'en'), 'fr': _string(labels, 'fr')},
+    );
   }
 
   List<SourceTemplateAlias> decodeTemplateAliases(String source) {
@@ -728,9 +756,13 @@ final class CatalogSourceDocumentCodec {
     }
   }
 
-  Map<String, Object?> _root(String source, String kind) {
+  Map<String, Object?> _root(
+    String source,
+    String kind, {
+    Set<String> optional = const {},
+  }) {
     final root = _map(jsonDecode(source), 'root');
-    _keys(root, {'schemaVersion', 'kind', kind});
+    _keys(root, {'schemaVersion', 'kind', kind}, optional: optional);
     if (_int(root, 'schemaVersion') != 1 || _string(root, 'kind') != kind) {
       throw FormatException('Expected schemaVersion 1 $kind document.');
     }

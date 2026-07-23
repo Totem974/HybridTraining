@@ -35,6 +35,10 @@ interface CatalogIndex {
   readonly templates: readonly {
     readonly id: string;
     readonly labels: Readonly<Record<string, string>>;
+    readonly generation: {
+      readonly id: string;
+      readonly labels: Readonly<Record<string, string>>;
+    };
     readonly variantIds: readonly string[];
   }[];
 }
@@ -159,6 +163,15 @@ async function handleIntent(intent: CycleFormIntent): Promise<void> {
   }
   if (!intent.path || intent.value === undefined) return;
   values[intent.path] = intent.value;
+  if (intent.path === 'generationId' && typeof intent.value === 'string') {
+    const selected = catalog.templates.find(
+      (item) => item.generation.id === intent.value,
+    );
+    if (selected?.variantIds[0]) {
+      await loadSchema(selected.id, selected.variantIds[0], values);
+    }
+    return;
+  }
   if (intent.path === 'templateId' && typeof intent.value === 'string') {
     const selected = catalog.templates.find((item) => item.id === intent.value);
     if (selected?.variantIds[0]) await loadSchema(selected.id, selected.variantIds[0], values);

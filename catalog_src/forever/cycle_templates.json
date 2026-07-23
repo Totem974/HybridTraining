@@ -1,6 +1,10 @@
 {
   "schemaVersion": 1,
   "kind": "templates",
+  "generation": {
+    "id": "forever",
+    "labels": {"en": "Forever", "fr": "Forever"}
+  },
   "templates": [
     {
       "id":"forever_bbb_leader","revision":1,

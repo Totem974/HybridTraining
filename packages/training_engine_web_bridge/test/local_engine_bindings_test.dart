@@ -109,6 +109,72 @@ void main() {
             as Map<String, Object?>;
     final templates = (index['templates'] as List).cast<Map<String, Object?>>();
     expect(templates.first['id'], 'classic_boring_but_big');
+    expect(
+      templates
+          .map((template) => (template['generation'] as Map)['id'])
+          .toSet(),
+      {'classic', 'beyond'},
+    );
+    expect(
+      templates.any((template) => template['id'] == 'forever_bbb_leader'),
+      isFalse,
+    );
+  });
+
+  test('editor filters template choices by catalog generation', () {
+    final service = initializedService();
+
+    Map<String, Object?> schema(String templateId, String variantId) =>
+        jsonDecode(
+              service.cycleEditorSchema(
+                jsonEncode({
+                  'apiVersion': 'v1',
+                  'schemaVersion': 1,
+                  'templateId': templateId,
+                  'variantId': variantId,
+                }),
+              ),
+            )
+            as Map<String, Object?>;
+
+    final classicFields = (schema('classic_531', 'four_day')['fields'] as List)
+        .cast<Map<String, Object?>>();
+    final generation = classicFields.singleWhere(
+      (field) => field['id'] == 'generation',
+    );
+    expect(generation['value'], 'classic');
+    expect(
+      (generation['choices'] as List).cast<Map<String, Object?>>().map(
+        (choice) => choice['value'],
+      ),
+      ['classic', 'beyond'],
+    );
+    final classicTemplates = classicFields.singleWhere(
+      (field) => field['id'] == 'template',
+    );
+    expect(
+      (classicTemplates['choices'] as List).cast<Map<String, Object?>>().map(
+        (choice) => choice['value'],
+      ),
+      everyElement(anyOf(startsWith('classic_'), startsWith('powerlifting_'))),
+    );
+
+    final beyondFields =
+        (schema('beyond_pyramid', 'four_day_two_cycles')['fields'] as List)
+            .cast<Map<String, Object?>>();
+    expect(
+      beyondFields.singleWhere((field) => field['id'] == 'generation')['value'],
+      'beyond',
+    );
+    final beyondTemplates = beyondFields.singleWhere(
+      (field) => field['id'] == 'template',
+    );
+    expect(
+      (beyondTemplates['choices'] as List).cast<Map<String, Object?>>().map(
+        (choice) => choice['value'],
+      ),
+      everyElement(startsWith('beyond_')),
+    );
   });
 
   test('generateCycle resolves and applies the catalog option recipe', () {

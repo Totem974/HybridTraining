@@ -482,10 +482,11 @@ String buildCatalogSeed(
 }
 
 final class _Document {
-  const _Document(this.path, this.kind, this.records);
+  const _Document(this.path, this.kind, this.records, {this.generation});
   final String path;
   final String kind;
   final List<Map<String, Object?>> records;
+  final Map<String, Object?>? generation;
 }
 
 final class _Catalog {
@@ -514,11 +515,12 @@ final class _Catalog {
         }
         final kindValue = value['kind'];
         final arrayName = kindValue is String ? _arrayName(kindValue) : '';
-        _exact(value, {
-          'schemaVersion',
-          'kind',
-          arrayName,
-        }, '${file.path}:root');
+        _exact(
+          value,
+          {'schemaVersion', 'kind', arrayName, 'generation'},
+          '${file.path}:root',
+          optional: kindValue == 'templates' ? const {} : const {'generation'},
+        );
         if (value['schemaVersion'] != 1) {
           throw const FormatException('schemaVersion must be 1');
         }
@@ -529,6 +531,17 @@ final class _Catalog {
         final list = value[arrayName];
         if (list is! List<Object?>) {
           throw FormatException('$kind must be an array');
+        }
+        final generation = kind == 'templates'
+            ? _object(value['generation'], 'generation')
+            : null;
+        if (generation != null) {
+          _exact(generation, {'id', 'labels'}, '${file.path}:generation');
+          if (generation['id'] is! String ||
+              (generation['id']! as String).trim().isEmpty) {
+            throw const FormatException('generation.id must not be blank');
+          }
+          _labels(generation['labels'], '${file.path}:generation.labels');
         }
         documents.add(
           _Document(
@@ -544,6 +557,7 @@ final class _Catalog {
                   return item;
                 })
                 .toList(growable: false),
+            generation: generation,
           ),
         );
       } catch (error) {
@@ -805,6 +819,7 @@ final class _Catalog {
           'content': {
             'schemaVersion': 1,
             'kind': document.kind,
+            if (document.generation != null) 'generation': document.generation,
             _arrayName(document.kind): document.records,
           },
         },

@@ -100,7 +100,11 @@ function renderDynamicOption(
   context: CycleBlockRenderContext,
 ): HTMLElement {
   if (field.kind === "boolean") return renderBooleanOption(field, context);
-  if (field.kind === "choice") return renderChoiceRow(field, context);
+  if (field.kind === "choice") {
+    const row = renderChoiceRow(field, context);
+    row.classList.add("template-option");
+    return row;
+  }
 
   const wrapper = document.createElement("div");
   wrapper.className = "field template-option";
@@ -141,8 +145,11 @@ export function renderTemplateBlock(
   options.className = "template-dynamic-options";
 
   for (const field of context.fields) {
-    if (field.kind === "choice") rows.append(renderChoiceRow(field, context));
-    else options.append(renderDynamicOption(field, context));
+    if (["generation", "template", "variant"].includes(field.id)) {
+      rows.append(renderChoiceRow(field, context));
+    } else {
+      options.append(renderDynamicOption(field, context));
+    }
   }
   if (rows.childElementCount > 0) block.append(rows);
   if (options.childElementCount > 0) block.append(options);

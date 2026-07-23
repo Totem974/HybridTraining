@@ -8,7 +8,7 @@ export type Weight = { readonly "centiUnits": number; readonly "unit": "kg" | "l
 
 export type EngineIssue = { readonly "code": string; readonly "path": string; readonly "messageKey": string; readonly "details": { readonly [key: string]: unknown; }; readonly "severity": "error" | "warning"; };
 
-export type CatalogIndex = ContractEnvelope & { readonly "apiVersion"?: unknown; readonly "schemaVersion"?: unknown; readonly "engineVersion"?: unknown; readonly "catalogVersion"?: unknown; readonly "catalogHash"?: unknown; readonly "templates": ReadonlyArray<{ readonly "id": string; readonly "revision": number; readonly "labels": { readonly "en": string; readonly "fr": string; }; readonly "variantIds": ReadonlyArray<string>; }>; };
+export type CatalogIndex = ContractEnvelope & { readonly "apiVersion"?: unknown; readonly "schemaVersion"?: unknown; readonly "engineVersion"?: unknown; readonly "catalogVersion"?: unknown; readonly "catalogHash"?: unknown; readonly "templates": ReadonlyArray<{ readonly "id": string; readonly "revision": number; readonly "labels": { readonly "en": string; readonly "fr": string; }; readonly "generation": { readonly "id": string; readonly "labels": { readonly "en": string; readonly "fr": string; }; }; readonly "variantIds": ReadonlyArray<string>; }>; };
 
 export type CycleConfigurationStableId = string;
 

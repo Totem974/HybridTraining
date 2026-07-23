@@ -1,6 +1,10 @@
 {
   "schemaVersion": 1,
   "kind": "templates",
+  "generation": {
+    "id": "beyond",
+    "labels": {"en": "Beyond", "fr": "Beyond"}
+  },
   "templates": [{
     "id": "beyond_boring_but_big",
     "revision": 1,

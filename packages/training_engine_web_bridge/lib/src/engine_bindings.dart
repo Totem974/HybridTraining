@@ -74,7 +74,11 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
       for (final document in documents.where(
         (item) => item['kind'] == 'templates',
       ))
-        for (final item in _list(document, 'templates')) _map(item, 'template'),
+        for (final item in _list(document, 'templates'))
+          {
+            ..._map(item, 'template'),
+            'generation': _map(document['generation'], 'template generation'),
+          },
     ];
     _rawOptionSchemas = [
       for (final document in documents.where(
@@ -165,7 +169,10 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     final request = _map(jsonDecode(requestJson), 'request');
     _keys(request, const {'apiVersion', 'schemaVersion'});
     _requireV1(request);
-    final defaults = _rawTemplateRecords
+    final publicTemplates = _rawTemplateRecords
+        .where((template) => template['surface'] == 'cyclePublic')
+        .toList(growable: false);
+    final defaults = publicTemplates
         .where((template) => template['isDefault'] == true)
         .toList(growable: false);
     if (defaults.length > 1) {
@@ -173,7 +180,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     }
     final orderedTemplates = [
       ...defaults,
-      ..._rawTemplateRecords.where((template) => template['isDefault'] != true),
+      ...publicTemplates.where((template) => template['isDefault'] != true),
     ];
     return jsonEncode({
       ..._metadata(),
@@ -183,6 +190,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
             'id': template['id'],
             'revision': template['revision'],
             'labels': template['labels'],
+            'generation': template['generation'],
             'variantIds': [
               for (final variant in _list(template, 'variants'))
                 _map(variant, 'variant')['id'],
@@ -215,6 +223,17 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     final rawTemplate = _rawTemplateRecords.singleWhere(
       (item) => item['id'] == templateId,
     );
+    final selectedGeneration = _map(
+      rawTemplate['generation'],
+      'template generation',
+    );
+    final publicTemplates = _rawTemplateRecords
+        .where((template) => template['surface'] == 'cyclePublic')
+        .toList(growable: false);
+    final orderedTemplates = [
+      ...publicTemplates.where((template) => template['isDefault'] == true),
+      ...publicTemplates.where((template) => template['isDefault'] != true),
+    ];
     _requireV1(request);
     final rawVariant = _list(rawTemplate, 'variants')
         .map((item) => _map(item, 'variant'))
@@ -270,6 +289,27 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
         2 * plateDenominations.fold<double>(0, (sum, plate) => sum + plate);
     final fields = <Map<String, Object?>>[
       _field(
+        id: 'generation',
+        path: 'generationId',
+        region: 'template',
+        kind: 'choice',
+        label: const {'en': 'Generation', 'fr': 'Génération'},
+        value: selectedGeneration['id'],
+        choices: [
+          for (final generation in {
+            for (final template in orderedTemplates)
+              _string(
+                _map(template['generation'], 'template generation'),
+                'id',
+              ): _map(
+                template['generation'],
+                'template generation',
+              ),
+          }.values)
+            {'value': generation['id'], 'label': generation['labels']},
+        ],
+      ),
+      _field(
         id: 'template',
         path: 'templateId',
         region: 'template',
@@ -277,7 +317,11 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
         label: const {'en': 'Template', 'fr': 'Modèle'},
         value: templateId,
         choices: [
-          for (final template in _rawTemplateRecords)
+          for (final template in orderedTemplates.where(
+            (item) =>
+                _map(item['generation'], 'template generation')['id'] ==
+                selectedGeneration['id'],
+          ))
             {'value': template['id'], 'label': template['labels']},
         ],
       ),
@@ -1164,6 +1208,7 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     Map<String, Object?> optionOverrides,
   ) {
     final type = parameter['type'] as String;
+    final presentationGroup = parameter['presentationGroup'] as String?;
     final kind = switch (type) {
       'boolean' => 'boolean',
       'integer' => 'integer',
@@ -1175,9 +1220,11 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     return _field(
       id: parameter['id'] as String,
       path: 'options.${requestPaths[_string(parameter, 'id')]}',
-      region: 'additional-options',
-      group: parameter['presentationGroup'] as String?,
-      groupLabel: _optionGroupLabel(parameter['presentationGroup'] as String?),
+      region: const {'warmup', 'joker', 'deload'}.contains(presentationGroup)
+          ? 'additional-options'
+          : 'template',
+      group: presentationGroup,
+      groupLabel: _optionGroupLabel(presentationGroup),
       kind: kind,
       label: {
         'en': parameter['labelEn'] ?? parameter['id'],
