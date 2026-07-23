@@ -332,6 +332,403 @@
           }
         ]
       }
+    },
+    {
+      "id": "source_bbb_less_boring_5x10_variable",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "Source BBB Less Boring 5x10",
+        "fr": "BBB Less Boring source 5x10"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_variants"
+      ],
+      "parameterSchemaIds": [
+        "bbb_percentage"
+      ],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_parity"
+        ]
+      },
+      "sessionMovementBindings": [
+        {
+          "sessionId": "overhead_press",
+          "movementId": "bench_press"
+        },
+        {
+          "sessionId": "deadlift",
+          "movementId": "squat"
+        },
+        {
+          "sessionId": "bench_press",
+          "movementId": "overhead_press"
+        },
+        {
+          "sessionId": "squat",
+          "movementId": "deadlift"
+        }
+      ],
+      "block": {
+        "id": "supplemental",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "parameterized_training_max_percentage",
+              "parameterId": "bbb_percentage",
+              "defaultBasisPoints": 3000,
+              "minimumBasisPoints": 3000,
+              "maximumBasisPoints": 7500
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "parameterized_training_max_percentage",
+              "parameterId": "bbb_percentage",
+              "defaultBasisPoints": 3000,
+              "minimumBasisPoints": 3000,
+              "maximumBasisPoints": 7500
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "parameterized_training_max_percentage",
+              "parameterId": "bbb_percentage",
+              "defaultBasisPoints": 3000,
+              "minimumBasisPoints": 3000,
+              "maximumBasisPoints": 7500
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "parameterized_training_max_percentage",
+              "parameterId": "bbb_percentage",
+              "defaultBasisPoints": 3000,
+              "minimumBasisPoints": 3000,
+              "maximumBasisPoints": 7500
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "parameterized_training_max_percentage",
+              "parameterId": "bbb_percentage",
+              "defaultBasisPoints": 3000,
+              "minimumBasisPoints": 3000,
+              "maximumBasisPoints": 7500
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_two_day_5x10_50",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "Source BBB two-day 5x10 at 50%",
+        "fr": "BBB source deux jours 5x10 à 50 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_variants"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_parity"
+        ]
+      },
+      "sessionMovementBindings": [
+        {
+          "sessionId": "overhead_press",
+          "movementId": "bench_press"
+        },
+        {
+          "sessionId": "deadlift",
+          "movementId": "squat"
+        },
+        {
+          "sessionId": "bench_press",
+          "movementId": "overhead_press"
+        },
+        {
+          "sessionId": "squat",
+          "movementId": "deadlift"
+        }
+      ],
+      "block": {
+        "id": "supplemental",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 5000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 5000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 5000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 5000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 5000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_two_day_5x10_60",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "Source BBB two-day 5x10 at 60%",
+        "fr": "BBB source deux jours 5x10 à 60 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_variants"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_parity"
+        ]
+      },
+      "sessionMovementBindings": [
+        {
+          "sessionId": "overhead_press",
+          "movementId": "bench_press"
+        },
+        {
+          "sessionId": "deadlift",
+          "movementId": "squat"
+        },
+        {
+          "sessionId": "bench_press",
+          "movementId": "overhead_press"
+        },
+        {
+          "sessionId": "squat",
+          "movementId": "deadlift"
+        }
+      ],
+      "block": {
+        "id": "supplemental",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 6000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 6000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 6000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 6000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 6000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "source_bbb_two_day_5x10_70",
+      "revision": 1,
+      "role": "supplemental",
+      "labels": {
+        "en": "Source BBB two-day 5x10 at 70%",
+        "fr": "BBB source deux jours 5x10 à 70 %"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_variants"
+      ],
+      "parameterSchemaIds": [],
+      "constraints": {
+        "setOrder": "declared"
+      },
+      "compatibilities": {
+        "generations": [
+          "source_parity"
+        ]
+      },
+      "sessionMovementBindings": [
+        {
+          "sessionId": "overhead_press",
+          "movementId": "bench_press"
+        },
+        {
+          "sessionId": "deadlift",
+          "movementId": "squat"
+        },
+        {
+          "sessionId": "bench_press",
+          "movementId": "overhead_press"
+        },
+        {
+          "sessionId": "squat",
+          "movementId": "deadlift"
+        }
+      ],
+      "block": {
+        "id": "supplemental",
+        "role": "supplemental",
+        "sets": [
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 7000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 7000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 7000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 7000
+            }
+          },
+          {
+            "repetitions": {
+              "type": "fixed",
+              "count": 10
+            },
+            "load": {
+              "type": "training_max_percentage",
+              "basisPoints": 7000
+            }
+          }
+        ]
+      }
     }
   ]
 }

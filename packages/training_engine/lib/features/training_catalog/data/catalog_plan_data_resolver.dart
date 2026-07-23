@@ -5,7 +5,11 @@ import '../../cycle_generation/domain/cycle_execution_options.dart';
 import 'catalog_source_document_codec.dart';
 
 final class CatalogPlanDataResolver {
-  const CatalogPlanDataResolver();
+  const CatalogPlanDataResolver({
+    this.componentMaterializer = const PlanComponentMaterializer(),
+  });
+
+  final PlanComponentMaterializer componentMaterializer;
 
   CatalogPlan resolve({
     required int catalogVersion,
@@ -71,6 +75,13 @@ final class CatalogPlanDataResolver {
           reference: component.reference,
           block: component.block,
           mainWorkSemantics: component.mainWorkSemantics,
+          sessionMovementBindings: [
+            for (final binding in component.sessionMovementBindings)
+              PlanSessionMovementBinding(
+                sessionId: MovementId(binding.sessionId),
+                movementId: MovementId(binding.movementId),
+              ),
+          ],
           sessionIds: [
             for (final id in [
               ..._targetIds(component.compatibilities, 'sessionIds'),
@@ -88,6 +99,15 @@ final class CatalogPlanDataResolver {
           ],
         ),
     ];
+    _validateActiveSessionMovementBindings(
+      selectedWeekPlans: selectedWeekPlans,
+      selectedPhases: selectedPhases,
+      components: planComponents,
+      sessions: planSessions,
+      scheduledMovementIds: scheduledMovementIds,
+      hasVariantSessionTargets: sessionTargets.isNotEmpty,
+      hasVariantMovementTargets: movementTargets.isNotEmpty,
+    );
     return CatalogPlan(
       catalogVersion: catalogVersion,
       definitionId: template.id,
@@ -230,7 +250,7 @@ final class CatalogPlanDataResolver {
               sessionId: session.id,
               blocks: [
                 for (final component in recipeComponents)
-                  if (_targetsSession(component, session)) component.block,
+                  ...componentMaterializer.blocksFor(component, session),
               ],
             ),
     ];
@@ -242,20 +262,62 @@ final class CatalogPlanDataResolver {
     Map<String, PlanComponent> components, {
     required bool deloadOnly,
   }) {
-    final base = [
+    final baseBlocks = [
       for (final reference in week.components)
         if (components[_key(reference)] case final component?)
-          if (_targetsSession(component, session)) component,
+          ...componentMaterializer.blocksFor(component, session),
     ];
-    if (deloadOnly) return base.any((item) => item.block.role == 'deload');
-    return base.any((item) => item.block.role != 'warm_up');
+    if (deloadOnly) return baseBlocks.any((block) => block.role == 'deload');
+    return baseBlocks.any((block) => block.role != 'warm_up');
   }
 
-  bool _targetsSession(PlanComponent component, PlanSession session) =>
-      (component.sessionIds.isEmpty ||
-          component.sessionIds.contains(session.id)) &&
-      (component.movementIds.isEmpty ||
-          component.movementIds.any(session.movementIds.contains));
+  void _validateActiveSessionMovementBindings({
+    required List<CatalogWeekPlan> selectedWeekPlans,
+    required List<CatalogPhase> selectedPhases,
+    required List<PlanComponent> components,
+    required List<PlanSession> sessions,
+    required List<String> scheduledMovementIds,
+    required bool hasVariantSessionTargets,
+    required bool hasVariantMovementTargets,
+  }) {
+    final activeReferences = {
+      for (final week in selectedWeekPlans) ...week.components.map(_key),
+      for (final phase in selectedPhases)
+        for (final week in phase.weekPlans) ...week.components.map(_key),
+    };
+    final sessionIds = {for (final session in sessions) session.id};
+    final movementIds = {
+      for (final movementId in scheduledMovementIds) MovementId(movementId),
+    };
+    for (final component in components) {
+      final bindings = component.sessionMovementBindings;
+      if (bindings.isEmpty ||
+          !activeReferences.contains(_key(component.reference))) {
+        continue;
+      }
+      if (hasVariantSessionTargets || hasVariantMovementTargets) {
+        throw FormatException(
+          'Component ${_key(component.reference)} uses '
+          'sessionMovementBindings and cannot be combined with variant '
+          'sessionIds or movementIds compatibilities.',
+        );
+      }
+      for (final binding in bindings) {
+        if (!sessionIds.contains(binding.sessionId)) {
+          throw FormatException(
+            'Component ${_key(component.reference)} binds unknown session '
+            '${binding.sessionId.value}.',
+          );
+        }
+        if (!movementIds.contains(binding.movementId)) {
+          throw FormatException(
+            'Component ${_key(component.reference)} binds movement '
+            '${binding.movementId.value} outside the selected schedule.',
+          );
+        }
+      }
+    }
+  }
 
   String _key(ComponentReference reference) =>
       '${reference.id}@${reference.revision}';

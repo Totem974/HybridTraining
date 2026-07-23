@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "kind": "assistancePlans",
+  "assistancePlans": [
+    {
+      "id": "source_bbb_two_day_assistance",
+      "revision": 1,
+      "labels": {
+        "en": "Source BBB two-day assistance",
+        "fr": "Assistance BBB source deux jours"
+      },
+      "sourceRuleIds": [
+        "app.source_calculator.bbb_assistance_mapping"
+      ],
+      "slots": [
+        {
+          "id": "press_assistance",
+          "sessionRole": "overhead_press",
+          "minimumExercises": 1,
+          "maximumExercises": 1,
+          "allowedCategories": [
+            "pull"
+          ],
+          "prescriptions": [
+            {
+              "exerciseId": "pull_up",
+              "sets": 5,
+              "repetitions": {
+                "type": "fixed",
+                "count": 10
+              },
+              "load": {
+                "type": "unconfigured"
+              }
+            }
+          ]
+        },
+        {
+          "id": "deadlift_assistance",
+          "sessionRole": "deadlift",
+          "minimumExercises": 1,
+          "maximumExercises": 1,
+          "allowedCategories": [
+            "singleLegCore"
+          ],
+          "prescriptions": [
+            {
+              "exerciseId": "good_morning",
+              "sets": 5,
+              "repetitions": {
+                "type": "fixed",
+                "count": 10
+              },
+              "load": {
+                "type": "unconfigured"
+              }
+            }
+          ]
+        },
+        {
+          "id": "bench_assistance",
+          "sessionRole": "bench_press",
+          "minimumExercises": 1,
+          "maximumExercises": 1,
+          "allowedCategories": [
+            "pull"
+          ],
+          "prescriptions": [
+            {
+              "exerciseId": "dumbbell_row",
+              "sets": 5,
+              "repetitions": {
+                "type": "fixed",
+                "count": 10
+              },
+              "load": {
+                "type": "unconfigured"
+              }
+            }
+          ]
+        },
+        {
+          "id": "squat_assistance",
+          "sessionRole": "squat",
+          "minimumExercises": 1,
+          "maximumExercises": 1,
+          "allowedCategories": [
+            "singleLegCore"
+          ],
+          "prescriptions": [
+            {
+              "exerciseId": "good_morning",
+              "sets": 5,
+              "repetitions": {
+                "type": "fixed",
+                "count": 10
+              },
+              "load": {
+                "type": "unconfigured"
+              }
+            }
+          ]
+        }
+      ],
+      "constraints": [
+        "sourceCalculatorExactOneAssistanceExercisePerMainLift"
+      ],
+      "compatibleExerciseCategories": [
+        "pull",
+        "singleLegCore"
+      ]
+    }
+  ]
+}

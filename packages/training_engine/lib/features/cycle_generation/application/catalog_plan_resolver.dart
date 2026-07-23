@@ -22,6 +22,7 @@ final class PlanComponent {
     required this.block,
     this.sessionIds = const [],
     this.movementIds = const [],
+    this.sessionMovementBindings = const [],
     this.mainWorkSemantics,
   });
 
@@ -29,7 +30,69 @@ final class PlanComponent {
   final BlockDefinition block;
   final List<MovementId> sessionIds;
   final List<MovementId> movementIds;
+  final List<PlanSessionMovementBinding> sessionMovementBindings;
   final MainWorkSemantics? mainWorkSemantics;
+}
+
+final class PlanSessionMovementBinding {
+  const PlanSessionMovementBinding({
+    required this.sessionId,
+    required this.movementId,
+  });
+
+  final MovementId sessionId;
+  final MovementId movementId;
+}
+
+final class PlanComponentMaterializer {
+  const PlanComponentMaterializer();
+
+  List<BlockDefinition> blocksFor(
+    PlanComponent component,
+    PlanSession session,
+  ) {
+    if (component.sessionIds.isNotEmpty &&
+        !component.sessionIds.contains(session.id)) {
+      return const [];
+    }
+    final bindings = component.sessionMovementBindings
+        .where((binding) => binding.sessionId == session.id)
+        .toList(growable: false);
+    if (component.sessionMovementBindings.isNotEmpty) {
+      if (bindings.isEmpty) return const [];
+      if (bindings.length != 1) {
+        throw FormatException(
+          'Component ${component.reference.id} has ambiguous movement '
+          'bindings for session ${session.id.value}.',
+        );
+      }
+      return List.unmodifiable([
+        _materialize(component, bindings.single.movementId),
+      ]);
+    }
+    final targets = component.movementIds.isEmpty
+        ? component.block.movementId == null
+              ? session.movementIds.isEmpty
+                    ? <MovementId>[session.id]
+                    : session.movementIds
+              : <MovementId>[component.block.movementId!]
+        : component.movementIds
+              .where(session.movementIds.contains)
+              .toList(growable: false);
+    return List.unmodifiable([
+      for (final movement in targets) _materialize(component, movement),
+    ]);
+  }
+
+  BlockDefinition _materialize(PlanComponent component, MovementId movement) =>
+      BlockDefinition(
+        id: component.block.id,
+        role: component.block.role,
+        sets: component.block.sets,
+        movementId: movement,
+        mainWorkSemantics:
+            component.mainWorkSemantics ?? component.block.mainWorkSemantics,
+      );
 }
 
 final class CatalogPlan {
@@ -67,9 +130,13 @@ final class CatalogPlan {
 }
 
 final class CatalogPlanResolver {
-  const CatalogPlanResolver({this.phaseExpander = const PhaseExpander()});
+  const CatalogPlanResolver({
+    this.phaseExpander = const PhaseExpander(),
+    this.componentMaterializer = const PlanComponentMaterializer(),
+  });
 
   final PhaseExpander phaseExpander;
+  final PlanComponentMaterializer componentMaterializer;
 
   ResolvedCycleDefinition resolve(CatalogPlan plan) {
     if (plan.weekPlans.isEmpty == plan.phases.isEmpty) {
@@ -150,32 +217,7 @@ final class CatalogPlanResolver {
           'Unknown component reference ${_key(reference)}.',
         );
       }
-      if (component.sessionIds.isNotEmpty &&
-          !component.sessionIds.contains(session.id)) {
-        continue;
-      }
-      final targets = component.movementIds.isEmpty
-          ? component.block.movementId == null
-                ? session.movementIds.isEmpty
-                      ? <MovementId>[session.id]
-                      : session.movementIds
-                : <MovementId>[component.block.movementId!]
-          : component.movementIds
-                .where(session.movementIds.contains)
-                .toList(growable: false);
-      for (final movement in targets) {
-        result.add(
-          BlockDefinition(
-            id: component.block.id,
-            role: component.block.role,
-            sets: component.block.sets,
-            movementId: movement,
-            mainWorkSemantics:
-                component.mainWorkSemantics ??
-                component.block.mainWorkSemantics,
-          ),
-        );
-      }
+      result.addAll(componentMaterializer.blocksFor(component, session));
     }
     return List.unmodifiable(result);
   }

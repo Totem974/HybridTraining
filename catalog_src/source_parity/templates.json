@@ -150,6 +150,130 @@
           ]
         },
         {
+          "id": "less_boring_5x10",
+          "revision": 1,
+          "loadRoundingPolicy": "up",
+          "labels": {
+            "en": "Less Boring",
+            "fr": "Less Boring"
+          },
+          "sourceRuleIds": [
+            "app.source_calculator.bbb_variants"
+          ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
+          "optionSchemaId": {
+            "id": "source_bbb_original_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_four_day_fixed",
+              "revision": 1
+            },
+            {
+              "id": "schedule_three_day_rotating",
+              "revision": 1
+            }
+          ],
+          "assistancePlanIds": [
+            {
+              "id": "source_bbb_exact_assistance",
+              "revision": 1
+            }
+          ],
+          "conditioningDefinitionIds": [],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "supplementalMovementRelation": "oppositeMain"
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_four_day_fixed",
+            "includeWarmUp": true,
+            "includeDeload": true,
+            "assistancePlanId": "source_bbb_exact_assistance",
+            "percentageParametersByMovement": {
+              "overhead_press": {
+                "bbb_percentage": 3000
+              },
+              "deadlift": {
+                "bbb_percentage": 3000
+              },
+              "bench_press": {
+                "bbb_percentage": 3000
+              },
+              "squat": {
+                "bbb_percentage": 3000
+              }
+            }
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_less_boring_5x10_variable",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_less_boring_5x10_variable",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_less_boring_5x10_variable",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
           "id": "five_by_five_80",
           "revision": 1,
           "loadRoundingPolicy": "up",
@@ -686,6 +810,113 @@
                 },
                 {
                   "id": "beyond_bbb_variation_ii_5x5_75",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 4,
+              "componentIds": [
+                {
+                  "id": "deload_original_40_50_60",
+                  "revision": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "two_days_per_week",
+          "revision": 1,
+          "loadRoundingPolicy": "up",
+          "labels": {
+            "en": "2 Days/Week",
+            "fr": "2 jours/semaine"
+          },
+          "sourceRuleIds": [
+            "app.source_calculator.bbb_variants",
+            "app.source_calculator.bbb_assistance_mapping"
+          ],
+          "optionRecipeId": {
+            "id": "classic_additional_options",
+            "revision": 1
+          },
+          "optionSchemaId": {
+            "id": "source_bbb_fixed_options",
+            "revision": 1
+          },
+          "scheduleIds": [
+            {
+              "id": "schedule_two_day_rotating_four_lifts",
+              "revision": 1
+            }
+          ],
+          "assistancePlanIds": [
+            {
+              "id": "source_bbb_two_day_assistance",
+              "revision": 1
+            }
+          ],
+          "conditioningDefinitionIds": [],
+          "compatibilities": {
+            "trainingMaxRequired": true,
+            "supplementalMovementRelation": "oppositeMain"
+          },
+          "validExample": {
+            "trainingMaxRatioBasisPoints": 9000,
+            "scheduleId": "schedule_two_day_rotating_four_lifts",
+            "includeWarmUp": true,
+            "includeDeload": true,
+            "assistancePlanId": "source_bbb_two_day_assistance"
+          },
+          "weekPlans": [
+            {
+              "weekNumber": 1,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_5_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_two_day_5x10_50",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 2,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_3_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_two_day_5x10_60",
+                  "revision": 1
+                }
+              ]
+            },
+            {
+              "weekNumber": 3,
+              "componentIds": [
+                {
+                  "id": "warmup_original_40_50_60",
+                  "revision": 1
+                },
+                {
+                  "id": "main_standard_531_week",
+                  "revision": 1
+                },
+                {
+                  "id": "source_bbb_two_day_5x10_70",
                   "revision": 1
                 }
               ]

@@ -12,13 +12,25 @@ final class SourceComponent {
     required this.block,
     required this.constraints,
     required this.compatibilities,
+    this.sessionMovementBindings = const [],
     this.mainWorkSemantics,
   });
   final ComponentReference reference;
   final BlockDefinition block;
   final Map<String, Object?> constraints;
   final Map<String, Object?> compatibilities;
+  final List<SourceSessionMovementBinding> sessionMovementBindings;
   final MainWorkSemantics? mainWorkSemantics;
+}
+
+final class SourceSessionMovementBinding {
+  const SourceSessionMovementBinding({
+    required this.sessionId,
+    required this.movementId,
+  });
+
+  final String sessionId;
+  final String movementId;
 }
 
 final class SourceSchedule {
@@ -165,28 +177,89 @@ final class CatalogSourceDocumentCodec {
     return _list(root, 'components')
         .map((value) {
           final map = _map(value, 'component');
-          _keys(map, const {
-            'id',
-            'revision',
-            'role',
-            'labels',
-            'sourceRuleIds',
-            'parameterSchemaIds',
-            'constraints',
-            'compatibilities',
-            'block',
-          });
+          _keys(
+            map,
+            const {
+              'id',
+              'revision',
+              'role',
+              'labels',
+              'sourceRuleIds',
+              'parameterSchemaIds',
+              'constraints',
+              'compatibilities',
+              'block',
+            },
+            optional: const {'sessionMovementBindings'},
+          );
           final block = _block(_map(map['block'], 'block'));
           final constraints = _map(map['constraints'], 'constraints');
+          final compatibilities = _map(
+            map['compatibilities'],
+            'compatibilities',
+          );
+          final bindings = _sessionMovementBindings(
+            map['sessionMovementBindings'],
+          );
+          if (bindings.isNotEmpty) {
+            if (block.movementId != null) {
+              throw const FormatException(
+                'sessionMovementBindings cannot be combined with '
+                'block.movementId.',
+              );
+            }
+            if (constraints.containsKey('movementRelation')) {
+              throw const FormatException(
+                'sessionMovementBindings cannot be combined with '
+                'constraints.movementRelation.',
+              );
+            }
+            if (compatibilities.containsKey('sessionIds') ||
+                compatibilities.containsKey('movementIds')) {
+              throw const FormatException(
+                'sessionMovementBindings cannot be combined with component '
+                'sessionIds or movementIds compatibilities.',
+              );
+            }
+          }
           return SourceComponent(
             reference: _recordReference(map),
             block: block,
             constraints: constraints,
-            compatibilities: _map(map['compatibilities'], 'compatibilities'),
+            compatibilities: compatibilities,
+            sessionMovementBindings: bindings,
             mainWorkSemantics: _mainWorkSemantics(block, constraints),
           );
         })
         .toList(growable: false);
+  }
+
+  List<SourceSessionMovementBinding> _sessionMovementBindings(Object? value) {
+    if (value == null) return const [];
+    if (value is! List<Object?> || value.isEmpty) {
+      throw const FormatException(
+        'sessionMovementBindings must be a non-empty list.',
+      );
+    }
+    final sessionIds = <String>{};
+    return List.unmodifiable([
+      for (final item in value)
+        (() {
+          final binding = _map(item, 'sessionMovementBinding');
+          _keys(binding, const {'sessionId', 'movementId'});
+          final sessionId = _nonEmptyString(binding, 'sessionId');
+          final movementId = _nonEmptyString(binding, 'movementId');
+          if (!sessionIds.add(sessionId)) {
+            throw FormatException(
+              'Duplicate sessionMovementBinding for session $sessionId.',
+            );
+          }
+          return SourceSessionMovementBinding(
+            sessionId: sessionId,
+            movementId: movementId,
+          );
+        })(),
+    ]);
   }
 
   List<SourceSchedule> decodeSchedules(String source) {

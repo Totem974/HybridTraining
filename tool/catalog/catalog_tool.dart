@@ -938,22 +938,77 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
         );
       }
     case 'components':
-      _exact(value, {
-        'id',
-        'revision',
-        'role',
-        'labels',
-        'sourceRuleIds',
-        'parameterSchemaIds',
-        'constraints',
-        'compatibilities',
-        'block',
-      }, at);
+      _exact(
+        value,
+        {
+          'id',
+          'revision',
+          'role',
+          'labels',
+          'sourceRuleIds',
+          'parameterSchemaIds',
+          'constraints',
+          'compatibilities',
+          'block',
+        },
+        at,
+        optional: {'sessionMovementBindings'},
+      );
       _common(value, at);
       _strings(value['parameterSchemaIds'], '$at.parameterSchemaIds');
-      _object(value['constraints'], '$at.constraints');
-      _object(value['compatibilities'], '$at.compatibilities');
-      _block(value['block'], '$at.block');
+      final constraints = _object(value['constraints'], '$at.constraints');
+      final compatibilities = _object(
+        value['compatibilities'],
+        '$at.compatibilities',
+      );
+      final block = _object(value['block'], '$at.block');
+      _block(block, '$at.block');
+      if (value['sessionMovementBindings'] case final rawBindings?) {
+        final bindings = _objects(rawBindings, '$at.sessionMovementBindings');
+        if (bindings.isEmpty) {
+          throw FormatException(
+            '$at.sessionMovementBindings must not be empty',
+          );
+        }
+        final sessionIds = <String>{};
+        for (var index = 0; index < bindings.length; index++) {
+          final binding = bindings[index];
+          final bindingAt = '$at.sessionMovementBindings[$index]';
+          _exact(binding, {'sessionId', 'movementId'}, bindingAt);
+          for (final key in const ['sessionId', 'movementId']) {
+            final id = binding[key];
+            if (id is! String || id.trim().isEmpty) {
+              throw FormatException(
+                '$bindingAt.$key must be a non-empty string',
+              );
+            }
+          }
+          final sessionId = binding['sessionId']! as String;
+          if (!sessionIds.add(sessionId)) {
+            throw FormatException(
+              '$at.sessionMovementBindings duplicates session $sessionId',
+            );
+          }
+        }
+        if (block['movementId'] != null) {
+          throw FormatException(
+            '$at.sessionMovementBindings conflicts with block.movementId',
+          );
+        }
+        if (constraints.containsKey('movementRelation')) {
+          throw FormatException(
+            '$at.sessionMovementBindings conflicts with '
+            'constraints.movementRelation',
+          );
+        }
+        if (compatibilities.containsKey('sessionIds') ||
+            compatibilities.containsKey('movementIds')) {
+          throw FormatException(
+            '$at.sessionMovementBindings conflicts with component '
+            'sessionIds or movementIds compatibilities',
+          );
+        }
+      }
     case 'schedules':
       _exact(value, {
         'id',

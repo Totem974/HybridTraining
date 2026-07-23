@@ -18,6 +18,14 @@ const _goldenVariants = {
   'bbb-beyond-variation-1-4-day': 'beyond_variation_one',
   'bbb-beyond-variation-2-4-day': 'beyond_variation_two',
 };
+const _sameLiftVariantIds = [
+  'original_5x10',
+  'five_by_five_80',
+  'five_by_three_90',
+  'five_by_one_100',
+  'beyond_variation_one',
+  'beyond_variation_two',
+];
 
 void main() {
   late SourceTemplate template;
@@ -79,18 +87,23 @@ void main() {
             as Map<String, Object?>;
   });
 
-  test('source documents expose exactly the six same-lift BBB variants', () {
+  test('source documents preserve the six same-lift BBB variants', () {
     expect(template.surface, TemplateSurface.cyclePublic);
-    expect(template.variants.map((variant) => variant.id), [
-      'original_5x10',
-      'five_by_five_80',
-      'five_by_three_90',
-      'five_by_one_100',
-      'beyond_variation_one',
-      'beyond_variation_two',
-    ]);
+    expect(
+      template.variants.map((variant) => variant.id),
+      containsAll([
+        ..._sameLiftVariantIds,
+        'less_boring_5x10',
+        'two_days_per_week',
+      ]),
+    );
 
-    for (final variant in template.variants) {
+    final sameLiftVariants = template.variants
+        .where((variant) => _sameLiftVariantIds.contains(variant.id))
+        .toList(growable: false);
+    expect(sameLiftVariants.map((variant) => variant.id), _sameLiftVariantIds);
+
+    for (final variant in sameLiftVariants) {
       expect(variant.scheduleIds.map((reference) => reference.id), [
         _fourDayScheduleId,
         _threeDayScheduleId,
@@ -146,8 +159,7 @@ void main() {
   });
 
   for (final entry in _goldenVariants.entries) {
-    test('${entry.value} matches exact source structure and repetitions '
-        '(load strings await source upward-rounding policy)', () {
+    test('${entry.value} matches exact source structure and repetitions', () {
       final actual = _compile(
         template: template,
         variantId: entry.value,
@@ -493,12 +505,9 @@ List<Map<String, Object?>> _consecutiveExercises(List<GeneratedBlock> blocks) {
   return result;
 }
 
-// The captured calculator rounds every load upward to the next plate
-// increment, while the current core rounds to the nearest increment. This
-// canonical comparison intentionally freezes the exact exercise and
-// repetition topology. Planned-load string parity is gated on a separate,
-// explicit source-rounding policy in the core; catalog values must not emulate
-// that behavior by altering training maxes or percentages.
+// This canonical comparison freezes the exact exercise and repetition
+// topology. Planned-load string parity is covered by the dedicated exact
+// source golden tests.
 String _generatedRepetitions(GeneratedSet set) =>
     switch (set.repetitions['type']) {
       'fixed' => '${set.repetitions['count']}',
