@@ -21,12 +21,14 @@ final class PlanComponent {
     required this.block,
     this.sessionIds = const [],
     this.movementIds = const [],
+    this.mainWorkSemantics,
   });
 
   final ComponentReference reference;
   final BlockDefinition block;
   final List<MovementId> sessionIds;
   final List<MovementId> movementIds;
+  final MainWorkSemantics? mainWorkSemantics;
 }
 
 final class CatalogPlan {
@@ -164,6 +166,9 @@ final class CatalogPlanResolver {
             role: component.block.role,
             sets: component.block.sets,
             movementId: movement,
+            mainWorkSemantics:
+                component.mainWorkSemantics ??
+                component.block.mainWorkSemantics,
           ),
         );
       }

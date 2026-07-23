@@ -11,11 +11,13 @@ final class SourceComponent {
     required this.block,
     required this.constraints,
     required this.compatibilities,
+    this.mainWorkSemantics,
   });
   final ComponentReference reference;
   final BlockDefinition block;
   final Map<String, Object?> constraints;
   final Map<String, Object?> compatibilities;
+  final MainWorkSemantics? mainWorkSemantics;
 }
 
 final class SourceSchedule {
@@ -171,11 +173,14 @@ final class CatalogSourceDocumentCodec {
             'compatibilities',
             'block',
           });
+          final block = _block(_map(map['block'], 'block'));
+          final constraints = _map(map['constraints'], 'constraints');
           return SourceComponent(
             reference: _recordReference(map),
-            block: _block(_map(map['block'], 'block')),
-            constraints: _map(map['constraints'], 'constraints'),
+            block: block,
+            constraints: constraints,
             compatibilities: _map(map['compatibilities'], 'compatibilities'),
+            mainWorkSemantics: _mainWorkSemantics(block, constraints),
           );
         })
         .toList(growable: false);
@@ -608,6 +613,115 @@ final class CatalogSourceDocumentCodec {
           .toList(growable: false),
     );
   }
+
+  MainWorkSemantics? _mainWorkSemantics(
+    BlockDefinition block,
+    Map<String, Object?> constraints,
+  ) {
+    if (!const {
+      'main_work',
+      'main work',
+      'deload',
+      'training_max_test',
+    }.contains(block.role)) {
+      return null;
+    }
+    if (block.sets.isEmpty) {
+      throw const FormatException(
+        'A main-work semantic block requires at least one prescribed set.',
+      );
+    }
+    final setRoles = constraints.containsKey('setRoles')
+        ? _mainWorkSetRoles(constraints['setRoles'], block.sets.length)
+        : _defaultMainWorkSetRoles(block.sets.length);
+    _validateMainWorkSetRoles(setRoles);
+    final topIndex = setRoles.indexOf(MainWorkSetRole.top);
+    final policyValue = constraints['lastSet'];
+    final lastSetPolicy = policyValue == null
+        ? _derivedLastSetPolicy(
+            block.sets[topIndex < 0 ? block.sets.length - 1 : topIndex],
+          )
+        : switch (policyValue) {
+            'amrapPermission' => MainWorkLastSetPolicy.amrapPermitted,
+            'fixed' => MainWorkLastSetPolicy.fixed,
+            _ => throw FormatException(
+              'Unknown main-work last-set policy $policyValue.',
+            ),
+          };
+    final waveValue = constraints['weekRole'];
+    final waveRole = waveValue == null
+        ? null
+        : switch (waveValue) {
+            'five' => MainWorkWaveRole.five,
+            'three' => MainWorkWaveRole.three,
+            'fiveThreeOne' => MainWorkWaveRole.fiveThreeOne,
+            'deload' => MainWorkWaveRole.deload,
+            'test' || 'trainingMaxTest' => MainWorkWaveRole.test,
+            _ => throw FormatException(
+              'Unknown main-work week role $waveValue.',
+            ),
+          };
+    return MainWorkSemantics(
+      waveRole: waveRole,
+      lastSetPolicy: lastSetPolicy,
+      setRoles: List.unmodifiable(setRoles),
+    );
+  }
+
+  List<MainWorkSetRole?> _mainWorkSetRoles(Object? value, int setCount) {
+    if (value is! List<Object?>) {
+      throw const FormatException('setRoles must be a list.');
+    }
+    if (value.length != setCount) {
+      throw const FormatException(
+        'setRoles must contain one entry per prescribed set.',
+      );
+    }
+    return [
+      for (final role in value)
+        switch (role) {
+          null => null,
+          'first' => MainWorkSetRole.first,
+          'second' => MainWorkSetRole.second,
+          'top' => MainWorkSetRole.top,
+          'heavySingle' || 'heavy_single' => MainWorkSetRole.heavySingle,
+          _ => throw FormatException('Unknown main-work set role $role.'),
+        },
+    ];
+  }
+
+  List<MainWorkSetRole?> _defaultMainWorkSetRoles(int setCount) => [
+    for (var index = 0; index < setCount; index++)
+      switch ((setCount, index)) {
+        (1, 0) => MainWorkSetRole.top,
+        (2, 0) => MainWorkSetRole.first,
+        (2, 1) => MainWorkSetRole.top,
+        (_, 0) => MainWorkSetRole.first,
+        (_, 1) => MainWorkSetRole.second,
+        (_, 2) => MainWorkSetRole.top,
+        _ => null,
+      },
+  ];
+
+  void _validateMainWorkSetRoles(List<MainWorkSetRole?> roles) {
+    for (final role in const [
+      MainWorkSetRole.first,
+      MainWorkSetRole.second,
+      MainWorkSetRole.top,
+    ]) {
+      if (roles.where((candidate) => candidate == role).length > 1) {
+        throw FormatException('Main-work set role ${role.name} is duplicated.');
+      }
+    }
+  }
+
+  MainWorkLastSetPolicy _derivedLastSetPolicy(
+    PrescribedSetDefinition definition,
+  ) => switch (definition.repetitions) {
+    AmrapRepetitions() ||
+    PlusSetRepetitions() => MainWorkLastSetPolicy.amrapPermitted,
+    _ => MainWorkLastSetPolicy.fixed,
+  };
 
   RepetitionPrescription _repetitions(Map<String, Object?> map) {
     switch (_string(map, 'type')) {

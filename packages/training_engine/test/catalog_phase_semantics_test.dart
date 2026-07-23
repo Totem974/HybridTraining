@@ -32,6 +32,11 @@ void main() {
         components: [
           PlanComponent(
             reference: _componentReference,
+            mainWorkSemantics: MainWorkSemantics(
+              waveRole: MainWorkWaveRole.five,
+              lastSetPolicy: MainWorkLastSetPolicy.fixed,
+              setRoles: [MainWorkSetRole.top],
+            ),
             block: BlockDefinition(
               id: 'main',
               role: 'main',
@@ -78,6 +83,18 @@ void main() {
     );
     expect(resolved.weeks.first.sessions.single.role, _sessionId.value);
     expect(resolved.weeks.first.sessions.single.sourceRole, 'multiLift');
+    expect(
+      resolved
+          .weeks
+          .first
+          .sessions
+          .single
+          .blocks
+          .single
+          .mainWorkSemantics
+          ?.waveRole,
+      MainWorkWaveRole.five,
+    );
   });
 
   test('direct week plans receive a stable cycle origin', () {

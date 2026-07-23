@@ -70,6 +70,7 @@ final class CatalogPlanDataResolver {
         PlanComponent(
           reference: component.reference,
           block: component.block,
+          mainWorkSemantics: component.mainWorkSemantics,
           sessionIds: [
             for (final id in [
               ..._targetIds(component.compatibilities, 'sessionIds'),

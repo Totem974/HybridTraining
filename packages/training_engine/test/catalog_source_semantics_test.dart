@@ -6,6 +6,35 @@ import 'package:training_engine/training_engine.dart';
 void main() {
   const codec = CatalogSourceDocumentCodec();
 
+  test('source main-work constraints become typed execution semantics', () {
+    final components = codec.decodeComponents(
+      File(
+        '../../catalog_src/shared/cycle_components_v1.json',
+      ).readAsStringSync(),
+    );
+    final standardFive = components.singleWhere(
+      (component) => component.reference.id == 'main_standard_5_week',
+    );
+    final fivesPro = components.singleWhere(
+      (component) => component.reference.id == 'main_fives_pro_5_week',
+    );
+
+    expect(standardFive.mainWorkSemantics?.waveRole, MainWorkWaveRole.five);
+    expect(
+      standardFive.mainWorkSemantics?.lastSetPolicy,
+      MainWorkLastSetPolicy.amrapPermitted,
+    );
+    expect(standardFive.mainWorkSemantics?.setRoles, [
+      MainWorkSetRole.first,
+      MainWorkSetRole.second,
+      MainWorkSetRole.top,
+    ]);
+    expect(
+      fivesPro.mainWorkSemantics?.lastSetPolicy,
+      MainWorkLastSetPolicy.fixed,
+    );
+  });
+
   test('source schedules preserve their type, role, and movement groups', () {
     final schedules = <SourceSchedule>[
       for (final path in const [

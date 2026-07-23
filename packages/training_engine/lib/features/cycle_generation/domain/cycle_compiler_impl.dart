@@ -211,20 +211,17 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
   ) {
     final result = <GeneratedSet>[];
     final options = request.cycleOptions.normalized().mainWork;
-    final indices = List<int>.generate(block.sets.length, (index) => index);
-    final orderedIndices =
-        _isMainWork(block) && options.setOrder == WorkSetOrder.bastard
-        ? indices.reversed
-        : indices;
-    final plusTarget = _isMainWork(block)
-        ? _heaviestMainWorkSetIndex(block)
-        : null;
+    final orderedIndices = _isMainWork(block)
+        ? _orderedMainWorkSetIndices(block, options.setOrder)
+        : List<int>.generate(block.sets.length, (index) => index);
+    final plusTarget = _isMainWork(block) ? _mainWorkPlusTarget(block) : null;
     for (final index in orderedIndices) {
       final definition = _effectiveMainWorkSet(
         block.sets[index],
         index: index,
         plusTarget: plusTarget,
         mode: options.plusSet,
+        lastSetPolicy: block.mainWorkSemantics?.lastSetPolicy,
       );
       if (definition.load case final TrainingMaxRampLoad ramp) {
         result.addAll(
@@ -550,12 +547,24 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
         'A relative load found multiple main-work blocks for its movement.',
       );
     }
-    final workSets = candidates.single.sets;
-    final index = switch (position) {
-      RelativeSetPosition.first => 0,
-      RelativeSetPosition.second => workSets.length < 2 ? null : 1,
-      RelativeSetPosition.top => workSets.length - 1,
+    final mainWork = candidates.single;
+    final workSets = mainWork.sets;
+    final semanticRole = switch (position) {
+      RelativeSetPosition.first => MainWorkSetRole.first,
+      RelativeSetPosition.second => MainWorkSetRole.second,
+      RelativeSetPosition.top => MainWorkSetRole.top,
     };
+    final semantics = _semanticsFor(mainWork);
+    final index =
+        semantics?.indexOf(semanticRole) ??
+        (semantics == null
+            ? switch (position) {
+                RelativeSetPosition.first => workSets.isEmpty ? null : 0,
+                RelativeSetPosition.second => workSets.length < 2 ? null : 1,
+                RelativeSetPosition.top =>
+                  workSets.isEmpty ? null : workSets.length - 1,
+              }
+            : null);
     if (index == null || workSets.isEmpty) {
       throw const CycleGenerationException(
         CycleGenerationErrorCode.missingRelativeLoadTarget,
@@ -598,7 +607,14 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
           roles.contains(block.role) &&
           (block.movementId == null || block.movementId == movement),
     )) {
-      for (final set in block.sets) {
+      final semantics = _semanticsFor(block);
+      final semanticTop = semantics?.indexOf(MainWorkSetRole.top);
+      final targetSets = semanticTop == null
+          ? semantics == null
+                ? block.sets
+                : const <PrescribedSetDefinition>[]
+          : [block.sets[semanticTop]];
+      for (final set in targetSets) {
         switch (set.load) {
           case TrainingMaxPercentageLoad(:final percentage):
             values.add(percentage);
@@ -720,22 +736,19 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
     final transformed = <WeekDefinition>[];
     for (final target in definition.weeks) {
       final sourceNumber = target.origin?.sourceWeekNumber ?? target.number;
-      final desiredNumber = switch (order) {
-        WorkWeekOrder.catalog => sourceNumber,
-        WorkWeekOrder.fiveThreeOne => sourceNumber,
-        WorkWeekOrder.threeFiveOne => switch (sourceNumber) {
-          1 => 2,
-          2 => 1,
-          _ => sourceNumber,
-        },
-      };
-      final donors = definition.weeks.where(
-        (candidate) =>
-            _samePhase(target, candidate) &&
-            (candidate.origin?.sourceWeekNumber ?? candidate.number) ==
-                desiredNumber,
-      );
-      final donor = donors.length == 1 ? donors.single : target;
+      final desiredWave = _desiredWaveRole(order, sourceNumber);
+      final semanticDonors = desiredWave == null
+          ? const <WeekDefinition>[]
+          : definition.weeks
+                .where(
+                  (candidate) =>
+                      _samePhase(target, candidate) &&
+                      _weekWaveRole(candidate) == desiredWave,
+                )
+                .toList(growable: false);
+      final donor = semanticDonors.length == 1
+          ? semanticDonors.single
+          : _legacyWeekOrderDonor(definition, target, order, sourceNumber);
       transformed.add(
         WeekDefinition(
           number: target.number,
@@ -770,13 +783,59 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
         leftOrigin.phaseIteration == rightOrigin.phaseIteration;
   }
 
+  MainWorkWaveRole? _desiredWaveRole(WorkWeekOrder order, int position) =>
+      switch ((order, position)) {
+        (WorkWeekOrder.fiveThreeOne, 1) => MainWorkWaveRole.five,
+        (WorkWeekOrder.fiveThreeOne, 2) => MainWorkWaveRole.three,
+        (WorkWeekOrder.fiveThreeOne, 3) => MainWorkWaveRole.fiveThreeOne,
+        (WorkWeekOrder.threeFiveOne, 1) => MainWorkWaveRole.three,
+        (WorkWeekOrder.threeFiveOne, 2) => MainWorkWaveRole.five,
+        (WorkWeekOrder.threeFiveOne, 3) => MainWorkWaveRole.fiveThreeOne,
+        _ => null,
+      };
+
+  MainWorkWaveRole? _weekWaveRole(WeekDefinition week) {
+    final roles =
+        [...week.blocks, for (final session in week.sessions) ...session.blocks]
+            .map((block) => block.mainWorkSemantics?.waveRole)
+            .whereType<MainWorkWaveRole>()
+            .toSet();
+    return roles.length == 1 ? roles.single : null;
+  }
+
+  WeekDefinition _legacyWeekOrderDonor(
+    ResolvedCycleDefinition definition,
+    WeekDefinition target,
+    WorkWeekOrder order,
+    int sourceNumber,
+  ) {
+    final desiredNumber = switch (order) {
+      WorkWeekOrder.catalog => sourceNumber,
+      WorkWeekOrder.fiveThreeOne => sourceNumber,
+      WorkWeekOrder.threeFiveOne => switch (sourceNumber) {
+        1 => 2,
+        2 => 1,
+        _ => sourceNumber,
+      },
+    };
+    final donors = definition.weeks.where(
+      (candidate) =>
+          _samePhase(target, candidate) &&
+          (candidate.origin?.sourceWeekNumber ?? candidate.number) ==
+              desiredNumber,
+    );
+    return donors.length == 1 ? donors.single : target;
+  }
+
   PrescribedSetDefinition _effectiveMainWorkSet(
     PrescribedSetDefinition definition, {
     required int index,
     required int? plusTarget,
     required PlusSetMode mode,
+    required MainWorkLastSetPolicy? lastSetPolicy,
   }) {
     if (plusTarget == null || mode == PlusSetMode.catalog) return definition;
+    if (index != plusTarget) return definition;
     final repetitions = definition.repetitions;
     RepetitionPrescription? replacement;
     switch (mode) {
@@ -789,13 +848,13 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
           _ => null,
         };
       case PlusSetMode.enabled:
-        if (index == plusTarget) {
-          switch (repetitions) {
-            case AmrapRepetitions(:final minimum):
-              replacement = PlusSetRepetitions(minimum ?? 1);
-            default:
-              break;
-          }
+        if (lastSetPolicy != MainWorkLastSetPolicy.fixed) {
+          replacement = switch (repetitions) {
+            AmrapRepetitions(:final minimum) => PlusSetRepetitions(
+              minimum ?? 1,
+            ),
+            _ => null,
+          };
         }
     }
     if (replacement == null) return definition;
@@ -805,6 +864,82 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
       execution: definition.execution,
       runtimeGates: definition.runtimeGates,
     );
+  }
+
+  List<int> _orderedMainWorkSetIndices(
+    BlockDefinition block,
+    WorkSetOrder order,
+  ) {
+    final indices = List<int>.generate(block.sets.length, (index) => index);
+    if (order == WorkSetOrder.catalog) return indices;
+    final semantics = _semanticsFor(block);
+    if (semantics == null) {
+      return order == WorkSetOrder.bastard
+          ? indices.reversed.toList(growable: false)
+          : indices;
+    }
+    final orderableRoles = const {
+      MainWorkSetRole.first,
+      MainWorkSetRole.second,
+      MainWorkSetRole.top,
+    };
+    final targetPositions = [
+      for (final entry in semantics.setRoles.indexed)
+        if (entry.$2 != null && orderableRoles.contains(entry.$2)) entry.$1,
+    ];
+    final desiredRoles = order == WorkSetOrder.bastard
+        ? const [
+            MainWorkSetRole.top,
+            MainWorkSetRole.second,
+            MainWorkSetRole.first,
+          ]
+        : const [
+            MainWorkSetRole.first,
+            MainWorkSetRole.second,
+            MainWorkSetRole.top,
+          ];
+    final desiredIndices = desiredRoles
+        .map(semantics.indexOf)
+        .whereType<int>()
+        .toList(growable: false);
+    if (targetPositions.length != desiredIndices.length) return indices;
+    final result = List<int>.of(indices);
+    for (var index = 0; index < targetPositions.length; index++) {
+      result[targetPositions[index]] = desiredIndices[index];
+    }
+    return result;
+  }
+
+  int? _mainWorkPlusTarget(BlockDefinition block) {
+    final semantics = _semanticsFor(block);
+    return semantics == null
+        ? _heaviestMainWorkSetIndex(block)
+        : semantics.indexOf(MainWorkSetRole.top);
+  }
+
+  MainWorkSemantics? _semanticsFor(BlockDefinition block) {
+    final semantics = block.mainWorkSemantics;
+    if (semantics == null) return null;
+    if (semantics.setRoles.length != block.sets.length) {
+      throw const CycleGenerationException(
+        CycleGenerationErrorCode.invalidCycleOptions,
+        'Main-work set roles must align with prescribed sets.',
+      );
+    }
+    for (final role in const [
+      MainWorkSetRole.first,
+      MainWorkSetRole.second,
+      MainWorkSetRole.top,
+    ]) {
+      if (semantics.setRoles.where((candidate) => candidate == role).length >
+          1) {
+        throw CycleGenerationException(
+          CycleGenerationErrorCode.invalidCycleOptions,
+          'Main-work set role ${role.name} cannot be duplicated.',
+        );
+      }
+    }
+    return semantics;
   }
 
   int? _heaviestMainWorkSetIndex(BlockDefinition block) {
@@ -1380,6 +1515,7 @@ final class CycleCompilerImpl implements CycleCompiler, ScheduledCycleCompiler {
               role: block.role,
               sets: block.sets,
               movementId: movement,
+              mainWorkSemantics: block.mainWorkSemantics,
             ),
     ];
   }

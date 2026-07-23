@@ -314,6 +314,29 @@ final class RuntimeDecision {
   Map<String, Object> toJson() => {'type': kind.name, 'status': status.name};
 }
 
+enum MainWorkWaveRole { five, three, fiveThreeOne, deload, test }
+
+enum MainWorkSetRole { first, second, top, heavySingle }
+
+enum MainWorkLastSetPolicy { amrapPermitted, fixed }
+
+final class MainWorkSemantics {
+  const MainWorkSemantics({
+    required this.lastSetPolicy,
+    required this.setRoles,
+    this.waveRole,
+  });
+
+  final MainWorkWaveRole? waveRole;
+  final MainWorkLastSetPolicy lastSetPolicy;
+  final List<MainWorkSetRole?> setRoles;
+
+  int? indexOf(MainWorkSetRole role) {
+    final index = setRoles.indexOf(role);
+    return index < 0 ? null : index;
+  }
+}
+
 final class PrescribedSetDefinition {
   const PrescribedSetDefinition({
     required this.repetitions,
@@ -333,11 +356,13 @@ final class BlockDefinition {
     required this.role,
     required this.sets,
     this.movementId,
+    this.mainWorkSemantics,
   });
   final String id;
   final String role;
   final List<PrescribedSetDefinition> sets;
   final MovementId? movementId;
+  final MainWorkSemantics? mainWorkSemantics;
 }
 
 final class SessionDefinition {
