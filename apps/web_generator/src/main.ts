@@ -11,6 +11,7 @@ import {
 } from './cycle/configuration/share';
 import { changeEditorValue, normalizeEditorState } from './cycle/state/editorState';
 import { buildCycleRequest } from './cycle/request/buildCycleRequest';
+import { installCollapsibleSections } from './cycle/ui/collapsibleSections';
 import {
   createCycleGenerationScheduler,
   type CycleGenerationScheduler,
@@ -123,6 +124,7 @@ async function start(): Promise<void> {
       restoredConfiguration?.schedule.id,
     );
     installLocaleControls();
+    installCollapsibleSections(document, preferences);
     root.dataset.cycleReady = 'true';
     if (status) status.textContent = startupWarning;
   } catch (error) {
