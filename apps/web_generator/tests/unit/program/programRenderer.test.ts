@@ -34,6 +34,7 @@ const labels = {
     deadlift: "Soulevé de terre",
     bench: "Développé couché",
     squat: "Squat",
+    dumbbell_row: "Rowing haltère",
   },
   blockNames: { main_work: "Travail principal" },
 };
@@ -108,6 +109,28 @@ describe("renderProgram", () => {
     expect(target.textContent).toContain("Travail");
     expect(target.textContent).not.toContain("private_movement_id");
     expect(target.textContent).not.toContain("internal_role");
+  });
+
+  it("renders a known assistance exercise label without leaking its id", () => {
+    renderProgram(target, {
+      weeks: [{
+        number: 1,
+        sessions: [{
+          movementId: "press",
+          blocks: [{
+            role: "assistance",
+            movementId: "dumbbell_row",
+            sets: [{
+              repetitions: { type: "fixed", count: 10 },
+              plannedLoad: null,
+            }],
+          }],
+        }],
+      }],
+    }, { labels, showPlating: false });
+
+    expect(target.textContent).toContain("Rowing haltère");
+    expect(target.textContent).not.toContain("dumbbell_row");
   });
 
   it("announces one plate group while keeping visual chips decorative", () => {

@@ -1,5 +1,9 @@
 import type { ContractMetadata } from '../../../../contracts/v1/generated/contracts';
 
+export type CatalogMovementLabels = Readonly<
+  Record<string, Readonly<Record<string, string>>>
+>;
+
 export interface EngineBridge {
   initialize(catalogJson: string): string;
   engineInfo(): string;
@@ -21,6 +25,7 @@ export class EngineClient {
   private constructor(
     private readonly bridge: EngineBridge,
     private readonly metadata: ContractMetadata,
+    private readonly movementLabels: CatalogMovementLabels,
   ) {}
 
   static async initialize(catalogUrl = '../catalog.bundle.json'): Promise<EngineClient> {
@@ -32,9 +37,14 @@ export class EngineClient {
     }
     const response = await fetch(resolvedCatalogUrl, { credentials: 'same-origin' });
     if (!response.ok) throw new Error(`CATALOG_LOAD_FAILED:${response.status}`);
-    const initialized = parseObject(bridge.initialize(await response.text()));
+    const catalogJson = await response.text();
+    const initialized = parseObject(bridge.initialize(catalogJson));
     const metadata = requireMetadata(initialized);
-    return new EngineClient(bridge, metadata);
+    return new EngineClient(
+      bridge,
+      metadata,
+      extractCatalogMovementLabels(catalogJson),
+    );
   }
 
   engineInfo<T>(): T {
@@ -43,6 +53,10 @@ export class EngineClient {
 
   contractMetadata(): ContractMetadata {
     return { ...this.metadata };
+  }
+
+  catalogMovementLabels(): CatalogMovementLabels {
+    return this.movementLabels;
   }
 
   catalogIndex<T>(request: object): T {
@@ -108,4 +122,40 @@ function requireMetadata(value: Record<string, unknown>): ContractMetadata {
     typeof value.catalogHash !== 'string'
   ) throw new Error('ENGINE_CONTRACT_VERSION_UNSUPPORTED');
   return value as unknown as ContractMetadata;
+}
+
+function extractCatalogMovementLabels(
+  catalogJson: string,
+): CatalogMovementLabels {
+  const catalog = parseObject(catalogJson);
+  const documents = Array.isArray(catalog.documents) ? catalog.documents : [];
+  const labels: Record<string, Readonly<Record<string, string>>> = {};
+  for (const candidate of documents) {
+    if (!isRecord(candidate) || !isRecord(candidate.content)) continue;
+    const content = candidate.content;
+    const collection = content.kind === 'movements'
+      ? content.movements
+      : content.kind === 'exercises'
+      ? content.exercises
+      : undefined;
+    if (!Array.isArray(collection)) continue;
+    for (const item of collection) {
+      if (!isRecord(item) || typeof item.id !== 'string' || !isRecord(item.labels)) {
+        continue;
+      }
+      const localized = Object.fromEntries(
+        Object.entries(item.labels).filter(
+          (entry): entry is [string, string] => typeof entry[1] === 'string',
+        ),
+      );
+      if (Object.keys(localized).length > 0) {
+        labels[item.id] = Object.freeze(localized);
+      }
+    }
+  }
+  return Object.freeze(labels);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }

@@ -417,9 +417,17 @@ function download(fileName: string, content: string): void {
 }
 
 function movementNames(): Record<string, string> {
-  return Object.fromEntries(schema.fields
-    .filter((field) => field.id.startsWith('max-load-'))
-    .map((field) => [field.id.slice('max-load-'.length), localized(field.label, locale)]));
+  const names = Object.fromEntries(
+    Object.entries(client.catalogMovementLabels()).map(([id, labels]) => [
+      id,
+      localized(labels, locale),
+    ]),
+  );
+  for (const field of schema.fields) {
+    if (!field.id.startsWith('max-load-')) continue;
+    names[field.id.slice('max-load-'.length)] = localized(field.label, locale);
+  }
+  return names;
 }
 
 function installRepositories(): void {

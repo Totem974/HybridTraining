@@ -35,6 +35,57 @@ describe("EngineClient", () => {
     expect(() => client.catalogIndex({ apiVersion: "v1", schemaVersion: 1 }))
       .toThrow("ENGINE_RESPONSE_VERSION_MISMATCH");
   });
+
+  it("reuses the loaded catalog to expose movement and exercise labels", async () => {
+    const catalogJson = JSON.stringify({
+      documents: [
+        {
+          content: {
+            kind: "movements",
+            movements: [{
+              id: "overhead_press",
+              labels: { en: "Overhead press", fr: "Développé militaire" },
+            }],
+          },
+        },
+        {
+          content: {
+            kind: "exercises",
+            exercises: [{
+              id: "dumbbell_row",
+              labels: { en: "Dumbbell row", fr: "Rowing haltère" },
+            }],
+          },
+        },
+      ],
+    });
+    const local = bridge();
+    const initialize = vi.fn(() =>
+      JSON.stringify({ ...metadata, initialized: true })
+    );
+    local.initialize = initialize;
+    window.hybridTrainingEngine = local;
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      text: async () => catalogJson,
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = await EngineClient.initialize();
+
+    expect(client.catalogMovementLabels()).toEqual({
+      overhead_press: {
+        en: "Overhead press",
+        fr: "Développé militaire",
+      },
+      dumbbell_row: {
+        en: "Dumbbell row",
+        fr: "Rowing haltère",
+      },
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(initialize).toHaveBeenCalledWith(catalogJson);
+  });
 });
 
 function bridge(): EngineBridge {

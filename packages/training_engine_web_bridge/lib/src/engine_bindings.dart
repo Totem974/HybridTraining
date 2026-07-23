@@ -133,9 +133,12 @@ final class LocalTrainingEngineBindings implements TrainingEngineJsonBindings {
     ];
     _movementLabels = {
       for (final document in documents.where(
-        (item) => item['kind'] == 'movements',
+        (item) => item['kind'] == 'movements' || item['kind'] == 'exercises',
       ))
-        for (final item in _list(document, 'movements'))
+        for (final item in _list(
+          document,
+          document['kind'] == 'movements' ? 'movements' : 'exercises',
+        ))
           _string(_map(item, 'movement'), 'id'): {
             for (final entry in _map(
               _map(item, 'movement')['labels'],

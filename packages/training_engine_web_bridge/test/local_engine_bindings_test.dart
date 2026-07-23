@@ -5,7 +5,10 @@ import 'package:test/test.dart';
 import 'package:training_engine_web_bridge/training_engine_web_bridge.dart';
 
 void main() {
-  BridgeService initializedService({bool exposePerMovementOption = false}) {
+  BridgeService initializedService({
+    bool exposePerMovementOption = false,
+    bool exposeExerciseAsMovement = false,
+  }) {
     final service = BridgeService(LocalTrainingEngineBindings());
     final catalogPath =
         Platform.environment['TRAINING_ENGINE_CATALOG_BUNDLE'] ??
@@ -40,6 +43,13 @@ void main() {
           if (template['id'] == 'classic_boring_but_big') {
             template['isDefault'] = true;
           }
+        }
+      }
+      if (exposeExerciseAsMovement && content['kind'] == 'schedules') {
+        for (final schedule in (content['schedules'] as List).cast<Map>()) {
+          if (schedule['id'] != 'schedule_four_day_fixed') continue;
+          final sessions = (schedule['sessions'] as List).cast<Map>();
+          sessions.first['movementIds'] = ['dumbbell_row'];
         }
       }
     }
@@ -88,6 +98,31 @@ void main() {
       ),
       isEmpty,
     );
+  });
+
+  test('editor resolves labels from exercise catalog documents', () {
+    final service = initializedService(exposeExerciseAsMovement: true);
+    final schema =
+        jsonDecode(
+              service.cycleEditorSchema(
+                jsonEncode({
+                  'apiVersion': 'v1',
+                  'schemaVersion': 1,
+                  'templateId': 'classic_531',
+                  'variantId': 'four_day',
+                }),
+              ),
+            )
+            as Map<String, Object?>;
+    final fields = (schema['fields'] as List).cast<Map<String, Object?>>();
+    final dumbbellRow = fields.singleWhere(
+      (field) => field['id'] == 'max-load-dumbbell_row',
+    );
+
+    expect(dumbbellRow['label'], {
+      'en': 'Dumbbell row',
+      'fr': 'Rowing haltere',
+    });
   });
 
   test('onePlusSet derives TM at 95 percent and ignores the global ratio', () {
