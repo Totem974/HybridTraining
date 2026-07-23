@@ -1,9 +1,100 @@
-import { expect, test, type Page } from '@playwright/test';
-import { mkdir } from 'node:fs/promises';
+import { expect, test, type Download, type Locator, type Page } from '@playwright/test';
+import { mkdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const localOrigin = 'http://127.0.0.1:4175';
 const visualEvidenceDirectory = resolve('tests', 'visual-evidence');
+
+interface ProgramCycle {
+  readonly templateId: string;
+  readonly variantId: string;
+  readonly weeks: readonly {
+    readonly sessions: readonly {
+      readonly blocks: readonly {
+        readonly id: string;
+        readonly role: string;
+        readonly movementId: string;
+        readonly sets: readonly {
+          readonly repetitions: Readonly<Record<string, unknown>>;
+          readonly percentageBasisPoints?: number | null;
+          readonly plannedLoad?: {
+            readonly centiUnits: number;
+            readonly unit: 'kg' | 'lb';
+          } | null;
+        }[];
+      }[];
+    }[];
+  }[];
+}
+
+async function installRequestRecorder(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    if (document.documentElement.dataset.cycleRequestRecorder === 'true') return;
+    const engine = window.hybridTrainingEngine;
+    if (!engine) throw new Error('ENGINE_BRIDGE_UNAVAILABLE');
+    const generateCycle = engine.generateCycle.bind(engine);
+    engine.generateCycle = (requestJson: string) => {
+      document.documentElement.dataset.lastCycleRequest = requestJson;
+      return generateCycle(requestJson);
+    };
+    document.documentElement.dataset.cycleRequestRecorder = 'true';
+  });
+}
+
+async function optionIds(select: Locator): Promise<string[]> {
+  const values = await select.locator('option').evaluateAll((items) =>
+    items.map((item) => (item as HTMLOptionElement).value),
+  );
+  return values.map((value) => {
+    const id = JSON.parse(value) as unknown;
+    if (typeof id !== 'string') throw new Error(`NON_STRING_CATALOG_ID:${value}`);
+    return id;
+  });
+}
+
+async function selectCatalogVariant(
+  page: Page,
+  generationId: string,
+  templateId: string,
+  variantId: string,
+): Promise<void> {
+  const generation = page.getByTestId('generation-row').getByRole('combobox');
+  const template = page.getByTestId('template-row').getByRole('combobox');
+  const variant = page.getByTestId('variant-row').getByRole('combobox');
+
+  await generation.selectOption(JSON.stringify(generationId));
+  await expect.poll(() => optionIds(template)).toContain(templateId);
+  await template.selectOption(JSON.stringify(templateId));
+  await expect.poll(() => optionIds(variant)).toContain(variantId);
+  await variant.selectOption(JSON.stringify(variantId));
+  await expect.poll(async () => {
+    const raw = await page.locator('html').getAttribute('data-last-cycle-request');
+    if (!raw) return undefined;
+    const request = JSON.parse(raw) as {
+      readonly templateId?: unknown;
+      readonly variantId?: unknown;
+    };
+    return [request.templateId, request.variantId];
+  }).toEqual([templateId, variantId]);
+  await awaitGeneratedProgram(page);
+}
+
+async function readDownload(download: Download): Promise<Record<string, unknown>> {
+  const path = await download.path();
+  if (!path) throw new Error('DOWNLOAD_PATH_MISSING');
+  return JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
+}
+
+async function exportedProgram(page: Page): Promise<ProgramCycle> {
+  const pending = page.waitForEvent('download');
+  await page.getByRole('button', {
+    name: /export.*program|exporter.*programme/i,
+  }).click();
+  const artifact = await readDownload(await pending);
+  const response = artifact.payload as { readonly cycle?: ProgramCycle };
+  if (!response?.cycle) throw new Error('EXPORTED_CYCLE_MISSING');
+  return response.cycle;
+}
 
 async function openIntegratedCycle(page: Page): Promise<string[]> {
   const externalRequests: string[] = [];
@@ -18,6 +109,7 @@ async function openIntegratedCycle(page: Page): Promise<string[]> {
   });
   await page.goto('/cycle/');
   await expect(page.locator('[data-cycle-ready="true"]')).toHaveCount(1);
+  await installRequestRecorder(page);
   return externalRequests;
 }
 
@@ -92,6 +184,106 @@ test('Beyond BBB exposes and generates both sourced wave variants', async ({ pag
   await expect(page.locator('.program-week').nth(2)).toContainText(/5\s*[×x]/i);
   expect(external).toEqual([]);
 });
+
+const sourceFamilyScenarios = [
+  {
+    name: 'source BBB',
+    generationId: 'source_parity',
+    templateId: 'source_calculator_boring_but_big',
+    variantId: 'original_5x10',
+    weekCount: 4,
+    marker: 'fiveByTen',
+  },
+  {
+    name: 'First Set Last',
+    generationId: 'source_fsl_gvt',
+    templateId: 'source_calculator_first_set_last',
+    variantId: 'standard',
+    weekCount: 4,
+    marker: 'fslAmrap',
+  },
+  {
+    name: 'GVT',
+    generationId: 'source_fsl_gvt',
+    templateId: 'source_calculator_gvt',
+    variantId: 'standard',
+    weekCount: 4,
+    marker: 'gvt',
+  },
+  {
+    name: 'BBB Challenge',
+    generationId: 'source_bbb_challenge',
+    templateId: 'source_calculator_bbb_challenge',
+    variantId: 'six_weeks',
+    weekCount: 7,
+    marker: 'challenge',
+  },
+  {
+    name: 'standalone Two Days',
+    generationId: 'source_two_day',
+    templateId: 'source_calculator_two_days_per_week',
+    variantId: 'option_one',
+    weekCount: 4,
+    marker: 'paired',
+  },
+] as const;
+
+for (const scenario of sourceFamilyScenarios) {
+  test(`${scenario.name} reaches the bridge and keeps its source structure`, async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.name !== 'chromium-desktop',
+      'Deep source-family parity is exercised once in deterministic Chromium.',
+    );
+    const external = await openIntegratedCycle(page);
+    await selectCatalogVariant(
+      page,
+      scenario.generationId,
+      scenario.templateId,
+      scenario.variantId,
+    );
+    const cycle = await exportedProgram(page);
+
+    expect(cycle.templateId).toBe(scenario.templateId);
+    expect(cycle.variantId).toBe(scenario.variantId);
+    expect(cycle.weeks).toHaveLength(scenario.weekCount);
+    const blocks = cycle.weeks.flatMap((week) =>
+      week.sessions.flatMap((session) => session.blocks)
+    );
+    if (scenario.marker === 'fiveByTen') {
+      expect(blocks.some((block) =>
+        block.role === 'supplemental' &&
+        block.sets.length === 5 &&
+        block.sets.every((set) => set.repetitions.count === 10)
+      )).toBe(true);
+    } else if (scenario.marker === 'fslAmrap') {
+      expect(blocks.some((block) =>
+        block.id === 'fsl_amrap' &&
+        block.sets.length === 1 &&
+        block.sets[0]?.repetitions.type === 'amrap'
+      )).toBe(true);
+    } else if (scenario.marker === 'gvt') {
+      expect(blocks.some((block) =>
+        block.id === 'gvt_10x10' &&
+        block.sets.length === 10 &&
+        block.sets.every((set) => set.repetitions.count === 10)
+      )).toBe(true);
+    } else if (scenario.marker === 'challenge') {
+      expect(blocks.some((block) =>
+        block.id === 'bbb_challenge_5x10_50' &&
+        block.sets.length === 5 &&
+        block.sets.every((set) => set.repetitions.count === 10)
+      )).toBe(true);
+    } else {
+      const firstSession = cycle.weeks[0]?.sessions[0];
+      expect(
+        firstSession?.blocks.filter((block) => block.role === 'main_work'),
+      ).toHaveLength(2);
+    }
+    expect(external).toEqual([]);
+  });
+}
 
 test('Two Days renders only valid schedule tokens and generates', async ({ page }) => {
   const external = await openIntegratedCycle(page);
