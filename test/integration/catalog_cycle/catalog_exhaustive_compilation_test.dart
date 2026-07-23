@@ -8,7 +8,7 @@ void main() {
     () async {
       final report = await catalog_tool.verifyCatalogCompilation();
 
-      expect(report.variantCount, 21);
+      expect(report.variantCount, 37);
       expect(report.failures, isEmpty, reason: report.failures.join('\n'));
     },
     timeout: const Timeout(Duration(minutes: 2)),

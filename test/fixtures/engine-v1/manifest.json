@@ -1,7 +1,7 @@
 {
   "fixtureVersion": 1,
   "catalogVersion": 2,
-  "cycleVariantCount": 21,
+  "cycleVariantCount": 37,
   "cycleFixtures": [
     "beyond_boring_but_big--same_lift_5x10_50_two_cycles",
     "beyond_boring_but_big--variation_i_5x10_wave",
@@ -23,7 +23,23 @@
     "classic_simplest_strength--original",
     "classic_simplest_strength--powerlifting",
     "classic_triumvirate--four_day",
-    "powerlifting_classic_531--four_day_531_deload"
+    "powerlifting_classic_531--four_day_531_deload",
+    "source_calculator_bbb_challenge--six_weeks",
+    "source_calculator_bbb_challenge--thirteen_weeks",
+    "source_calculator_bbb_challenge--three_months",
+    "source_calculator_boring_but_big--beyond_variation_one",
+    "source_calculator_boring_but_big--beyond_variation_two",
+    "source_calculator_boring_but_big--five_by_five_80",
+    "source_calculator_boring_but_big--five_by_one_100",
+    "source_calculator_boring_but_big--five_by_three_90",
+    "source_calculator_boring_but_big--less_boring_5x10",
+    "source_calculator_boring_but_big--original_5x10",
+    "source_calculator_boring_but_big--two_days_per_week",
+    "source_calculator_first_set_last--standard",
+    "source_calculator_gvt--standard",
+    "source_calculator_two_days_per_week--option_one",
+    "source_calculator_two_days_per_week--option_three",
+    "source_calculator_two_days_per_week--option_two"
   ],
   "errorFixtures": [
     "missing-training-max",

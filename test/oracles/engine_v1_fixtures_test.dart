@@ -30,8 +30,8 @@ void main() {
       final manifest = _json('${checkedIn.path}/manifest.json');
       expect(manifest['fixtureVersion'], 1);
       expect(manifest['catalogVersion'], 2);
-      expect(manifest['cycleVariantCount'], 21);
-      expect(manifest['cycleFixtures'], hasLength(21));
+      expect(manifest['cycleVariantCount'], 37);
+      expect(manifest['cycleFixtures'], hasLength(37));
       expect(manifest['errorFixtures'], hasLength(3));
       expect(manifest['foreverFixtures'], hasLength(1));
 
