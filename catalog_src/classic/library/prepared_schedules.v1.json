@@ -7,6 +7,7 @@
     "labels":{"en":"Original For Beginners fixed three-day schedule","fr":"Programme Original debutant fixe sur trois jours"},
     "sourceRuleIds":["or.beginner.full_body"],
     "type":"multiMovement",
+    "sessionsPerWeek":3,
     "sessions":[
       {"id":"day_a","role":"fullBodyDayA","movementIds":["squat","bench_press"]},
       {"id":"day_b","role":"fullBodyDayB","movementIds":["deadlift","overhead_press"]},

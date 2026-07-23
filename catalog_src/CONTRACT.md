@@ -31,7 +31,10 @@ optional `cycleTemplateId`, and `sourceRuleIds`. Classification is one of
 strict primitive `block` payload.
 
 `schedules` contains `schedules`: `id`, `revision`, `labels`, `sourceRuleIds`,
-`type` (`fixed`, `rotating`, `multiMovement`, `finite`), and ordered `sessions`.
+`type` (`fixed`, `rotating`, `multiMovement`, `finite`), `sessionsPerWeek`
+(an integer from 1 to 7), and ordered `sessions`. `fixed` and `multiMovement`
+schedules use one weekly slot per session. A `rotating` schedule may use fewer
+weekly slots than its ordered session templates.
 
 `templates` contains `templates`: `id`, `revision`, `labels`, `sourceRuleIds`,
 and `variants`. Every variant has `id`, `revision`, `labels`, `sourceRuleIds`,

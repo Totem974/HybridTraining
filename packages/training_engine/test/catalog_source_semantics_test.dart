@@ -33,6 +33,24 @@ void main() {
       schedules.where((item) => item.type == CycleScheduleMode.finite),
       isEmpty,
     );
+    expect(
+      {
+        for (final schedule in schedules)
+          schedule.reference.id: schedule.sessionsPerWeek,
+      },
+      {
+        'schedule_four_day_fixed': 4,
+        'schedule_three_day_rotating': 3,
+        'schedule_two_day_multi_movement_option_one': 2,
+        'schedule_two_day_rotating_four_lifts': 2,
+        'classic_extended_two_day_option_one': 2,
+        'classic_extended_two_day_option_two': 2,
+        'classic_for_beginners_three_day': 3,
+        'classic_full_body_three_day': 3,
+        'classic_full_body_full_boring_three_day': 3,
+        'schedule_original_for_beginners_fixed_three_day': 3,
+      },
+    );
 
     final grouped = schedules.singleWhere(
       (item) =>
@@ -86,6 +104,61 @@ void main() {
           contains('Unknown schedule type unsupported'),
         ),
       ),
+    );
+  });
+
+  test('source schedules reject invalid explicit weekly cadence', () {
+    final source = File(
+      '../../catalog_src/schedules/cycle_schedules_v1.json',
+    ).readAsStringSync();
+
+    expect(
+      () => codec.decodeSchedules(
+        source.replaceFirst('"sessionsPerWeek": 4', '"sessionsPerWeek": 0'),
+      ),
+      throwsA(
+        isA<FormatException>().having(
+          (error) => error.message,
+          'message',
+          contains('sessionsPerWeek must be positive'),
+        ),
+      ),
+    );
+    expect(
+      () => codec.decodeSchedules(
+        source.replaceFirst('"sessionsPerWeek": 4', '"sessionsPerWeek": 3'),
+      ),
+      throwsA(
+        isA<FormatException>().having(
+          (error) => error.message,
+          'message',
+          contains('must equal the session count for fixed schedules'),
+        ),
+      ),
+    );
+    expect(
+      () => codec.decodeSchedules(
+        source.replaceFirst('"sessionsPerWeek": 3', '"sessionsPerWeek": 5'),
+      ),
+      throwsA(
+        isA<FormatException>().having(
+          (error) => error.message,
+          'message',
+          contains('cannot exceed the session count for rotating schedules'),
+        ),
+      ),
+    );
+  });
+
+  test('source codec remains compatible with schedules without cadence', () {
+    final source = File(
+      '../../catalog_src/schedules/cycle_schedules_v1.json',
+    ).readAsStringSync();
+    final legacy = source.replaceAll(RegExp(r'\s*"sessionsPerWeek": \d+,'), '');
+
+    expect(
+      codec.decodeSchedules(legacy).map((item) => item.sessionsPerWeek),
+      everyElement(isNull),
     );
   });
 }

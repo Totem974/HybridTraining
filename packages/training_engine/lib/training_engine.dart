@@ -21,4 +21,5 @@ export 'features/training_catalog/domain/catalog_coverage.dart';
 export 'features/training_catalog/domain/catalog_index.dart';
 export 'features/training_catalog/domain/catalog_models.dart';
 export 'features/training_catalog/data/catalog_plan_data_resolver.dart';
+export 'features/training_catalog/data/catalog_schedule_data_resolver.dart';
 export 'features/training_catalog/data/catalog_source_document_codec.dart';

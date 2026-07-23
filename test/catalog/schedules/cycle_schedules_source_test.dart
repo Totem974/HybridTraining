@@ -31,12 +31,14 @@ void main() {
       'labels',
       'sourceRuleIds',
       'type',
+      'sessionsPerWeek',
       'sessions',
     };
     for (final schedule in schedules) {
       expect(schedule.keys.toSet(), keys);
       expect(schedule['revision'], 1);
       expect(schedule['sourceRuleIds'], isNotEmpty);
+      expect(schedule['sessionsPerWeek'], inInclusiveRange(1, 7));
       final sessions = (schedule['sessions']! as List).cast<Map>();
       expect(sessions, isNotEmpty);
       for (final session in sessions) {
@@ -44,6 +46,18 @@ void main() {
         expect(session['movementIds'], isNotEmpty);
       }
     }
+    expect(
+      {
+        for (final schedule in schedules)
+          schedule['id']: schedule['sessionsPerWeek'],
+      },
+      {
+        'schedule_four_day_fixed': 4,
+        'schedule_three_day_rotating': 3,
+        'schedule_two_day_multi_movement_option_one': 2,
+        'schedule_two_day_rotating_four_lifts': 2,
+      },
+    );
   });
 
   test(

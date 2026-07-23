@@ -13,6 +13,7 @@
         "or.schedule.two_day_option_1"
       ],
       "type": "multiMovement",
+      "sessionsPerWeek": 2,
       "sessions": [
         {
           "id": "day_one",
@@ -43,6 +44,7 @@
         "or.schedule.two_day_option_2"
       ],
       "type": "rotating",
+      "sessionsPerWeek": 2,
       "sessions": [
         {
           "id": "overhead_press",
@@ -85,6 +87,7 @@
         "or.beginner.full_body"
       ],
       "type": "multiMovement",
+      "sessionsPerWeek": 3,
       "sessions": [
         {
           "id": "monday",
@@ -126,6 +129,7 @@
         "app.full_body.updated"
       ],
       "type": "multiMovement",
+      "sessionsPerWeek": 3,
       "sessions": [
         {
           "id": "monday",
@@ -164,6 +168,7 @@
         "app.full_body.full_boring"
       ],
       "type": "multiMovement",
+      "sessionsPerWeek": 3,
       "sessions": [
         {
           "id": "monday",

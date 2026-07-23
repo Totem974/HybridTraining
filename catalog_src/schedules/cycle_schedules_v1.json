@@ -8,6 +8,7 @@
       "labels": {"en": "Four-day fixed standard split", "fr": "Répartition standard fixe sur quatre jours"},
       "sourceRuleIds": ["or.classic.four_day"],
       "type": "fixed",
+      "sessionsPerWeek": 4,
       "sessions": [
         {"id": "overhead_press", "role": "mainLift", "movementIds": ["overhead_press"]},
         {"id": "deadlift", "role": "mainLift", "movementIds": ["deadlift"]},
@@ -21,6 +22,7 @@
       "labels": {"en": "Three-day rotating four-lift schedule", "fr": "Rotation des quatre mouvements sur trois jours"},
       "sourceRuleIds": ["or.schedule.three_day"],
       "type": "rotating",
+      "sessionsPerWeek": 3,
       "sessions": [
         {"id": "overhead_press", "role": "mainLift", "movementIds": ["overhead_press"]},
         {"id": "deadlift", "role": "mainLift", "movementIds": ["deadlift"]},
@@ -34,6 +36,7 @@
       "labels": {"en": "Two-day, two-lift schedule", "fr": "Programme deux jours avec deux mouvements"},
       "sourceRuleIds": ["or.schedule.two_day_option_1"],
       "type": "multiMovement",
+      "sessionsPerWeek": 2,
       "sessions": [
         {"id": "squat_bench_press", "role": "multiLift", "movementIds": ["squat", "bench_press"]},
         {"id": "deadlift_overhead_press", "role": "multiLift", "movementIds": ["deadlift", "overhead_press"]}
@@ -45,6 +48,7 @@
       "labels": {"en": "Two-day rotating four-lift schedule", "fr": "Rotation des quatre mouvements sur deux jours"},
       "sourceRuleIds": ["or.schedule.two_day_option_2"],
       "type": "rotating",
+      "sessionsPerWeek": 2,
       "sessions": [
         {"id": "overhead_press", "role": "mainLift", "movementIds": ["overhead_press"]},
         {"id": "deadlift", "role": "mainLift", "movementIds": ["deadlift"]},

@@ -23,10 +23,12 @@ final class SourceSchedule {
     required this.reference,
     required this.sessions,
     this.type = CycleScheduleMode.fixed,
+    this.sessionsPerWeek,
   });
   final ComponentReference reference;
   final List<SourceSession> sessions;
   final CycleScheduleMode type;
+  final int? sessionsPerWeek;
 }
 
 final class SourceSession {
@@ -184,28 +186,41 @@ final class CatalogSourceDocumentCodec {
     return _list(root, 'schedules')
         .map((value) {
           final map = _map(value, 'schedule');
-          _keys(map, const {
-            'id',
-            'revision',
-            'labels',
-            'sourceRuleIds',
-            'type',
-            'sessions',
-          });
+          _keys(
+            map,
+            const {
+              'id',
+              'revision',
+              'labels',
+              'sourceRuleIds',
+              'type',
+              'sessions',
+            },
+            optional: const {'sessionsPerWeek'},
+          );
+          final type = _scheduleMode(map);
+          final sessions = _list(map, 'sessions')
+              .map((value) {
+                final session = _map(value, 'session');
+                _keys(session, const {'id', 'role', 'movementIds'});
+                return SourceSession(
+                  id: _string(session, 'id'),
+                  movementIds: _strings(session, 'movementIds'),
+                  role: _string(session, 'role'),
+                );
+              })
+              .toList(growable: false);
+          final sessionsPerWeek = map['sessionsPerWeek'] == null
+              ? null
+              : _positiveInt(map, 'sessionsPerWeek');
+          if (sessionsPerWeek != null) {
+            _validateScheduleCadence(type, sessions, sessionsPerWeek);
+          }
           return SourceSchedule(
             reference: _recordReference(map),
-            type: _scheduleMode(map),
-            sessions: _list(map, 'sessions')
-                .map((value) {
-                  final session = _map(value, 'session');
-                  _keys(session, const {'id', 'role', 'movementIds'});
-                  return SourceSession(
-                    id: _string(session, 'id'),
-                    movementIds: _strings(session, 'movementIds'),
-                    role: _string(session, 'role'),
-                  );
-                })
-                .toList(growable: false),
+            type: type,
+            sessions: sessions,
+            sessionsPerWeek: sessionsPerWeek,
           );
         })
         .toList(growable: false);
@@ -812,6 +827,32 @@ final class CatalogSourceDocumentCodec {
         'finite' => CycleScheduleMode.finite,
         final value => throw FormatException('Unknown schedule type $value.'),
       };
+
+  void _validateScheduleCadence(
+    CycleScheduleMode type,
+    List<SourceSession> sessions,
+    int sessionsPerWeek,
+  ) {
+    if (sessionsPerWeek > 7) {
+      throw const FormatException('sessionsPerWeek must be from 1 to 7.');
+    }
+    switch (type) {
+      case CycleScheduleMode.fixed || CycleScheduleMode.multiMovement:
+        if (sessionsPerWeek != sessions.length) {
+          throw FormatException(
+            'sessionsPerWeek must equal the session count for ${type.name} schedules.',
+          );
+        }
+      case CycleScheduleMode.rotating:
+        if (sessionsPerWeek > sessions.length) {
+          throw const FormatException(
+            'sessionsPerWeek cannot exceed the session count for rotating schedules.',
+          );
+        }
+      case CycleScheduleMode.finite:
+        break;
+    }
+  }
 
   static Map<String, Object?> _map(Object? value, String label) =>
       value is Map<String, Object?>

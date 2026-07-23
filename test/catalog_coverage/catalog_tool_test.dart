@@ -70,6 +70,9 @@ void main() {
       File('${directory.path}/primitive.json').writeAsStringSync(
         '{"schemaVersion":1,"kind":"components","components":[{"id":"c","revision":1,"role":"main_work","labels":{"en":"C","fr":"C"},"sourceRuleIds":["r"],"parameterSchemaIds":[],"constraints":{},"compatibilities":{},"block":{"id":"b","role":"main_work","sets":[{"repetitions":{"type":"mystery"},"load":{"type":"unloaded"}}]}}]}',
       );
+      File('${directory.path}/schedule-cadence.json').writeAsStringSync(
+        '{"schemaVersion":1,"kind":"schedules","schedules":[{"id":"s","revision":1,"labels":{"en":"S","fr":"S"},"sourceRuleIds":["r"],"type":"fixed","sessionsPerWeek":1,"sessions":[{"id":"a","role":"mainLift","movementIds":["a"]},{"id":"b","role":"mainLift","movementIds":["b"]}]}]}',
+      );
       final errors = catalog_tool.lintCatalog(sourcePath: directory.path);
       expect(errors.any((error) => error.contains('unknown kind')), isTrue);
       expect(errors.any((error) => error.contains('unknown key')), isTrue);
@@ -78,6 +81,13 @@ void main() {
         isTrue,
       );
       expect(errors.any((error) => error.contains('placeholder')), isTrue);
+      expect(
+        errors.any(
+          (error) =>
+              error.contains('sessionsPerWeek must equal the session count'),
+        ),
+        isTrue,
+      );
     } finally {
       directory.deleteSync(recursive: true);
     }

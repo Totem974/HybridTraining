@@ -919,6 +919,7 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
         'labels',
         'sourceRuleIds',
         'type',
+        'sessionsPerWeek',
         'sessions',
       }, at);
       _common(value, at);
@@ -934,6 +935,28 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
       for (var i = 0; i < sessions.length; i++) {
         _exact(sessions[i], {'id', 'role', 'movementIds'}, '$at.sessions[$i]');
         _strings(sessions[i]['movementIds'], '$at.sessions[$i].movementIds');
+      }
+      final sessionsPerWeek = value['sessionsPerWeek'];
+      if (sessionsPerWeek is! int ||
+          sessionsPerWeek < 1 ||
+          sessionsPerWeek > 7) {
+        throw FormatException('$at.sessionsPerWeek must be from 1 to 7');
+      }
+      switch (value['type']) {
+        case 'fixed' || 'multiMovement':
+          if (sessionsPerWeek != sessions.length) {
+            throw FormatException(
+              '$at.sessionsPerWeek must equal the session count for ${value['type']} schedules',
+            );
+          }
+        case 'rotating':
+          if (sessionsPerWeek > sessions.length) {
+            throw FormatException(
+              '$at.sessionsPerWeek cannot exceed the session count for rotating schedules',
+            );
+          }
+        case 'finite':
+          break;
       }
     case 'templates':
       _exact(
