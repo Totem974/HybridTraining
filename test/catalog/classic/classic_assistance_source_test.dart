@@ -53,7 +53,7 @@ void main() {
   test('bodyweight assigns two exercises and a total to each main lift', () {
     final bodyweight = _plan(plans, 'original_bodyweight');
 
-    expect(_recommendedExerciseMap(bodyweight), {
+    expect(_exerciseMap(bodyweight), {
       'overhead_press': ['pull_up', 'dip'],
       'deadlift': ['glute_ham_raise', 'hanging_leg_raise'],
       'bench_press': ['pull_up', 'push_up'],
@@ -67,11 +67,30 @@ void main() {
       ]),
     );
     expect(bodyweight['constraints'], isNot(contains('omitDuringDeload')));
-    expect(bodyweight['prescription'], {
-      'sets': {'minimum': 1, 'maximum': 10, 'step': 1},
-      'totalRepetitions': {'minimum': 75, 'maximum': 150, 'step': 5},
-      'load': {'type': 'bodyweight'},
-    });
+    for (final slot in _slots(bodyweight)) {
+      for (final prescription
+          in (slot['prescriptions']! as List<Object?>)
+              .cast<Map<String, Object?>>()) {
+        expect(prescription['sets'], {
+          'type': 'parameterized',
+          'parameterId': 'set_count',
+          'default': 5,
+          'minimum': 1,
+          'maximum': 10,
+          'step': 1,
+        });
+        expect(prescription['repetitions'], {
+          'type': 'distributed_total',
+          'parameterId': 'total_repetitions',
+          'default': 75,
+          'minimum': 75,
+          'maximum': 150,
+          'step': 5,
+          'distribution': 'rounded_average_edge_remainder',
+        });
+        expect(prescription['load'], {'type': 'bodyweight'});
+      }
+    }
   });
 
   test(
@@ -135,9 +154,12 @@ Map<String, List<(String, int)>> _fixedPrescriptionMap(
     ],
 };
 
-Map<String, List<String>> _recommendedExerciseMap(Map<String, Object?> plan) =>
-    {
-      for (final slot in _slots(plan))
-        slot['sessionRole']! as String:
-            (slot['recommendedExerciseIds']! as List<Object?>).cast<String>(),
-    };
+Map<String, List<String>> _exerciseMap(Map<String, Object?> plan) => {
+  for (final slot in _slots(plan))
+    slot['sessionRole']! as String: [
+      for (final prescription
+          in (slot['prescriptions']! as List<Object?>)
+              .cast<Map<String, Object?>>())
+        prescription['exerciseId']! as String,
+    ],
+};

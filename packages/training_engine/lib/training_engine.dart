@@ -1,6 +1,9 @@
 library;
 
 export 'features/cycle_generation/application/catalog_plan_resolver.dart';
+export 'features/cycle_generation/application/assistance_plan_resolver.dart';
+export 'features/cycle_generation/domain/assistance_compiler.dart';
+export 'features/cycle_generation/domain/assistance_contract.dart';
 export 'features/cycle_generation/application/cycle_v1_schedule_selection_adapter.dart';
 export 'features/cycle_generation/domain/catalog_cycle_primitives.dart';
 export 'features/cycle_generation/domain/cycle_calculations.dart';

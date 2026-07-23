@@ -627,6 +627,9 @@ final class _Catalog {
     final assistancePlans = (byKind['assistancePlans'] ?? const [])
         .map((r) => '${r['id']}@${r['revision']}')
         .toSet();
+    final exercises = (byKind['exercises'] ?? const [])
+        .map((r) => r['id'])
+        .toSet();
     final conditioningDefinitions =
         (byKind['conditioningDefinitions'] ?? const [])
             .map((r) => '${r['id']}@${r['revision']}')
@@ -736,6 +739,24 @@ final class _Catalog {
         final ids = record['sourceRuleIds'];
         if (ids is List<Object?>) {
           missingReferences += ids.where((id) => !sources.contains(id)).length;
+        }
+      }
+    }
+    for (final plan in byKind['assistancePlans'] ?? const []) {
+      for (final slot in plan['slots']! as List<Object?>) {
+        final slotMap = slot! as Map<String, Object?>;
+        if (slotMap['prescriptions'] case final List<Object?> prescriptions) {
+          for (final prescription in prescriptions) {
+            final exerciseId =
+                (prescription! as Map<String, Object?>)['exerciseId'];
+            if (!exercises.contains(exerciseId)) missingReferences++;
+          }
+        }
+        if (slotMap['recommendedExerciseIds']
+            case final List<Object?> recommended) {
+          missingReferences += recommended
+              .where((exerciseId) => !exercises.contains(exerciseId))
+              .length;
         }
       }
     }
@@ -1303,6 +1324,14 @@ void _lintRecord(String kind, Map<String, Object?> value, String at) {
               slot['prescriptions'] is! List<Object?>) {
             throw FormatException('$at.slot.prescriptions must be an array');
           }
+          if (slot['prescriptions'] case final List<Object?> prescriptions) {
+            for (var index = 0; index < prescriptions.length; index++) {
+              _lintAssistancePrescription(
+                _object(prescriptions[index], '$at.slot.prescriptions[$index]'),
+                '$at.slot.prescriptions[$index]',
+              );
+            }
+          }
         }
       }
       if (value['prescription'] != null) {
@@ -1635,6 +1664,84 @@ Map<String, Object?> _object(Object? raw, String at) =>
 void _strings(Object? raw, String at) {
   if (raw is! List<Object?> || raw.any((v) => v is! String)) {
     throw FormatException('$at must be a string array');
+  }
+}
+
+void _lintAssistancePrescription(Map<String, Object?> value, String at) {
+  _exact(value, {'exerciseId', 'sets', 'repetitions', 'load'}, at);
+  if (value['exerciseId'] is! String ||
+      (value['exerciseId']! as String).isEmpty) {
+    throw FormatException('$at.exerciseId must be a non-empty string');
+  }
+  final repetitions = _object(value['repetitions'], '$at.repetitions');
+  if (value['sets'] case final int setCount) {
+    if (setCount <= 0) {
+      throw FormatException('$at.sets must be positive');
+    }
+    _exact(repetitions, {'type', 'count'}, '$at.repetitions');
+    if (repetitions['type'] != 'fixed' ||
+        repetitions['count'] is! int ||
+        (repetitions['count']! as int) <= 0) {
+      throw FormatException('$at.repetitions must be a positive fixed count');
+    }
+  } else {
+    _lintAssistanceParameter(
+      _object(value['sets'], '$at.sets'),
+      '$at.sets',
+      expectedType: 'parameterized',
+    );
+    _lintAssistanceParameter(
+      repetitions,
+      '$at.repetitions',
+      expectedType: 'distributed_total',
+      distribution: 'rounded_average_edge_remainder',
+    );
+  }
+  final load = _object(value['load'], '$at.load');
+  _exact(load, {'type'}, '$at.load');
+  if (!const {'bodyweight', 'unconfigured'}.contains(load['type'])) {
+    throw FormatException('$at.load has unsupported type ${load['type']}');
+  }
+}
+
+void _lintAssistanceParameter(
+  Map<String, Object?> value,
+  String at, {
+  required String expectedType,
+  String? distribution,
+}) {
+  _exact(value, {
+    'type',
+    'parameterId',
+    'default',
+    'minimum',
+    'maximum',
+    'step',
+    if (distribution != null) 'distribution',
+  }, at);
+  if (value['type'] != expectedType ||
+      value['parameterId'] is! String ||
+      (value['parameterId']! as String).isEmpty) {
+    throw FormatException('$at must be a $expectedType parameter reference');
+  }
+  if (distribution != null && value['distribution'] != distribution) {
+    throw FormatException('$at has unsupported distribution');
+  }
+  final minimum = value['minimum'];
+  final maximum = value['maximum'];
+  final defaultValue = value['default'];
+  final step = value['step'];
+  if (minimum is! int ||
+      maximum is! int ||
+      defaultValue is! int ||
+      step is! int ||
+      minimum <= 0 ||
+      maximum < minimum ||
+      defaultValue < minimum ||
+      defaultValue > maximum ||
+      step <= 0 ||
+      (defaultValue - minimum) % step != 0) {
+    throw FormatException('$at has invalid integer bounds');
   }
 }
 

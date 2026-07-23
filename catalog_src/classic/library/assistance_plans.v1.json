@@ -36,12 +36,23 @@
       "labels": {"en":"Original bodyweight assistance","fr":"Assistance Original au poids du corps"},
       "sourceRuleIds": ["or.assistance.bodyweight","or.assistance.bodyweight_observed_volume","or.assistance.bodyweight_observed_mapping"],
       "slots": [
-        {"id":"press_assistance","sessionRole":"overhead_press","minimumExercises":2,"maximumExercises":2,"allowedCategories":["push","pull"],"recommendedExerciseIds":["pull_up","dip"]},
-        {"id":"deadlift_assistance","sessionRole":"deadlift","minimumExercises":2,"maximumExercises":2,"allowedCategories":["singleLegCore"],"recommendedExerciseIds":["glute_ham_raise","hanging_leg_raise"]},
-        {"id":"bench_assistance","sessionRole":"bench_press","minimumExercises":2,"maximumExercises":2,"allowedCategories":["push","pull"],"recommendedExerciseIds":["pull_up","push_up"]},
-        {"id":"squat_assistance","sessionRole":"squat","minimumExercises":2,"maximumExercises":2,"allowedCategories":["singleLegCore"],"recommendedExerciseIds":["single_leg_squat","sit_up"]}
+        {"id":"press_assistance","sessionRole":"overhead_press","minimumExercises":2,"maximumExercises":2,"allowedCategories":["push","pull"],"prescriptions":[
+          {"exerciseId":"pull_up","sets":{"type":"parameterized","parameterId":"set_count","default":5,"minimum":1,"maximum":10,"step":1},"repetitions":{"type":"distributed_total","parameterId":"total_repetitions","default":75,"minimum":75,"maximum":150,"step":5,"distribution":"rounded_average_edge_remainder"},"load":{"type":"bodyweight"}},
+          {"exerciseId":"dip","sets":{"type":"parameterized","parameterId":"set_count","default":5,"minimum":1,"maximum":10,"step":1},"repetitions":{"type":"distributed_total","parameterId":"total_repetitions","default":75,"minimum":75,"maximum":150,"step":5,"distribution":"rounded_average_edge_remainder"},"load":{"type":"bodyweight"}}
+        ]},
+        {"id":"deadlift_assistance","sessionRole":"deadlift","minimumExercises":2,"maximumExercises":2,"allowedCategories":["singleLegCore"],"prescriptions":[
+          {"exerciseId":"glute_ham_raise","sets":{"type":"parameterized","parameterId":"set_count","default":5,"minimum":1,"maximum":10,"step":1},"repetitions":{"type":"distributed_total","parameterId":"total_repetitions","default":75,"minimum":75,"maximum":150,"step":5,"distribution":"rounded_average_edge_remainder"},"load":{"type":"bodyweight"}},
+          {"exerciseId":"hanging_leg_raise","sets":{"type":"parameterized","parameterId":"set_count","default":5,"minimum":1,"maximum":10,"step":1},"repetitions":{"type":"distributed_total","parameterId":"total_repetitions","default":75,"minimum":75,"maximum":150,"step":5,"distribution":"rounded_average_edge_remainder"},"load":{"type":"bodyweight"}}
+        ]},
+        {"id":"bench_assistance","sessionRole":"bench_press","minimumExercises":2,"maximumExercises":2,"allowedCategories":["push","pull"],"prescriptions":[
+          {"exerciseId":"pull_up","sets":{"type":"parameterized","parameterId":"set_count","default":5,"minimum":1,"maximum":10,"step":1},"repetitions":{"type":"distributed_total","parameterId":"total_repetitions","default":75,"minimum":75,"maximum":150,"step":5,"distribution":"rounded_average_edge_remainder"},"load":{"type":"bodyweight"}},
+          {"exerciseId":"push_up","sets":{"type":"parameterized","parameterId":"set_count","default":5,"minimum":1,"maximum":10,"step":1},"repetitions":{"type":"distributed_total","parameterId":"total_repetitions","default":75,"minimum":75,"maximum":150,"step":5,"distribution":"rounded_average_edge_remainder"},"load":{"type":"bodyweight"}}
+        ]},
+        {"id":"squat_assistance","sessionRole":"squat","minimumExercises":2,"maximumExercises":2,"allowedCategories":["singleLegCore"],"prescriptions":[
+          {"exerciseId":"single_leg_squat","sets":{"type":"parameterized","parameterId":"set_count","default":5,"minimum":1,"maximum":10,"step":1},"repetitions":{"type":"distributed_total","parameterId":"total_repetitions","default":75,"minimum":75,"maximum":150,"step":5,"distribution":"rounded_average_edge_remainder"},"load":{"type":"bodyweight"}},
+          {"exerciseId":"sit_up","sets":{"type":"parameterized","parameterId":"set_count","default":5,"minimum":1,"maximum":10,"step":1},"repetitions":{"type":"distributed_total","parameterId":"total_repetitions","default":75,"minimum":75,"maximum":150,"step":5,"distribution":"rounded_average_edge_remainder"},"load":{"type":"bodyweight"}}
+        ]}
       ],
-      "prescription": {"sets":{"minimum":1,"maximum":10,"step":1},"totalRepetitions":{"minimum":75,"maximum":150,"step":5},"load":{"type":"bodyweight"}},
       "constraints": ["totalRepetitionsPerExercise","distributeTotalDeterministicallyAcrossSets"],
       "compatibleExerciseCategories": ["push","pull","singleLegCore"]
     }

@@ -53,5 +53,14 @@ contain an array with that exact name. Records have `id`, `revision`, `labels`,
 `sourceRuleIds`, typed capabilities/slots/prescriptions as appropriate, and no
 free-form executable expression.
 
+Executable assistance slots carry ordered `prescriptions`. A fixed
+prescription uses a positive integer `sets`, fixed repetitions, and a typed
+load. A configurable total uses a `parameterized` set count together with
+`distributed_total` repetitions. Both parameters declare their stable option
+ID, default, minimum, maximum, and step. The only supported distribution is
+`rounded_average_edge_remainder`: all but one sets use the rounded average and
+the remaining repetitions are placed on the leading edge only when the
+remainder is greater than that average, otherwise on the trailing edge.
+
 Files may contain one document only. Templates never inline shared components,
 schedules, exercises, assistance plans, or conditioning definitions.
