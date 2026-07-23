@@ -20,8 +20,17 @@
   "evidence": [
     "docs/audits/source-template-behavior-inventory.md",
     "docs/audits/cycle-ui-reference-2026-07-23.md",
-    "docs/audits/options-end-to-end-trace.md"
+    "docs/audits/options-end-to-end-trace.md",
+    "test/fixtures/source-calculator-v1/exact-goldens.json"
   ],
+  "exactGoldenCapture": {
+    "method": "localBlackBoxChromium",
+    "entrypoint": "http://127.0.0.1:4173/calculator/",
+    "browser": "Chromium 149.0.7827.55",
+    "scenarioCount": 19,
+    "networkPolicy": "loopbackOnly",
+    "copiedSourceAssets": false
+  },
   "excludedCopyrightMaterial": [
     "archive",
     "javascriptBundles",

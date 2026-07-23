@@ -46,15 +46,71 @@
     {"id": "deload-off", "captureStatus": "partialExact", "observationIds": ["OBS-DELOAD-OFF"]},
     {"id": "deload-three-skip-warmup", "captureStatus": "partialExact", "observationIds": ["OBS-DELOAD-THREE-SKIP-WARMUP"]},
     {"id": "remaining-deload-types", "captureStatus": "pendingExactCapture"},
-    {"id": "bbb-eight-variants", "captureStatus": "pendingExactCapture"},
-    {"id": "full-body-profiles", "captureStatus": "pendingExactCapture"},
-    {"id": "fsl-3x5-and-5x8", "captureStatus": "pendingExactCapture"},
-    {"id": "gvt-10x10", "captureStatus": "pendingExactCapture"},
+    {
+      "id": "bbb-eight-variants",
+      "captureStatus": "exactGolden",
+      "goldenScenarioIds": [
+        "bbb-original-4-day",
+        "bbb-less-boring-4-day",
+        "bbb-5x5-4-day",
+        "bbb-5x3-4-day",
+        "bbb-5x1-4-day",
+        "bbb-beyond-variation-1-4-day",
+        "bbb-beyond-variation-2-4-day",
+        "bbb-2-day"
+      ]
+    },
+    {
+      "id": "full-body-profiles",
+      "captureStatus": "exactGolden",
+      "goldenScenarioIds": [
+        "full-body-original-phase-one",
+        "full-body-updated-default",
+        "full-body-full-boring-default"
+      ]
+    },
+    {
+      "id": "fsl-3x5-and-5x8",
+      "captureStatus": "exactGolden",
+      "goldenScenarioIds": [
+        "fsl-amrap-4-day",
+        "fsl-multiple-3x5-4-day",
+        "fsl-multiple-5x8-4-day"
+      ]
+    },
+    {
+      "id": "gvt-10x10",
+      "captureStatus": "exactGolden",
+      "goldenScenarioIds": ["gvt-10x10-4-day"]
+    },
     {"id": "bodyweight-distribution", "captureStatus": "pendingExactCapture"},
-    {"id": "bbb-challenge-phases-and-tm", "captureStatus": "pendingExactCapture"},
-    {"id": "schedule-4-day", "captureStatus": "partialExact", "observationIds": ["OBS-DEFAULT-BBB-ORIGINAL"]},
-    {"id": "schedule-3-day-rotation", "captureStatus": "partialExact", "observationIds": ["OBS-SCHEDULE-THREE-DAY-ROTATION"]},
-    {"id": "schedule-2-day-rotation", "captureStatus": "partialExact", "observationIds": ["OBS-SCHEDULE-TWO-DAY-BBB"]},
+    {
+      "id": "bbb-challenge-phases-and-tm",
+      "captureStatus": "exactGolden",
+      "goldenScenarioIds": [
+        "bbb-challenge-six-weeks",
+        "bbb-challenge-three-months",
+        "bbb-challenge-thirteen-weeks"
+      ]
+    },
+    {
+      "id": "schedule-4-day",
+      "captureStatus": "exactGolden",
+      "observationIds": ["OBS-DEFAULT-BBB-ORIGINAL"],
+      "goldenScenarioIds": ["bbb-original-4-day"]
+    },
+    {
+      "id": "schedule-3-day-rotation",
+      "captureStatus": "exactGolden",
+      "observationIds": ["OBS-SCHEDULE-THREE-DAY-ROTATION"],
+      "goldenScenarioIds": ["bbb-original-3-day"]
+    },
+    {
+      "id": "schedule-2-day-rotation",
+      "captureStatus": "exactGolden",
+      "observationIds": ["OBS-SCHEDULE-TWO-DAY-BBB"],
+      "goldenScenarioIds": ["bbb-2-day"]
+    },
     {"id": "standalone-two-days-option-one", "captureStatus": "partialExact", "observationIds": ["OBS-STANDALONE-TWO-DAYS-OPTION-ONE"]},
     {"id": "plating-edge-cases", "captureStatus": "documented", "observationIds": ["OBS-PLATING"]},
     {"id": "persistence-and-legacy-url", "captureStatus": "documented", "observationIds": ["OBS-PERSISTENCE"]},

@@ -11,6 +11,8 @@ behavior are versioned here.
 
 Evidence levels used by the corpus:
 
+- `exactGolden`: the complete structured program was captured from local
+  Chromium and is protected by both scenario and raw-byte SHA-256 digests;
 - `partialExact`: values were read from a black-box run, but the complete
   program was not copied;
 - `documented`: the control or behavior was recovered from the archived
@@ -22,6 +24,8 @@ Evidence levels used by the corpus:
 
 `controls.json` is the exhaustive UI surface known at freeze time.
 `coverage.json` distinguishes documented coverage from exact runtime capture.
+`exact-goldens.json` freezes 19 complete programs for the priority template and
+schedule matrix, including every displayed set and plate list.
 `anomalies.json` records every known source quirk and the target disposition.
 Raw-byte SHA-256 digests in `checksums.json` protect the evidence documents.
 
@@ -29,4 +33,10 @@ The integrity test is:
 
 ```text
 flutter test test/oracles/source_calculator_v1_integrity_test.dart
+```
+
+The exact-program verifier is:
+
+```text
+node tests/source-calculator/verify-exact-goldens.cjs
 ```

@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hybridtraining.local/schemas/source-calculator-v1/exact-goldens.schema.json",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "fixtureSetId",
+    "capture",
+    "commonInput",
+    "scenarioCount",
+    "scenarios",
+    "corpusSha256"
+  ],
+  "properties": {
+    "$schema": {"const": "schemas/exact-goldens.schema.json"},
+    "schemaVersion": {"const": 1},
+    "fixtureSetId": {"const": "source-calculator-v1"},
+    "capture": {
+      "type": "object",
+      "required": [
+        "method",
+        "sourceEntrypoint",
+        "sourceArchiveSha256",
+        "sourceReportedVersion",
+        "networkPolicy",
+        "generatedByHybridTraining",
+        "copiedSourceAssets"
+      ]
+    },
+    "commonInput": {"type": "object"},
+    "scenarioCount": {"type": "integer", "minimum": 1},
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "coverage",
+          "input",
+          "selectedState",
+          "output",
+          "outputSha256"
+        ],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "coverage": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "input": {"type": "object"},
+          "selectedState": {"type": "object"},
+          "output": {
+            "type": "object",
+            "required": ["weekCount", "weeks"],
+            "properties": {
+              "weekCount": {"type": "integer", "minimum": 1},
+              "weeks": {"type": "array", "minItems": 1}
+            }
+          },
+          "outputSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "corpusSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

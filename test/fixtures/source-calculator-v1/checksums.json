@@ -18,7 +18,11 @@
     },
     {
       "path": "coverage.json",
-      "sha256": "04b17752a981a26ce3ef52f2e95a1eef9e795cee8d231eefd933804e6b8af1e7"
+      "sha256": "6db45fd3bc88841be3e6827be57f5b9fcc02a5b81d1034dfb7ee6f41298647ae"
+    },
+    {
+      "path": "exact-goldens.json",
+      "sha256": "32c9281a1abcaf46dc2fcc550a7bcf875166b26674937d60150986a5ad9c71ba"
     },
     {
       "path": "observations.json",
@@ -26,7 +30,7 @@
     },
     {
       "path": "provenance.json",
-      "sha256": "0efcba725dfe143f245e7d9cb3a443ef7b40c62215a1e7f3964b6237b1a1b72d"
+      "sha256": "97f8ca9e0fd2da1bae7788b6f29344b877c121c514590ec4836c4d978b41f71f"
     }
   ]
 }

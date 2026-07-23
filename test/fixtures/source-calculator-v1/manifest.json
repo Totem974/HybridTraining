@@ -9,6 +9,7 @@
     "checksums.json",
     "controls.json",
     "coverage.json",
+    "exact-goldens.json",
     "manifest.json",
     "observations.json",
     "provenance.json",
@@ -16,6 +17,7 @@
     "schemas/checksums.schema.json",
     "schemas/controls.schema.json",
     "schemas/coverage.schema.json",
+    "schemas/exact-goldens.schema.json",
     "schemas/manifest.schema.json",
     "schemas/observations.schema.json",
     "schemas/provenance.schema.json"
